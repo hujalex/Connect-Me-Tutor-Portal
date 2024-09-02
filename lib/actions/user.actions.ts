@@ -81,3 +81,49 @@ export async function reactivateUser(userId: string) {
     throw error
   }
 }
+
+export const logoutUser = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error logging out:', error.message);
+    } else {
+      console.log('User logged out successfully');
+    }
+  } catch (error) {
+    console.error('Unexpected error logging out:', error);
+  }
+};
+
+
+export const getProfileRole = async (userId: string): Promise<string | null> => {
+  if (!userId) {
+    console.error('User ID is required to fetch profile role');
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('profilerole')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching profile role:', error.message);
+    return null;
+  }
+
+  return data?.profilerole || null;
+};
+
+
+export async function getUserInfo() {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    return null; // Return null if no user or error occurs
+  }
+  return user;
+}
