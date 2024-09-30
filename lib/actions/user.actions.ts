@@ -1,14 +1,278 @@
-// lib/user.actions.ts
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import {Profile} from '@/types'
 
-import { createClient } from '@supabase/supabase-js'
+const supabase = createClientComponentClient({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+});
 
-// Supabase client
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+export const getUser = async () => {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    return null; // Return null if no user or error occurs
+  }
+  return user;
+}
+
+export const getProfile = async (userId: string): Promise<Profile | null> => {
+  if (!userId) {
+    console.error('User ID is required to fetch profile data');
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('Profiles')
+      .select(`
+        id,
+        created_at,
+        role,
+        user_id,
+        first_name,
+        last_name,
+        date_of_birth,
+        start_date,
+        availability,
+        email,
+        parent_name,
+        parent_phone,
+        parent_email,
+        tutor_ids,
+        timezone,
+        subjects_of_interest,
+        status
+      `)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error.message);
+      console.error('Error details:', error);
+      return null;
+    }
+
+    if (!data) {
+      console.log('No profile found for user ID:', userId);
+      return null;
+    }
+
+    // Mapping the fetched data to the UserProfile object
+    const userProfile: Profile = {
+      id: data.id,
+      createdAt: data.created_at,
+      role: data.role,
+      userId: data.user_id,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      dateOfBirth: data.date_of_birth,
+      startDate: data.start_date,
+      availability: data.availability, // Assuming the data is stored as JSON
+      email: data.email,
+      parentName: data.parent_name,
+      parentPhone: data.parent_phone,
+      parentEmail: data.parent_email,
+      tutorIds: data.tutor_ids,
+      timeZone: data.timezone,
+      subjectsOfInterest: data.subjects_of_interest,
+      status: data.status,
+    };
+
+    console.log('Mapped profile data:', userProfile);
+    return userProfile;
+  } catch (error) {
+    console.error('Unexpected error in getProfile:', error);
+    return null;
+  }
+};
+
+export const getProfileRole = async (userId: string): Promise<string | null> => {
+
+  if (!userId) {
+    console.error('User ID is required to fetch profile role');
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('Profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile role:', error.message);
+      console.error('Error details:', error);
+      return null;
+    }
+
+    console.log('Fetched profile data:', data);
+
+    if (!data) {
+      console.log('No profile found for user ID:', userId);
+      return null;
+    }
+
+    return data.role || null;
+  } catch (error) {
+    console.error('Unexpected error in getProfileRole:', error);
+    return null;
+  }
+};
+
+export const getSessionUserProfile = async (): Promise<Profile | null> => {
+  
+  const user = await getUser()
+  const userId = user?.id
+
+  try {
+    const { data, error } = await supabase
+      .from('Profiles')
+      .select(`
+        id,
+        created_at,
+        role,
+        user_id,
+        first_name,
+        last_name,
+        date_of_birth,
+        start_date,
+        availability,
+        email,
+        parent_name,
+        parent_phone,
+        parent_email,
+        tutor_ids,
+        timezone,
+        subjects_of_interest,
+        status
+      `)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error.message);
+      console.error('Error details:', error);
+      return null;
+    }
+
+    if (!data) {
+      console.log('No profile found for user ID:', userId);
+      return null;
+    }
+
+    // Mapping the fetched data to the UserProfile object
+    const userProfile: Profile = {
+      id: data.id,
+      createdAt: data.created_at,
+      role: data.role,
+      userId: data.user_id,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      dateOfBirth: data.date_of_birth,
+      startDate: data.start_date,
+      availability: data.availability, // Assuming the data is stored as JSON
+      email: data.email,
+      parentName: data.parent_name,
+      parentPhone: data.parent_phone,
+      parentEmail: data.parent_email,
+      tutorIds: data.tutor_ids,
+      timeZone: data.timezone,
+      subjectsOfInterest: data.subjects_of_interest,
+      status: data.status,
+    };
+
+    console.log('Mapped profile data:', userProfile);
+    return userProfile;
+  } catch (error) {
+    console.error('Unexpected error in getProfile:', error);
+    return null;
+  }
+};
+
+export async function getProfileWithProfileId(profileId: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await supabase
+      .from('Profiles')
+      .select(`
+        id,
+        created_at,
+        role,
+        user_id,
+        first_name,
+        last_name,
+        date_of_birth,
+        start_date,
+        availability,
+        email,
+        parent_name,
+        parent_phone,
+        parent_email,
+        tutor_ids,
+        timezone,
+        subjects_of_interest,
+        status
+      `)
+      .eq('id', profileId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error.message);
+      console.error('Error details:', error);
+      return null;
+    }
+
+    if (!data) {
+      console.log('No profile found for user ID:', profileId);
+      return null;
+    }
+
+    // Mapping the fetched data to the Profile object
+    const userProfile: Profile = {
+      id: data.id,
+      createdAt: data.created_at,
+      role: data.role,
+      userId: data.user_id,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      dateOfBirth: data.date_of_birth,
+      startDate: data.start_date,
+      availability: data.availability,
+      email: data.email,
+      parentName: data.parent_name,
+      parentPhone: data.parent_phone,
+      tutorIds: data.tutor_ids,
+      parentEmail: data.parent_email,
+      timeZone: data.timezone,
+      subjectsOfInterest: data.subjects_of_interest,
+      status: data.status,
+    };
+
+    console.log('Mapped profile data:', userProfile);
+    return userProfile;
+  } catch (error) {
+    console.error('Unexpected error in getProfile:', error);
+    return null;
+  }
+}
+
+export async function getUserInfo() {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    return null; // Return null if no user or error occurs
+  }
+  return user;
+}
 
 export async function updateProfile(userId: string, profileData: any) {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('Profiles')
       .update(profileData)
       .eq('user_id', userId)
       .single()
@@ -34,7 +298,7 @@ export async function createUser(userData: any) {
 
     // If you need to store additional user data, you can do it here
     const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
+      .from('Profiles')
       .insert({
         user_id: data.user.id,
         ...userData
@@ -50,37 +314,6 @@ export async function createUser(userData: any) {
   }
 }
 
-export async function deactivateUser(userId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ status: 'GHOST' })
-      .eq('user_id', userId)
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error deactivating user:', error)
-    throw error
-  }
-}
-
-export async function reactivateUser(userId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ status: 'ACTIVE' })
-      .eq('user_id', userId)
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error reactivating user:', error)
-    throw error
-  }
-}
 
 export const logoutUser = async () => {
   try {
@@ -96,34 +329,3 @@ export const logoutUser = async () => {
 };
 
 
-export const getProfileRole = async (userId: string): Promise<string | null> => {
-  if (!userId) {
-    console.error('User ID is required to fetch profile role');
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('profilerole')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching profile role:', error.message);
-    return null;
-  }
-
-  return data?.profilerole || null;
-};
-
-
-export async function getUserInfo() {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) {
-    return null; // Return null if no user or error occurs
-  }
-  return user;
-}

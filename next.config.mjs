@@ -1,4 +1,18 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
-
-export default nextConfig;
+const nextConfig = {
+    async headers() {
+      return [
+        {
+          source: '/(.*)',
+          headers: [
+            {
+              key: 'Content-Security-Policy',
+              value: "frame-src 'self' https://*.zoom.us;",
+            },
+          ],
+        },
+      ];
+    },
+  };
+  
+  export default nextConfig;

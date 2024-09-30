@@ -1,64 +1,99 @@
 // lib/student.actions.ts
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Profile, Session } from '@/types'
+import { getProfileWithProfileId } from './user.actions'
 
-import { createClient } from '@supabase/supabase-js'
+const supabase = createClientComponentClient({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+});
 
-// Supabase client
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-export async function getStudentProfile(studentId: string) {
+
+
+export async function getStudentSessions(profileId: string, startDate?: string, endDate?: string): Promise<Session[]> {
+  let query = supabase
+    .from('Sessions')
+    .select(`
+      id,
+      created_at,
+      environment,
+      student_id,
+      tutor_id,
+      date,
+      summary,
+      meeting_id,
+      status
+    `)
+    .eq('student_id', profileId);
+
+  if (startDate) {
+    query = query.gte('date', startDate);
+  }
+  if (endDate) {
+    query = query.lte('date', endDate);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching student sessions:', error.message);
+    throw error;
+  }
+
+  // Map the result to the Session interface
+  const sessions: Session[] = await Promise.all(data.map(async (session: any) => ({
+    id: session.id,
+    createdAt: session.created_at,
+    environment: session.environment,
+    date: session.date,
+    summary: session.summary,
+    meetingId: session.meeting_id,
+    status: session.status,
+    student: await getProfileWithProfileId(session.student_id),
+    tutor: await getProfileWithProfileId(session.tutor_id)
+  })));
+
+  return sessions;
+}
+
+export async function rescheduleSession(sessionId: string, newDate: string, studentId: string): Promise<void> {
   try {
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        *,
-        users (*)
-      `)
-      .eq('id', studentId)
-      .single()
+    // First, get the current session details
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('Sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
 
-    if (error) throw error
-    return data
+    if (sessionError) {
+      throw sessionError;
+    }
+
+    // Create a notification for the admin
+    const { error: notificationError } = await supabase
+      .from('Notifications')
+      .insert({
+        session_id: sessionId,
+        previous_date: sessionData.date,
+        suggested_date: newDate,
+        student_id: studentId,
+        tutor_id: sessionData.tutor_id,
+        type: 'RESCHEDULE_REQUEST',
+        status: 'PENDING'
+      });
+
+    if (notificationError) {
+      throw notificationError;
+    }
+
+    console.log('Reschedule request notification created successfully');
   } catch (error) {
-    console.error('Error fetching student profile:', error)
-    throw error
+    console.error('Error creating reschedule request:', error);
+    throw error;
   }
 }
 
-export async function updateStudentProfile(studentId: string, profileData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('students')
-      .update(profileData)
-      .eq('id', studentId)
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error updating student profile:', error)
-    throw error
-  }
-}
-
-export async function getStudentSessions(studentId: string, startDate: string, endDate: string) {
-  try {
-    const { data, error } = await supabase
-      .from('sessions')
-      .select(`
-        *,
-        tutors (name)
-      `)
-      .eq('student_id', studentId)
-      .gte('date', startDate)
-      .lte('date', endDate)
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error fetching student sessions:', error)
-    throw error
-  }
-}
 
 export async function enrollInSession(studentId: string, sessionId: string) {
   try {
