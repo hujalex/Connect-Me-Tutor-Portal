@@ -50,6 +50,7 @@ const MeetingPage = ({params}:ParamsProps) => {
     getThisMeeting();
   }, );
 
+  /*
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -113,14 +114,15 @@ const MeetingPage = ({params}:ParamsProps) => {
       fetchData();
     }
   }, [meetingId]);
+  */
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100">
       <div className="bg-white shadow-md p-4 rounded-md">
         <h2 className="text-lg font-semibold mb-4">Zoom Meeting</h2>
-        <div id="meetingSDKElement" ref={meetingSDKElementRef} style={{ width: '100%', height: '100%' }}>
-          {/* Zoom SDK will be rendered here */}
-        </div>
+        {/*<div id="meetingSDKElement" ref={meetingSDKElementRef} style={{ width: '100%', height: '100%' }}>
+          {/* Zoom SDK will be rendered here </div>*/}
+
         <div>
           {meeting?.link}
         </div>
