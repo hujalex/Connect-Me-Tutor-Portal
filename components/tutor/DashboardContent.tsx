@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { Bell, ChevronDown, Plus, Link as LinkIcon, Eye, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import Sidebar from '@/components/ui/sidebar';
 import TutorCalendar from './TutorCalendar';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
