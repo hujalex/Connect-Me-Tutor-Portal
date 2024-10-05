@@ -166,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = async () => {
     toast.success('Successfully logging out')
     await logoutUser();
-    router.push('/login');
+    router.push('/');
   };
 
   
