@@ -9,8 +9,8 @@ export default function LoginPage() {
           <Logo/>   
         </div>
         <div className='absolute left-8 bottom-8 text-sm'>
-          "Connect me has helped me explore new math topics and learn critical problem solving skills.
-          <br/> It makes learning so much fun"
+        &quot;Connect me has helped me explore new math topics and learn critical problem solving skills.
+          <br/> It makes learning so much fun&quot;
           <br/>
           --Olivia M.
           </div>
