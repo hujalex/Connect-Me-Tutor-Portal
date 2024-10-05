@@ -8,7 +8,6 @@ import TutorDashboard from '@/components/tutor/DashboardContent';
 import AdminDashboard from '@/components/admin/DashboardContent';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/ui/sidebar'; // Assuming Sidebar component is available
 
 const Dashboard = () => {
   const [role, setRole] = useState<string | null>(null);
