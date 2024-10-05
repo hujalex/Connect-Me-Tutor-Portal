@@ -1,4 +1,4 @@
-export default function ContactPage() {
+export default function ForgotPasswordPage() {
     return (
         <main>
             
