@@ -9,7 +9,7 @@ interface Profile {
   lastName: string;
   dateOfBirth: string; // Format: YYYY-MM-DD
   startDate: string; // Format: YYYY-MM-DD, start date of the user's involvement
-  availability: { day: string; time: string }[]; // Example: [{ day: "Monday", time: "3PM-6PM" }]
+  availability: { day: string; startTime: string, endTime:string }[]; // Example: [{ day: "Monday", time: "3PM-6PM" }]
   email: string;
   parentName?: string; // Optional
   parentPhone?: string; // Optional
@@ -63,14 +63,14 @@ interface Event {
 }
   
 // Type for Student Enrollments
-interface StudentEnrollment {
-  dateOfBirth: string; // Format: YYYY-MM-DD
-  tutoringDuration: number; // in weeks or months depending on the use case
-  numberOfDaysPerWeek: number;
-  firstSessionDate: string; // Format: YYYY-MM-DD
-  currentMeetingDatesTimes?: string[]; // Array of date strings in YYYY-MM-DD format or with times (Optional)
-  creationDate: string; // Format: YYYY-MM-DD
-  studentId: string;
-  tutorId: string;
+interface Enrollment {
+  id: string;
+  createdAt: string;
+  student: Profile | null;
+  tutor: Profile | null;
+  summary: string;
+  startDate: string;
+  endDate:string;
+  availability: { day: string; startTime: string, endTime: string }[]; // Ensure startTime and endTime have AM/PM format
 }
   

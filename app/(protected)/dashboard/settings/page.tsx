@@ -1,8 +1,8 @@
-import AccountPage from '@/components/settings/AccountPage'
+import ProfilePage from '@/components/settings/ProfilePage'
 
 
 export default function Display() {
     return (
-        <AccountPage/>
+        <ProfilePage/>
     )
 }

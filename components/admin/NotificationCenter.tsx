@@ -15,7 +15,7 @@ import {Skeleton} from '@/components/ui/skeleton'
 const NotificationCenter = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
-    const [filterValue, setFilterValue] = useState('All');
+    const [filterValue, setFilterValue] = useState('Active');
     const [searchValue, setSearchValue] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -116,9 +116,9 @@ const NotificationCenter = () => {
                             <SelectValue placeholder="Filter Status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="All">All</SelectItem>
                             <SelectItem value="Active">Active</SelectItem>
                             <SelectItem value="Resolved">Resolved</SelectItem>
+                            <SelectItem value="All">All</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

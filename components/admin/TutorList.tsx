@@ -82,7 +82,7 @@ const TutorList = () => {
     };
 
     getTutorData();
-  }, [supabase.auth]);
+  }, [supabase.auth, tutors]);
 
   useEffect(() => {
     const filtered = tutors.filter(tutor =>
@@ -153,7 +153,9 @@ const TutorList = () => {
       if (addedTutor) {
         // Close modal and show success toast
         setIsModalOpen(false);
-        toast.success('Successfully added student. Refresh to see update.')
+        setTutors(prevTutors => [...prevTutors, addedTutor]);
+
+        toast.success('Successfully added student.')
     
         // Reset form
         setNewTutor({
@@ -291,7 +293,7 @@ const TutorList = () => {
             <div className="flex space-x-2">
               <Input 
                 type="text" 
-                placeholder="Filter students..." 
+                placeholder="Filter tutors..." 
                 className="w-64" 
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
@@ -299,11 +301,11 @@ const TutorList = () => {
               {/*Add Student*/}
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
-                  <Button>Add Student</Button>
+                  <Button>Add Tutor</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Add New Student</DialogTitle>
+                    <DialogTitle>Add New Tutor</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">

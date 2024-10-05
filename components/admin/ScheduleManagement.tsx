@@ -1,22 +1,48 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, parseISO, isAfter, isValid } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAllSessions, rescheduleSession } from "@/lib/actions/admin.actions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  getAllSessions, 
+  rescheduleSession, 
+  getAllEnrollments, 
+  addSessions,
+  updateSession,
+  getMeetings,
+  getAllProfiles,
+  removeSession
+} from "@/lib/actions/admin.actions";
+import {
+  getProfileWithProfileId
+} from '@/lib/actions/user.actions'
 import { toast } from "react-hot-toast";
-import { Session } from '@/types';
+import { Session, Enrollment, Meeting, Profile } from '@/types';
 import { getSessionTimespan } from '@/lib/utils';
-import { ChevronRight, ChevronLeft, Calendar } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, GraduationCap, CircleUserRound } from 'lucide-react';
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [students, setStudents] = useState<Profile[]>([]);
+  const [tutors, setTutors] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchSessions();
-  }, [currentWeek]);
+    fetchEnrollments();
+    fetchMeetings();
+    fetchStudents();
+    fetchTutors();
+  },[currentWeek]);
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -36,6 +62,62 @@ const Schedule = () => {
     }
   };
 
+  const fetchEnrollments = async () => {
+    try {
+      console.log('ds')
+      const fetchedEnrollments = await getAllEnrollments();
+      console.log(fetchedEnrollments)
+      console.log('dosajfksaf')
+      const validEnrollments = fetchedEnrollments?.filter(enrollment => {
+        console.log(enrollment.endDate)
+        if (!enrollment.endDate) return true;
+        return isAfter(parseISO(enrollment.endDate), new Date());
+      });
+      if (validEnrollments) {
+        setEnrollments(validEnrollments);
+      }
+    } catch (error) {
+      console.error("Failed to fetch enrollments:", error);
+      toast.error("Failed to load enrollments");
+    }
+  };
+
+  const fetchMeetings = async () => {
+    try {
+      const fetchedMeetings = await getMeetings();
+      if (fetchedMeetings) {
+        setMeetings(fetchedMeetings);
+      }
+    } catch (error) {
+      console.error("Failed to fetch meetings:", error);
+      toast.error("Failed to load meetings");
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      const fetchedStudents = await getAllProfiles('Student');
+      if (fetchedStudents) {
+        setStudents(fetchedStudents);
+      }
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+      toast.error("Failed to load students");
+    }
+  };
+
+  const fetchTutors = async () => {
+    try {
+      const fetchedTutors = await getAllProfiles('Tutor');
+      if (fetchedTutors) {
+        setTutors(fetchedTutors);
+      }
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+      toast.error("Failed to load students");
+    }
+  };
+
   const handleReschedule = async (sessionId: string, newDate: Date) => {
     try {
       const newDateString = newDate.toISOString();
@@ -48,6 +130,88 @@ const Schedule = () => {
     }
   };
 
+  const handleUpdateWeek = async () => {
+    try {
+      const weekStart = startOfWeek(currentWeek);
+      const weekEnd = endOfWeek(currentWeek);
+      console.log(weekStart, weekEnd);
+  
+      const now = new Date();
+  
+      // Filter available meetings based on session status and time
+      const availableMeetings = meetings.filter(meeting => 
+        !sessions.some(session => {
+          const sessionEndTime = new Date(session.date);
+          sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
+          return (session.status === 'Complete' || sessionEndTime < now) && session.meetingId === meeting.id;
+        })
+      );
+  
+      // Filter out existing sessions for the current week
+      const existingSessionsInWeek = sessions.filter(session => {
+        const sessionDate = new Date(session.date);
+        return sessionDate >= weekStart && sessionDate <= weekEnd;
+      });
+  
+      // Create a map of existing sessions for quick lookup
+      const existingSessionMap = new Map();
+      existingSessionsInWeek.forEach(session => {
+        const sessionDate = new Date(session.date);
+        const key = `${session.student?.id}-${session.tutor?.id}-${isValid(sessionDate) ? format(sessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
+        existingSessionMap.set(key, session);
+      });
+  
+      // Call addSessions function to create new sessions
+      const newSessions = await addSessions(
+        weekStart.toISOString(), 
+        weekEnd.toISOString(), 
+        enrollments, 
+        availableMeetings
+      );
+  
+      // Filter out any duplicate sessions
+      const uniqueNewSessions = newSessions.filter(newSession => {
+        const newSessionDate = new Date(newSession?.date);
+        const key = `${newSession?.student?.id}-${newSession?.tutor?.id}-${isValid(newSessionDate) ? format(newSessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
+        return !existingSessionMap.has(key);
+      });
+  
+      console.log(enrollments);
+      console.log(availableMeetings);
+      console.log(uniqueNewSessions);
+  
+      // Update sessions state with the unique newly created sessions
+      setSessions(prevSessions => [...prevSessions, ...uniqueNewSessions]);
+      toast.success(`${uniqueNewSessions.length} new sessions added successfully`);
+    } catch (error: any) {
+      console.error("Failed to add sessions:", error);
+      toast.error(`Failed to add sessions. ${error.message}`);
+    }
+  };
+  
+  const handleRemoveSession = async(sessionId:string) => {
+    try {
+      await removeSession(sessionId)
+      setSessions(prevSessions => prevSessions.filter(session => session.id !== sessionId));
+      toast.success("Session removed successfully")
+    } catch (error) {
+      console.error("Failed to remove session",error)
+      toast.error("Failed to remove session")
+    }
+  }
+
+  const handleUpdateSession = async (updatedSession: Session) => {
+    try {
+      await updateSession(updatedSession);
+      toast.success("Session updated successfully");
+      setIsModalOpen(false);
+      fetchSessions();
+    } catch (error) {
+      console.error("Failed to update session:", error);
+      toast.error("Failed to update session");
+    }
+  };
+
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentWeek),
     end: endOfWeek(currentWeek)
@@ -56,11 +220,17 @@ const Schedule = () => {
   const goToPreviousWeek = () => setCurrentWeek(prevWeek => subWeeks(prevWeek, 1));
   const goToNextWeek = () => setCurrentWeek(prevWeek => addWeeks(prevWeek, 1));
 
+  const getEnrollmentProgress = () => {
+    const totalStudents = students.length;
+    const studentsThisWeek = new Set(sessions.map(session => session?.student?.id)).size;
+    return { totalStudents, studentsThisWeek };
+  };
+
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-left text-gray-800">Schedule</h1>
       
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex justify-between items-center mb-6">
           <Button variant="outline" onClick={goToPreviousWeek} className="flex items-center">
             <ChevronLeft className="w-5 h-5 mr-2" /> Previous Week
@@ -72,6 +242,8 @@ const Schedule = () => {
             Next Week <ChevronRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
+        
+        <Button onClick={handleUpdateWeek} className="mb-4">Update Week</Button>
 
         {loading ? (
           <div className="text-center py-10">
@@ -81,33 +253,42 @@ const Schedule = () => {
         ) : (
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((day) => (
-              <div key={day.toISOString()} className="border rounded-lg p-3 bg-gray-50">
+              <div key={day.toISOString()} className="border rounded-lg px-2 py-3 bg-gray-50">
                 <h3 className="font-semibold mb-2 text-gray-700">{format(day, 'EEEE')}</h3>
                 <p className="text-sm mb-4 text-gray-500">{format(day, 'MMM d')}</p>
                 {sessions
-                  .filter(session => format(parseISO(session.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'))
+                  .filter(session => session?.date && format(parseISO(session?.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'))
                   .map(session => (
                     <Card 
                       key={session.id} 
-                      className={`mb-2 ${session.status === 'Complete' ? 'bg-green-100' : 'bg-white'}`}
+                      className={`mb-2 ${session.status === 'Complete' ? 'bg-green-500/10 border-2' : 'bg-white'}`}
                     >
                       <CardContent className="p-3">
-                        <p className="text-xs font-medium text-blue-800">Tutor: {session.tutor?.firstName} {session.tutor?.lastName}</p>
-                        <p className="text-xs font-medium text-blue-600">Student: {session?.student?.firstName}</p>
+                        <p className="text-xs font-semibold">Tutor: {session.tutor?.firstName} {session.tutor?.lastName}</p>
+                        <p className="text-xs font-medium">Student: {session?.student?.firstName}</p>
                         <p className="text-xs text-gray-500">{session.summary}</p>
                         <p className="text-xs text-gray-500">{getSessionTimespan(session.date)}</p>
-                        <p className="text-xs text-gray-400">Meeting ID: {session.meetingId}</p>
+                        <p className="text-xs text-gray-500">
+                          Meeting ID: {session.meetingId || 'Not assigned'}
+                        </p>
+                        {session.status && 
+                          <p className={`text-xs inline font-medium px-3 py-1 rounded-lg bg-gray-100 mt-1 ${session.status === 'Complete' ? 'bg-green-200' : ''}`}>{session.status}</p>
+                        }
+                        
                         <Button 
                           className="mt-2 w-full text-xs h-6" 
-                          onClick={() => handleReschedule(session.id, new Date())}
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsModalOpen(true);
+                          }}
                           variant="outline"
                         >
-                          Reschedule
+                          View Details
                         </Button>
                       </CardContent>
                     </Card>
                   ))}
-                {sessions.filter(session => format(parseISO(session.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')).length === 0 && (
+                {sessions.filter(session => session?.date && format(parseISO(session.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')).length === 0 && (
                   <p className="text-sm text-gray-400 text-center">No sessions</p>
                 )}
               </div>
@@ -115,6 +296,122 @@ const Schedule = () => {
           </div>
         )}
       </div>
+
+      <div>
+        <h3 className="text-3xl font-bold mb-6 text-left text-gray-800">Enrollment Progress</h3>
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="font-medium">Total Students:</p>
+                <p>{getEnrollmentProgress().totalStudents}</p>
+              </div>
+              <div>
+                <p className="font-medium">Students This Week:</p>
+                <p>{getEnrollmentProgress().studentsThisWeek}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Session Details</DialogTitle>
+          </DialogHeader>
+          {selectedSession && (
+            <div className="space-y-4">
+              <div>
+                <Label>Status</Label>
+                <Select
+                  value={selectedSession?.status}
+                  onValueChange={(value) => {
+                    console.log("Selected value:", value); // Log the selected value
+                    if (value) {
+                      const updatedSession = { ...selectedSession, status: value };
+                      console.log("Updated session:", updatedSession); // Log the updated session
+                      setSelectedSession(updatedSession);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      {selectedSession?.status ? selectedSession.status : 'Select status'}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Complete">Complete</SelectItem>
+                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Tutor</Label>
+                <Select
+                  value={selectedSession.tutor?.id}
+                  onValueChange={async (value) => {
+                    console.log(value)
+                    const selectedTutor = await getProfileWithProfileId(value);
+                    if (selectedTutor) {
+                      setSelectedSession({ ...selectedSession, tutor: selectedTutor });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      {selectedSession.tutor ? `${selectedSession.tutor.firstName} ${selectedSession.tutor.lastName}` : 'Select a tutor'}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tutors.map((tutor) => 
+                      tutor.status !== 'Inactive' && (
+                        <SelectItem key={tutor.id} value={tutor.id}>
+                          {tutor.firstName} {tutor.lastName}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Date</Label>
+                <Input
+                  type="datetime-local"
+                  defaultValue={format(parseISO(selectedSession.date), "yyyy-MM-dd'T'HH:mm")}
+                  onChange={(e) => setSelectedSession({...selectedSession, date: new Date(e.target.value).toISOString()})}
+                />
+              </div>
+              <div>
+                <Label>Meeting</Label>
+                <Select
+                  value={selectedSession.meetingId}
+                  onValueChange={(value) => setSelectedSession({...selectedSession, meetingId: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      {selectedSession?.meetingId}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {meetings.map(meeting => (
+                      <SelectItem key={meeting.id} value={meeting.id}>
+                        {meeting.password} - {meeting.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                </div>
+                <div className='flex flex-row justify-between'>
+                  <Button onClick={() => handleUpdateSession(selectedSession)}>Update Session</Button>
+                  <Button variant='destructive' onClick={() => handleRemoveSession(selectedSession.id)}>Delete Session</Button>
+                </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

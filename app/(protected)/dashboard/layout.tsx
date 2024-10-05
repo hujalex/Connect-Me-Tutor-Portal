@@ -50,7 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   if (!role) {
-    router.push('/login');
+    router.push('/');
     return null;
   }
 

@@ -103,3 +103,24 @@ function formatTime(date: Date): string {
   // Construct the final formatted string
   return `${hours}${formattedMinutes} ${isPM ? 'PM' : 'AM'}`;
 }
+
+export function formatMilitaryToStandardTime(militaryTime:string) {
+  // Check if the input is in valid military time format
+  if (!/^\d{2}:\d{2}$/.test(militaryTime)) {
+    return "Invalid time format";
+  }
+
+  let [hours, minutes] = militaryTime.split(":").map(Number);
+
+  // Adjust for times past midnight (e.g., 24:00)
+  if (hours === 24) {
+    hours = 0;
+  }
+
+  const period = hours < 12 ? "AM" : "PM";
+
+  // Convert to 12-hour format
+  hours = hours % 12 || 12;
+
+  return `${hours}:${minutes.toString().padStart(2, "0")}${period}`;
+}

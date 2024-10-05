@@ -76,7 +76,7 @@ const StudentList = () => {
     };
 
     getStudentData();
-  }, [supabase.auth]);
+  }, [supabase.auth, students]);
 
   useEffect(() => {
     const filtered = students.filter(student =>
@@ -147,7 +147,9 @@ const StudentList = () => {
       if (addedStudent) {
         // Close modal and show success toast
         setIsModalOpen(false);
-        toast.success('Successfully added student. Refresh to see update.')
+        setStudents(prevStudents => [...prevStudents, addedStudent]);
+
+        toast.success('Successfully added student.')
     
         // Reset form
         setNewStudent({

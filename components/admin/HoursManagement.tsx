@@ -125,7 +125,7 @@ const HoursManager = () => {
         new Date(session.date) >= weekStart &&
         new Date(session.date) < weekEnd
       )
-      .reduce((total, session) => total + calculateSessionDuration(session), 0) || 0;
+      .reduce((total, session) => total + 1.5, 0) || 0;
   };
 
   const calculateExtraHours = (tutorId: string) => {
@@ -135,7 +135,7 @@ const HoursManager = () => {
   const calculateMonthHours = (tutorId: string) => {
     const sessionHours = sessionsData[tutorId]
       ?.filter(session => session.status === 'Complete')
-      .reduce((total, session) => total + calculateSessionDuration(session), 0) || 0;
+      .reduce((total, session) => total + 1.5, 0) || 0;
     const extraHours = calculateExtraHours(tutorId);
     return sessionHours + extraHours;
   };

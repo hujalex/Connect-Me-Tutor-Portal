@@ -4,9 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { getProfileRole, getSessionUserProfile } from '@/lib/actions/user.actions';
+import { getProfileRole, getSessionUserProfile, logoutUser} from '@/lib/actions/user.actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import Sidebar from '@/components/ui/sidebar'; // Assuming Sidebar component is available
 import { 
   Search, 
   Link as LinkIcon, 
@@ -25,13 +24,26 @@ import {
   LayoutDashboardIcon,
   Layers,
   User,
-  Clock
+  Clock,
+  ChevronLeft,
+  UserIcon,
+  BookOpenText,
+  CircleUserRound
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Logo from '@/components/ui/logo';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+  } from "@/components/ui/breadcrumb"
+
+  
 import { cn } from "@/lib/utils";
-import { logoutUser } from '@/lib/actions/user.actions';
 
 import {
   Tooltip,
@@ -49,6 +61,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const supabase = createClientComponentClient();
   const router = useRouter();
   const pathname = usePathname()
+  const isSettingsPage = pathname === '/dashboard/settings'
+
+
+  const settingsSidebarItems = [
+    {
+        title: "Profile",
+        href: "/settings",
+        icon: <CircleUserRound className="h-5 w-5" />,
+    }
+  ]
 
   const studentSidebarItems = [
     {
@@ -91,6 +113,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         title: "Schedule",
         href: "/dashboard/schedule",
         icon: <Calendar className="h-5 w-5" />,
+    },
+    {
+        title: "Enrollments",
+        href: "/dashboard/enrollments",
+        icon: <BookOpenText className="h-5 w-5" />,
     },
     {
         title: "Hours Manager",
@@ -142,6 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login');
   };
 
+  
 
   if (loading) {
     return (
@@ -153,13 +181,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (!role) {
-    router.push('/login');
+    router.push('/');
     return null;
   }
 
   // Layout with Sidebar and Navbar
   return (
-    <div className="flex h-screen bg-[--clr-gray-light]">
+    <div className="flex h-screen ">
         <TooltipProvider> {/* Wrap with TooltipProvider */}
             {/* Sidebar container */}
             <aside
@@ -192,6 +220,87 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     )}
 
                     {/* Navigation */}
+                    {isSettingsPage &&
+                    <>
+                        {isOpen && 
+                        <div className="px-4 py-2">
+                            <div className="relative">
+                                <p className='text-sm text-gray-500'>
+                                Manage your account settings and preferences.
+                                </p>
+                            </div>
+                        </div>}
+
+                        {isOpen ? 
+                        <Breadcrumb className='p-4'>
+                            <BreadcrumbList>
+                                <BreadcrumbItem>
+                                    <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                                </BreadcrumbItem>
+                                <BreadcrumbSeparator />
+                                <BreadcrumbItem>
+                                    <BreadcrumbPage>Settings</BreadcrumbPage>
+                                </BreadcrumbItem>
+                            </BreadcrumbList>
+                        </Breadcrumb> :
+                        <div>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                    asChild
+                                    variant="ghost"
+                                    className={cn("w-full justify-start", !isOpen && "justify-center px-2")}
+                                    >
+                                    <Link href="/dashboard/">
+                                        <LayoutDashboardIcon className="h-5 w-5" />
+                                        {isOpen && <span className="ml-3">Dashboard</span>}
+                                    </Link>
+                                    </Button>
+                                </TooltipTrigger>
+                                {!isOpen && (
+                                    <TooltipContent side="right">
+                                    <p>Dashboard</p>
+                                    </TooltipContent>
+                                )}
+                            </Tooltip>
+                        </div>}
+
+                        <nav className="flex-grow space-y-1 ">
+                            <>
+                            {settingsSidebarItems.map((item) => (
+                                <Tooltip key={item.href}>
+                                <TooltipTrigger asChild>
+                                    <Button 
+                                    asChild
+                                    variant="ghost"
+                                    className={cn(
+                                        "w-full justify-start",
+                                        pathname === item.href 
+                                        ? "bg-blue-400/10 text-blue-500" 
+                                        : "text-primary-dark hover:bg-muted hover:text-foreground",
+                                        !isOpen && "justify-center px-2"
+                                    )}
+                                    >
+                                    <Link href={item.href}>
+                                        {item.icon}
+                                        {isOpen && <span className="ml-3">{item.title}</span>}
+                                    </Link>
+                                    </Button>
+                                </TooltipTrigger>
+                                {!isOpen && (
+                                    <TooltipContent side="right">
+                                    <p>{item.title}</p>
+                                    </TooltipContent>
+                                )}
+                                </Tooltip>
+                            ))}
+                            </>
+                        </nav>  
+                    </>
+                    }
+
+                    {/* Navigation */}
+                    {!isSettingsPage &&
                     <nav className="flex-grow space-y-1 px-3">
                         {role === 'Student' && (
                             <>
@@ -290,10 +399,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             ))}
                             </>
                         )}
-                    </nav>
+                    </nav>  
+                    }
+
 
                     {/* Settings and Logout */}
                     <div className="px-3 space-y-2 mb-2">
+                        {!isSettingsPage && 
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
@@ -313,6 +425,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 </TooltipContent>
                             )}
                         </Tooltip>
+                        }
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
@@ -331,11 +444,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                         </Tooltip>
                     </div>
-
                 </div>
             </aside>
         </TooltipProvider>
-
+        
         <div className="flex-1 overflow-auto">
             {/* Navbar */}
             <header className="bg-background w-full h-16">
@@ -355,10 +467,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </header>
 
             {/* Main content based on role */}
-            <main>
+            <main className='border-2 border-gray-200 rounded-2xl'>
                 {children}
             </main>
         </div>
+
         <Toaster/>
     </div>
   );

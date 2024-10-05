@@ -43,9 +43,10 @@ const AdminDashboard = () => {
 
         setProfile(profileData);
 
-        const sessionsData = await getAllSessions();
+        let sessionsData = await getAllSessions();
         if (!sessionsData) throw new Error('No sessions found');
-
+        sessionsData = sessionsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
         setSessions(sessionsData);
         setFilteredSessions(sessionsData);
       } catch (error) {
