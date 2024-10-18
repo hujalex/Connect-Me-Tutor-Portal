@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { getProfileRole, getSessionUserProfile, logoutUser} from '@/lib/actions/user.actions';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -200,10 +201,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {/* Logo */}
                     <div className="h-16 p-4 flex items-center">
                         <Link href="/" className="flex items-center px-1 text-sm font-medium rounded-md transition-colors">
-                        <div className="bg-blue-500 text-white p-1 rounded">
-                            <Compass size={18} />
+                        <div className="text-white p-1 rounded">
+                            {/* <Compass size={18} /> */}
+                            <Image alt = "logo" height = "30" width = "30" src = "/logo.png"/>
                         </div>
-                        {isOpen && <span className="font-bold text-lg ml-2">ConnectMe</span>}
+                        {isOpen && <span className="font-bold text-lg ml-2">Connect Me</span>}
                         </Link>
                     </div>
 
