@@ -186,6 +186,11 @@ const StudentDashboard = () => {
                     </DialogContent>
                   </Dialog>
                 </TableCell>
+                {//? Added sub hotline
+                }
+                <TableCell>
+                  <Button variant = "outline" onClick = {() => window.location.href = "https://forms.gle/AC4an7K6NSNumDwKA"}>Request a Sub</Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
