@@ -81,7 +81,7 @@ export async function getTutorStudents(tutorId: string) {
       .contains('tutor_ids', [tutorId]);
 
     if (error) {
-      console.error('Error fetching profile:', error.message);
+      console.error('Error fetching profile in Tutor Actions:', error.message);
       console.error('Error details:', error);
       return null;
     }

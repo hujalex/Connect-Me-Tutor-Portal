@@ -85,7 +85,7 @@ const EnrollmentList = () => {
             if (studentsData) setStudents(studentsData.filter(s => s.status === 'Active'));
             if (tutorsData) setTutors(tutorsData.filter(t => t.status === 'Active'));
         } catch (error) {
-            console.error('Error fetching profiles:', error);
+            console.error('Error fetching profiles in EnrollmentsMangement.tsx:', error);
         }
     };
 

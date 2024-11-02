@@ -171,7 +171,8 @@ const StudentList = () => {
       }
     } catch (error) {
       console.error('Error adding student:', error);
-      toast.error('Failed to add student.')
+      toast.error('Failed to Add Student.')
+      toast.error(`${error.message}`)
     }
   };
 
