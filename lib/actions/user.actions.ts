@@ -49,7 +49,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       .single();
 
     if (error) {
-      console.error('Error fetching profile:', error.message);
+      console.error('Error fetching profile in getProfile:', error.message);
       console.error('Error details:', error);
       return null;
     }
@@ -103,7 +103,7 @@ export const getProfileRole = async (userId: string): Promise<string | null> => 
       .single();
 
     if (error) {
-      console.error('Error fetching profile role:', error.message);
+      console.error('Error fetching profile role in getProfileRole:', error.message);
       console.error('Error details:', error);
       return null;
     }
@@ -153,7 +153,7 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
       .single();
 
     if (error) {
-      console.error('Error fetching profile:', error.message);
+      console.error('Error fetching profile in getSessionUserProfile:', error.message);
       console.error('Error details:', error);
       return null;
     }
@@ -219,7 +219,7 @@ export async function getProfileWithProfileId(profileId: string): Promise<Profil
       .single();
 
     if (error) {
-      console.error('Error fetching profile:', error.message);
+      console.error('Error fetching profile in getProfileWithProfileId:', error.message);
       console.error('Error details:', error);
       return null;
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link'
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import axios, { AxiosResponse } from 'axios';
@@ -124,7 +125,12 @@ const MeetingPage = ({params}:ParamsProps) => {
           {/* Zoom SDK will be rendered here </div>*/}
 
         <div>
-          {meeting?.link}
+          {meeting?.link ? (
+           <Link className = "text-blue-500" href = {meeting.link}>{meeting.link}</Link>
+            ) : (
+              "Link Not Available"
+            )
+          }
         </div>
       </div>
     </div>

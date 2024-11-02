@@ -41,7 +41,7 @@ export async function getAllProfiles(role:'Student'|'Tutor'|'Admin') {
       .eq("role",role);
 
     if (error) {
-      console.error('Error fetching profile:', error.message);
+      console.error('Error fetching profile in Admin Actions:', error.message);
       console.error('Error details:', error);
       return null;
     }
@@ -172,8 +172,8 @@ export const addStudent = async (studentData: Partial<Profile>): Promise<Profile
 };
 
 export const addTutor = async (tutorData: Partial<Profile>): Promise<Profile> => {
-  const supabase = createClientComponentClient();
 
+  const supabase = createClientComponentClient();
   try {
     console.log(tutorData)
     if (!tutorData.email) {
