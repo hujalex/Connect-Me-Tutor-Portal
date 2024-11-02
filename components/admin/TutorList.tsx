@@ -176,9 +176,11 @@ const TutorList = () => {
         });
       }
     } catch (error) {
+
+      const err = error as Error;
       console.error('Error adding Tutor:', error);
       toast.error('Failed to Add Tutor');
-      toast.error(`${error.message}`)
+      toast.error(`${err.message}`)
     }
   };
 

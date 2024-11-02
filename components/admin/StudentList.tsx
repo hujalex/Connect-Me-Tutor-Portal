@@ -170,9 +170,10 @@ const StudentList = () => {
         });
       }
     } catch (error) {
+      const err = error as Error;
       console.error('Error adding student:', error);
       toast.error('Failed to Add Student.')
-      toast.error(`${error.message}`)
+      toast.error(`${err.message}`)
     }
   };
 
