@@ -17,8 +17,7 @@ export default async function Layout({ children }:{children:React.ReactNode}) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const userId = user ? user.id : ''
-  console.log('USER ID', user)
-  
+  console.log('USER ID', user, 'Layout')
   const data = await getProfile(userId);
 
   
