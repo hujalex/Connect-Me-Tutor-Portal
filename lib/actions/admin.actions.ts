@@ -92,6 +92,8 @@ export const addStudent = async (studentData: Partial<Profile>): Promise<Profile
 
     const tempPassword = studentData.lastName || studentData.email + studentData.startDate
 
+    console.log(tempPassword,'PASSWORD')
+
     const userId = await createUser(studentData.email,tempPassword)
 
     // Check if a user with this email already exists
@@ -258,12 +260,13 @@ export const addTutor = async (tutorData: Partial<Profile>): Promise<Profile> =>
   }
 };
 
-export async function deactivateUser(userId: string) {
+export async function deactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
       .from('Profiles')
       .update({ status: 'Inactive' })
-      .eq('user_id', userId)
+      .eq('id', profileId)
+      .select('*')
       .single()
 
     if (error) throw error
@@ -274,12 +277,13 @@ export async function deactivateUser(userId: string) {
   }
 }
 
-export async function reactivateUser(userId: string) {
+export async function reactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
       .from('Profiles')
       .update({ status: 'Active' })
-      .eq('user_id', userId)
+      .eq('id', profileId)
+      .select('*')
       .single()
 
     if (error) throw error
@@ -385,15 +389,9 @@ export async function addSessions(
   weekStartString: string,
   weekEndString: string,
   enrollments: Enrollment[],
-  availableMeetings: Meeting[],
 ) {
   const weekStart = parseISO(weekStartString);
   const weekEnd = parseISO(weekEndString);
-
-  if (availableMeetings.length === 0) {
-    throw new Error('No available meeting links to schedule sessions.');
-  }
-
   const sessions: Session[] = [];
   const scheduledSessions: Set<string> = new Set();
 
@@ -436,7 +434,7 @@ export async function addSessions(
             continue;
           }
 
-          // Check for duplicates or overlapping sessions
+          // Check for duplicates
           const sessionKey = `${student.id}-${tutor.id}-${format(sessionStartTime, 'yyyy-MM-dd-HH:mm')}`;
           if (scheduledSessions.has(sessionKey)) {
             console.warn(`Duplicate session detected: ${sessionKey}`);
@@ -444,23 +442,13 @@ export async function addSessions(
             continue;
           }
 
-          if (availableMeetings.length === 0) {
-            throw new Error('No available meetings left to schedule sessions.');
-          }
-
-          const meeting = availableMeetings.pop();
-          if (!meeting) {
-            console.warn('No more available meetings');
-            break;
-          }
-
+          // Create session without requiring a meeting link
           const { data: session, error } = await supabase
             .from('Sessions')
             .insert({
               date: sessionStartTime.toISOString(),
               student_id: student.id,
               tutor_id: tutor.id,
-              meeting_id: meeting.id,
               status: 'Active',
               summary: enrollment.summary,
             })

@@ -123,15 +123,21 @@ export async function getTutorStudents(tutorId: string) {
 
 
 
-export async function rescheduleSession(sessionId: string, newDate: string) {
+export async function rescheduleSession(sessionId: string, newDate: any) {
+  console.log(sessionId)
   const { data, error } = await supabase
-    .from('sessions')
+    .from('Sessions')
     .update({ date: newDate })
     .eq('id', sessionId)
+    .select('*')
     .single()
 
   if (error) throw error
-  return data
+  if (data) {
+    return data[0];
+  }
+
+  console.log(data)
 }
 
 

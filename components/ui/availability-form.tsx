@@ -36,10 +36,10 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
                 ...availabilityList,
                 { day: selectedDay, startTime: selectedStartTime, endTime: selectedEndTime },
             ];
-            setAvailabilityList(updatedList); // Use the prop function to set the updated list
-            setSelectedDay(''); // Reset the selected day
-            setSelectedStartTime(''); // Reset the selected start time
-            setSelectedEndTime(''); // Reset the selected end time
+            setAvailabilityList(updatedList);
+            setSelectedDay('');
+            setSelectedStartTime('');
+            setSelectedEndTime('');
         }
     };
 
@@ -104,7 +104,7 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
             <div className="mt-4">
                 <Label>Availability List:</Label>
                 <ul className="list-disc pl-5">
-                    {availabilityList.map((availability, index) => (
+                    {availabilityList?.map((availability, index) => (
                         <li key={index} className="flex justify-between">
                             {availability.day} from {formatTime(availability.startTime)} to {formatTime(availability.endTime)}
                             <Button

@@ -13,7 +13,7 @@ import {
   Calendar, 
   Bell, 
   Home, 
-  HelpCircle, 
+  CirclePlus, 
   Settings, 
   Compass, 
   HelpCircleIcon, 
@@ -133,6 +133,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         title: "All Students",
         href: "/dashboard/all-students",
         icon: <Users className="h-5 w-5" />,
+    },
+    {
+        title: "Migrate Profiles",
+        href: "/dashboard/migrate",
+        icon: <CirclePlus className="h-5 w-5" />,
     },
   ]
 

@@ -13,6 +13,7 @@ import { Enrollment, Profile, Event } from '@/types';
 import toast from "react-hot-toast";
 import AvailabilityFormat from '@/components/student/AvailabilityFormat'
 import AvailabilityForm from '@/components/ui/availability-form'
+import { formatDate } from '@/lib/utils'
 
 const EnrollmentList = () => {
     const supabase = createClientComponentClient();
@@ -196,6 +197,8 @@ const EnrollmentList = () => {
         });
     };
 
+    
+
     return (
         <main className="p-8">
             <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
@@ -316,12 +319,12 @@ const EnrollmentList = () => {
                                 <TableRow key={enrollment.id}>
                                     <TableCell>{enrollment.student?.firstName} {enrollment.student?.lastName}</TableCell>
                                     <TableCell>{enrollment.tutor?.firstName} {enrollment.tutor?.lastName}</TableCell>
-                                    <TableCell>
+                                    <TableCell className='colspan-[40px]'>
                                         <AvailabilityFormat availability={enrollment.availability}/>
                                     </TableCell>
                                     <TableCell>{enrollment.summary}</TableCell>
-                                    <TableCell>{enrollment.startDate}</TableCell>
-                                    <TableCell>{enrollment.endDate}</TableCell>
+                                    <TableCell>{formatDate(enrollment.endDate)}</TableCell>
+                                    <TableCell>{formatDate(enrollment.endDate)}</TableCell>
                                     <TableCell>
                                         <Button variant="ghost" size="icon" onClick={() => { setSelectedEnrollment(enrollment); setIsEditModalOpen(true); }}>
                                             <Edit className="h-4 w-4" />
@@ -408,8 +411,8 @@ const EnrollmentList = () => {
                 </div>
 
                 <AvailabilityForm
-                    availabilityList={selectedEnrollment?.availability}
-                    setAvailabilityList={(availability) => handleInputChange({ target: { name: 'availability', availability } } as any)}
+                    availabilityList={selectedEnrollment?.availability || []}  // Default to empty array if undefined
+                    setAvailabilityList={(availability) => handleInputChange({ target: { name: 'availability', value: availability } } as any)}
                 />
 
                 <div className="grid grid-cols-4 items-center gap-4">

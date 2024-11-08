@@ -70,6 +70,10 @@ export async function rescheduleSession(sessionId: string, newDate: string, stud
       throw sessionError;
     }
 
+    if (sessionData) {
+      return sessionData[0];
+    }
+
     // Create a notification for the admin
     const { error: notificationError } = await supabase
       .from('Notifications')
@@ -182,21 +186,3 @@ export async function getStudentProgress(studentId: string) {
   }
 }
 
-export async function requestSessionReschedule(sessionId: string, newDate: string) {
-  try {
-    const { data, error } = await supabase
-      .from('reschedule_requests')
-      .insert({
-        session_id: sessionId,
-        requested_date: newDate,
-        status: 'PENDING'
-      })
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error requesting session reschedule:', error)
-    throw error
-  }
-}

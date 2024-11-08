@@ -12,6 +12,7 @@ import { getTutorSessions, rescheduleSession } from '@/lib/actions/tutor.actions
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Session, Profile } from '@/types'
 import { formatSessionDate } from '@/lib/utils'
+import toast from "react-hot-toast";
 
 const StudentDashboard = () => {
   const supabase = createClientComponentClient();
@@ -26,6 +27,10 @@ const StudentDashboard = () => {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(()=>{
+    console.log(isDialogOpen)
+  },[isDialogOpen])
 
   useEffect(() => {
     const getUserData = async () => {
@@ -80,23 +85,29 @@ const StudentDashboard = () => {
   };
 
   const handleReschedule = async (sessionId: string, newDate: string) => {
-    if (!profile || !profile.id) {
-      console.error('Cannot reschedule: Student profile not loaded');
-      // You might want to show an error message to the user here
-      return;
-    }
-
     try {
-      await rescheduleSession(sessionId, newDate);
+      const updatedSession = await rescheduleSession(sessionId, newDate);
+
+        if (updatedSession) {
+          setSessions(paginatedSessions.map((e:Session) => 
+              e.id === updatedSession.id 
+              ? updatedSession 
+              : e) as Session[]);  // Explicitly cast as Enrollment[]
+      }
       setSelectedSession(null);
       setIsDialogOpen(false);
+      toast.success('Enrollment updated successfully');
       // You might want to show a success message to the user here
       console.log('Reschedule request submitted successfully');
+
+
     } catch (error) {
       console.error('Error requesting session reschedule:', error);
       // You might want to show an error message to the user here
     }
   };
+
+
 
   const paginatedSessions = filteredSessions.slice(
     (currentPage - 1) * rowsPerPage,

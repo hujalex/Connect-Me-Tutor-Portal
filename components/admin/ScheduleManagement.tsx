@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Circle} from 'lucide-react'
 import { 
   getAllSessions, 
   rescheduleSession, 
@@ -134,59 +135,77 @@ const Schedule = () => {
     try {
       const weekStart = startOfWeek(currentWeek);
       const weekEnd = endOfWeek(currentWeek);
-      console.log(weekStart, weekEnd);
-  
-      const now = new Date();
-  
-      // Filter available meetings based on session status and time
-      const availableMeetings = meetings.filter(meeting => 
-        !sessions.some(session => {
-          const sessionEndTime = new Date(session.date);
-          sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
-          return (session.status === 'Complete' || sessionEndTime < now) && session.meetingId === meeting.id;
-        })
-      );
-  
-      // Filter out existing sessions for the current week
-      const existingSessionsInWeek = sessions.filter(session => {
-        const sessionDate = new Date(session.date);
-        return sessionDate >= weekStart && sessionDate <= weekEnd;
-      });
-  
-      // Create a map of existing sessions for quick lookup
-      const existingSessionMap = new Map();
-      existingSessionsInWeek.forEach(session => {
-        const sessionDate = new Date(session.date);
-        const key = `${session.student?.id}-${session.tutor?.id}-${isValid(sessionDate) ? format(sessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
-        existingSessionMap.set(key, session);
-      });
-  
-      // Call addSessions function to create new sessions
+      
+      // Create sessions for all enrollments without checking meeting availability
       const newSessions = await addSessions(
         weekStart.toISOString(), 
         weekEnd.toISOString(), 
-        enrollments, 
-        availableMeetings
+        enrollments
       );
-  
-      // Filter out any duplicate sessions
+
+      if (!newSessions) {
+        throw new Error('No sessions were created');
+      }
+
+      // Filter out duplicates
+      const existingSessionMap = new Map();
+      sessions.forEach(session => {
+        if (session?.date) {  // Add null check for date
+          const sessionDate = new Date(session.date);
+          const key = `${session.student?.id}-${session.tutor?.id}-${isValid(sessionDate) ? format(sessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
+          existingSessionMap.set(key, session);
+        }
+      });
+
       const uniqueNewSessions = newSessions.filter(newSession => {
-        const newSessionDate = new Date(newSession?.date);
+        if (!newSession?.date) return false;  // Skip sessions without dates
+        const newSessionDate = new Date(newSession.date);
         const key = `${newSession?.student?.id}-${newSession?.tutor?.id}-${isValid(newSessionDate) ? format(newSessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
         return !existingSessionMap.has(key);
       });
-  
-      console.log(enrollments);
-      console.log(availableMeetings);
-      console.log(uniqueNewSessions);
-  
-      // Update sessions state with the unique newly created sessions
+
       setSessions(prevSessions => [...prevSessions, ...uniqueNewSessions]);
       toast.success(`${uniqueNewSessions.length} new sessions added successfully`);
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);
     }
+  };
+
+  // Check if a meeting is available (not used in any complete/past session)
+  const isMeetingAvailable = (meetingId: string) => {
+    try {
+      const now = new Date();
+      return !sessions.some(session => {
+        // Skip sessions without dates or meeting IDs
+        if (!session?.date || !session?.meetingId) return false;
+        
+        try {
+          const sessionEndTime = new Date(session.date);
+          sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
+          return (session.status === 'Complete' || sessionEndTime < now) && session.meetingId === meetingId;
+        } catch (error) {
+          console.error("Error processing session date:", error);
+          return false;
+        }
+      });
+    } catch (error) {
+      console.error("Error checking meeting availability:", error);
+      return true; // Default to available if there's an error
+    }
+  };
+
+  // Filter sessions with valid dates for display
+  const getValidSessionsForDay = (day: Date) => {
+    return sessions.filter(session => {
+      if (!session?.date) return false;
+      try {
+        return format(parseISO(session.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+      } catch (error) {
+        console.error("Error filtering session:", error);
+        return false;
+      }
+    });
   };
   
   const handleRemoveSession = async(sessionId:string) => {
@@ -256,9 +275,7 @@ const Schedule = () => {
               <div key={day.toISOString()} className="border rounded-lg px-2 py-3 bg-gray-50">
                 <h3 className="font-semibold mb-2 text-gray-700">{format(day, 'EEEE')}</h3>
                 <p className="text-sm mb-4 text-gray-500">{format(day, 'MMM d')}</p>
-                {sessions
-                  .filter(session => session?.date && format(parseISO(session?.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'))
-                  .map(session => (
+                {getValidSessionsForDay(day).map(session => (
                     <Card 
                       key={session.id} 
                       className={`mb-2 ${session.status === 'Complete' ? 'bg-green-500/10 border-2' : 'bg-white'}`}
@@ -268,12 +285,12 @@ const Schedule = () => {
                         <p className="text-xs font-medium">Student: {session?.student?.firstName}</p>
                         <p className="text-xs text-gray-500">{session.summary}</p>
                         <p className="text-xs text-gray-500">{getSessionTimespan(session.date)}</p>
-                        <p className="text-xs text-gray-500">
-                          Meeting ID: {session.meetingId || 'Not assigned'}
-                        </p>
                         {session.status && 
                           <p className={`text-xs inline font-medium px-3 py-1 rounded-lg bg-gray-100 mt-1 ${session.status === 'Complete' ? 'bg-green-200' : ''}`}>{session.status}</p>
                         }
+                        <div className={`text-xs font-medium px-3 py-1 rounded-lg mt-1 ${session.meetingId ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {session.meetingId ? 'Meeting Link' : 'No Meeting Link'}
+                        </div>
                         
                         <Button 
                           className="mt-2 w-full text-xs h-6" 
@@ -392,13 +409,16 @@ const Schedule = () => {
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {selectedSession?.meetingId}
+                      {selectedSession?.meetingId || 'Select a meeting'}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {meetings.map(meeting => (
-                      <SelectItem key={meeting.id} value={meeting.id}>
-                        {meeting.password} - {meeting.id}
+                      <SelectItem key={meeting.id} value={meeting.id} className="flex items-center justify-between">
+                        <span>{meeting.password} - {meeting.id}</span>
+                        <Circle 
+                          className={`w-2 h-2 ml-2 ${isMeetingAvailable(meeting.id) ? 'text-green-500' : 'text-red-500'} fill-current`}
+                        />
                       </SelectItem>
                     ))}
                   </SelectContent>

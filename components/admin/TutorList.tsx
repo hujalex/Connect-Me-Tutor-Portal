@@ -155,11 +155,11 @@ const TutorList = () => {
         setIsModalOpen(false);
         setTutors(prevTutors => [...prevTutors, addedTutor]);
 
-        toast.success('Successfully added student.')
+        toast.success('Successfully added tutor.')
     
         // Reset form
         setNewTutor({
-            role: 'Student',
+            role: 'Tutor',
             firstName: '',
             lastName: '',
             dateOfBirth: '',
@@ -176,8 +176,8 @@ const TutorList = () => {
         });
       }
     } catch (error) {
-      console.error('Error adding student:', error);
-      toast.error('Failed to add student.')
+      console.error('Error adding tutor:', error);
+      toast.error('Failed to add tutor')
     }
   };
 
@@ -186,12 +186,12 @@ const TutorList = () => {
       try {
         const data = await deactivateUser(selectedTutorId); // Call deactivateUser function with studentId
         if (data) {
-            toast.success('Student deactivated successfully');
+            toast.success('Tutor deactivated successfully');
             setIsDeactivateModalOpen(false);
             setSelectedTutorId(null);
         }
       } catch (error) {
-        toast.error('Failed to deactivate student');
+        toast.error('Failed to deactivate tutor');
       }
     }
   };
@@ -201,7 +201,7 @@ const TutorList = () => {
       try {
         const data = await reactivateUser(selectedTutorId); // Call deactivateUser function with studentId
         if (data) {
-            toast.success('Student reactivated successfully');
+            toast.success('Tutor reactivated successfully');
             setIsReactivateModalOpen(false);
             setSelectedTutorId(null);
         }
@@ -347,10 +347,10 @@ const TutorList = () => {
                     <DialogTitle>Select a Tutor to Deactivate</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
-                    <Label htmlFor="studentSelect" className="text-right">Tutor</Label>
+                    <Label htmlFor="tutorSelect" className="text-right">Tutor</Label>
                     <Select onValueChange={setSelectedTutorId} value={selectedTutorId || ''}>
-                      <SelectTrigger id="studentSelect">
-                        <SelectValue placeholder="Select a student" />
+                      <SelectTrigger id="tutorSelect">
+                        <SelectValue placeholder="Select a tutor" />
                       </SelectTrigger>
                       <SelectContent>
                         {tutors.map((tutor) => (
@@ -378,10 +378,10 @@ const TutorList = () => {
                     <DialogTitle>Select a Tutor to Reactivate</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
-                    <Label htmlFor="studentSelect" className="text-right">Tutor</Label>
+                    <Label htmlFor="tutorSelect" className="text-right">Tutor</Label>
                     <Select onValueChange={setSelectedTutorId} value={selectedTutorId || ''}>
-                      <SelectTrigger id="studentSelect">
-                        <SelectValue placeholder="Select a student" />
+                      <SelectTrigger id="tutorSelect">
+                        <SelectValue placeholder="Select a tutor" />
                       </SelectTrigger>
                       <SelectContent>
                         {tutors.map((tutor) => (
@@ -407,7 +407,7 @@ const TutorList = () => {
               <TableRow>
                 <TableHead>Status</TableHead>
                 <TableHead>Start Date</TableHead>
-                <TableHead>Student Name</TableHead>
+                <TableHead>Tutor Name</TableHead>
                 <TableHead>Availability</TableHead>
                 <TableHead>Subjects Teaching </TableHead>
                 <TableHead>Email</TableHead>
