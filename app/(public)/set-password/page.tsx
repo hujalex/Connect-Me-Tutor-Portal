@@ -47,9 +47,9 @@ export default function ResetPassword() {
   const supabase = createClientComponentClient();
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("code");
-  console.log(token);
+  //   const searchParams = useSearchParams();
+  //   const token = searchParams.get("code");
+  //   console.log(token);
 
   const [data, setData] = useState<{
     password: string;
