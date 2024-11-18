@@ -1,25 +1,39 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Profile, Session, Notification, Event, Enrollment, Meeting } from '@/types'
-import { getProfileWithProfileId } from './user.actions'
-import { addDays, format, parse, parseISO, isBefore, isAfter, setHours, setMinutes } from 'date-fns'; // Only use date-fns
-
-
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  Profile,
+  Session,
+  Notification,
+  Event,
+  Enrollment,
+  Meeting,
+} from "@/types";
+import { getProfileWithProfileId } from "./user.actions";
+import {
+  addDays,
+  format,
+  parse,
+  parseISO,
+  isBefore,
+  isAfter,
+  setHours,
+  setMinutes,
+} from "date-fns"; // Only use date-fns
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
-
 /* PROFILES */
-export async function getAllProfiles(role:'Student'|'Tutor'|'Admin') {
+export async function getAllProfiles(role: "Student" | "Tutor" | "Admin") {
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .select(`
+      .from("Profiles")
+      .select(
+        `
         id,
         created_at,
         role,
@@ -37,111 +51,114 @@ export async function getAllProfiles(role:'Student'|'Tutor'|'Admin') {
         timezone,
         subjects_of_interest,
         status
-      `)
-      .eq("role",role);
+      `
+      )
+      .eq("role", role);
 
     if (error) {
-      console.error('Error fetching profile in Admin Actions:', error.message);
-      console.error('Error details:', error);
+      console.error("Error fetching profile in Admin Actions:", error.message);
+      console.error("Error details:", error);
       return null;
     }
 
     if (!data) {
-      console.log('No profiles found');
+      console.log("No profiles found");
       return null;
     }
 
-  // Mapping the fetched data to the Profile object
-  const userProfiles: Profile[] = data.map((profile: any) => ({
-    id: profile.id,
-    createdAt: profile.created_at,
-    role: profile.role,
-    userId: profile.user_id,
-    firstName: profile.first_name,
-    lastName: profile.last_name,
-    dateOfBirth: profile.date_of_birth,
-    startDate: profile.start_date,
-    availability: profile.availability,
-    email: profile.email,
-    parentName: profile.parent_name,
-    parentPhone: profile.parent_phone,
-    parentEmail: profile.parent_email,
-    tutorIds: profile.tutor_ids,
-    timeZone: profile.timezone,
-    subjectsOfInterest: profile.subjects_of_interest,
-    status: profile.status,
-  }));
+    // Mapping the fetched data to the Profile object
+    const userProfiles: Profile[] = data.map((profile: any) => ({
+      id: profile.id,
+      createdAt: profile.created_at,
+      role: profile.role,
+      userId: profile.user_id,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      dateOfBirth: profile.date_of_birth,
+      startDate: profile.start_date,
+      availability: profile.availability,
+      email: profile.email,
+      parentName: profile.parent_name,
+      parentPhone: profile.parent_phone,
+      parentEmail: profile.parent_email,
+      tutorIds: profile.tutor_ids,
+      timeZone: profile.timezone,
+      subjectsOfInterest: profile.subjects_of_interest,
+      status: profile.status,
+    }));
 
-
-    console.log('Mapped profile data:', userProfiles);
+    console.log("Mapped profile data:", userProfiles);
     return userProfiles;
   } catch (error) {
-    console.error('Unexpected error in getProfile:', error);
+    console.error("Unexpected error in getProfile:", error);
     return null;
   }
 }
 
-export const addStudent = async (studentData: Partial<Profile>): Promise<Profile> => {
+export const addStudent = async (
+  studentData: Partial<Profile>
+): Promise<Profile> => {
   const supabase = createClientComponentClient();
 
   try {
-    console.log(studentData)
+    console.log(studentData);
     if (!studentData.email) {
-      throw new Error('Email is required to create a student profile');
+      throw new Error("Email is required to create a student profile");
     }
 
-    const tempPassword = studentData.lastName || studentData.email + studentData.startDate
+    const tempPassword =
+      studentData.lastName || studentData.email + studentData.startDate;
 
-    console.log(tempPassword,'PASSWORD')
+    console.log(tempPassword, "PASSWORD");
 
-    const userId = await createUser(studentData.email,tempPassword)
+    const userId = await createUser(studentData.email, tempPassword);
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
-      .from('Profiles')
-      .select('user_id')
-      .eq('email', studentData.email)
+      .from("Profiles")
+      .select("user_id")
+      .eq("email", studentData.email)
       .single();
 
-    if (userCheckError && userCheckError.code !== 'PGRST116') {
+    if (userCheckError && userCheckError.code !== "PGRST116") {
       // PGRST116 means no rows returned, which is what we want
       throw userCheckError;
     }
 
     if (existingUser) {
-      throw new Error('A user with this email already exists');
+      throw new Error("A user with this email already exists");
     }
 
     // Create the student profile without id and createdAt
     const newStudentProfile = {
       user_id: userId,
-      role: 'Student',
-      first_name: studentData.firstName || '',
-      last_name: studentData.lastName || '',
-      date_of_birth: studentData.dateOfBirth || '',
+      role: "Student",
+      first_name: studentData.firstName || "",
+      last_name: studentData.lastName || "",
+      date_of_birth: studentData.dateOfBirth || "",
       start_date: studentData.startDate || new Date().toISOString(),
       availability: studentData.availability || [],
       email: studentData.email,
-      parent_name: studentData.parentName || '',
-      parent_phone: studentData.parentPhone || '',
-      parent_email: studentData.parentEmail || '',
-      timezone: studentData.timeZone || '',
+      parent_name: studentData.parentName || "",
+      parent_phone: studentData.parentPhone || "",
+      parent_email: studentData.parentEmail || "",
+      timezone: studentData.timeZone || "",
       subjects_of_interest: studentData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
-      status: 'Active',
+      status: "Active",
     };
 
     // Add student profile to the database
     const { data: profileData, error: profileError } = await supabase
-      .from('Profiles') // Ensure 'profiles' is correctly cased
+      .from("Profiles") // Ensure 'profiles' is correctly cased
       .insert(newStudentProfile)
-      .select('*');
+      .select("*");
 
     if (profileError) throw profileError;
 
     // Ensure profileData is defined and cast it to the correct type
     if (!profileData) {
-      throw new Error('Profile data not returned after insertion');
+      throw new Error("Profile data not returned after insertion");
     }
 
     // Type assertion to ensure profileData is of type Profile
@@ -168,67 +185,69 @@ export const addStudent = async (studentData: Partial<Profile>): Promise<Profile
       status: createdProfile.status,
     };
   } catch (error) {
-    console.error('Error adding student:', error);
+    console.error("Error adding student:", error);
     throw error;
   }
 };
 
-export const addTutor = async (tutorData: Partial<Profile>): Promise<Profile> => {
-
+export const addTutor = async (
+  tutorData: Partial<Profile>
+): Promise<Profile> => {
   const supabase = createClientComponentClient();
   try {
-    console.log(tutorData)
+    console.log(tutorData);
     if (!tutorData.email) {
-      throw new Error('Email is required to create a student profile');
+      throw new Error("Email is required to create a student profile");
     }
 
-    const tempPassword = tutorData.lastName || tutorData.email + tutorData.startDate
+    const tempPassword =
+      tutorData.lastName || tutorData.email + tutorData.startDate;
 
-    const userId = await createUser(tutorData.email,tempPassword)
+    const userId = await createUser(tutorData.email, tempPassword);
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
-      .from('Profiles')
-      .select('user_id')
-      .eq('email', tutorData.email)
+      .from("Profiles")
+      .select("user_id")
+      .eq("email", tutorData.email)
       .single();
 
-    if (userCheckError && userCheckError.code !== 'PGRST116') {
+    if (userCheckError && userCheckError.code !== "PGRST116") {
       // PGRST116 means no rows returned, which is what we want
       throw userCheckError;
     }
 
     if (existingUser) {
-      throw new Error('A user with this email already exists');
+      throw new Error("A user with this email already exists");
     }
 
     // Create the student profile without id and createdAt
     const newTutorProfile = {
       user_id: userId,
-      role: 'Tutor',
-      first_name: tutorData.firstName || '',
-      last_name: tutorData.lastName || '',
-      date_of_birth: tutorData.dateOfBirth || '',
+      role: "Tutor",
+      first_name: tutorData.firstName || "",
+      last_name: tutorData.lastName || "",
+      date_of_birth: tutorData.dateOfBirth || "",
       start_date: tutorData.startDate || new Date().toISOString(),
       availability: tutorData.availability || [],
       email: tutorData.email,
-      timezone: tutorData.timeZone || '',
+      timezone: tutorData.timeZone || "",
       subjects_of_interest: tutorData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
-      status: 'Active',
+      status: "Active",
     };
 
     // Add tutor profile to the database
     const { data: profileData, error: profileError } = await supabase
-      .from('Profiles') // Ensure 'profiles' is correctly cased
+      .from("Profiles") // Ensure 'profiles' is correctly cased
       .insert(newTutorProfile)
-      .select('*');
+      .select("*");
 
     if (profileError) throw profileError;
 
     // Ensure profileData is defined and cast it to the correct type
     if (!profileData) {
-      throw new Error('Profile data not returned after insertion');
+      throw new Error("Profile data not returned after insertion");
     }
 
     // Type assertion to ensure profileData is of type Profile
@@ -255,7 +274,7 @@ export const addTutor = async (tutorData: Partial<Profile>): Promise<Profile> =>
       status: createdProfile.status,
     };
   } catch (error) {
-    console.error('Error adding student:', error);
+    console.error("Error adding student:", error);
     throw error;
   }
 };
@@ -263,76 +282,82 @@ export const addTutor = async (tutorData: Partial<Profile>): Promise<Profile> =>
 export async function deactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .update({ status: 'Inactive' })
-      .eq('id', profileId)
-      .select('*')
-      .single()
+      .from("Profiles")
+      .update({ status: "Inactive" })
+      .eq("id", profileId)
+      .select("*")
+      .single();
 
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return data;
   } catch (error) {
-    console.error('Error deactivating user:', error)
-    throw error
+    console.error("Error deactivating user:", error);
+    throw error;
   }
 }
 
 export async function reactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .update({ status: 'Active' })
-      .eq('id', profileId)
-      .select('*')
-      .single()
+      .from("Profiles")
+      .update({ status: "Active" })
+      .eq("id", profileId)
+      .select("*")
+      .single();
 
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return data;
   } catch (error) {
-    console.error('Error reactivating user:', error)
-    throw error
+    console.error("Error reactivating user:", error);
+    throw error;
   }
 }
 
 /* USERS */
-export const createUser = async (email: string,password:string): Promise<string | null> => {
+export const createUser = async (
+  email: string,
+  password: string
+): Promise<string | null> => {
   try {
     // Call signUp to create a new user
     const { data, error } = await supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}`,
+      },
     });
 
     if (error) {
       throw new Error(`Error creating user: ${error.message}`);
     }
 
-    console.log('User created successfully:', data);
+    console.log("User created successfully:", data);
 
     // Return the user ID
     return data?.user?.id || null; // Use optional chaining to safely access id
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error("Error creating user:", error);
     return null; // Return null if there was an error
   }
 };
 
-
 /* SESSIONS */
 export async function createSession(sessionData: any) {
   const { data, error } = await supabase
-    .from('Sessions')
+    .from("Sessions")
     .insert(sessionData)
-    .single()
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
-export async function getAllSessions(startDate?: string, endDate?: string): Promise<Session[]> {
-  let query = supabase
-    .from('Sessions')
-    .select(`
+export async function getAllSessions(
+  startDate?: string,
+  endDate?: string
+): Promise<Session[]> {
+  let query = supabase.from("Sessions").select(`
       id,
       created_at,
       environment,
@@ -342,53 +367,55 @@ export async function getAllSessions(startDate?: string, endDate?: string): Prom
       summary,
       meeting_id,
       status
-    `)
+    `);
 
   if (startDate) {
-    query = query.gte('date', startDate);
+    query = query.gte("date", startDate);
   }
   if (endDate) {
-    query = query.lte('date', endDate);
+    query = query.lte("date", endDate);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching student sessions:', error.message);
+    console.error("Error fetching student sessions:", error.message);
     throw error;
   }
 
   // Map the result to the Session interface
-  const sessions: Session[] = await Promise.all(data.map(async (session: any) => ({
-    id: session.id,
-    createdAt: session.created_at,
-    environment: session.environment,
-    date: session.date,
-    summary: session.summary,
-    meetingId: session.meeting_id,
-    student: await getProfileWithProfileId(session.student_id),
-    tutor: await getProfileWithProfileId(session.tutor_id),
-    status:session.status
-  })));
+  const sessions: Session[] = await Promise.all(
+    data.map(async (session: any) => ({
+      id: session.id,
+      createdAt: session.created_at,
+      environment: session.environment,
+      date: session.date,
+      summary: session.summary,
+      meetingId: session.meeting_id,
+      student: await getProfileWithProfileId(session.student_id),
+      tutor: await getProfileWithProfileId(session.tutor_id),
+      status: session.status,
+    }))
+  );
 
   return sessions;
 }
 
 export async function rescheduleSession(sessionId: string, newDate: string) {
   const { data, error } = await supabase
-    .from('Sessions')
+    .from("Sessions")
     .update({ date: newDate })
-    .eq('id', sessionId)
-    .single()
+    .eq("id", sessionId)
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export async function addSessions(
   weekStartString: string,
   weekEndString: string,
-  enrollments: Enrollment[],
+  enrollments: Enrollment[]
 ) {
   const weekStart = parseISO(weekStartString);
   const weekEnd = parseISO(weekEndString);
@@ -403,7 +430,7 @@ export async function addSessions(
     for (const avail of availability) {
       const { day, startTime, endTime } = avail;
 
-      if (!startTime || startTime.includes('-')) {
+      if (!startTime || startTime.includes("-")) {
         console.error(`Invalid time format for availability: ${startTime}`);
         continue;
       }
@@ -411,31 +438,58 @@ export async function addSessions(
       const [availStart, availEnd] = [startTime, endTime];
 
       if (!availStart || !availEnd) {
-        console.error(`Invalid start or end time: start=${availStart}, end=${availEnd}`);
+        console.error(
+          `Invalid start or end time: start=${availStart}, end=${availEnd}`
+        );
         continue;
       }
 
       let sessionDate = new Date(weekStart);
       while (sessionDate <= weekEnd) {
-        if (format(sessionDate, 'EEEE').toLowerCase() === day.toLowerCase()) {
-          const availStartTime = parse(availStart.toLowerCase(), 'HH:mm', sessionDate);
-          const availEndTime = parse(availEnd.toLowerCase(), 'HH:mm', sessionDate);
+        if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
+          const availStartTime = parse(
+            availStart.toLowerCase(),
+            "HH:mm",
+            sessionDate
+          );
+          const availEndTime = parse(
+            availEnd.toLowerCase(),
+            "HH:mm",
+            sessionDate
+          );
 
-          if (isNaN(availStartTime.getTime()) || isNaN(availEndTime.getTime())) {
-            console.error(`Invalid parsed time: start=${availStart}, end=${availEnd}`);
+          if (
+            isNaN(availStartTime.getTime()) ||
+            isNaN(availEndTime.getTime())
+          ) {
+            console.error(
+              `Invalid parsed time: start=${availStart}, end=${availEnd}`
+            );
             break;
           }
 
-          const sessionStartTime = setMinutes(setHours(sessionDate, availStartTime.getHours()), availStartTime.getMinutes());
-          const sessionEndTime = setMinutes(setHours(sessionDate, availEndTime.getHours()), availEndTime.getMinutes());
+          const sessionStartTime = setMinutes(
+            setHours(sessionDate, availStartTime.getHours()),
+            availStartTime.getMinutes()
+          );
+          const sessionEndTime = setMinutes(
+            setHours(sessionDate, availEndTime.getHours()),
+            availEndTime.getMinutes()
+          );
 
-          if (isBefore(sessionStartTime, weekStart) || isAfter(sessionEndTime, weekEnd)) {
+          if (
+            isBefore(sessionStartTime, weekStart) ||
+            isAfter(sessionEndTime, weekEnd)
+          ) {
             sessionDate = addDays(sessionDate, 1);
             continue;
           }
 
           // Check for duplicates
-          const sessionKey = `${student.id}-${tutor.id}-${format(sessionStartTime, 'yyyy-MM-dd-HH:mm')}`;
+          const sessionKey = `${student.id}-${tutor.id}-${format(
+            sessionStartTime,
+            "yyyy-MM-dd-HH:mm"
+          )}`;
           if (scheduledSessions.has(sessionKey)) {
             console.warn(`Duplicate session detected: ${sessionKey}`);
             sessionDate = addDays(sessionDate, 1);
@@ -444,18 +498,18 @@ export async function addSessions(
 
           // Create session without requiring a meeting link
           const { data: session, error } = await supabase
-            .from('Sessions')
+            .from("Sessions")
             .insert({
               date: sessionStartTime.toISOString(),
               student_id: student.id,
               tutor_id: tutor.id,
-              status: 'Active',
+              status: "Active",
               summary: enrollment.summary,
             })
             .single();
 
           if (error) {
-            console.error('Error creating session:', error);
+            console.error("Error creating session:", error);
             continue;
           }
 
@@ -475,18 +529,18 @@ export async function updateSession(updatedSession: Session) {
   const { id, status, tutor, student, date, meetingId } = updatedSession;
 
   const { data, error } = await supabase
-    .from('Sessions')
+    .from("Sessions")
     .update({
       status: status,
       student_id: student?.id,
       tutor_id: tutor?.id,
       date: date,
-      meeting_id: meetingId
+      meeting_id: meetingId,
     })
-    .eq('id', id);
+    .eq("id", id);
 
   if (error) {
-    console.error('Error updating session:', error);
+    console.error("Error updating session:", error);
     return null;
   }
 
@@ -495,68 +549,65 @@ export async function updateSession(updatedSession: Session) {
   }
 }
 
-export async function removeSession(sessionId:string) {
+export async function removeSession(sessionId: string) {
   // Create a notification for the admin
   const { error: eventError } = await supabase
-  .from('Sessions')
-  .delete()
-  .eq('id',sessionId)
+    .from("Sessions")
+    .delete()
+    .eq("id", sessionId);
 
-if (eventError) {
-  throw eventError;
-}
+  if (eventError) {
+    throw eventError;
+  }
 }
 
 /* MEETINGS */
 export async function getMeetings(): Promise<Meeting[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase
-      .from('Meetings')
-      .select(`
+    const { data, error } = await supabase.from("Meetings").select(`
         id,
         link,
         meeting_id,
         password,
         created_at
-      `)
-    
+      `);
+
     // Check for errors and log them
     if (error) {
-      console.error('Error fetching event details:', error.message);
+      console.error("Error fetching event details:", error.message);
       return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
     }
 
     // Check if data exists
     if (!data) {
-      console.log('No events found:');
+      console.log("No events found:");
       return null; // Valid return
     }
 
     // Mapping the fetched data to the Notification object
-    const meetings: Meeting[] = await Promise.all(data.map(async (meeting: any) => ({
-      id: meeting.id,
-      meetingId:meeting.meeting_id,
-      password:meeting.password,
-      link:meeting.link,
-      createdAt:meeting.created_at
-    })));
+    const meetings: Meeting[] = await Promise.all(
+      data.map(async (meeting: any) => ({
+        id: meeting.id,
+        meetingId: meeting.meeting_id,
+        password: meeting.password,
+        link: meeting.link,
+        createdAt: meeting.created_at,
+      }))
+    );
 
     return meetings; // Return the array of notifications
   } catch (error) {
-    console.error('Unexpected error in getMeeting:', error);
+    console.error("Unexpected error in getMeeting:", error);
     return null; // Valid return
   }
 }
-
 
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase
-      .from('Enrollments')
-      .select(`
+    const { data, error } = await supabase.from("Enrollments").select(`
         id,
         created_at,
         summary,
@@ -565,44 +616,46 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         start_date,
         end_date,
         availability
-      `)
-    
+      `);
+
     // Check for errors and log them
     if (error) {
-      console.error('Error fetching event details:', error.message);
+      console.error("Error fetching event details:", error.message);
       return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
     }
 
     // Check if data exists
     if (!data) {
-      console.log('No events found:');
+      console.log("No events found:");
       return null; // Valid return
     }
 
     // Mapping the fetched data to the Notification object
-    const enrollments: Enrollment[] = await Promise.all(data.map(async (enrollment: any) => ({
-      createdAt: enrollment.created_at,
-      id: enrollment.id,
-      summary: enrollment.summary,
-      student: await getProfileWithProfileId(enrollment.student_id),
-      tutor: await getProfileWithProfileId(enrollment.tutor_id),
-      startDate:enrollment.start_date,
-      endDate:enrollment.end_date,
-      availability: enrollment.availability
-    })));
+    const enrollments: Enrollment[] = await Promise.all(
+      data.map(async (enrollment: any) => ({
+        createdAt: enrollment.created_at,
+        id: enrollment.id,
+        summary: enrollment.summary,
+        student: await getProfileWithProfileId(enrollment.student_id),
+        tutor: await getProfileWithProfileId(enrollment.tutor_id),
+        startDate: enrollment.start_date,
+        endDate: enrollment.end_date,
+        availability: enrollment.availability,
+      }))
+    );
 
-    console.log(data[0].student_id)
+    console.log(data[0].student_id);
 
     return enrollments; // Return the array of enrollments
   } catch (error) {
-    console.error('Unexpected error in getMeeting:', error);
-    return null
+    console.error("Unexpected error in getMeeting:", error);
+    return null;
   }
 }
 
 export const updateEnrollment = async (enrollment: Enrollment) => {
   const { data, error } = await supabase
-    .from('Enrollments')
+    .from("Enrollments")
     .update({
       student_id: enrollment.student?.id,
       tutor_id: enrollment.tutor?.id,
@@ -611,23 +664,24 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       end_date: enrollment.endDate,
       availability: enrollment.availability,
     })
-    .eq('id', enrollment.id)
-    .select('*')  // Ensure it selects all columns
-    .single();    // Ensure only one object is returned
+    .eq("id", enrollment.id)
+    .select("*") // Ensure it selects all columns
+    .single(); // Ensure only one object is returned
 
   if (error) {
-    console.error('Error updating enrollment:', error);
+    console.error("Error updating enrollment:", error);
     throw error;
   }
 
   return data;
 };
 
-
-export const addEnrollment = async (enrollment: Omit<Enrollment, 'id' | 'createdAt'>) => {
-  console.log(enrollment)
+export const addEnrollment = async (
+  enrollment: Omit<Enrollment, "id" | "createdAt">
+) => {
+  console.log(enrollment);
   const { data, error } = await supabase
-    .from('Enrollments')
+    .from("Enrollments")
     .insert({
       student_id: enrollment.student?.id,
       tutor_id: enrollment.tutor?.id,
@@ -637,14 +691,14 @@ export const addEnrollment = async (enrollment: Omit<Enrollment, 'id' | 'created
       availability: enrollment.availability,
     })
     .select(`*`)
-    .single()
+    .single();
 
   if (error) {
-    console.error('Error adding enrollment:', error);
+    console.error("Error adding enrollment:", error);
     throw error;
   }
 
-  console.log(data)
+  console.log(data);
 
   return {
     createdAt: data.created_at,
@@ -652,98 +706,113 @@ export const addEnrollment = async (enrollment: Omit<Enrollment, 'id' | 'created
     summary: data.summary,
     student: await getProfileWithProfileId(data.student_id),
     tutor: await getProfileWithProfileId(data.tutor_id),
-    startDate:data.start_date,
-    endDate:data.end_date,
-    availability: data.availability
-  }
+    startDate: data.start_date,
+    endDate: data.end_date,
+    availability: data.availability,
+  };
 };
 
 export const removeEnrollment = async (enrollmentId: string) => {
   const { data, error } = await supabase
-    .from('Enrollments')
+    .from("Enrollments")
     .delete()
-    .eq('id', enrollmentId);
+    .eq("id", enrollmentId);
 
   if (error) {
-    console.error('Error removing enrollment:', error);
+    console.error("Error removing enrollment:", error);
     throw error;
   }
 
   return data;
 };
 
-
 /* EVENTS */
-export async function getEvents(tutorId:string): Promise<Event[] | null> {
+export async function getEvents(tutorId: string): Promise<Event[] | null> {
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
-      .from('Events')
-      .select(`
+      .from("Events")
+      .select(
+        `
         id,
         created_at,
         date,
         summary,
         tutor_id,
         hours
-      `)
-      .eq("tutor_id",tutorId)
-    
+      `
+      )
+      .eq("tutor_id", tutorId);
+
     // Check for errors and log them
     if (error) {
-      console.error('Error fetching event details:', error.message);
+      console.error("Error fetching event details:", error.message);
       return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
     }
 
     // Check if data exists
     if (!data) {
-      console.log('No events found:');
+      console.log("No events found:");
       return null; // Valid return
     }
 
     // Mapping the fetched data to the Notification object
-    const events: Event[] = await Promise.all(data.map(async (event: any) => ({
-      createdAt: event.created_at,
-      id: event.id,
-      summary: event.summary,
-      tutorId: event.tutor_id,
-      date:event.date,
-      hours:event.hours
-    })));
+    const events: Event[] = await Promise.all(
+      data.map(async (event: any) => ({
+        createdAt: event.created_at,
+        id: event.id,
+        summary: event.summary,
+        tutorId: event.tutor_id,
+        date: event.date,
+        hours: event.hours,
+      }))
+    );
 
     return events; // Return the array of notifications
   } catch (error) {
-    console.error('Unexpected error in getMeeting:', error);
+    console.error("Unexpected error in getMeeting:", error);
     return null; // Valid return
   }
 }
 
-export async function getEventsWithTutorMonth(tutorId:string, selectedMonth: string): Promise<Event[] | null> {
+export async function getEventsWithTutorMonth(
+  tutorId: string,
+  selectedMonth: string
+): Promise<Event[] | null> {
   try {
     // Fetch event details filtered by tutor IDs and selected month
     const { data, error } = await supabase
-      .from('Events')
-      .select(`
+      .from("Events")
+      .select(
+        `
         id,
         created_at,
         date,
         summary,
         tutor_id,
         hours
-      `)
-      .eq('tutor_id', tutorId) // Filter by tutor IDs
-      .gte('date', selectedMonth) // Filter events from the start of the selected month
-      .lt('date', new Date(new Date(selectedMonth).setMonth(new Date(selectedMonth).getMonth() + 1)).toISOString()); // Filter before the start of the next month
-    
+      `
+      )
+      .eq("tutor_id", tutorId) // Filter by tutor IDs
+      .gte("date", selectedMonth) // Filter events from the start of the selected month
+      .lt(
+        "date",
+        new Date(
+          new Date(selectedMonth).setMonth(
+            new Date(selectedMonth).getMonth() + 1
+          )
+        ).toISOString()
+      ); // Filter before the start of the next month
+
     // Check for errors and log them
     if (error) {
-      console.error('Error fetching event details:', error.message);
+      console.error("Error fetching event details:", error.message);
       return null;
     }
 
     // Check if data exists
     if (!data) {
-      console.log('No events found:');
+      console.log("No events found:");
       return null;
     }
 
@@ -754,52 +823,47 @@ export async function getEventsWithTutorMonth(tutorId:string, selectedMonth: str
       summary: event.summary,
       tutorId: event.tutor_id,
       date: event.date,
-      hours:event.hours
+      hours: event.hours,
     }));
 
     return events; // Return the array of events
   } catch (error) {
-    console.error('Unexpected error in getEventsWithTutorMonth:', error);
+    console.error("Unexpected error in getEventsWithTutorMonth:", error);
     return null;
   }
 }
 
-export async function createEvent(event:Event) {
-      // Create a notification for the admin
-      const { error: eventError } = await supabase
-      .from('Events')
-      .insert({
-        date: event.date,
-        summary:event.summary,
-        tutor_id:event.tutorId,
-        hours:event.hours
-      });
+export async function createEvent(event: Event) {
+  // Create a notification for the admin
+  const { error: eventError } = await supabase.from("Events").insert({
+    date: event.date,
+    summary: event.summary,
+    tutor_id: event.tutorId,
+    hours: event.hours,
+  });
 
-    if (eventError) {
-      throw eventError;
-    }
+  if (eventError) {
+    throw eventError;
+  }
 }
 
-export async function removeEvent(eventId:string) {
+export async function removeEvent(eventId: string) {
   // Create a notification for the admin
   const { error: eventError } = await supabase
-  .from('Events')
-  .delete()
-  .eq('id',eventId)
+    .from("Events")
+    .delete()
+    .eq("id", eventId);
 
-if (eventError) {
-  throw eventError;
+  if (eventError) {
+    throw eventError;
+  }
 }
-}
-
 
 /* NOTIFICATIONS */
 export async function getAllNotifications(): Promise<Notification[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase
-      .from('Notifications')
-      .select(`
+    const { data, error } = await supabase.from("Notifications").select(`
         id,
         created_at,
         session_id,
@@ -810,53 +874,58 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
         status,
         summary
       `);
-    
+
     // Check for errors and log them
     if (error) {
-      console.error('Error fetching notification details:', error.message);
+      console.error("Error fetching notification details:", error.message);
       return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
     }
 
     // Check if data exists
     if (!data) {
-      console.log('No notifications found:');
+      console.log("No notifications found:");
       return null; // Valid return
     }
 
     // Mapping the fetched data to the Notification object
-    const notifications: Notification[] = await Promise.all(data.map(async (notification: any) => ({
-      createdAt: notification.created_at,
-      id: notification.id,
-      summary: notification.summary,
-      sessionId: notification.session_id,
-      previousDate: notification.previous_date,
-      suggestedDate: notification.suggested_date,
-      student: await getProfileWithProfileId(notification.student_id),
-      tutor: await getProfileWithProfileId(notification.tutor_id),
-      status: notification.status
-    })));
+    const notifications: Notification[] = await Promise.all(
+      data.map(async (notification: any) => ({
+        createdAt: notification.created_at,
+        id: notification.id,
+        summary: notification.summary,
+        sessionId: notification.session_id,
+        previousDate: notification.previous_date,
+        suggestedDate: notification.suggested_date,
+        student: await getProfileWithProfileId(notification.student_id),
+        tutor: await getProfileWithProfileId(notification.tutor_id),
+        status: notification.status,
+      }))
+    );
 
     return notifications; // Return the array of notifications
   } catch (error) {
-    console.error('Unexpected error in getMeeting:', error);
+    console.error("Unexpected error in getMeeting:", error);
     return null; // Valid return
   }
 }
 
-export const updateNotification = async (notificationId: string, status: 'Active' | 'Resolved') => {
+export const updateNotification = async (
+  notificationId: string,
+  status: "Active" | "Resolved"
+) => {
   try {
-      const { data, error } = await supabase
-          .from('Notifications') // Adjust this table name to match your database
-          .update({ status: status }) // Update the status field
-          .eq('id', notificationId); // Assuming `id` is the primary key for the notifications table
+    const { data, error } = await supabase
+      .from("Notifications") // Adjust this table name to match your database
+      .update({ status: status }) // Update the status field
+      .eq("id", notificationId); // Assuming `id` is the primary key for the notifications table
 
-      if (error) {
-          throw error; // Handle the error as needed
-      }
+    if (error) {
+      throw error; // Handle the error as needed
+    }
 
-      return data; // Return the updated notification data or whatever is needed
+    return data; // Return the updated notification data or whatever is needed
   } catch (error) {
-      console.error('Error updating notification:', error);
-      throw new Error('Failed to update notification');
+    console.error("Error updating notification:", error);
+    throw new Error("Failed to update notification");
   }
 };
