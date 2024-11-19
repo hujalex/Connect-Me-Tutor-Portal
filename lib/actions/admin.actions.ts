@@ -21,6 +21,7 @@ import {
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
+import ResetPassword from "@/app/(public)/set-password/page";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -106,10 +107,7 @@ export const addStudent = async (
       throw new Error("Email is required to create a student profile");
     }
 
-    const tempPassword =
-      studentData.lastName || studentData.email + studentData.startDate;
-
-    console.log(tempPassword, "PASSWORD");
+    const tempPassword = await createPassword();
 
     const userId = await createUser(studentData.email, tempPassword);
 
@@ -200,9 +198,7 @@ export const addTutor = async (
       throw new Error("Email is required to create a student profile");
     }
 
-    const tempPassword =
-      tutorData.lastName || tutorData.email + tutorData.startDate;
-
+    const tempPassword = await createPassword();
     const userId = await createUser(tutorData.email, tempPassword);
 
     // Check if a user with this email already exists
@@ -929,3 +925,13 @@ export const updateNotification = async (
     throw new Error("Failed to update notification");
   }
 };
+
+export async function createPassword(): Promise<string> {
+  let password = "";
+
+  for (let i = 0; i < 10; ++i) {
+    password += Math.floor(Math.random() * 10);
+  }
+
+  return password;
+}
