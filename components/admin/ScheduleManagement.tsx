@@ -1,30 +1,55 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, parseISO, isAfter, isValid } from 'date-fns';
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  addWeeks,
+  subWeeks,
+  parseISO,
+  isAfter,
+  isValid,
+} from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Circle} from 'lucide-react'
-import { 
-  getAllSessions, 
-  rescheduleSession, 
-  getAllEnrollments, 
+import { Circle } from "lucide-react";
+import {
+  getAllSessions,
+  rescheduleSession,
+  getAllEnrollments,
   addSessions,
   updateSession,
   getMeetings,
   getAllProfiles,
-  removeSession
+  removeSession,
 } from "@/lib/actions/admin.actions";
-import {
-  getProfileWithProfileId
-} from '@/lib/actions/user.actions'
+import { getProfileWithProfileId } from "@/lib/actions/user.actions";
 import { toast } from "react-hot-toast";
-import { Session, Enrollment, Meeting, Profile } from '@/types';
-import { getSessionTimespan } from '@/lib/utils';
-import { ChevronRight, ChevronLeft, Calendar, GraduationCap, CircleUserRound } from 'lucide-react';
+import { Session, Enrollment, Meeting, Profile } from "@/types";
+import { getSessionTimespan } from "@/lib/utils";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Calendar,
+  GraduationCap,
+  CircleUserRound,
+} from "lucide-react";
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -43,7 +68,7 @@ const Schedule = () => {
     fetchMeetings();
     fetchStudents();
     fetchTutors();
-  },[currentWeek]);
+  }, [currentWeek]);
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -53,7 +78,10 @@ const Schedule = () => {
       const weekStartString = weekStart.toISOString();
       const weekEndString = weekEnd.toISOString();
 
-      const fetchedSessions = await getAllSessions(weekStartString, weekEndString);
+      const fetchedSessions = await getAllSessions(
+        weekStartString,
+        weekEndString
+      );
       setSessions(fetchedSessions);
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
@@ -65,12 +93,12 @@ const Schedule = () => {
 
   const fetchEnrollments = async () => {
     try {
-      console.log('ds')
+      console.log("ds");
       const fetchedEnrollments = await getAllEnrollments();
-      console.log(fetchedEnrollments)
-      console.log('dosajfksaf')
-      const validEnrollments = fetchedEnrollments?.filter(enrollment => {
-        console.log(enrollment.endDate)
+      console.log(fetchedEnrollments);
+      console.log("dosajfksaf");
+      const validEnrollments = fetchedEnrollments?.filter((enrollment) => {
+        console.log(enrollment.endDate);
         if (!enrollment.endDate) return true;
         return isAfter(parseISO(enrollment.endDate), new Date());
       });
@@ -97,7 +125,7 @@ const Schedule = () => {
 
   const fetchStudents = async () => {
     try {
-      const fetchedStudents = await getAllProfiles('Student');
+      const fetchedStudents = await getAllProfiles("Student");
       if (fetchedStudents) {
         setStudents(fetchedStudents);
       }
@@ -109,7 +137,7 @@ const Schedule = () => {
 
   const fetchTutors = async () => {
     try {
-      const fetchedTutors = await getAllProfiles('Tutor');
+      const fetchedTutors = await getAllProfiles("Tutor");
       if (fetchedTutors) {
         setTutors(fetchedTutors);
       }
@@ -135,37 +163,49 @@ const Schedule = () => {
     try {
       const weekStart = startOfWeek(currentWeek);
       const weekEnd = endOfWeek(currentWeek);
-      
+
       // Create sessions for all enrollments without checking meeting availability
       const newSessions = await addSessions(
-        weekStart.toISOString(), 
-        weekEnd.toISOString(), 
+        weekStart.toISOString(),
+        weekEnd.toISOString(),
         enrollments
       );
 
       if (!newSessions) {
-        throw new Error('No sessions were created');
+        throw new Error("No sessions were created");
       }
 
       // Filter out duplicates
+
       const existingSessionMap = new Map();
-      sessions.forEach(session => {
-        if (session?.date) {  // Add null check for date
+      sessions.forEach((session) => {
+        if (session?.date) {
+          // Add null check for date
           const sessionDate = new Date(session.date);
-          const key = `${session.student?.id}-${session.tutor?.id}-${isValid(sessionDate) ? format(sessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
+          const key = `${session.student?.id}-${session.tutor?.id}-${
+            isValid(sessionDate)
+              ? format(sessionDate, "yyyy-MM-dd-HH:mm")
+              : "invalid-date"
+          }`;
           existingSessionMap.set(key, session);
         }
       });
 
-      const uniqueNewSessions = newSessions.filter(newSession => {
-        if (!newSession?.date) return false;  // Skip sessions without dates
+      const uniqueNewSessions = newSessions.filter((newSession) => {
+        if (!newSession?.date) return false; // Skip sessions without dates
         const newSessionDate = new Date(newSession.date);
-        const key = `${newSession?.student?.id}-${newSession?.tutor?.id}-${isValid(newSessionDate) ? format(newSessionDate, 'yyyy-MM-dd-HH:mm') : 'invalid-date'}`;
+        const key = `${newSession?.student?.id}-${newSession?.tutor?.id}-${
+          isValid(newSessionDate)
+            ? format(newSessionDate, "yyyy-MM-dd-HH:mm")
+            : "invalid-date"
+        }`;
         return !existingSessionMap.has(key);
       });
 
-      setSessions(prevSessions => [...prevSessions, ...uniqueNewSessions]);
-      toast.success(`${uniqueNewSessions.length} new sessions added successfully`);
+      setSessions((prevSessions) => [...prevSessions, ...uniqueNewSessions]);
+      toast.success(
+        `${uniqueNewSessions.length} new sessions added successfully`
+      );
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);
@@ -176,14 +216,17 @@ const Schedule = () => {
   const isMeetingAvailable = (meetingId: string) => {
     try {
       const now = new Date();
-      return !sessions.some(session => {
+      return !sessions.some((session) => {
         // Skip sessions without dates or meeting IDs
         if (!session?.date || !session?.meetingId) return false;
-        
+
         try {
           const sessionEndTime = new Date(session.date);
           sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
-          return (session.status === 'Complete' || sessionEndTime < now) && session.meetingId === meetingId;
+          return (
+            (session.status === "Complete" || sessionEndTime < now) &&
+            session.meetingId === meetingId
+          );
         } catch (error) {
           console.error("Error processing session date:", error);
           return false;
@@ -197,27 +240,32 @@ const Schedule = () => {
 
   // Filter sessions with valid dates for display
   const getValidSessionsForDay = (day: Date) => {
-    return sessions.filter(session => {
+    return sessions.filter((session) => {
       if (!session?.date) return false;
       try {
-        return format(parseISO(session.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+        return (
+          format(parseISO(session.date), "yyyy-MM-dd") ===
+          format(day, "yyyy-MM-dd")
+        );
       } catch (error) {
         console.error("Error filtering session:", error);
         return false;
       }
     });
   };
-  
-  const handleRemoveSession = async(sessionId:string) => {
+
+  const handleRemoveSession = async (sessionId: string) => {
     try {
-      await removeSession(sessionId)
-      setSessions(prevSessions => prevSessions.filter(session => session.id !== sessionId));
-      toast.success("Session removed successfully")
+      await removeSession(sessionId);
+      setSessions((prevSessions) =>
+        prevSessions.filter((session) => session.id !== sessionId)
+      );
+      toast.success("Session removed successfully");
     } catch (error) {
-      console.error("Failed to remove session",error)
-      toast.error("Failed to remove session")
+      console.error("Failed to remove session", error);
+      toast.error("Failed to remove session");
     }
-  }
+  };
 
   const handleUpdateSession = async (updatedSession: Session) => {
     try {
@@ -233,36 +281,53 @@ const Schedule = () => {
 
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentWeek),
-    end: endOfWeek(currentWeek)
+    end: endOfWeek(currentWeek),
   });
 
-  const goToPreviousWeek = () => setCurrentWeek(prevWeek => subWeeks(prevWeek, 1));
-  const goToNextWeek = () => setCurrentWeek(prevWeek => addWeeks(prevWeek, 1));
+  const goToPreviousWeek = () =>
+    setCurrentWeek((prevWeek) => subWeeks(prevWeek, 1));
+  const goToNextWeek = () =>
+    setCurrentWeek((prevWeek) => addWeeks(prevWeek, 1));
 
   const getEnrollmentProgress = () => {
     const totalStudents = students.length;
-    const studentsThisWeek = new Set(sessions.map(session => session?.student?.id)).size;
+    const studentsThisWeek = new Set(
+      sessions.map((session) => session?.student?.id)
+    ).size;
     return { totalStudents, studentsThisWeek };
   };
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-left text-gray-800">Schedule</h1>
-      
+      <h1 className="text-3xl font-bold mb-6 text-left text-gray-800">
+        Schedule
+      </h1>
+
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex justify-between items-center mb-6">
-          <Button variant="outline" onClick={goToPreviousWeek} className="flex items-center">
+          <Button
+            variant="outline"
+            onClick={goToPreviousWeek}
+            className="flex items-center"
+          >
             <ChevronLeft className="w-5 h-5 mr-2" /> Previous Week
           </Button>
           <h2 className="text-xl font-semibold text-gray-700">
-            {format(weekDays[0], 'MMMM d, yyyy')} - {format(weekDays[6], 'MMMM d, yyyy')}
+            {format(weekDays[0], "MMMM d, yyyy")} -{" "}
+            {format(weekDays[6], "MMMM d, yyyy")}
           </h2>
-          <Button variant="outline" onClick={goToNextWeek} className="flex items-center">
+          <Button
+            variant="outline"
+            onClick={goToNextWeek}
+            className="flex items-center"
+          >
             Next Week <ChevronRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
-        
-        <Button onClick={handleUpdateWeek} className="mb-4">Update Week</Button>
+
+        <Button onClick={handleUpdateWeek} className="mb-4">
+          Update Week
+        </Button>
 
         {loading ? (
           <div className="text-center py-10">
@@ -272,41 +337,78 @@ const Schedule = () => {
         ) : (
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((day) => (
-              <div key={day.toISOString()} className="border rounded-lg px-2 py-3 bg-gray-50">
-                <h3 className="font-semibold mb-2 text-gray-700">{format(day, 'EEEE')}</h3>
-                <p className="text-sm mb-4 text-gray-500">{format(day, 'MMM d')}</p>
-                {getValidSessionsForDay(day).map(session => (
-                    <Card 
-                      key={session.id} 
-                      className={`mb-2 ${session.status === 'Complete' ? 'bg-green-500/10 border-2' : 'bg-white'}`}
-                    >
-                      <CardContent className="p-3">
-                        <p className="text-xs font-semibold">Tutor: {session.tutor?.firstName} {session.tutor?.lastName}</p>
-                        <p className="text-xs font-medium">Student: {session?.student?.firstName}</p>
-                        <p className="text-xs text-gray-500">{session.summary}</p>
-                        <p className="text-xs text-gray-500">{getSessionTimespan(session.date)}</p>
-                        {session.status && 
-                          <p className={`text-xs inline font-medium px-3 py-1 rounded-lg bg-gray-100 mt-1 ${session.status === 'Complete' ? 'bg-green-200' : ''}`}>{session.status}</p>
-                        }
-                        <div className={`text-xs font-medium px-3 py-1 rounded-lg mt-1 ${session.meetingId ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {session.meetingId ? 'Meeting Link' : 'No Meeting Link'}
-                        </div>
-                        
-                        <Button 
-                          className="mt-2 w-full text-xs h-6" 
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setIsModalOpen(true);
-                          }}
-                          variant="outline"
+              <div
+                key={day.toISOString()}
+                className="border rounded-lg px-2 py-3 bg-gray-50"
+              >
+                <h3 className="font-semibold mb-2 text-gray-700">
+                  {format(day, "EEEE")}
+                </h3>
+                <p className="text-sm mb-4 text-gray-500">
+                  {format(day, "MMM d")}
+                </p>
+                {getValidSessionsForDay(day).map((session) => (
+                  <Card
+                    key={session.id}
+                    className={`mb-2 ${
+                      session.status === "Complete"
+                        ? "bg-green-500/10 border-2"
+                        : "bg-white"
+                    }`}
+                  >
+                    <CardContent className="p-3">
+                      <p className="text-xs font-semibold">
+                        Tutor: {session.tutor?.firstName}{" "}
+                        {session.tutor?.lastName}
+                      </p>
+                      <p className="text-xs font-medium">
+                        Student: {session?.student?.firstName}
+                      </p>
+                      <p className="text-xs text-gray-500">{session.summary}</p>
+                      <p className="text-xs text-gray-500">
+                        {getSessionTimespan(session.date)}
+                      </p>
+                      {session.status && (
+                        <p
+                          className={`text-xs inline font-medium px-3 py-1 rounded-lg bg-gray-100 mt-1 ${
+                            session.status === "Complete" ? "bg-green-200" : ""
+                          }`}
                         >
-                          View Details
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                {sessions.filter(session => session?.date && format(parseISO(session.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')).length === 0 && (
-                  <p className="text-sm text-gray-400 text-center">No sessions</p>
+                          {session.status}
+                        </p>
+                      )}
+                      <div
+                        className={`text-xs font-medium px-3 py-1 rounded-lg mt-1 ${
+                          session.meetingId
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {session.meetingId ? "Meeting Link" : "No Meeting Link"}
+                      </div>
+
+                      <Button
+                        className="mt-2 w-full text-xs h-6"
+                        onClick={() => {
+                          setSelectedSession(session);
+                          setIsModalOpen(true);
+                        }}
+                        variant="outline"
+                      >
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+                {sessions.filter(
+                  (session) =>
+                    session?.date &&
+                    format(parseISO(session.date), "yyyy-MM-dd") ===
+                      format(day, "yyyy-MM-dd")
+                ).length === 0 && (
+                  <p className="text-sm text-gray-400 text-center">
+                    No sessions
+                  </p>
                 )}
               </div>
             ))}
@@ -315,10 +417,11 @@ const Schedule = () => {
       </div>
 
       <div>
-        <h3 className="text-3xl font-bold mb-6 text-left text-gray-800">Enrollment Progress</h3>
+        <h3 className="text-3xl font-bold mb-6 text-left text-gray-800">
+          Enrollment Progress
+        </h3>
         <Card className="mb-6">
           <CardContent className="p-6">
-            
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="font-medium">Total Students:</p>
@@ -347,7 +450,10 @@ const Schedule = () => {
                   onValueChange={(value) => {
                     console.log("Selected value:", value); // Log the selected value
                     if (value) {
-                      const updatedSession = { ...selectedSession, status: value };
+                      const updatedSession = {
+                        ...selectedSession,
+                        status: value,
+                      };
                       console.log("Updated session:", updatedSession); // Log the updated session
                       setSelectedSession(updatedSession);
                     }
@@ -355,7 +461,9 @@ const Schedule = () => {
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {selectedSession?.status ? selectedSession.status : 'Select status'}
+                      {selectedSession?.status
+                        ? selectedSession.status
+                        : "Select status"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -370,25 +478,31 @@ const Schedule = () => {
                 <Select
                   value={selectedSession.tutor?.id}
                   onValueChange={async (value) => {
-                    console.log(value)
+                    console.log(value);
                     const selectedTutor = await getProfileWithProfileId(value);
                     if (selectedTutor) {
-                      setSelectedSession({ ...selectedSession, tutor: selectedTutor });
+                      setSelectedSession({
+                        ...selectedSession,
+                        tutor: selectedTutor,
+                      });
                     }
                   }}
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {selectedSession.tutor ? `${selectedSession.tutor.firstName} ${selectedSession.tutor.lastName}` : 'Select a tutor'}
+                      {selectedSession.tutor
+                        ? `${selectedSession.tutor.firstName} ${selectedSession.tutor.lastName}`
+                        : "Select a tutor"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {tutors.map((tutor) => 
-                      tutor.status !== 'Inactive' && (
-                        <SelectItem key={tutor.id} value={tutor.id}>
-                          {tutor.firstName} {tutor.lastName}
-                        </SelectItem>
-                      )
+                    {tutors.map(
+                      (tutor) =>
+                        tutor.status !== "Inactive" && (
+                          <SelectItem key={tutor.id} value={tutor.id}>
+                            {tutor.firstName} {tutor.lastName}
+                          </SelectItem>
+                        )
                     )}
                   </SelectContent>
                 </Select>
@@ -397,37 +511,64 @@ const Schedule = () => {
                 <Label>Date</Label>
                 <Input
                   type="datetime-local"
-                  defaultValue={format(parseISO(selectedSession.date), "yyyy-MM-dd'T'HH:mm")}
-                  onChange={(e) => setSelectedSession({...selectedSession, date: new Date(e.target.value).toISOString()})}
+                  defaultValue={format(
+                    parseISO(selectedSession.date),
+                    "yyyy-MM-dd'T'HH:mm"
+                  )}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      date: new Date(e.target.value).toISOString(),
+                    })
+                  }
                 />
               </div>
               <div>
                 <Label>Meeting</Label>
                 <Select
                   value={selectedSession.meetingId}
-                  onValueChange={(value) => setSelectedSession({...selectedSession, meetingId: value})}
+                  onValueChange={(value) =>
+                    setSelectedSession({ ...selectedSession, meetingId: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {selectedSession?.meetingId || 'Select a meeting'}
+                      {selectedSession?.meetingId || "Select a meeting"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {meetings.map(meeting => (
-                      <SelectItem key={meeting.id} value={meeting.id} className="flex items-center justify-between">
-                        <span>{meeting.password} - {meeting.id}</span>
-                        <Circle 
-                          className={`w-2 h-2 ml-2 ${isMeetingAvailable(meeting.id) ? 'text-green-500' : 'text-red-500'} fill-current`}
+                    {meetings.map((meeting) => (
+                      <SelectItem
+                        key={meeting.id}
+                        value={meeting.id}
+                        className="flex items-center justify-between"
+                      >
+                        <span>
+                          {meeting.name} - {meeting.id}
+                        </span>
+                        <Circle
+                          className={`w-2 h-2 ml-2 ${
+                            isMeetingAvailable(meeting.id)
+                              ? "text-green-500"
+                              : "text-red-500"
+                          } fill-current`}
                         />
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                </div>
-                <div className='flex flex-row justify-between'>
-                  <Button onClick={() => handleUpdateSession(selectedSession)}>Update Session</Button>
-                  <Button variant='destructive' onClick={() => handleRemoveSession(selectedSession.id)}>Delete Session</Button>
-                </div>
+              </div>
+              <div className="flex flex-row justify-between">
+                <Button onClick={() => handleUpdateSession(selectedSession)}>
+                  Update Session
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleRemoveSession(selectedSession.id)}
+                >
+                  Delete Session
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

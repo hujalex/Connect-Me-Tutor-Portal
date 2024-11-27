@@ -566,7 +566,8 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         link,
         meeting_id,
         password,
-        created_at
+        created_at,
+        name
       `);
 
     // Check for errors and log them
@@ -589,6 +590,7 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         password: meeting.password,
         link: meeting.link,
         createdAt: meeting.created_at,
+        name: meeting.name,
       }))
     );
 
