@@ -1,10 +1,8 @@
-// import ResetPasswordPage from "@/components/auth/ResetPasswordForm";
 "use client";
 
 import Logo from "@/components/ui/logo";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-// import { createServerSupabaseClient } from "@supabase/ssr";
 import { setDefaultAutoSelectFamily } from "net";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -45,11 +43,7 @@ const formSchema = z
 
 export default function ResetPassword() {
   const supabase = createClientComponentClient();
-
   const router = useRouter();
-  //   const searchParams = useSearchParams();
-  //   const token = searchParams.get("code");
-  //   console.log(token);
 
   const [data, setData] = useState<{
     password: string;
@@ -58,29 +52,8 @@ export default function ResetPassword() {
     password: "",
     confirmPassword: "",
   });
-  // const [data, setData] = useState({
-  //   password: "",
-  //   confirmPassword: "",
-  // });
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
-
-  // useEffect(() => {
-  //   const exchangeCodeForSession = async () => {
-  //     if (token) {
-  //       const { data, error } = await supabase.auth.exchangeCodeForSession(
-  //         token
-  //       );
-  //       if (error) {
-  //         console.error("Error exchanging code for session:", error);
-  //         toast.error("Error exchanging code for session.");
-  //         // return;
-  //       }
-  //     }
-  //   };
-  //   exchangeCodeForSession();
-  // }, [supabase, token]);
-
   const confirmPasswords = async () => {
     try {
       const { password, confirmPassword } = data;
