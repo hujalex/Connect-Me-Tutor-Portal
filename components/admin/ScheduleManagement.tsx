@@ -158,12 +158,6 @@ const Schedule = () => {
     }
   };
 
-  const checkForUniqueSessions = async (
-    weekStart: Date,
-    weekEnd: Date,
-    enrollments: Enrollment[]
-  ) => {};
-
   const handleUpdateWeek = async () => {
     try {
       const weekStart = startOfWeek(currentWeek);
@@ -180,9 +174,6 @@ const Schedule = () => {
         throw new Error("No sessions were created");
       }
 
-      // Filter out duplicates // * Works perfectly issue likely not here
-      // * No sessions added upon button click because filtered out but become visible upon useEffect
-
       const existingSessionMap = new Map();
       sessions.forEach((session) => {
         if (session?.date) {
@@ -197,24 +188,10 @@ const Schedule = () => {
         }
       });
 
-      // const uniqueNewSessions = newSessions.filter((newSession) => {
-      //   if (!newSession?.date) return false; // Skip sessions without dates
-      //   const newSessionDate = new Date(newSession.date);
-      //   const key = `${newSession?.student?.id}-${newSession?.tutor?.id}-${
-      //     isValid(newSessionDate)
-      //       ? format(newSessionDate, "yyyy-MM-dd-HH:mm")
-      //       : "invalid-date"
-      //   }`;
-      //   return !existingSessionMap.has(key);
-      // });
-
-      // setSessions((prevSessions) => [...prevSessions, ...uniqueNewSessions]);
       setSessions((prevSessions) => [...prevSessions, ...newSessions]);
-
+      fetchSessions(); // Reloads only sessions 
       toast.success(`${newSessions.length} new sessions added successfully`);
-      // toast.success(
-      //   `${uniqueNewSessions.length} new sessions added successfully`
-      // );
+
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);

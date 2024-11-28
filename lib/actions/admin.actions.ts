@@ -445,9 +445,9 @@ export async function addSessions(
   const weekEnd = parseISO(weekEndString);
   const sessions: Session[] = [];
 
-  // ? const scheduledSessions: Set<string> = new Set();
-  // * Fixes issue with duplicate sessions created and shown in the schedule
-  const scheduledSessions: Set<string> = await getSessionKeys(); // !
+  // const scheduledSessions: Set<string> = new Set();
+  // ! Fixed issue with duplicate sessions created and shown in the schedule
+  const scheduledSessions: Set<string> = await getSessionKeys(); //!
 
   for (const enrollment of enrollments) {
     const { student, tutor, availability } = enrollment;
