@@ -408,6 +408,34 @@ export async function rescheduleSession(sessionId: string, newDate: string) {
   return data;
 }
 
+export async function getSessionKeys() {
+  const sessionKeys: Set<string> = new Set();
+
+  const { data, error } = await supabase
+    .from("Sessions")
+    .select("student_id, tutor_id, date");
+
+  if (error) {
+    console.error("Error fetching sessions:", error);
+    throw error;
+  }
+
+  if (!data) return sessionKeys;
+
+  data.forEach((session) => {
+    if (session.date) {
+      const sessionDate = new Date(session.date);
+      const key = `${session.student_id}-${session.tutor_id}-${format(
+        sessionDate,
+        "yyyy-MM-dd-HH:mm"
+      )}`;
+      sessionKeys.add(key);
+    }
+  });
+
+  return sessionKeys;
+}
+
 export async function addSessions(
   weekStartString: string,
   weekEndString: string,
@@ -416,7 +444,10 @@ export async function addSessions(
   const weekStart = parseISO(weekStartString);
   const weekEnd = parseISO(weekEndString);
   const sessions: Session[] = [];
-  const scheduledSessions: Set<string> = new Set();
+
+  // ? const scheduledSessions: Set<string> = new Set();
+  // * Fixes issue with duplicate sessions created and shown in the schedule
+  const scheduledSessions: Set<string> = await getSessionKeys(); // !
 
   for (const enrollment of enrollments) {
     const { student, tutor, availability } = enrollment;
@@ -551,6 +582,8 @@ export async function removeSession(sessionId: string) {
     .from("Sessions")
     .delete()
     .eq("id", sessionId);
+
+  console.log(sessionId);
 
   if (eventError) {
     throw eventError;
