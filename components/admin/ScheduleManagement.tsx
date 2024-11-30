@@ -189,9 +189,8 @@ const Schedule = () => {
       });
 
       setSessions((prevSessions) => [...prevSessions, ...newSessions]);
-      fetchSessions(); // Reloads only sessions 
+      fetchSessions(); // Reloads only sessions
       toast.success(`${newSessions.length} new sessions added successfully`);
-
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);
@@ -519,7 +518,11 @@ const Schedule = () => {
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {selectedSession?.meetingId || "Select a meeting"}
+                      {(selectedSession.meetingId &&
+                        meetings.find(
+                          (meeting) => meeting.id === selectedSession.meetingId
+                        )?.name) ||
+                        "Select a meeting"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>

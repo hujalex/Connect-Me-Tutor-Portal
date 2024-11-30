@@ -13,6 +13,7 @@ import {
   Trash,
   ChevronsUpDown,
   Check,
+  Circle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,10 @@ import {
   removeEnrollment,
   updateEnrollment,
   getAllProfiles,
+  getMeetings,
 } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Enrollment, Profile, Event } from "@/types";
+import { Enrollment, Profile, Event, Meeting } from "@/types";
 import toast from "react-hot-toast";
 import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
@@ -96,6 +98,7 @@ const EnrollmentList = () => {
   const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>(
     []
   );
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [openStudentOptions, setOpenStudentOptions] = React.useState(false);
   const [openTutorOptions, setOpentTutorOptions] = React.useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState("");
@@ -123,11 +126,13 @@ const EnrollmentList = () => {
     startDate: "",
     endDate: "",
     availability: [{ day: "", startTime: "", endTime: "" }],
+    meetingId: "",
   });
 
   useEffect(() => {
     fetchEnrollments();
     fetchProfiles();
+    fetchMeetings();
   }, [supabase.auth]);
 
   useEffect(() => {
@@ -146,17 +151,63 @@ const EnrollmentList = () => {
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
 
-  const filteredTutors = tutors.filter((tutor) => {
-    const searchText = normalizeText(tutorSearch);
-    const tutorName = normalizeText(`${tutor.firstName} ${tutor.lastName}`);
-    const firstName = normalizeText(tutor.firstName);
-    const lastName = normalizeText(tutor.lastName);
-    return (
-      tutorName.includes(searchText) ||
-      firstName.includes(searchText) ||
-      lastName.includes(searchText)
-    );
-  });
+  // const filteredTutors = tutors.filter((tutor) => {
+  //   const searchText = normalizeText(tutorSearch);
+  //   const tutorName = normalizeText(`${tutor.firstName} ${tutor.lastName}`);
+  //   const firstName = normalizeText(tutor.firstName);
+  //   const lastName = normalizeText(tutor.lastName);
+  //   return (
+  //     tutorName.includes(searchText) ||
+  //     firstName.includes(searchText) ||
+  //     lastName.includes(searchText)
+  //   );
+  // });
+
+  const isMeetingAvailable = (
+    meetingId: string,
+    enroll: Omit<Enrollment, "id" | "createdAt">
+  ) => {
+    try {
+      const now = new Date();
+      const new_enrollment_date = new Date(
+        `${enroll.availability[0].day} ${enroll.availability[0].endTime}`
+      );
+      console.log(now);
+      return !enrollments.some((enrollment) => {
+        // Skip sessions without dates or meeting IDs
+        if (!enrollment?.endDate || !enrollment?.meetingId) return false;
+
+        try {
+          const sessionEndTime = new Date(
+            `${enrollment.availability[0].day}, ${enrollment.availability[0].endTime}`
+          );
+          sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
+          return (
+            sessionEndTime < new_enrollment_date &&
+            enrollment.meetingId === meetingId
+          );
+        } catch (error) {
+          console.error("Error processing session date:", error);
+          return false;
+        }
+      });
+    } catch (error) {
+      console.error("Error checking meeting availability:", error);
+      return true; // Default to available if there's an error
+    }
+  };
+
+  const fetchMeetings = async () => {
+    try {
+      const fetchedMeetings = await getMeetings();
+      if (fetchedMeetings) {
+        setMeetings(fetchedMeetings);
+      }
+    } catch (error) {
+      console.error("Failed to fetch meetings:", error);
+      toast.error("Failed to load meetings");
+    }
+  };
 
   const fetchEnrollments = async () => {
     try {
@@ -318,6 +369,7 @@ const EnrollmentList = () => {
       startDate: "",
       endDate: "",
       availability: [{ day: "", startTime: "", endTime: "" }],
+      meetingId: "",
     });
   };
 
@@ -365,13 +417,13 @@ const EnrollmentList = () => {
                             {selectedStudentId ? (
                               <>
                                 {
-                                  tutors.find(
+                                  students.find(
                                     (student) =>
                                       student.id === selectedStudentId
                                   )?.firstName
                                 }{" "}
                                 {
-                                  tutors.find(
+                                  students.find(
                                     (student) =>
                                       student.id === selectedStudentId
                                   )?.lastName
@@ -404,7 +456,9 @@ const EnrollmentList = () => {
                                           currentValue
                                       );
                                       if (selectedStudent) {
-                                        setSelectedTutorId(selectedStudent.id);
+                                        setSelectedStudentId(
+                                          selectedStudent.id
+                                        );
                                         handleInputChange({
                                           target: {
                                             name: "student.id",
@@ -561,6 +615,82 @@ const EnrollmentList = () => {
                         className="col-span-3"
                       />
                     </div>
+                    {/* 
+                    <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tutorId" className="text-right">
+                  Tutor
+                </Label>
+                <Select
+                  name="tutorId"
+                  value={selectedEnrollment.tutor?.id}
+                  onValueChange={(value) =>
+                    handleInputChange({
+                      target: { name: "tutorId", value },
+                    } as any)
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a tutor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tutors.map((tutor) => (
+                      <SelectItem key={tutor.id} value={tutor.id}>
+                        {tutor.firstName} {tutor.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div> */}
+
+                    <div>
+                      <Label>Meeting Link</Label>
+                      <Select
+                        name="meetingId"
+                        value={newEnrollment.meetingId}
+                        // onValueChange={(value) =>
+                        //   setSelectedEnrollment({
+                        //     ...selectedEnrollment,
+                        //     meetingId: value,
+                        //   })
+                        // }
+                        onValueChange={(value) =>
+                          handleInputChange({
+                            target: { name: "meetingId", value },
+                          } as any)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a meeting link">
+                            {newEnrollment.meetingId
+                              ? meetings.find(
+                                  (meeting) =>
+                                    meeting.id === newEnrollment.meetingId
+                                )?.name
+                              : "Select a meeting"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {meetings.map((meeting) => (
+                            <SelectItem
+                              key={meeting.id}
+                              value={meeting.id}
+                              className="flex items-center justify-between"
+                            >
+                              <span>
+                                {meeting.name} - {meeting.id}
+                              </span>
+                              <Circle
+                                className={`w-2 h-2 ml-2 ${
+                                  isMeetingAvailable(meeting.id, newEnrollment)
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                } fill-current`}
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <Button onClick={handleAddEnrollment}>Add Enrollment</Button>
                 </DialogContent>
@@ -577,6 +707,7 @@ const EnrollmentList = () => {
                   "Summary",
                   "Start Date",
                   "End Date",
+                  "Meeting Link",
                   "Actions",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
@@ -601,6 +732,21 @@ const EnrollmentList = () => {
                   <TableCell>{enrollment.summary}</TableCell>
                   <TableCell>{formatDate(enrollment.endDate)}</TableCell>
                   <TableCell>{formatDate(enrollment.endDate)}</TableCell>
+                  <TableCell>
+                    {/* {console.log("Meeting ID:", enrollment.meetingId)} */}
+
+                    {/* {console.log("Available Meetings:", meetings)} */}
+
+                    <TableCell>
+                      {enrollment.meetingId
+                        ? meetings.find(
+                            (meeting) =>
+                              String(meeting.id) ===
+                              String(enrollment.meetingId)
+                          )?.name || "No Meeting"
+                        : "No Meeting Link"}
+                    </TableCell>
+                  </TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -792,6 +938,56 @@ const EnrollmentList = () => {
                   className="col-span-3"
                 />
               </div>
+
+              {/* <div>
+                <Label>Meeting Link</Label>
+                <Select
+                  name="meetingId"
+                  value={selectedEnrollment.meetingId}
+                  // onValueChange={(value) =>
+                  //   setSelectedEnrollment({
+                  //     ...selectedEnrollment,
+                  //     meetingId: value,
+                  //   })
+                  // }
+                  onValueChange={(value) =>
+                    handleInputChange({
+                      target: { name: "meetingId", value },
+                    } as any)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a meeting link">
+                      {selectedEnrollment.meetingId
+                        ? meetings.find(
+                            (meeting) =>
+                              meeting.id === selectedEnrollment.meetingId
+                          )?.name
+                        : "Select a meeting"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {meetings.map((meeting) => (
+                      <SelectItem
+                        key={meeting.id}
+                        value={meeting.id}
+                        className="flex items-center justify-between"
+                      >
+                        <span>
+                          {meeting.name} - {meeting.id}
+                        </span>
+                        <Circle
+                          className={`w-2 h-2 ml-2 ${
+                            isMeetingAvailable(meeting.id, selectedEnrollment)
+                              ? "text-green-500"
+                              : "text-red-500"
+                          } fill-current`}
+                        />
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div> */}
             </div>
           )}
           <Button onClick={handleUpdateEnrollment}>Update Enrollment</Button>

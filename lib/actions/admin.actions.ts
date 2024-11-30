@@ -524,6 +524,8 @@ export async function addSessions(
           }
 
           // Create session without requiring a meeting link
+
+          //!Create Session with Meeting Link
           const { data: session, error } = await supabase
             .from("Sessions")
             .insert({
@@ -532,6 +534,7 @@ export async function addSessions(
               tutor_id: tutor.id,
               status: "Active",
               summary: enrollment.summary,
+              meeting_id: enrollment.meetingId,
             })
             .single();
 
@@ -646,7 +649,8 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         tutor_id,
         start_date,
         end_date,
-        availability
+        availability,
+        meetingId
       `);
 
     // Check for errors and log them
@@ -672,6 +676,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         startDate: enrollment.start_date,
         endDate: enrollment.end_date,
         availability: enrollment.availability,
+        meetingId: enrollment.meetingId,
       }))
     );
 
@@ -720,6 +725,7 @@ export const addEnrollment = async (
       start_date: enrollment.startDate,
       end_date: enrollment.endDate,
       availability: enrollment.availability,
+      meetingId: enrollment.meetingId,
     })
     .select(`*`)
     .single();
@@ -740,6 +746,7 @@ export const addEnrollment = async (
     startDate: data.start_date,
     endDate: data.end_date,
     availability: data.availability,
+    meetingId: data.meetingId,
   };
 };
 
