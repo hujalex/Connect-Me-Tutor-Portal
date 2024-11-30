@@ -51,15 +51,6 @@ export default function LoginForm() {
         throw error;
       }
 
-      // SiteURL http://localhost:3000/auth/confirm?token_hash=pkce_fee5c2b62c4e067928e220729ea7843cb50a946c3b746e76d8740d37&type=recovery&next=/auth/forgot/update
-
-      // RedirectTo http://localhost:3000/auth/confirm?token_hash=pkce_4f9f245bf4bbe25191c14f140a78ec8213adec286870822086483b54&type=recovery&next=/auth/forgot/update
-
-      ///           http://localhost:3000/reset-password/auth/confirm?token_hash=pkce_95a30bb89fbb8ac15409f386d5da4869ae192a70ae1e5362ca9d5afc&type=recovery&next=/auth/forgot/update
-
-      //http://localhost:3000/reset-password/auth/confirm?token_hash=pkce_5f32ef4cef77e4e4a657b58c072ebdb154ad187ac9a21b97695a8e9c&type=recovery&next=/auth/forgot/update
-      //localhost:3000/reset-password/auth/confirm?token_hash=pkce_2e8fc8eb1b75fb39b330fa1620e7e9601a0a079a357db25d9f05c7d7&type=recovery&next=/auth/forgot/update
-
       toast.success("Password reset email sent successfully");
     } catch (error) {
       console.log(error);
