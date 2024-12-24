@@ -22,6 +22,7 @@ import {
   setMinutes,
 } from "date-fns"; // Only use date-fns
 import ResetPassword from "@/app/(public)/set-password/page";
+// import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -387,12 +388,15 @@ export async function getAllSessions(
       environment: session.environment,
       date: session.date,
       summary: session.summary,
-      meetingId: session.meeting_id,
+      // meetingId: session.meeting_id,
+      meeting: await getMeeting(session.meeting_id),
       student: await getProfileWithProfileId(session.student_id),
       tutor: await getProfileWithProfileId(session.tutor_id),
       status: session.status,
     }))
   );
+
+  console.log(sessions);
 
   return sessions;
 }
@@ -556,7 +560,12 @@ export async function addSessions(
 
 // Function to update a session
 export async function updateSession(updatedSession: Session) {
-  const { id, status, tutor, student, date, meetingId } = updatedSession;
+  // const { id, status, tutor, student, date, meetingId } = updatedSession;
+  const { id, status, tutor, student, date, meeting } = updatedSession;
+
+  console.log(id);
+  console.log(status);
+  console.log(meeting);
 
   const { data, error } = await supabase
     .from("Sessions")
@@ -565,9 +574,12 @@ export async function updateSession(updatedSession: Session) {
       student_id: student?.id,
       tutor_id: tutor?.id,
       date: date,
-      meeting_id: meetingId,
+      // meeting_id: meetingId,
+      // meeting: meeting,
+      meeting_id: meeting?.id,
     })
     .eq("id", id);
+  console.log("UPDATING...");
 
   if (error) {
     console.error("Error updating session:", error);
@@ -575,7 +587,10 @@ export async function updateSession(updatedSession: Session) {
   }
 
   if (data) {
+    console.log(data[0]);
     return data[0];
+  } else {
+    console.error("NO DATA");
   }
 }
 
@@ -622,11 +637,12 @@ export async function getMeetings(): Promise<Meeting[] | null> {
     const meetings: Meeting[] = await Promise.all(
       data.map(async (meeting: any) => ({
         id: meeting.id,
+        name: meeting.name,
         meetingId: meeting.meeting_id,
         password: meeting.password,
         link: meeting.link,
         createdAt: meeting.created_at,
-        name: meeting.name,
+        // name: meeting.name,
       }))
     );
 
@@ -686,6 +702,51 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);
     return null;
+  }
+}
+
+export async function getMeeting(id: string): Promise<Meeting | null> {
+  try {
+    // Fetch meeting details from Supabase
+    const { data, error } = await supabase
+      .from("Meetings")
+      .select(
+        `
+        id,
+        link,
+        meeting_id,
+        password,
+        created_at,
+        name
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    // Check for errors and log them
+    if (error) {
+      console.error("Error fetching event details:", error.message);
+      return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
+    }
+    // Check if data exists
+    if (!data) {
+      console.log("No events found:");
+      return null; // Valid return
+    }
+    // Mapping the fetched data to the Notification object
+    const meeting: Meeting = {
+      id: data.id,
+      name: data.name,
+      meetingId: data.meeting_id,
+      password: data.password,
+      link: data.link,
+      createdAt: data.created_at,
+    };
+    console.log(meeting);
+    return meeting; // Return the array of notifications
+  } catch (error) {
+    console.error("Unexpected error in getMeeting:", error);
+    return null; // Valid return
   }
 }
 

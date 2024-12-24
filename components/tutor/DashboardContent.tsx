@@ -1,17 +1,50 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { Bell, ChevronDown, Plus, Link as LinkIcon, Eye, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import TutorCalendar from './TutorCalendar';
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  Bell,
+  ChevronDown,
+  Plus,
+  Link as LinkIcon,
+  Eye,
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import TutorCalendar from "./TutorCalendar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { getProfile } from '@/lib/actions/user.actions'
-import { getTutorSessions, rescheduleSession } from '@/lib/actions/tutor.actions'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Session, Profile } from '@/types'
-import { formatSessionDate } from '@/lib/utils'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { getProfile } from "@/lib/actions/user.actions";
+import { updateSession } from "@/lib/actions/admin.actions";
+import {
+  getTutorSessions,
+  rescheduleSession,
+} from "@/lib/actions/tutor.actions";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Session, Profile } from "@/types";
+import { formatSessionDate } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const StudentDashboard = () => {
@@ -23,14 +56,16 @@ const StudentDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [filterValue, setFilterValue] = useState('');
+  const [filterValue, setFilterValue] = useState("");
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
-  const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null)
+  const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(
+    null
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(()=>{
-    console.log(isDialogOpen)
-  },[isDialogOpen])
+  useEffect(() => {
+    console.log(isDialogOpen);
+  }, [isDialogOpen]);
 
   useEffect(() => {
     const getUserData = async () => {
@@ -38,24 +73,29 @@ const StudentDashboard = () => {
         setLoading(true);
         setError(null);
 
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
         if (userError) throw new Error(userError.message);
-        if (!user) throw new Error('No user found');
+        if (!user) throw new Error("No user found");
 
         const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error('No profile found');
+        if (!profileData) throw new Error("No profile found");
 
         setProfile(profileData);
 
         const sessionsData = await getTutorSessions(profileData.id);
-        if (!sessionsData) throw new Error('No sessions found');
+        if (!sessionsData) throw new Error("No sessions found");
 
         setSessions(sessionsData);
         setFilteredSessions(sessionsData);
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        setError(error instanceof Error ? error.message : 'An unknown error occurred');
+        console.error("Error fetching user data:", error);
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }
@@ -65,9 +105,14 @@ const StudentDashboard = () => {
   }, [supabase.auth]);
 
   useEffect(() => {
-    const filtered = sessions.filter(session =>
-      session.student?.firstName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      session.student?.lastName.toLowerCase().includes(filterValue.toLowerCase())
+    const filtered = sessions.filter(
+      (session) =>
+        session.student?.firstName
+          .toLowerCase()
+          .includes(filterValue.toLowerCase()) ||
+        session.student?.lastName
+          .toLowerCase()
+          .includes(filterValue.toLowerCase())
     );
     setFilteredSessions(filtered);
     setCurrentPage(1);
@@ -88,26 +133,41 @@ const StudentDashboard = () => {
     try {
       const updatedSession = await rescheduleSession(sessionId, newDate);
 
-        if (updatedSession) {
-          setSessions(paginatedSessions.map((e:Session) => 
-              e.id === updatedSession.id 
-              ? updatedSession 
-              : e) as Session[]);  // Explicitly cast as Enrollment[]
+      if (updatedSession) {
+        setSessions(
+          paginatedSessions.map((e: Session) =>
+            e.id === updatedSession.id ? updatedSession : e
+          ) as Session[]
+        ); // Explicitly cast as Enrollment[]
       }
       setSelectedSession(null);
       setIsDialogOpen(false);
-      toast.success('Enrollment updated successfully');
+      toast.success("Enrollment updated successfully");
       // You might want to show a success message to the user here
-      console.log('Reschedule request submitted successfully');
-
-
+      console.log("Reschedule request submitted successfully");
     } catch (error) {
-      console.error('Error requesting session reschedule:', error);
+      console.error("Error requesting session reschedule:", error);
       // You might want to show an error message to the user here
     }
   };
 
-
+  const handleStatusChange = async (updatedSession: Session) => {
+    console.log("Status Change");
+    try {
+      await updateSession(updatedSession);
+      if (updatedSession) {
+        setSessions(
+          paginatedSessions.map((e: Session) =>
+            e.id === updatedSession.id ? updatedSession : e
+          ) as Session[]
+        ); // Explicitly cast as Enrollment[]
+      }
+      toast.success("Session updated successfully");
+    } catch (error) {
+      console.error("Failed to update session:", error);
+      toast.error("Failed to update session");
+    }
+  };
 
   const paginatedSessions = filteredSessions.slice(
     (currentPage - 1) * rowsPerPage,
@@ -115,136 +175,265 @@ const StudentDashboard = () => {
   );
 
   return (
-  <main className="p-8">
-    <h1 className="text-3xl font-bold mb-6">Tutor Dashboard</h1>
-    
-    <div className="flex space-x-6">
-      <div className="flex-grow bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-2">
-            <Input 
-              type="text" 
-              placeholder="Filter sessions..." 
-              className="w-64" 
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-            />
-            
-          </div>
-          
-        </div>
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Tutor Dashboard</h1>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Meeting</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedSessions.map((session, index) => (
-              <TableRow key={index} className={session.status === 'ACTIVE' ? '' : session.status === 'COMPLETE' ? 'bg-green-200 opacity-25 pointer-events-none' : session.status === 'RESCHEDULED' ? 'bg-red-100 opacity-25 pointer-events-none' : ''}>
-                <TableCell>{formatSessionDate(session.date)}</TableCell>
-                <TableCell className='font-medium'>Meeting with {session.student?.firstName} {session.student?.lastName}</TableCell>
-                <TableCell>{session.student?.firstName} {session.student?.lastName}</TableCell>
-                <TableCell>{session.environment}</TableCell>
-                <TableCell>
-                  {session.environment !== 'In-Person' && 
-                    <>
-                    {session.meetingId ? (
-                      <button 
-                        onClick={() => window.location.href = `/meeting/${session.meetingId}`}
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                      >
-                        View
-                      </button>
-                    ) : (
-                      <button className="text-black px-3 py-1 border border-gray-200 rounded">
-                        N/A
-                      </button>
-                    )}
-                    </>
+      <div className="flex space-x-6">
+        <div className="flex-grow bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-2">
+              <Input
+                type="text"
+                placeholder="Filter sessions..."
+                className="w-64"
+                value={filterValue}
+                onChange={(e) => setFilterValue(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Mark Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Meeting</TableHead>
+                <TableHead>Reschedule</TableHead>
+                <TableHead>Request Substitute</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedSessions.map((session, index) => (
+                <TableRow
+                  key={index}
+                  className={
+                    session.status === "Active"
+                      ? ""
+                      : session.status === "Complete"
+                      ? "bg-green-200 opacity-50"
+                      : session.status === "Cancelled"
+                      ? "bg-red-100 opacity-50 "
+                      : ""
                   }
-                </TableCell>
-                <TableCell>
-                  <Dialog  open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" onClick={() => 
-                        {setSelectedSession(session); setIsDialogOpen(true)}}>Reschedule</Button>
-                    </DialogTrigger>
-                    <DialogContent >
-                      <DialogHeader>
-                        <DialogTitle>Reschedule Session with {session.student?.firstName} {session.student?.lastName} on {formatSessionDate(session.date)}</DialogTitle>
-                      </DialogHeader>
-                      <div className="py-4 space-y-6">
-                        <Input
-                          type="datetime-local"
-                          defaultValue={selectedSession?.date}
-                          onChange={(e) => {
-                            if (selectedSession) {
-                              setSelectedSessionDate(e.target.value);
+                >
+                  <TableCell>
+                    {/* <Select
+                      value={selectedSession?.status}
+                      onValueChange={(value) => {
+                        console.log("Selected value:", value); // Log the selected value
+                        console.log(selectedSession);
+                        console.log(session);
+                        if (
+                          value &&
+                          selectedSession &&
+                          "id" in selectedSession
+                        ) {
+                          const updatedSession: Session = {
+                            ...selectedSession,
+                            status: value,
+                          };
+                          handleStatusChange(updatedSession);
+                        }
+                      }}
+                    > */}
+                    <Select
+                      value={session?.status}
+                      onValueChange={(value) => {
+                        const updatedSession: Session = {
+                          ...session,
+                          status: value,
+                        };
+                        handleStatusChange(updatedSession);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={session?.status}>
+                          {/* {session
+                            ? session.status
+                              ? session.status
+                              : "Select status"
+                            : "Loading..."} */}
+                          {session.status ? session.status : "Select Status"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Complete">Complete</SelectItem>
+                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>{formatSessionDate(session.date)}</TableCell>
+                  <TableCell className="font-medium">
+                    Meeting with {session.student?.firstName}{" "}
+                    {session.student?.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {session.student?.firstName} {session.student?.lastName}
+                  </TableCell>
+                  <TableCell>{session.environment}</TableCell>
+                  <TableCell>
+                    {session.environment !== "In-Person" && (
+                      <>
+                        {/* {session.meetingId ? ( */}
+
+                        {session?.meeting?.meetingId ? (
+                          <button
+                            // onClick={() =>
+                            //   (window.location.href = `/meeting/${session.meetingId}`)
+                            // }
+                            onClick={() =>
+                              (window.location.href = `/meeting/${session?.meeting?.meetingId}`)
                             }
+                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                          >
+                            View
+                          </button>
+                        ) : (
+                          <button className="text-black px-3 py-1 border border-gray-200 rounded">
+                            N/A
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsDialogOpen(true);
                           }}
-                        />
-                        <Button variant='destructive' onClick={() => selectedSession && selectedSessionDate && handleReschedule(selectedSession?.id, selectedSessionDate)}>
+                        >
                           Reschedule
                         </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-                {//? Added sub hotline
-                }
-                <TableCell>
-                  <Button variant = "outline" onClick = {() => window.location.href = "https://forms.gle/AC4an7K6NSNumDwKA"}>Request a Sub</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          {/* <DialogTitle>
+                            Reschedule Session with {session.student?.firstName}{" "}
+                            {session.student?.lastName} on{" "}
+                            {formatSessionDate(session.date)}
+                          </DialogTitle> */}
+                          <DialogTitle>
+                            Reschedule Session with{" "}
+                            {selectedSession?.student?.firstName}{" "}
+                            {selectedSession?.student?.lastName} on{" "}
+                            {formatSessionDate(selectedSession?.date || "")}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4 space-y-6">
+                          <Input
+                            type="datetime-local"
+                            defaultValue={selectedSession?.date}
+                            onChange={(e) => {
+                              if (selectedSession) {
+                                setSelectedSessionDate(e.target.value);
+                              }
+                            }}
+                          />
+                          <Button
+                            variant="destructive"
+                            onClick={() =>
+                              selectedSession &&
+                              selectedSessionDate &&
+                              handleReschedule(
+                                selectedSession?.id,
+                                selectedSessionDate
+                              )
+                            }
+                          >
+                            Reschedule
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
 
-        <div className="mt-4 flex justify-between items-center">
-          <span>{filteredSessions.length} row(s) total.</span>
-          <div className="flex items-center space-x-2">
-            <span>Rows per page</span>
-            <Select value={rowsPerPage.toString()} onValueChange={handleRowsPerPageChange}>
-              <SelectTrigger className="w-[70px]">
-                <SelectValue placeholder={rowsPerPage.toString()} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-            <span>Page {currentPage} of {totalPages}</span>
-            <div className="flex space-x-1">
-              <Button variant="ghost" size="icon" onClick={() => handlePageChange(1)} disabled={currentPage === 1}>
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages}>
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        (window.location.href =
+                          "https://forms.gle/AC4an7K6NSNumDwKA")
+                      }
+                    >
+                      Request a Sub
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <div className="mt-4 flex justify-between items-center">
+            <span>{filteredSessions.length} row(s) total.</span>
+            <div className="flex items-center space-x-2">
+              <span>Rows per page</span>
+              <Select
+                value={rowsPerPage.toString()}
+                onValueChange={handleRowsPerPageChange}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue placeholder={rowsPerPage.toString()} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
+
+        <div className="w-80">
+          <TutorCalendar sessions={sessions} />
+        </div>
       </div>
-      
-      <div className="w-80">
-        <TutorCalendar sessions={sessions} />
-      </div>
-    </div>
-  </main>
+    </main>
   );
 };
 
