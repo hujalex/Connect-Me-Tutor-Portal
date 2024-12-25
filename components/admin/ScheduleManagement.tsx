@@ -341,7 +341,7 @@ const Schedule = () => {
                     }}
 
                     key={session.id}
-                    className={`hover:cursor-pointer hover:shadow-md mb-2 ${session.status === 'Complete' ? 'bg-green-500/10 border-2' : 'bg-white'}`}
+                    className={`hover:cursor-pointer hover:shadow-md mb-2 ${session.status === 'Complete' ? 'bg-green-500/10 border-2' : session.status === 'Cancelled' ? 'bg-red-500/10 border-2' : 'bg-white'}`}
                   >
                     <CardContent className="p-3">
                     <p className="text-xs font-semibold">{session.tutor?.firstName} {session.tutor?.lastName}</p>

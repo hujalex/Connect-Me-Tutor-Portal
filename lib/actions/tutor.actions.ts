@@ -20,6 +20,7 @@ export async function getTutorSessions(
     .select(
       `
       id,
+      status,
       created_at,
       environment,
       student_id,
