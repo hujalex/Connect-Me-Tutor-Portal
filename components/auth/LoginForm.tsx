@@ -229,15 +229,15 @@ export default function LoginForm() {
         />
 
         <FormDescription>
-          <Link href="/forgot-password">Forgot password?</Link>
+          <Link href="/forgot-password"><b>Forgot password</b></Link>
         </FormDescription>
         <Button disabled={isLoading} type="submit" className='w-full bg-blue-400'>
           {isLoading ? 'Logging in...' : 'Login'}
         </Button>
 
-        <FormDescription>
+        {/* <FormDescription>
           Don&apos;t have an account? < Link href='/register'><b>Register</b></Link>
-        </FormDescription>
+        </FormDescription> */}
       </form>
       <Toaster/>
     </Form>
