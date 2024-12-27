@@ -46,6 +46,17 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session, Profile } from "@/types";
 import { formatSessionDate } from "@/lib/utils";
 import toast from "react-hot-toast";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  addWeeks,
+  subWeeks,
+  parseISO,
+  isAfter,
+  isValid,
+} from "date-fns";
 
 const StudentDashboard = () => {
   const supabase = createClientComponentClient();
@@ -62,6 +73,7 @@ const StudentDashboard = () => {
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
   useEffect(() => {
     console.log(isDialogOpen);
@@ -86,7 +98,9 @@ const StudentDashboard = () => {
 
         setProfile(profileData);
 
-        const sessionsData = await getTutorSessions(profileData.id);
+        const endWeek = endOfWeek(new Date()).toISOString();
+
+        const sessionsData = await getTutorSessions(profileData.id, undefined, endWeek); // Params so that way tutor doesn't see sessions in later weeks
         if (!sessionsData) throw new Error("No sessions found");
 
         setSessions(sessionsData);

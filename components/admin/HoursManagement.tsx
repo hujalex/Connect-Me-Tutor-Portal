@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachWeekOfInterval, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfWeek, endOfMonth, eachWeekOfInterval, parseISO } from 'date-fns';
 import { 
   Table, 
   TableBody, 
@@ -20,6 +20,7 @@ import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { Profile, Session, Event } from '@/types';
 import { toast, Toaster } from "react-hot-toast";
 
+
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -32,6 +33,7 @@ const HoursManager = () => {
   const [newEvent, setNewEvent] = useState<Partial<Event>>({});
   const [eventsToRemove, setEventsToRemove] = useState<Event[]>([]);
   const [selectedEventToRemove, setSelectedEventToRemove] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchTutors();
