@@ -108,9 +108,11 @@ export default function ForgotPasswordPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full bg-blue-400">
-                    Reset Password
-                  </Button>
+                    
+                    <Button type="submit" className="w-full bg-blue-400">
+                      Reset Password
+                    </Button>
+                
                 </form>
                 <Toaster />
               </Form>
