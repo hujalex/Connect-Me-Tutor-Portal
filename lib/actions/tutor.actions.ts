@@ -1,19 +1,26 @@
 // lib/tutors.actions.ts
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Profile, Session } from '@/types'
-import { getProfileWithProfileId } from './user.actions'
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Profile, Session } from "@/types";
+import { getProfileWithProfileId } from "./user.actions";
+import { getMeeting } from "./admin.actions";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
-export async function getTutorSessions(profileId: string, startDate?: string, endDate?: string): Promise<Session[]> {
+export async function getTutorSessions(
+  profileId: string,
+  startDate?: string,
+  endDate?: string
+): Promise<Session[]> {
   let query = supabase
-    .from('Sessions')
-    .select(`
+    .from("Sessions")
+    .select(
+      `
       id,
+      status,
       created_at,
       environment,
       student_id,
@@ -21,45 +28,49 @@ export async function getTutorSessions(profileId: string, startDate?: string, en
       date,
       summary,
       meeting_id
-    `)
-    .eq('tutor_id', profileId);
+    `
+    )
+    .eq("tutor_id", profileId);
 
   if (startDate) {
-    query = query.gte('date', startDate);
+    query = query.gte("date", startDate);
   }
   if (endDate) {
-    query = query.lte('date', endDate);
+    query = query.lte("date", endDate);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching student sessions:', error.message);
+    console.error("Error fetching student sessions:", error.message);
     throw error;
   }
 
   // Map the result to the Session interface
-  const sessions: Session[] = await Promise.all(data.map(async (session: any) => ({
-    id: session.id,
-    createdAt: session.created_at,
-    environment: session.environment,
-    date: session.date,
-    summary: session.summary,
-    meetingId: session.meeting_id,
-    student: await getProfileWithProfileId(session.student_id),
-    tutor: await getProfileWithProfileId(session.tutor_id),
-    status: session.status
-  })));
+  const sessions: Session[] = await Promise.all(
+    data.map(async (session: any) => ({
+      id: session.id,
+      createdAt: session.created_at,
+      environment: session.environment,
+      date: session.date,
+      summary: session.summary,
+      // meetingId: session.meeting_id,
+      meeting: await getMeeting(session.meeting_id),
+      student: await getProfileWithProfileId(session.student_id),
+      tutor: await getProfileWithProfileId(session.tutor_id),
+      status: session.status,
+    }))
+  );
 
   return sessions;
 }
 
-
 export async function getTutorStudents(tutorId: string) {
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .select(`
+      .from("Profiles")
+      .select(
+        `
         id,
         created_at,
         role,
@@ -77,128 +88,129 @@ export async function getTutorStudents(tutorId: string) {
         timezone,
         subjects_of_interest,
         status
-      `)
-      .contains('tutor_ids', [tutorId]);
+      `
+      )
+      .contains("tutor_ids", [tutorId]);
 
     if (error) {
-      console.error('Error fetching profile in Tutor Actions:', error.message);
-      console.error('Error details:', error);
+      console.error("Error fetching profile in Tutor Actions:", error.message);
+      console.error("Error details:", error);
       return null;
     }
 
     if (!data) {
-      console.log('No profile found for tutor ID:', tutorId);
+      console.log("No profile found for tutor ID:", tutorId);
       return null;
     }
 
-  // Mapping the fetched data to the Profile object
-  const userProfiles: Profile[] = data.map((profile: any) => ({
-    id: profile.id,
-    createdAt: profile.created_at,
-    role: profile.role,
-    userId: profile.user_id,
-    firstName: profile.first_name,
-    lastName: profile.last_name,
-    dateOfBirth: profile.date_of_birth,
-    startDate: profile.start_date,
-    availability: profile.availability,
-    email: profile.email,
-    parentName: profile.parent_name,
-    parentPhone: profile.parent_phone,
-    parentEmail: profile.parent_email,
-    tutorIds: profile.tutor_ids,
-    timeZone: profile.timezone,
-    subjectsOfInterest: profile.subjects_of_interest,
-    status: profile.status,
-  }));
+    // Mapping the fetched data to the Profile object
+    const userProfiles: Profile[] = data.map((profile: any) => ({
+      id: profile.id,
+      createdAt: profile.created_at,
+      role: profile.role,
+      userId: profile.user_id,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      dateOfBirth: profile.date_of_birth,
+      startDate: profile.start_date,
+      availability: profile.availability,
+      email: profile.email,
+      parentName: profile.parent_name,
+      parentPhone: profile.parent_phone,
+      parentEmail: profile.parent_email,
+      tutorIds: profile.tutor_ids,
+      timeZone: profile.timezone,
+      subjectsOfInterest: profile.subjects_of_interest,
+      status: profile.status,
+    }));
 
-
-    console.log('Mapped profile data:', userProfiles);
+    console.log("Mapped profile data:", userProfiles);
     return userProfiles;
   } catch (error) {
-    console.error('Unexpected error in getProfile:', error);
+    console.error("Unexpected error in getProfile:", error);
     return null;
   }
 }
 
-
-
 export async function rescheduleSession(sessionId: string, newDate: any) {
-  console.log(sessionId)
+  console.log(sessionId);
   const { data, error } = await supabase
-    .from('Sessions')
+    .from("Sessions")
     .update({ date: newDate })
-    .eq('id', sessionId)
-    .select('*')
-    .single()
+    .eq("id", sessionId)
+    .select("*")
+    .single();
 
-  if (error) throw error
+  if (error) throw error;
   if (data) {
     return data[0];
   }
 
-  console.log(data)
+  console.log(data);
 }
-
 
 export async function cancelSession(sessionId: string) {
   const { data, error } = await supabase
-    .from('sessions')
-    .update({ status: 'CANCELLED' })
-    .eq('id', sessionId)
-    .single()
+    .from("Sessions")
+    .update({ status: "CANCELLED" })
+    .eq("id", sessionId)
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export async function addSessionNotes(sessionId: string, notes: string) {
   const { data, error } = await supabase
-    .from('sessions')
+    .from("Sessions")
     .update({ notes: notes })
-    .eq('id', sessionId)
-    .single()
+    .eq("id", sessionId)
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export async function getTutorAvailability(tutorId: string) {
   const { data, error } = await supabase
-    .from('tutor_availability')
-    .select('*')
-    .eq('tutor_id', tutorId)
+    .from("tutor_availability")
+    .select("*")
+    .eq("tutor_id", tutorId);
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
-export async function updateTutorAvailability(tutorId: string, availabilityData: any) {
+export async function updateTutorAvailability(
+  tutorId: string,
+  availabilityData: any
+) {
   const { data, error } = await supabase
-    .from('tutor_availability')
+    .from("tutor_availability")
     .upsert({ tutor_id: tutorId, ...availabilityData })
-    .eq('tutor_id', tutorId)
+    .eq("tutor_id", tutorId);
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export async function getTutorResources() {
-  const { data, error } = await supabase
-    .from('tutor_resources')
-    .select('*')
+  const { data, error } = await supabase.from("tutor_resources").select("*");
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
-export async function logSessionAttendance(sessionId: string, attended: boolean) {
+export async function logSessionAttendance(
+  sessionId: string,
+  attended: boolean
+) {
   const { data, error } = await supabase
-    .from('sessions')
+    .from("Sessions")
     .update({ attended: attended })
-    .eq('id', sessionId)
-    .single()
+    .eq("id", sessionId)
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }

@@ -28,7 +28,8 @@ interface Session {
   tutor: Profile | null;
   date: string;
   summary: string;
-  meetingId: string;
+  // meetingId: string;
+  meeting?: Meeting | null;
   status: string;
 }
 

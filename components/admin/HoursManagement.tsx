@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachWeekOfInterval, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfWeek, endOfMonth, eachWeekOfInterval, parseISO } from 'date-fns';
 import { 
   Table, 
   TableBody, 
@@ -20,6 +20,7 @@ import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { Profile, Session, Event } from '@/types';
 import { toast, Toaster } from "react-hot-toast";
 
+
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -32,6 +33,7 @@ const HoursManager = () => {
   const [newEvent, setNewEvent] = useState<Partial<Event>>({});
   const [eventsToRemove, setEventsToRemove] = useState<Event[]>([]);
   const [selectedEventToRemove, setSelectedEventToRemove] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchTutors();
@@ -63,6 +65,7 @@ const HoursManager = () => {
         getEventsWithTutorMonth(tutor?.id, startOfMonth(selectedDate).toISOString())
     );
 
+
     try {
       const sessionsResults = await Promise.all(sessionsPromises);
       const eventsResults = await Promise.all(eventsPromises);
@@ -79,6 +82,8 @@ const HoursManager = () => {
 
       setSessionsData(newSessionsData);
       setEventsData(newEventsData);
+
+      console.log("Fetched")
     } catch (error) {
       console.error("Failed to fetch sessions or events:", error);
     }
@@ -92,10 +97,12 @@ const HoursManager = () => {
       const sessionHours = allSessions
         .filter(session => session.status === 'Complete')
         .reduce((total, session) => total + calculateSessionDuration(session), 0);
+        // .reduce((total, session) => total + 1.0)
+
 
       const eventHours = allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
 
-      return { tutorId: tutor.id, hours: (sessionHours * 1.5) + eventHours };
+      return { tutorId: tutor.id, hours: (sessionHours) + eventHours };
     });
 
     try {
@@ -113,7 +120,7 @@ const HoursManager = () => {
   const calculateSessionDuration = (session: Session) => {
     const start = new Date(session.date);
     const end = new Date(session.date);
-    let sessionDuration = 1.5
+    let sessionDuration = 60 // ! Subject to change
     end.setMinutes(end.getMinutes() + sessionDuration);
     return (end.getTime() - start.getTime()) / (1000 * 60 * 60); // Convert to hours
   };
@@ -125,7 +132,7 @@ const HoursManager = () => {
         new Date(session.date) >= weekStart &&
         new Date(session.date) < weekEnd
       )
-      .reduce((total, session) => total + 1.5, 0) || 0;
+      .reduce((total, session) => total + 1, 0) || 0;
   };
 
   const calculateExtraHours = (tutorId: string) => {
@@ -135,7 +142,7 @@ const HoursManager = () => {
   const calculateMonthHours = (tutorId: string) => {
     const sessionHours = sessionsData[tutorId]
       ?.filter(session => session.status === 'Complete')
-      .reduce((total, session) => total + 1.5, 0) || 0;
+      .reduce((total, session) => total + 1, 0) || 0;
     const extraHours = calculateExtraHours(tutorId);
     return sessionHours + extraHours;
   };

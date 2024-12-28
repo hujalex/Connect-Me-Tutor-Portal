@@ -94,6 +94,8 @@ const frameworks = [
 
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState("")
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>(
     []
@@ -375,6 +377,7 @@ const EnrollmentList = () => {
 
   return (
     <main className="p-8">
+
       <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
@@ -397,12 +400,14 @@ const EnrollmentList = () => {
                   <DialogHeader>
                     <DialogTitle>Add New Enrollment</DialogTitle>
                   </DialogHeader>
+                  
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       {" "}
                       <Label htmlFor="tutor" className="text-right">
                         Student
                       </Label>
+                      
                       <Popover
                         open={openStudentOptions}
                         onOpenChange={setOpenStudentOptions}

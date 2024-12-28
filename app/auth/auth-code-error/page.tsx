@@ -78,7 +78,7 @@ export default function AuthError() {
             <div className="p-8 flex flex-col items-center justify-center gap-4 border border-gray-300 rounded-xl">
               <div className="flex flex-col gap-3">
                 <h1 className="text-2xl text-center font-bold">
-                  Your Confirmation link my have expired
+                  Your link may have expired
                 </h1>
                 <p className="text-sm text-gray-600"></p>
               </div>

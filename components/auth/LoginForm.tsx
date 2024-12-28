@@ -96,106 +96,150 @@ export default function LoginForm() {
     }
   };
 
+  // return (
+  //   <>
+  //     {!resetPassword && (
+  //       <div>
+  //         <Form {...form}>
+  //           <form
+  //             onSubmit={form.handleSubmit(onSubmit)}
+  //             className="space-y-8 p-0 rounded-md"
+  //           >
+  //             <FormField
+  //               control={form.control}
+  //               name="email"
+  //               render={({ field }) => (
+  //                 <FormItem>
+  //                   <FormLabel>Enter your email</FormLabel>
+  //                   <FormControl>
+  //                     <Input placeholder="youremail@example.com" {...field} />
+  //                   </FormControl>
+  //                   <FormDescription>
+  //                     Enter the email associated with your account.
+  //                   </FormDescription>
+  //                   <FormMessage />
+  //                 </FormItem>
+  //               )}
+  //             />
+  //             <FormField
+  //               control={form.control}
+  //               name="password"
+  //               render={({ field }) => (
+  //                 <FormItem>
+  //                   <FormLabel>Enter your password</FormLabel>
+  //                   <FormControl>
+  //                     <Input
+  //                       type="password"
+  //                       placeholder="********"
+  //                       {...field}
+  //                     />
+  //                   </FormControl>
+  //                   <FormMessage />
+  //                 </FormItem>
+  //               )}
+  //             />
+  //             <Button
+  //               disabled={isLoading}
+  //               type="submit"
+  //               className="w-full bg-blue-400"
+  //             >
+  //               {isLoading ? "Logging in..." : "Login"}
+  //             </Button>
+  //           </form>
+  //           <Toaster />
+  //         </Form>
+  //       </div>
+  //     )}
+
+  //     {resetPassword && (
+  //       <div>
+  //         <div>
+  //           <Form {...form}>
+  //             <form
+  //               onSubmit={form.handleSubmit(onSubmit)}
+  //               className="space-y-8 p-0 rounded-md"
+  //             >
+  //               <FormField
+  //                 control={form.control}
+  //                 name="email"
+  //                 render={({ field }) => (
+  //                   <FormItem>
+  //                     <FormLabel>Enter your email</FormLabel>
+  //                     <FormControl>
+  //                       <Input placeholder="youremail@example.com" {...field} />
+  //                     </FormControl>
+  //                     <FormDescription>
+  //                       Enter the email associated with your account.
+  //                     </FormDescription>
+  //                     <FormMessage />
+  //                   </FormItem>
+  //                 )}
+  //               />
+  //               <Button
+  //                 disabled={isLoading}
+  //                 type="submit"
+  //                 className="w-full bg-blue-400"
+  //                 onClick={sendResetPassword}
+  //               >
+  //                 {isLoading ? "Sending Email..." : "Reset Password"}
+  //               </Button>
+  //             </form>
+  //             <Toaster />
+  //           </Form>
+  //         </div>
+  //       </div>
+  //     )}
+
+  //     <p
+  //       className="cursor-pointer hover: underline"
+  //       onClick={() => setResetPassword(!resetPassword)}
+  //     >
+  //       {resetPassword ? "Login" : "Reset my Password"}
+  //     </p>
+  //   </>
+  // );
   return (
-    <>
-      {!resetPassword && (
-        <div>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8 p-0 rounded-md"
-            >
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Enter your email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="youremail@example.com" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Enter the email associated with your account.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Enter your password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                disabled={isLoading}
-                type="submit"
-                className="w-full bg-blue-400"
-              >
-                {isLoading ? "Logging in..." : "Login"}
-              </Button>
-            </form>
-            <Toaster />
-          </Form>
-        </div>
-      )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4 p-0 rounded-md">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem className='w-full'>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter your email address" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="Enter your password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      {resetPassword && (
-        <div>
-          <div>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8 p-0 rounded-md"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Enter your email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="youremail@example.com" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the email associated with your account.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  disabled={isLoading}
-                  type="submit"
-                  className="w-full bg-blue-400"
-                  onClick={sendResetPassword}
-                >
-                  {isLoading ? "Sending Email..." : "Reset Password"}
-                </Button>
-              </form>
-              <Toaster />
-            </Form>
-          </div>
-        </div>
-      )}
+        <FormDescription>
+          <Link href="/forgot-password"><b>Forgot password</b></Link>
+        </FormDescription>
+        <Button disabled={isLoading} type="submit" className='w-full bg-blue-400'>
+          {isLoading ? 'Logging in...' : 'Login'}
+        </Button>
 
-      <p
-        className="cursor-pointer hover: underline"
-        onClick={() => setResetPassword(!resetPassword)}
-      >
-        {resetPassword ? "Login" : "Reset my Password"}
-      </p>
-    </>
-  );
+        {/* <FormDescription>
+          Don&apos;t have an account? < Link href='/register'><b>Register</b></Link>
+        </FormDescription> */}
+      </form>
+      <Toaster/>
+    </Form>
+  )
 }
