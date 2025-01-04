@@ -278,112 +278,180 @@ export default function MigrateDataPage() {
     }
   };
 
+  // const handleConfirmTutorMigration = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   setMigrationStatus("Migrating selected students...");
+
+  //   const selectedTutorData: Profile[] = [];
+  //   const selectedIndices = Array.from(selectedTutors);
+
+  //   //Store selected Tutors
+  //   selectedIndices.forEach((index) => {
+  //     selectedTutorData.push(tutors[index]);
+  //   });
+
+  //   //Array without migrated tutors
+  //   const remainingTutors = tutors.filter(
+  //     (_, index) => !selectedTutors.has(index)
+  //   );
+
+  //   setTutors(remainingTutors);
+  //   setSelectedTutors(new Set());
+
+  //   const erroredEntries: ErrorEntry[] = [];
+
+  //   selectedTutorData.forEach(async (entry) => {
+  //     try {
+  //       if ((await addTutor(entry)) === null) {
+  //         throw new Error();
+  //       }
+  //     } catch (error) {
+  //       const err = error as Error;
+  //       erroredEntries.push({
+  //         profile: entry,
+  //         error: err.message || "Unknown error occured",
+  //       });
+  //       console.log(`Error for ${entry.email}: ${err.message}`);
+  //     }
+  //   });
+  //   //     try {
+  //   //       const selectedStudentData = Array.from(selectedStudents).map(index => students[index]);
+  //   //       const response = await migrateSelectedStudents(selectedStudentData);
+
+  //   //       if (response.success) {
+  //   //         setMigrationStatus(`Successfully migrated ${response.migratedCount} students!`);
+  //   //         setTimeout(() => {
+  //   //           setIsOpen(false);
+  //   //           setStudents([]);
+  //   //           setSelectedStudents(new Set());
+  //   //           setMigrationStatus('');
+  //   //         }, 2000);
+  //   //       } else {
+  //   //         throw new Error(response.error);
+  //   //       }
+  //   //     } catch (error) {
+  //   //       const errorMessage = error instanceof Error ? error.message : 'Migration failed';
+  //   //       setError(errorMessage);
+  //   //       setMigrationStatus('Migration failed. Please try again.');
+  //   //       console.error('Migration failed:', error);
+  //   //     } finally {
+  //   //       setLoading(false);
+  //   //     }
+  //   setErroredTutorEntries((prev) => [...prev, ...erroredEntries]);
+  //   setLoading(false);
+  //   setMigrationStatus("");
+  //   setRevealErrorEntries(true);
+  // };
+
   const handleConfirmTutorMigration = async () => {
     setLoading(true);
-    setError(null);
-    setMigrationStatus("Migrating selected students...");
+    const erroredEntries: ErrorEntry[] = [];
+    const migrations: number[] = [];
 
-    const selectedTutorData: Profile[] = [];
-    const selectedIndices = Array.from(selectedTutors);
+    await Promise.all(
+      Array.from(selectedTutors).map(async (index) => {
+        try {
+          migrations.push(index);
+          const entry = tutors[index];
+          if ((await addTutor(entry)) !== null) {
+          }
+        } catch (error) {
+          const err = error as Error;
+          erroredEntries.push({
+            profile: tutors[index],
+            error: err.message || "Unknown error occurred",
+          });
+        }
+      })
+    );
 
-    //Store selected Tutors
-    selectedIndices.forEach((index) => {
-      selectedTutorData.push(tutors[index]);
-    });
-
-    //Array without migrated tutors
+    // Keep only tutors that weren't successfully migrated
     const remainingTutors = tutors.filter(
-      (_, index) => !selectedTutors.has(index)
+      (_, index) => !migrations.includes(index)
     );
 
     setTutors(remainingTutors);
     setSelectedTutors(new Set());
-
-    const erroredEntries: ErrorEntry[] = [];
-
-    selectedTutorData.forEach(async (entry) => {
-      try {
-        if ((await addTutor(entry)) === null) {
-          throw new Error();
-        }
-      } catch (error) {
-        const err = error as Error;
-        erroredEntries.push({
-          profile: entry,
-          error: err.message || "Unknown error occured",
-        });
-        console.log(`Error for ${entry.email}: ${err.message}`);
-      }
-    });
-    //     try {
-    //       const selectedStudentData = Array.from(selectedStudents).map(index => students[index]);
-    //       const response = await migrateSelectedStudents(selectedStudentData);
-
-    //       if (response.success) {
-    //         setMigrationStatus(`Successfully migrated ${response.migratedCount} students!`);
-    //         setTimeout(() => {
-    //           setIsOpen(false);
-    //           setStudents([]);
-    //           setSelectedStudents(new Set());
-    //           setMigrationStatus('');
-    //         }, 2000);
-    //       } else {
-    //         throw new Error(response.error);
-    //       }
-    //     } catch (error) {
-    //       const errorMessage = error instanceof Error ? error.message : 'Migration failed';
-    //       setError(errorMessage);
-    //       setMigrationStatus('Migration failed. Please try again.');
-    //       console.error('Migration failed:', error);
-    //     } finally {
-    //       setLoading(false);
-    //     }
     setErroredTutorEntries((prev) => [...prev, ...erroredEntries]);
     setLoading(false);
-    setMigrationStatus("");
     setRevealErrorEntries(true);
   };
 
+  // const handleConfirmStudentMigration = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   setMigrationStatus("Migrating selected students...");
+
+  //   const selectedStudentData: Profile[] = [];
+  //   const selectedIndices = Array.from(selectedStudents);
+
+  //   //Store selected Tutors
+  //   selectedIndices.forEach((index) => {
+  //     selectedStudentData.push(students[index]);
+  //   });
+
+  //   //Array without migrated tutors
+  //   const remainingStudents = students.filter(
+  //     (_, index) => !selectedStudents.has(index)
+  //   );
+
+  //   setStudents(remainingStudents);
+  //   setSelectedStudents(new Set());
+
+  //   const erroredEntries: ErrorEntry[] = [];
+  //   selectedStudentData.forEach(async (entry) => {
+  //     try {
+  //       if ((await addStudent(entry)) === null) {
+  //         throw new Error();
+  //       }
+  //     } catch (error) {
+  //       const err = error as Error;
+  //       erroredEntries.push({
+  //         profile: entry,
+  //         error: err.message || "Unknown error occured",
+  //       });
+  //       console.log("Errored Entry");
+  //     }
+  //   });
+  //   setLoading(false);
+  //   setMigrationStatus("");
+  //   setRevealErrorEntries(true);
+  //   setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
+  // };
+
   const handleConfirmStudentMigration = async () => {
     setLoading(true);
-    setError(null);
-    setMigrationStatus("Migrating selected students...");
+    const erroredEntries: ErrorEntry[] = [];
+    const migrations: number[] = [];
 
-    const selectedStudentData: Profile[] = [];
-    const selectedIndices = Array.from(selectedStudents);
+    await Promise.all(
+      Array.from(selectedStudents).map(async (index) => {
+        try {
+          migrations.push(index);
+          const entry = students[index];
+          if ((await addStudent(entry)) !== null) {
+          }
+        } catch (error) {
+          const err = error as Error;
+          erroredEntries.push({
+            profile: students[index],
+            error: err.message || "Unknown error occurred",
+          });
+        }
+      })
+    );
 
-    //Store selected Tutors
-    selectedIndices.forEach((index) => {
-      selectedStudentData.push(students[index]);
-    });
-
-    //Array without migrated tutors
+    // Keep only students that weren't successfully migrated
     const remainingStudents = students.filter(
-      (_, index) => !selectedStudents.has(index)
+      (_, index) => !migrations.includes(index)
     );
 
     setStudents(remainingStudents);
     setSelectedStudents(new Set());
-
-    const erroredEntries: ErrorEntry[] = [];
-    selectedStudentData.forEach(async (entry) => {
-      try {
-        if ((await addStudent(entry)) === null) {
-          throw new Error();
-        }
-      } catch (error) {
-        const err = error as Error;
-        erroredEntries.push({
-          profile: entry,
-          error: err.message || "Unknown error occured",
-        });
-        console.log("Errored Entry");
-      }
-    });
-    setLoading(false);
-    setMigrationStatus("");
-    setRevealErrorEntries(true);
     setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
+    setLoading(false);
+    setRevealErrorEntries(true);
   };
 
   const handleUserSwitch = async () => {
