@@ -47,23 +47,23 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Papa from "papaparse";
 import { string } from "zod";
 import internal from "stream";
+import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 
-// const migratedTutor: Profile = {
-//   role: "Tutor",
-//   firstName: "",
-//   lastName: "",
-//   dateOfBirth: "",
-//   startDate: "",
-//   availability: [],
-//   email: "",
-//   parentName: "",
-//   parentPhone: "",
-//   parentEmail: "",
-//   timeZone: "",
-//   subjectsOfInterest: [],
-//   status: "Active",
-//   tutorIds: [],
-// };
+//-------------Indexing based on Data from imported CSV FILE-----------
+const col_idx = {
+  "Tutor Name": 1,
+  "Student Name": 2,
+  "Tutor Email": 3,
+  "Student Email": 4,
+  "Day of the Week": 5,
+  "Session Time": 6,
+  "Zoom Link": 7,
+};
+
+interface ErrorEntry {
+  profile: Profile;
+  error: string;
+}
 
 export default function MigrateDataPage() {
   const supabase = createClientComponentClient({
@@ -72,10 +72,12 @@ export default function MigrateDataPage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [erroredTutorEntries, setErroredTutorEntries] = useState<Profile[]>([]);
-  const [erroredStudentEntries, setErroredStudentEntries] = useState<Profile[]>(
+  const [erroredTutorEntries, setErroredTutorEntries] = useState<ErrorEntry[]>(
     []
   );
+  const [erroredStudentEntries, setErroredStudentEntries] = useState<
+    ErrorEntry[]
+  >([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +91,10 @@ export default function MigrateDataPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [migrationStatus, setMigrationStatus] = useState("");
   const [userOption, setUserOption] = useState(false);
+  const [showTutors, setShowTutors] = useState(true);
+  const [showStudents, setShowStudents] = useState(false);
   const [showErrorEntries, setShowErrorEntries] = useState(false);
-  const [revealErrorEntries, setRevealErrorEntries] = useState(true);
+  const [revealErrorEntries, setRevealErrorEntries] = useState(false);
 
   const ITEMS_PER_PAGE = 10;
 
@@ -99,16 +103,6 @@ export default function MigrateDataPage() {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentStudents = students?.slice(startIndex, endIndex);
   const currentTutors = tutors?.slice(startIndex, endIndex);
-
-  const col_idx = {
-    "Tutor Name": 1,
-    "Student Name": 2,
-    "Tutor Email": 3,
-    "Student Email": 4,
-    "Day of the Week": 5,
-    "Session Time": 6,
-    "Zoom Link": 7,
-  };
 
   const formatAvailability = (
     availability: Profile["availability"]
@@ -138,6 +132,26 @@ export default function MigrateDataPage() {
     setSelectedTutors(newSelected);
   };
 
+  const toggleSelectAllStudents = () => {
+    if (selectedStudents.size === currentStudents.length) {
+      setSelectedStudents(new Set());
+    } else {
+      setSelectedStudents(
+        new Set(currentStudents.map((_, index) => startIndex + index))
+      );
+    }
+  };
+
+  const toggleSelectAllTutors = () => {
+    if (selectedTutors.size === currentTutors.length) {
+      setSelectedTutors(new Set());
+    } else {
+      setSelectedTutors(
+        new Set(currentTutors.map((_, index) => startIndex + index))
+      );
+    }
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setFile(event.target.files[0]);
@@ -157,10 +171,11 @@ export default function MigrateDataPage() {
 
   const handleMigrateStudents = async (len: number, data: any) => {
     const students: Profile[] = [];
-    const errors: Profile[] = [];
+    // const errors: Profile[] = [];
 
-    for (let i = 0; i < len; ++i) {
-      const entry = data.at(3) as string[];
+    for (let i = 0; i < len - 1; ++i) {
+      const entry = data.at(i) as string[];
+      console.log(i);
 
       const migratedProfile: Profile = {
         role: "Student",
@@ -181,23 +196,25 @@ export default function MigrateDataPage() {
         createdAt: "",
         userId: "",
       };
-      try {
-        students.push(migratedProfile);
-      } catch (error) {
-        errors.push(migratedProfile);
-        console.error(`Error for row ${i}`);
-      }
+      // try {
+      //   students.push(migratedProfile);
+      // } catch (error) {
+      //   errors.push(migratedProfile);
+      //   console.error(`Error for row ${i}`);
+      // }
+      students.push(migratedProfile);
     }
     setStudents(students);
-    setErroredStudentEntries(errors);
+    // setErroredStudentEntries(errors);
   };
 
   const handleMigrateTutors = async (len: number, data: any) => {
     const tutors: Profile[] = [];
-    const errors: Profile[] = [];
+    // const errors: ErrorEntry[] = [];
 
-    for (let i = 0; i < len; ++i) {
-      const entry = data.at(3) as string[];
+    // ------Need to Subtract len by 1 because len contains the headers as well----
+    for (let i = 0; i < len - 1; ++i) {
+      const entry = data.at(i) as string[];
 
       const migratedProfile: Profile = {
         role: "Tutor",
@@ -218,21 +235,23 @@ export default function MigrateDataPage() {
         createdAt: "",
         userId: "",
       };
-      try {
-        tutors.push(migratedProfile);
-      } catch (error) {
-        errors.push(migratedProfile);
-        console.error(`Error for row ${i}`);
-      }
+      // try {
+      //   tutors.push(migratedProfile);
+      // } catch (error) {
+      //   errors.push(migratedProfile);
+      //   console.error(`Error for row ${i}`);
+      // }
+      tutors.push(migratedProfile);
     }
     setTutors(tutors);
-    setErroredTutorEntries(errors);
+    // setErroredTutorEntries(errors);
   };
 
   const handleMigrate = async () => {
-    setUploading(true);
+    // setUploading(true);
     setLoading(true);
     setIsOpen(true);
+
     try {
       if (file) {
         Papa.parse(file, {
@@ -254,7 +273,7 @@ export default function MigrateDataPage() {
     } catch (error) {
       console.error("Error uploading file:", error);
     } finally {
-      setUploading(false);
+      // setUploading(false);
       setLoading(false);
     }
   };
@@ -264,11 +283,23 @@ export default function MigrateDataPage() {
     setError(null);
     setMigrationStatus("Migrating selected students...");
 
-    const selectedTutorData = Array.from(selectedTutors).map(
-      (index) => tutors[index]
+    const selectedTutorData: Profile[] = [];
+    const selectedIndices = Array.from(selectedTutors);
+
+    //Store selected Tutors
+    selectedIndices.forEach((index) => {
+      selectedTutorData.push(tutors[index]);
+    });
+
+    //Array without migrated tutors
+    const remainingTutors = tutors.filter(
+      (_, index) => !selectedTutors.has(index)
     );
 
-    const erroredEntries: Profile[] = [];
+    setTutors(remainingTutors);
+    setSelectedTutors(new Set());
+
+    const erroredEntries: ErrorEntry[] = [];
 
     selectedTutorData.forEach(async (entry) => {
       try {
@@ -276,10 +307,12 @@ export default function MigrateDataPage() {
           throw new Error();
         }
       } catch (error) {
-        erroredEntries.push(entry);
-        console.log("Errored Entry");
-      } finally {
-        setErroredTutorEntries(erroredEntries);
+        const err = error as Error;
+        erroredEntries.push({
+          profile: entry,
+          error: err.message || "Unknown error occured",
+        });
+        console.log(`Error for ${entry.email}: ${err.message}`);
       }
     });
     //     try {
@@ -305,6 +338,10 @@ export default function MigrateDataPage() {
     //     } finally {
     //       setLoading(false);
     //     }
+    setErroredTutorEntries((prev) => [...prev, ...erroredEntries]);
+    setLoading(false);
+    setMigrationStatus("");
+    setRevealErrorEntries(true);
   };
 
   const handleConfirmStudentMigration = async () => {
@@ -312,35 +349,50 @@ export default function MigrateDataPage() {
     setError(null);
     setMigrationStatus("Migrating selected students...");
 
-    const selectedStudentData = Array.from(selectedStudents).map(
-      (index) => students[index]
+    const selectedStudentData: Profile[] = [];
+    const selectedIndices = Array.from(selectedStudents);
+
+    //Store selected Tutors
+    selectedIndices.forEach((index) => {
+      selectedStudentData.push(students[index]);
+    });
+
+    //Array without migrated tutors
+    const remainingStudents = students.filter(
+      (_, index) => !selectedStudents.has(index)
     );
 
-    const erroredEntries: Profile[] = [];
+    setStudents(remainingStudents);
+    setSelectedStudents(new Set());
+
+    const erroredEntries: ErrorEntry[] = [];
     selectedStudentData.forEach(async (entry) => {
       try {
         if ((await addStudent(entry)) === null) {
           throw new Error();
         }
       } catch (error) {
-        erroredEntries.push(entry);
+        const err = error as Error;
+        erroredEntries.push({
+          profile: entry,
+          error: err.message || "Unknown error occured",
+        });
         console.log("Errored Entry");
-      } finally {
-        setErroredStudentEntries(erroredEntries);
       }
     });
+    setLoading(false);
+    setMigrationStatus("");
+    setRevealErrorEntries(true);
+    setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
   };
 
   const handleUserSwitch = async () => {
     console.log("switched");
     setUserOption((prev) => !prev);
-    if (showErrorEntries) {
-      setShowErrorEntries(false);
-    }
   };
 
   const handleShowErrorEntries = async () => {
-    setShowErrorEntries(true);
+    setShowErrorEntries((prev) => !prev);
   };
 
   return (
@@ -372,18 +424,14 @@ export default function MigrateDataPage() {
             <div className="flex flex-row gap-2">
               <DialogTitle
                 onClick={handleUserSwitch}
-                className={`${
-                  showErrorEntries ? "" : userOption ? "" : "text-[#84ceeb]"
-                } `}
+                className={`${userOption ? "" : "text-[#84ceeb]"} `}
               >
                 Tutor Migration
               </DialogTitle>
               <DialogTitle> | </DialogTitle>
               <DialogTitle
                 onClick={handleUserSwitch}
-                className={`${
-                  showErrorEntries ? "" : userOption ? "text-[#84ceeb]" : ""
-                }`}
+                className={`${userOption ? "text-[#84ceeb]" : ""}`}
               >
                 Student Migration
               </DialogTitle>
@@ -398,34 +446,104 @@ export default function MigrateDataPage() {
                 className={`${
                   revealErrorEntries
                     ? showErrorEntries
-                      ? "text-[#ff0000]"
-                      : ""
+                      ? "text-[#008000]"
+                      : "text-[#ff0000]"
                     : "invisible"
                 }`}
               >
-                Incomplete Migration
+                {showErrorEntries ? "Show Remaining" : "Show Errors"}
               </DialogTitle>
             </div>
 
             <DialogDescription>
-              {userOption
+              {showErrorEntries
+                ? "Entries with errors"
+                : userOption
                 ? "Select the Students you want to migrate to the system."
                 : "Select the Tutors you want to migrate to the system."}
             </DialogDescription>
           </DialogHeader>
 
           {userOption ? (
-            students?.length > 0 ? (
+            showErrorEntries ? (
+              erroredStudentEntries?.length > 0 ? (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Error Message</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {erroredStudentEntries.map((student, index) => (
+                        <TableRow key={student.profile.id}>
+                          <TableCell>{`${student.profile.role}`}</TableCell>
+                          <TableCell>{`${student.profile.firstName} ${student.profile.lastName}`}</TableCell>
+                          <TableCell>{`${student.profile.email}`}</TableCell>
+                          <TableCell>{`${student.error}`}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                          }
+                          aria-disabled={currentPage === 1}
+                        />
+                      </PaginationItem>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(page)}
+                              isActive={currentPage === page}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          aria-disabled={currentPage === totalPages}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </>
+              ) : loading ? (
+                <div className="flex justify-center items-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : (
+                <p className="text-center p-8">No Errors found</p>
+              )
+            ) : students?.length > 0 ? (
               <>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        {/* <Checkbox
-                            checked={selectedStudents.size === currentStudents.length}
-                            onCheckedChange={toggleSelectAll}
-                            aria-label="Select all students"
-                        /> */}
+                        <Checkbox
+                          checked={
+                            selectedStudents.size === currentStudents.length
+                          }
+                          onCheckedChange={toggleSelectAllStudents}
+                          aria-label="Select all students"
+                        />
                       </TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
@@ -513,19 +631,84 @@ export default function MigrateDataPage() {
               </div>
             ) : (
               <p className="text-center p-8">No students found</p>
+            ) //-----Migrating Tutors-----
+          ) : showErrorEntries ? (
+            erroredTutorEntries?.length > 0 ? (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Error</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {erroredTutorEntries.map((tutor, index) => (
+                      <TableRow key={tutor.profile.id}>
+                        <TableCell>{`${tutor.profile.role}`}</TableCell>
+                        <TableCell>{`${tutor.profile.firstName} ${tutor.profile.lastName}`}</TableCell>
+                        <TableCell>{`${tutor.profile.email}`}</TableCell>
+                        <TableCell>{`${tutor.error}`}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((p) => Math.max(1, p - 1))
+                        }
+                        aria-disabled={currentPage === 1}
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        aria-disabled={currentPage === totalPages}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </>
+            ) : loading ? (
+              <div className="flex justify-center items-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <p className="text-center p-8">No Errors found</p>
             )
-          ) : //-----Migrating Tutors-----
-          tutors?.length > 0 ? (
+          ) : tutors?.length > 0 ? (
             <>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
-                      {/* <Checkbox
-                            checked={selectedStudents.size === currentStudents.length}
-                            onCheckedChange={toggleSelectAll}
-                            aria-label="Select all students"
-                        /> */}
+                      <Checkbox
+                        checked={selectedTutors.size === currentTutors.length}
+                        onCheckedChange={toggleSelectAllTutors}
+                        aria-label="Select all students"
+                      />
                     </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
@@ -619,13 +802,15 @@ export default function MigrateDataPage() {
             </p>
           )}
 
-          <DialogFooter>
+          <DialogFooter className={`${showErrorEntries ? "invisible" : ""}`}>
             {userOption ? (
               <Button
                 onClick={handleConfirmStudentMigration}
                 disabled={loading || selectedStudents.size === 0}
               >
-                {loading ? (
+                {showErrorEntries ? (
+                  ""
+                ) : loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing...
@@ -639,7 +824,9 @@ export default function MigrateDataPage() {
                 onClick={handleConfirmTutorMigration}
                 disabled={loading || selectedTutors.size === 0}
               >
-                {loading ? (
+                {showErrorEntries ? (
+                  ""
+                ) : loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing...
