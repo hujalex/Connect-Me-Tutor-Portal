@@ -236,8 +236,9 @@ const TutorList = () => {
         });
       }
     } catch (error) {
+      const err = error as Error;
       console.error("Error adding tutor:", error);
-      toast.error("Failed to add tutor");
+      toast.error(`Failed to add tutor ${err.message}`);
     }
   };
 

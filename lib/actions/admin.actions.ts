@@ -108,10 +108,6 @@ export const addStudent = async (
       throw new Error("Email is required to create a student profile");
     }
 
-    const tempPassword = await createPassword();
-
-    const userId = await createUser(studentData.email, tempPassword);
-
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
       .from("Profiles")
@@ -127,6 +123,10 @@ export const addStudent = async (
     if (existingUser) {
       throw new Error("A user with this email already exists");
     }
+
+    //-----Moved After Duplicate Check to prevent Sending confimration email-----
+    const tempPassword = await createPassword();
+    const userId = await createUser(studentData.email, tempPassword);
 
     // Create the student profile without id and createdAt
     const newStudentProfile = {
@@ -199,9 +199,6 @@ export const addTutor = async (
       throw new Error("Email is required to create a student profile");
     }
 
-    const tempPassword = await createPassword();
-    const userId = await createUser(tutorData.email, tempPassword);
-
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
       .from("Profiles")
@@ -217,6 +214,10 @@ export const addTutor = async (
     if (existingUser) {
       throw new Error("A user with this email already exists");
     }
+
+    //-----Moved After Duplicate Check to prevent Sending confimration email-----
+    const tempPassword = await createPassword();
+    const userId = await createUser(tutorData.email, tempPassword);
 
     // Create the student profile without id and createdAt
     const newTutorProfile = {
