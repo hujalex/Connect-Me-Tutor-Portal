@@ -339,6 +339,7 @@ const EnrollmentList = () => {
         setIsEditModalOpen(false);
         setSelectedEnrollment(null);
         toast.success("Enrollment updated successfully");
+        fetchEnrollments(); // reload Enrollments
       } catch (error) {
         console.error("Error updating enrollment:", error);
         toast.error("Failed to update enrollment");
@@ -441,7 +442,7 @@ const EnrollmentList = () => {
                         <PopoverContent className="">
                           <Command>
                             <CommandInput
-                              placeholder="Search framework..."
+                              placeholder="Search Student..."
                               value={studentSearch}
                               onValueChange={setStudentSearch}
                             />
@@ -527,7 +528,7 @@ const EnrollmentList = () => {
                         <PopoverContent className="">
                           <Command>
                             <CommandInput
-                              placeholder="Search framework..."
+                              placeholder="Search Tutor..."
                               value={tutorSearch}
                               onValueChange={setTutorSearch}
                             />
@@ -905,7 +906,7 @@ const EnrollmentList = () => {
                   <PopoverContent className="">
                     <Command>
                       <CommandInput
-                        placeholder="Search framework..."
+                        placeholder="Search Student..."
                         value={studentSearch}
                         onValueChange={setStudentSearch}
                       />
@@ -1011,7 +1012,7 @@ const EnrollmentList = () => {
                   <PopoverContent className="">
                     <Command>
                       <CommandInput
-                        placeholder="Search framework..."
+                        placeholder="Search Tutor..."
                         value={tutorSearch}
                         onValueChange={setTutorSearch}
                       />
