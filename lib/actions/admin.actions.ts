@@ -761,6 +761,7 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       start_date: enrollment.startDate,
       end_date: enrollment.endDate,
       availability: enrollment.availability,
+      meetingId: enrollment.meetingId,
     })
     .eq("id", enrollment.id)
     .select("*") // Ensure it selects all columns
