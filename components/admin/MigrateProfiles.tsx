@@ -36,6 +36,7 @@ import {
   getEvents,
   getEventsWithTutorMonth,
   addStudent,
+  addEnrollment,
 } from "@/lib/actions/admin.actions";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,7 +47,7 @@ import {
 } from "@/lib/actions/migrate.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Papa from "papaparse";
-import { string } from "zod";
+import { map, string } from "zod";
 import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 import { Enrollment } from "@/types";
@@ -600,6 +601,42 @@ export default function MigrateDataPage() {
 
   const handleConfirmPairingMigration = async () => {
     setLoading(true);
+    const migrations: number[] = [];
+
+    await Promise.all(
+      Array.from(selectedPairings).map(async (index) => {
+        migrations.push(index);
+        const entry = pairings[index];
+        try {
+          if (entry?.student) {
+            await addStudent(entry?.student);
+          }
+        } catch {
+          console.log("Student already exists");
+        }
+        try {
+          if (entry?.tutor) {
+            await addTutor(entry?.tutor);
+          }
+        } catch {
+          console.log("Tutor already exists");
+        }
+        try {
+          await addEnrollment(entry);
+        } catch (error) {
+          const err = error as Error;
+          console.error(err);
+        }
+      })
+    );
+
+    const remainingpairings = pairings.filter(
+      (_, index) => !migrations.includes(index)
+    );
+
+    setPairings(remainingpairings);
+    setSelectedPairings(new Set());
+    setLoading(false);
   };
 
   const handleUserSwitch = async () => {
