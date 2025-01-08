@@ -598,11 +598,9 @@ export default function MigrateDataPage() {
     setRevealErrorEntries(true);
   };
 
-  const handleConfirmPairingMigration = async() => {
-    setLoading(true)
-    
-
-  }
+  const handleConfirmPairingMigration = async () => {
+    setLoading(true);
+  };
 
   const handleUserSwitch = async () => {
     console.log("switched");
@@ -690,6 +688,59 @@ export default function MigrateDataPage() {
                   : "Select the Tutors you want to migrate to the system."}
               </DialogDescription>
             </DialogHeader>
+
+            {showPairings ? (
+              showErrorEntries ? (
+                "Hi"
+              ) : pairings.length > 0 ? (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={
+                              selectedPairings.size === currentPairings.length
+                            }
+                            onCheckedChange={toggleSelectAllPairings}
+                            aria-label="Select all Pairings"
+                          />
+                        </TableHead>
+                        <TableHead>Tutor</TableHead>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pairings.map((pairing, index) => (
+                        <TableRow key={pairing.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedPairings.has(startIndex + index)}
+                              onCheckedChange={() =>
+                                toggleSelectPairing(startIndex + index)
+                              }
+                              aria-label={`Select ${pairing.tutor?.firstName} ${pairing.tutor?.lastName} - ${pairing.student?.firstName} ${pairing.student?.lastName}`}
+                            />
+                          </TableCell>
+                          <TableCell>{`${pairing.tutor?.firstName} ${pairing.tutor?.lastName}`}</TableCell>
+                          <TableCell>{`${pairing.student?.firstName} ${pairing.student?.lastName}`}</TableCell>
+                          <TableCell>{`${pairing.startDate}`}</TableCell>
+                          <TableCell>{`${pairing.endDate}`}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {myPagination}
+                </>
+              ) : (
+                <p className="text-center p-8">No pairings found</p>
+              )
+            ) : (
+              ""
+            )}
 
             {showStudents ? (
               showErrorEntries ? (
@@ -795,56 +846,7 @@ export default function MigrateDataPage() {
             ) : (
               ""
             )}
-            {showPairings ? (
-              showErrorEntries ? (
-                "Hi"
-              ) : pairings.length > 0 ? (
-                <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          <Checkbox
-                            checked={
-                              selectedPairings.size === currentPairings.length
-                            }
-                            onCheckedChange={toggleSelectAllPairings}
-                            aria-label="Select all Pairings"
-                          />
-                        </TableHead>
-                        <TableHead>Tutor</TableHead>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Meeting</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pairings.map((pairing, index) => (
-                        <TableRow key={pairing.id}>
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedPairings.has(startIndex + index)}
-                              onCheckedChange={() =>
-                                toggleSelectTutor(startIndex + index)
-                              }
-                              aria-label={`Select ${pairing.tutor?.firstName} ${pairing.tutor?.lastName} - ${pairing.student?.firstName} ${pairing.student?.lastName}`}
-                            />
-                          </TableCell>
-                          <TableCell>{`${pairing.tutor?.firstName} ${pairing.tutor?.lastName}`}</TableCell>
-                          <TableCell>{`${pairing.student?.firstName} ${pairing.student?.lastName}`}</TableCell>
-                          <TableCell>{`${pairing.meetingId}`}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
 
-                  {myPagination}
-                </>
-              ) : (
-                <p className="text-center p-8">No pairings found</p>
-              )
-            ) : (
-              ""
-            )}
             {/* Fix this later */}
 
             {/* //   : loading ? (
@@ -1018,7 +1020,7 @@ export default function MigrateDataPage() {
                       Processing...
                     </>
                   ) : (
-                    `Migrate Selected (${selectedTutors.size})`
+                    `Migrate Selected (${selectedPairings.size})`
                   )}
                 </Button>
               ) : (
