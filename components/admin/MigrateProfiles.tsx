@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,6 +49,7 @@ import Papa from "papaparse";
 import { string } from "zod";
 import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
+import { Enrollment } from "@/types";
 
 //-------------Indexing based on Data from imported CSV FILE-----------
 const col_idx = {
@@ -83,26 +85,32 @@ export default function MigrateDataPage() {
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<Profile[]>([]);
   const [tutors, setTutors] = useState<Profile[]>([]);
+  const [pairings, setPairings] = useState<Enrollment[]>([]);
 
   const [selectedStudents, setSelectedStudents] = useState<Set<number>>(
     new Set()
   );
   const [selectedTutors, setSelectedTutors] = useState<Set<number>>(new Set());
+  const [selectedPairings, setSelectedPairings] = useState<Set<number>>(
+    new Set()
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [migrationStatus, setMigrationStatus] = useState("");
   const [userOption, setUserOption] = useState(false);
   const [showTutors, setShowTutors] = useState(true);
   const [showStudents, setShowStudents] = useState(false);
+  const [showPairings, setShowPairings] = useState(false);
   const [showErrorEntries, setShowErrorEntries] = useState(false);
   const [revealErrorEntries, setRevealErrorEntries] = useState(false);
 
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 5;
 
   const totalPages = Math.ceil(students?.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentStudents = students?.slice(startIndex, endIndex);
   const currentTutors = tutors?.slice(startIndex, endIndex);
+  const currentPairings = pairings?.slice(startIndex, endIndex);
 
   const formatAvailability = (
     availability: Profile["availability"]
@@ -111,6 +119,37 @@ export default function MigrateDataPage() {
       .map((slot) => `${slot.day} ${slot.startTime}-${slot.endTime}`)
       .join(", ");
   };
+
+  const myPagination = (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            aria-disabled={currentPage === 1}
+          />
+        </PaginationItem>
+
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <PaginationItem key={page}>
+            <PaginationLink
+              onClick={() => setCurrentPage(page)}
+              isActive={currentPage === page}
+            >
+              {page}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+
+        <PaginationItem>
+          <PaginationNext
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            aria-disabled={currentPage === totalPages}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
 
   const toggleSelectStudent = (index: number) => {
     const newSelected = new Set(selectedStudents);
@@ -130,6 +169,16 @@ export default function MigrateDataPage() {
       newSelected.add(index);
     }
     setSelectedTutors(newSelected);
+  };
+
+  const toggleSelectPairing = (index: number) => {
+    const newSelected = new Set(selectedPairings);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedPairings(newSelected);
   };
 
   const toggleSelectAllStudents = () => {
@@ -152,10 +201,40 @@ export default function MigrateDataPage() {
     }
   };
 
+  const toggleSelectAllPairings = () => {
+    if (selectedPairings.size === currentPairings.length) {
+      setSelectedPairings(new Set());
+    } else {
+      setSelectedPairings(
+        new Set(currentPairings.map((_, index) => startIndex + index))
+      );
+    }
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setFile(event.target.files[0]);
     }
+    setErroredStudentEntries([]);
+    setErroredTutorEntries([]);
+  };
+
+  const handleShowTutors = async () => {
+    setShowStudents(false);
+    setShowPairings(false);
+    setShowTutors(true);
+  };
+
+  const handleShowStudents = async () => {
+    setShowTutors(false);
+    setShowPairings(false);
+    setShowStudents(true);
+  };
+
+  const handleShowPairings = async () => {
+    setShowTutors(false);
+    setShowStudents(false);
+    setShowPairings(true);
   };
 
   const parseNames = (name: string) => {
@@ -235,16 +314,78 @@ export default function MigrateDataPage() {
         createdAt: "",
         userId: "",
       };
-      // try {
-      //   tutors.push(migratedProfile);
-      // } catch (error) {
-      //   errors.push(migratedProfile);
-      //   console.error(`Error for row ${i}`);
-      // }
+
       tutors.push(migratedProfile);
     }
     setTutors(tutors);
-    // setErroredTutorEntries(errors);
+  };
+
+  const handleMigrateUsers = async (len: number, data: any) => {
+    const tutors: Profile[] = [];
+    const students: Profile[] = [];
+    const pairings: Enrollment[] = [];
+    for (let i = 0; i < len - 1; ++i) {
+      const entry = data.at(i) as string[];
+
+      const migratedTutor: Profile = {
+        role: "Tutor",
+        firstName: parseNames(entry[col_idx["Tutor Name"]])[0],
+        lastName: parseNames(entry[col_idx["Tutor Name"]])[1],
+        dateOfBirth: "01/11/1111",
+        startDate: "01/11/1111",
+        availability: [],
+        email: entry[col_idx["Tutor Email"]],
+        parentName: "",
+        parentPhone: "",
+        parentEmail: "",
+        timeZone: "",
+        subjectsOfInterest: [],
+        status: "Active",
+        tutorIds: [],
+        id: "",
+        createdAt: "",
+        userId: "",
+      };
+
+      const migratedStudent: Profile = {
+        role: "Student",
+        firstName: parseNames(entry[col_idx["Student Name"]])[0],
+        lastName: parseNames(entry[col_idx["Student Name"]])[1],
+        dateOfBirth: "01/11/1111",
+        startDate: "01/11/1111",
+        availability: [],
+        email: entry[col_idx["Student Email"]],
+        parentName: "",
+        parentPhone: "",
+        parentEmail: "",
+        timeZone: "",
+        subjectsOfInterest: [],
+        status: "Active",
+        tutorIds: [],
+        id: "",
+        createdAt: "",
+        userId: "",
+      };
+
+      const migratedPairing: Enrollment = {
+        student: migratedStudent, // Initialize as an empty Profile
+        tutor: migratedTutor, // Initialize as an empty Profile
+        summary: `${migratedTutor.firstName} - ${migratedStudent.firstName}`,
+        startDate: "01/03/2025",
+        endDate: "01/03/2026",
+        availability: [{ day: "", startTime: "", endTime: "" }],
+        meetingId: "",
+        id: "",
+        createdAt: "",
+      };
+
+      tutors.push(migratedTutor);
+      students.push(migratedStudent);
+      pairings.push(migratedPairing);
+    }
+    setTutors(tutors);
+    setStudents(students);
+    setPairings(pairings);
   };
 
   const handleMigrate = async () => {
@@ -262,8 +403,9 @@ export default function MigrateDataPage() {
             const headings = results.data.at(0);
             const data = results.data.slice(1, len);
 
-            await handleMigrateStudents(len, data);
-            await handleMigrateTutors(len, data);
+            // await handleMigrateStudents(len, data);
+            // await handleMigrateTutors(len, data);
+            await handleMigrateUsers(len, data);
           },
         });
         console.log("FILE UPLOADED");
@@ -366,10 +508,11 @@ export default function MigrateDataPage() {
       })
     );
 
-    // Keep only tutors that weren't successfully migrated
     const remainingTutors = tutors.filter(
       (_, index) => !migrations.includes(index)
     );
+
+    toast.error(`Unable to register ${erroredEntries.length} tutors`);
 
     setTutors(remainingTutors);
     setSelectedTutors(new Set());
@@ -442,10 +585,11 @@ export default function MigrateDataPage() {
       })
     );
 
-    // Keep only students that weren't successfully migrated
     const remainingStudents = students.filter(
       (_, index) => !migrations.includes(index)
     );
+
+    toast.error(`Unable to register ${erroredEntries.length} students`);
 
     setStudents(remainingStudents);
     setSelectedStudents(new Set());
@@ -453,6 +597,12 @@ export default function MigrateDataPage() {
     setLoading(false);
     setRevealErrorEntries(true);
   };
+
+  const handleConfirmPairingMigration = async() => {
+    setLoading(true)
+    
+
+  }
 
   const handleUserSwitch = async () => {
     console.log("switched");
@@ -470,444 +620,415 @@ export default function MigrateDataPage() {
     //     {uploading ? "Uploading..." : "Upload"}
     //   </button>
     // </div>
+    <>
+      <Toaster />
 
-    <div className="container mx-auto p-8">
-      <input type="file" onChange={handleFileChange} />
-      <h1 className="text-3xl font-bold mb-8">Migrate Data</h1>
+      <div className="container mx-auto p-8">
+        <input type="file" onChange={handleFileChange} />
+        <h1 className="text-3xl font-bold mb-8">Migrate Data</h1>
 
-      <Button onClick={handleMigrate} disabled={loading}>
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          "Migrate Users"
-        )}
-      </Button>
+        <Button onClick={handleMigrate} disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "Migrate Users"
+          )}
+        </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex flex-row gap-2">
-              <DialogTitle
-                onClick={handleUserSwitch}
-                className={`${userOption ? "" : "text-[#84ceeb]"} `}
-              >
-                Tutor Migration
-              </DialogTitle>
-              <DialogTitle> | </DialogTitle>
-              <DialogTitle
-                onClick={handleUserSwitch}
-                className={`${userOption ? "text-[#84ceeb]" : ""}`}
-              >
-                Student Migration
-              </DialogTitle>
-              <DialogTitle
-                className={`${revealErrorEntries ? "" : "invisible"}`}
-              >
-                {" "}
-                |{" "}
-              </DialogTitle>
-              <DialogTitle
-                onClick={handleShowErrorEntries}
-                className={`${
-                  revealErrorEntries
-                    ? showErrorEntries
-                      ? "text-[#008000]"
-                      : "text-[#ff0000]"
-                    : "invisible"
-                }`}
-              >
-                {showErrorEntries ? "Show Remaining" : "Show Errors"}
-              </DialogTitle>
-            </div>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex flex-row gap-2">
+                <DialogTitle
+                  onClick={handleShowTutors}
+                  className={`${showTutors ? "text-[#84ceeb]" : ""} `}
+                >
+                  Tutor Migration
+                </DialogTitle>
+                <DialogTitle> | </DialogTitle>
+                <DialogTitle
+                  onClick={handleShowStudents}
+                  className={`${showStudents ? "text-[#84ceeb]" : ""}`}
+                >
+                  Student Migration
+                </DialogTitle>
+                <DialogTitle>|</DialogTitle>
+                <DialogTitle
+                  onClick={handleShowPairings}
+                  className={`${showPairings ? "text-[#84ceeb]" : ""}`}
+                >
+                  Make Pairings
+                </DialogTitle>
+                {/* <DialogTitle
+                  className={`${revealErrorEntries ? "" : "invisible"}`}
+                >
+                  {" "}
+                  |{" "}
+                </DialogTitle> */}
+                <DialogTitle
+                  onClick={handleShowErrorEntries}
+                  className={`${
+                    revealErrorEntries
+                      ? showErrorEntries
+                        ? "text-[#008000]"
+                        : "text-[#ff0000]"
+                      : "invisible"
+                  }`}
+                >
+                  {showErrorEntries ? "Show Remaining" : "Show Errors"}
+                </DialogTitle>
+              </div>
 
-            <DialogDescription>
-              {showErrorEntries
-                ? "Entries with errors"
-                : userOption
-                ? "Select the Students you want to migrate to the system."
-                : "Select the Tutors you want to migrate to the system."}
-            </DialogDescription>
-          </DialogHeader>
+              <DialogDescription>
+                {showErrorEntries
+                  ? "Entries with errors"
+                  : userOption
+                  ? "Select the Students you want to migrate to the system."
+                  : "Select the Tutors you want to migrate to the system."}
+              </DialogDescription>
+            </DialogHeader>
 
-          {userOption ? (
-            showErrorEntries ? (
-              erroredStudentEntries?.length > 0 ? (
+            {showStudents ? (
+              showErrorEntries ? (
+                erroredStudentEntries?.length > 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Error Message</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {erroredStudentEntries.map((student, index) => (
+                          <TableRow key={student.profile.id}>
+                            <TableCell>{`${student.profile.role}`}</TableCell>
+                            <TableCell>{`${student.profile.firstName} ${student.profile.lastName}`}</TableCell>
+                            <TableCell>{`${student.profile.email}`}</TableCell>
+                            <TableCell>{`${student.error}`}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {myPagination}{" "}
+                  </>
+                ) : loading ? (
+                  <div className="flex justify-center items-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <p className="text-center p-8">No Errors found</p>
+                )
+              ) : students?.length > 0 ? (
                 <>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Role</TableHead>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={
+                              selectedStudents.size === currentStudents.length
+                            }
+                            onCheckedChange={toggleSelectAllStudents}
+                            aria-label="Select all students"
+                          />
+                        </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Error Message</TableHead>
+                        <TableHead>Subjects</TableHead>
+                        <TableHead>Availability</TableHead>
+                        <TableHead>Parent Info</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {erroredStudentEntries.map((student, index) => (
-                        <TableRow key={student.profile.id}>
-                          <TableCell>{`${student.profile.role}`}</TableCell>
-                          <TableCell>{`${student.profile.firstName} ${student.profile.lastName}`}</TableCell>
-                          <TableCell>{`${student.profile.email}`}</TableCell>
-                          <TableCell>{`${student.error}`}</TableCell>
+                      {currentStudents.map((student, index) => (
+                        <TableRow key={student.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedStudents.has(startIndex + index)}
+                              onCheckedChange={() =>
+                                toggleSelectStudent(startIndex + index)
+                              }
+                              aria-label={`Select ${student.firstName} ${student.lastName}`}
+                            />
+                          </TableCell>
+                          <TableCell>{`${student.firstName} ${student.lastName}`}</TableCell>
+                          <TableCell>{student.email}</TableCell>
+                          <TableCell>
+                            {student.subjectsOfInterest.join(", ")}
+                          </TableCell>
+                          <TableCell>
+                            {formatAvailability(student.availability)}
+                          </TableCell>
+                          <TableCell>
+                            {student.parentName && (
+                              <div className="text-sm">
+                                <div>{student.parentName}</div>
+                                {student.parentEmail && (
+                                  <div>{student.parentEmail}</div>
+                                )}
+                                {student.parentPhone && (
+                                  <div>{student.parentPhone}</div>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
 
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            setCurrentPage((p) => Math.max(1, p - 1))
-                          }
-                          aria-disabled={currentPage === 1}
-                        />
-                      </PaginationItem>
-
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
-                      )}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            setCurrentPage((p) => Math.min(totalPages, p + 1))
-                          }
-                          aria-disabled={currentPage === totalPages}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                  {myPagination}
                 </>
               ) : loading ? (
                 <div className="flex justify-center items-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
               ) : (
-                <p className="text-center p-8">No Errors found</p>
-              )
-            ) : students?.length > 0 ? (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            selectedStudents.size === currentStudents.length
-                          }
-                          onCheckedChange={toggleSelectAllStudents}
-                          aria-label="Select all students"
-                        />
-                      </TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Subjects</TableHead>
-                      <TableHead>Availability</TableHead>
-                      <TableHead>Parent Info</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentStudents.map((student, index) => (
-                      <TableRow key={student.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedStudents.has(startIndex + index)}
-                            onCheckedChange={() =>
-                              toggleSelectStudent(startIndex + index)
-                            }
-                            aria-label={`Select ${student.firstName} ${student.lastName}`}
-                          />
-                        </TableCell>
-                        <TableCell>{`${student.firstName} ${student.lastName}`}</TableCell>
-                        <TableCell>{student.email}</TableCell>
-                        <TableCell>
-                          {student.subjectsOfInterest.join(", ")}
-                        </TableCell>
-                        <TableCell>
-                          {formatAvailability(student.availability)}
-                        </TableCell>
-                        <TableCell>
-                          {student.parentName && (
-                            <div className="text-sm">
-                              <div>{student.parentName}</div>
-                              {student.parentEmail && (
-                                <div>{student.parentEmail}</div>
-                              )}
-                              {student.parentPhone && (
-                                <div>{student.parentPhone}</div>
-                              )}
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        aria-disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={currentPage === page}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    )}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        aria-disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </>
-            ) : loading ? (
-              <div className="flex justify-center items-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
+                <p className="text-center p-8">No students found</p>
+              ) //-----Migrating Tutors-----
             ) : (
-              <p className="text-center p-8">No students found</p>
-            ) //-----Migrating Tutors-----
-          ) : showErrorEntries ? (
-            erroredTutorEntries?.length > 0 ? (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Error</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {erroredTutorEntries.map((tutor, index) => (
-                      <TableRow key={tutor.profile.id}>
-                        <TableCell>{`${tutor.profile.role}`}</TableCell>
-                        <TableCell>{`${tutor.profile.firstName} ${tutor.profile.lastName}`}</TableCell>
-                        <TableCell>{`${tutor.profile.email}`}</TableCell>
-                        <TableCell>{`${tutor.error}`}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        aria-disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={currentPage === page}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    )}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        aria-disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </>
-            ) : loading ? (
-              <div className="flex justify-center items-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            ) : (
-              <p className="text-center p-8">No Errors found</p>
-            )
-          ) : tutors?.length > 0 ? (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={selectedTutors.size === currentTutors.length}
-                        onCheckedChange={toggleSelectAllTutors}
-                        aria-label="Select all students"
-                      />
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Subjects</TableHead>
-                    <TableHead>Availability</TableHead>
-                    <TableHead>Parent Info</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentTutors.map((tutor, index) => (
-                    <TableRow key={tutor.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedTutors.has(startIndex + index)}
-                          onCheckedChange={() =>
-                            toggleSelectTutor(startIndex + index)
-                          }
-                          aria-label={`Select ${tutor.firstName} ${tutor.lastName}`}
-                        />
-                      </TableCell>
-                      <TableCell>{`${tutor.firstName} ${tutor.lastName}`}</TableCell>
-                      <TableCell>{tutor.email}</TableCell>
-                      <TableCell>
-                        {tutor.subjectsOfInterest.join(", ")}
-                      </TableCell>
-                      <TableCell>
-                        {formatAvailability(tutor.availability)}
-                      </TableCell>
-                      <TableCell>
-                        {tutor.parentName && (
-                          <div className="text-sm">
-                            <div>{tutor.parentName}</div>
-                            {tutor.parentEmail && (
-                              <div>{tutor.parentEmail}</div>
-                            )}
-                            {tutor.parentPhone && (
-                              <div>{tutor.parentPhone}</div>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      aria-disabled={currentPage === 1}
-                    />
-                  </PaginationItem>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(page)}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  )}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      aria-disabled={currentPage === totalPages}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </>
-          ) : loading ? (
-            <div className="flex justify-center items-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : (
-            <p className="text-center p-8">No Tutors found</p>
-          )}
-
-          {migrationStatus && (
-            <p className="text-center text-sm text-muted-foreground">
-              {migrationStatus}
-            </p>
-          )}
-
-          <DialogFooter className={`${showErrorEntries ? "invisible" : ""}`}>
-            {userOption ? (
-              <Button
-                onClick={handleConfirmStudentMigration}
-                disabled={loading || selectedStudents.size === 0}
-              >
-                {showErrorEntries ? (
-                  ""
-                ) : loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  `Migrate Selected (${selectedStudents.size})`
-                )}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleConfirmTutorMigration}
-                disabled={loading || selectedTutors.size === 0}
-              >
-                {showErrorEntries ? (
-                  ""
-                ) : loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  `Migrate Selected (${selectedTutors.size})`
-                )}
-              </Button>
+              ""
             )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            {showPairings ? (
+              showErrorEntries ? (
+                "Hi"
+              ) : pairings.length > 0 ? (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={
+                              selectedPairings.size === currentPairings.length
+                            }
+                            onCheckedChange={toggleSelectAllPairings}
+                            aria-label="Select all Pairings"
+                          />
+                        </TableHead>
+                        <TableHead>Tutor</TableHead>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Meeting</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pairings.map((pairing, index) => (
+                        <TableRow key={pairing.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedPairings.has(startIndex + index)}
+                              onCheckedChange={() =>
+                                toggleSelectTutor(startIndex + index)
+                              }
+                              aria-label={`Select ${pairing.tutor?.firstName} ${pairing.tutor?.lastName} - ${pairing.student?.firstName} ${pairing.student?.lastName}`}
+                            />
+                          </TableCell>
+                          <TableCell>{`${pairing.tutor?.firstName} ${pairing.tutor?.lastName}`}</TableCell>
+                          <TableCell>{`${pairing.student?.firstName} ${pairing.student?.lastName}`}</TableCell>
+                          <TableCell>{`${pairing.meetingId}`}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {myPagination}
+                </>
+              ) : (
+                <p className="text-center p-8">No pairings found</p>
+              )
+            ) : (
+              ""
+            )}
+            {/* Fix this later */}
+
+            {/* //   : loading ? (
+          //     <div className="flex justify-center items-center p-8">
+          //       <Loader2 className="h-8 w-8 animate-spin" />
+          //     </div>
+          //   ) : (
+          //     <p className="text-center p-8">No students found</p>
+          //   ) //-----Migrating Tutors-----
+          // ) : ( */}
+
+            {showTutors ? (
+              showErrorEntries ? (
+                erroredTutorEntries?.length > 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Error</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {erroredTutorEntries.map((tutor, index) => (
+                          <TableRow key={tutor.profile.id}>
+                            <TableCell>{`${tutor.profile.role}`}</TableCell>
+                            <TableCell>{`${tutor.profile.firstName} ${tutor.profile.lastName}`}</TableCell>
+                            <TableCell>{`${tutor.profile.email}`}</TableCell>
+                            <TableCell>{`${tutor.error}`}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {myPagination}
+                  </>
+                ) : loading ? (
+                  <div className="flex justify-center items-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <p className="text-center p-8">No Errors found</p>
+                )
+              ) : tutors?.length > 0 ? (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={
+                              selectedTutors.size === currentTutors.length
+                            }
+                            onCheckedChange={toggleSelectAllTutors}
+                            aria-label="Select all students"
+                          />
+                        </TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Subjects</TableHead>
+                        <TableHead>Availability</TableHead>
+                        <TableHead>Parent Info</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentTutors.map((tutor, index) => (
+                        <TableRow key={tutor.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedTutors.has(startIndex + index)}
+                              onCheckedChange={() =>
+                                toggleSelectTutor(startIndex + index)
+                              }
+                              aria-label={`Select ${tutor.firstName} ${tutor.lastName}`}
+                            />
+                          </TableCell>
+                          <TableCell>{`${tutor.firstName} ${tutor.lastName}`}</TableCell>
+                          <TableCell>{tutor.email}</TableCell>
+                          <TableCell>
+                            {tutor.subjectsOfInterest.join(", ")}
+                          </TableCell>
+                          <TableCell>
+                            {formatAvailability(tutor.availability)}
+                          </TableCell>
+                          <TableCell>
+                            {tutor.parentName && (
+                              <div className="text-sm">
+                                <div>{tutor.parentName}</div>
+                                {tutor.parentEmail && (
+                                  <div>{tutor.parentEmail}</div>
+                                )}
+                                {tutor.parentPhone && (
+                                  <div>{tutor.parentPhone}</div>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {myPagination}
+                </>
+              ) : loading ? (
+                <div className="flex justify-center items-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : (
+                <p className="text-center p-8">No tutors found</p>
+              ) //-----Migrating Tutors-----
+            ) : (
+              ""
+            )}
+
+            {migrationStatus && (
+              <p className="text-center text-sm text-muted-foreground">
+                {migrationStatus}
+              </p>
+            )}
+
+            <DialogFooter className={`${showErrorEntries ? "invisible" : ""}`}>
+              {showStudents ? (
+                <Button
+                  onClick={handleConfirmStudentMigration}
+                  disabled={loading || selectedStudents.size === 0}
+                >
+                  {showErrorEntries ? (
+                    ""
+                  ) : loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Migrate Selected (${selectedStudents.size})`
+                  )}
+                </Button>
+              ) : (
+                " "
+              )}
+              {showTutors ? (
+                <Button
+                  onClick={handleConfirmTutorMigration}
+                  disabled={loading || selectedTutors.size === 0}
+                >
+                  {showErrorEntries ? (
+                    ""
+                  ) : loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Migrate Selected (${selectedTutors.size})`
+                  )}
+                </Button>
+              ) : (
+                ""
+              )}
+              {showPairings ? (
+                <Button
+                  onClick={handleConfirmPairingMigration}
+                  disabled={loading || selectedPairings.size === 0}
+                >
+                  {showErrorEntries ? (
+                    ""
+                  ) : loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Migrate Selected (${selectedTutors.size})`
+                  )}
+                </Button>
+              ) : (
+                ""
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   );
 }
 
