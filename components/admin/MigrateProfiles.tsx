@@ -1,4 +1,6 @@
 "use client";
+import AvaiabilityFormat from "@/components/student/AvailabilityFormat"
+import { formatStandardToMilitaryTime, addOneHourToMilitaryTime, getToday, addYearsToDate } from "@/lib/utils";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -43,7 +45,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   analyzeAndTransformStudents,
   migrateSelectedStudents,
-  type Profile,
+  parseNames,
+  CSV_COLUMNS,
+  type Profile, ErrorEntry
 } from "@/lib/actions/migrate.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Papa from "papaparse";
@@ -51,22 +55,10 @@ import { map, string } from "zod";
 import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 import { Enrollment } from "@/types";
+import { resourceLimits } from "worker_threads";
 
-//-------------Indexing based on Data from imported CSV FILE-----------
-const col_idx = {
-  "Tutor Name": 1,
-  "Student Name": 2,
-  "Tutor Email": 3,
-  "Student Email": 4,
-  "Day of the Week": 5,
-  "Session Time": 6,
-  "Zoom Link": 7,
-};
 
-interface ErrorEntry {
-  profile: Profile;
-  error: string;
-}
+
 
 export default function MigrateDataPage() {
   const supabase = createClientComponentClient({
@@ -104,7 +96,7 @@ export default function MigrateDataPage() {
   const [showErrorEntries, setShowErrorEntries] = useState(false);
   const [revealErrorEntries, setRevealErrorEntries] = useState(false);
 
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 20;
 
   const totalPages = Math.ceil(students?.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -183,22 +175,20 @@ export default function MigrateDataPage() {
   };
 
   const toggleSelectAllStudents = () => {
-    if (selectedStudents.size === currentStudents.length) {
+    if (selectedStudents.size === students.length) {
       setSelectedStudents(new Set());
     } else {
       setSelectedStudents(
-        new Set(currentStudents.map((_, index) => startIndex + index))
+        new Set(students.map((_, index) => startIndex + index))
       );
     }
   };
 
   const toggleSelectAllTutors = () => {
-    if (selectedTutors.size === currentTutors.length) {
+    if (selectedTutors.size === tutors.length) {
       setSelectedTutors(new Set());
     } else {
-      setSelectedTutors(
-        new Set(currentTutors.map((_, index) => startIndex + index))
-      );
+      setSelectedTutors(new Set(tutors.map((_, index) => startIndex + index)));
     }
   };
 
@@ -238,88 +228,7 @@ export default function MigrateDataPage() {
     setShowPairings(true);
   };
 
-  const parseNames = (name: string) => {
-    if (!name.trim()) {
-      return ["", ""];
-    }
-    const words_in_name = name.split(" ");
-    if (words_in_name.length > 1) {
-      return [words_in_name[0], words_in_name[words_in_name.length - 1]];
-    }
-    return [words_in_name[0], ""];
-  };
 
-  const handleMigrateStudents = async (len: number, data: any) => {
-    const students: Profile[] = [];
-    // const errors: Profile[] = [];
-
-    for (let i = 0; i < len - 1; ++i) {
-      const entry = data.at(i) as string[];
-      console.log(i);
-
-      const migratedProfile: Profile = {
-        role: "Student",
-        firstName: parseNames(entry[col_idx["Student Name"]])[0],
-        lastName: parseNames(entry[col_idx["Student Name"]])[1],
-        dateOfBirth: "01/11/1111",
-        startDate: "01/11/1111",
-        availability: [],
-        email: entry[col_idx["Student Email"]],
-        parentName: "",
-        parentPhone: "",
-        parentEmail: "",
-        timeZone: "",
-        subjectsOfInterest: [],
-        status: "Active",
-        tutorIds: [],
-        id: "",
-        createdAt: "",
-        userId: "",
-      };
-      // try {
-      //   students.push(migratedProfile);
-      // } catch (error) {
-      //   errors.push(migratedProfile);
-      //   console.error(`Error for row ${i}`);
-      // }
-      students.push(migratedProfile);
-    }
-    setStudents(students);
-    // setErroredStudentEntries(errors);
-  };
-
-  const handleMigrateTutors = async (len: number, data: any) => {
-    const tutors: Profile[] = [];
-    // const errors: ErrorEntry[] = [];
-
-    // ------Need to Subtract len by 1 because len contains the headers as well----
-    for (let i = 0; i < len - 1; ++i) {
-      const entry = data.at(i) as string[];
-
-      const migratedProfile: Profile = {
-        role: "Tutor",
-        firstName: parseNames(entry[col_idx["Tutor Name"]])[0],
-        lastName: parseNames(entry[col_idx["Tutor Name"]])[1],
-        dateOfBirth: "01/11/1111",
-        startDate: "01/11/1111",
-        availability: [],
-        email: entry[col_idx["Tutor Email"]],
-        parentName: "",
-        parentPhone: "",
-        parentEmail: "",
-        timeZone: "",
-        subjectsOfInterest: [],
-        status: "Active",
-        tutorIds: [],
-        id: "",
-        createdAt: "",
-        userId: "",
-      };
-
-      tutors.push(migratedProfile);
-    }
-    setTutors(tutors);
-  };
 
   const handleMigrateUsers = async (len: number, data: any) => {
     const tutors: Profile[] = [];
@@ -330,12 +239,12 @@ export default function MigrateDataPage() {
 
       const migratedTutor: Profile = {
         role: "Tutor",
-        firstName: parseNames(entry[col_idx["Tutor Name"]])[0],
-        lastName: parseNames(entry[col_idx["Tutor Name"]])[1],
-        dateOfBirth: "01/11/1111",
-        startDate: "01/11/1111",
+        firstName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[0],
+        lastName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[1],
+        dateOfBirth: getToday(),
+        startDate: getToday(),
         availability: [],
-        email: entry[col_idx["Tutor Email"]],
+        email: entry[CSV_COLUMNS["Tutor Email"]],
         parentName: "",
         parentPhone: "",
         parentEmail: "",
@@ -350,12 +259,12 @@ export default function MigrateDataPage() {
 
       const migratedStudent: Profile = {
         role: "Student",
-        firstName: parseNames(entry[col_idx["Student Name"]])[0],
-        lastName: parseNames(entry[col_idx["Student Name"]])[1],
-        dateOfBirth: "01/11/1111",
-        startDate: "01/11/1111",
+        firstName: parseNames(entry[CSV_COLUMNS["Student Name"]])[0],
+        lastName: parseNames(entry[CSV_COLUMNS["Student Name"]])[1],
+        dateOfBirth: getToday(),
+        startDate: getToday(),
         availability: [],
-        email: entry[col_idx["Student Email"]],
+        email: entry[CSV_COLUMNS["Student Email"]],
         parentName: "",
         parentPhone: "",
         parentEmail: "",
@@ -372,9 +281,15 @@ export default function MigrateDataPage() {
         student: migratedStudent, // Initialize as an empty Profile
         tutor: migratedTutor, // Initialize as an empty Profile
         summary: `${migratedTutor.firstName} - ${migratedStudent.firstName}`,
-        startDate: "01/03/2025",
-        endDate: "01/03/2026",
-        availability: [{ day: "", startTime: "", endTime: "" }],
+        startDate: getToday(),
+        endDate: addYearsToDate(getToday(), 1),
+        availability: [
+          {
+            day: entry[CSV_COLUMNS["Day of the Week"]],
+            startTime: formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]]),
+            endTime: addOneHourToMilitaryTime(formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]])),
+          },
+        ], //based on one hour sessions
         meetingId: "",
         id: "",
         createdAt: "",
@@ -390,7 +305,6 @@ export default function MigrateDataPage() {
   };
 
   const handleMigrate = async () => {
-    // setUploading(true);
     setLoading(true);
     setIsOpen(true);
 
@@ -399,13 +313,10 @@ export default function MigrateDataPage() {
         Papa.parse(file, {
           complete: async function (results) {
             // results.data is a 2x2 array
-
             const len: number = results.data.length;
             const headings = results.data.at(0);
             const data = results.data.slice(1, len);
 
-            // await handleMigrateStudents(len, data);
-            // await handleMigrateTutors(len, data);
             await handleMigrateUsers(len, data);
           },
         });
@@ -416,76 +327,9 @@ export default function MigrateDataPage() {
     } catch (error) {
       console.error("Error uploading file:", error);
     } finally {
-      // setUploading(false);
       setLoading(false);
     }
   };
-
-  // const handleConfirmTutorMigration = async () => {
-  //   setLoading(true);
-  //   setError(null);
-  //   setMigrationStatus("Migrating selected students...");
-
-  //   const selectedTutorData: Profile[] = [];
-  //   const selectedIndices = Array.from(selectedTutors);
-
-  //   //Store selected Tutors
-  //   selectedIndices.forEach((index) => {
-  //     selectedTutorData.push(tutors[index]);
-  //   });
-
-  //   //Array without migrated tutors
-  //   const remainingTutors = tutors.filter(
-  //     (_, index) => !selectedTutors.has(index)
-  //   );
-
-  //   setTutors(remainingTutors);
-  //   setSelectedTutors(new Set());
-
-  //   const erroredEntries: ErrorEntry[] = [];
-
-  //   selectedTutorData.forEach(async (entry) => {
-  //     try {
-  //       if ((await addTutor(entry)) === null) {
-  //         throw new Error();
-  //       }
-  //     } catch (error) {
-  //       const err = error as Error;
-  //       erroredEntries.push({
-  //         profile: entry,
-  //         error: err.message || "Unknown error occured",
-  //       });
-  //       console.log(`Error for ${entry.email}: ${err.message}`);
-  //     }
-  //   });
-  //   //     try {
-  //   //       const selectedStudentData = Array.from(selectedStudents).map(index => students[index]);
-  //   //       const response = await migrateSelectedStudents(selectedStudentData);
-
-  //   //       if (response.success) {
-  //   //         setMigrationStatus(`Successfully migrated ${response.migratedCount} students!`);
-  //   //         setTimeout(() => {
-  //   //           setIsOpen(false);
-  //   //           setStudents([]);
-  //   //           setSelectedStudents(new Set());
-  //   //           setMigrationStatus('');
-  //   //         }, 2000);
-  //   //       } else {
-  //   //         throw new Error(response.error);
-  //   //       }
-  //   //     } catch (error) {
-  //   //       const errorMessage = error instanceof Error ? error.message : 'Migration failed';
-  //   //       setError(errorMessage);
-  //   //       setMigrationStatus('Migration failed. Please try again.');
-  //   //       console.error('Migration failed:', error);
-  //   //     } finally {
-  //   //       setLoading(false);
-  //   //     }
-  //   setErroredTutorEntries((prev) => [...prev, ...erroredEntries]);
-  //   setLoading(false);
-  //   setMigrationStatus("");
-  //   setRevealErrorEntries(true);
-  // };
 
   const handleConfirmTutorMigration = async () => {
     setLoading(true);
@@ -522,48 +366,6 @@ export default function MigrateDataPage() {
     setRevealErrorEntries(true);
   };
 
-  // const handleConfirmStudentMigration = async () => {
-  //   setLoading(true);
-  //   setError(null);
-  //   setMigrationStatus("Migrating selected students...");
-
-  //   const selectedStudentData: Profile[] = [];
-  //   const selectedIndices = Array.from(selectedStudents);
-
-  //   //Store selected Tutors
-  //   selectedIndices.forEach((index) => {
-  //     selectedStudentData.push(students[index]);
-  //   });
-
-  //   //Array without migrated tutors
-  //   const remainingStudents = students.filter(
-  //     (_, index) => !selectedStudents.has(index)
-  //   );
-
-  //   setStudents(remainingStudents);
-  //   setSelectedStudents(new Set());
-
-  //   const erroredEntries: ErrorEntry[] = [];
-  //   selectedStudentData.forEach(async (entry) => {
-  //     try {
-  //       if ((await addStudent(entry)) === null) {
-  //         throw new Error();
-  //       }
-  //     } catch (error) {
-  //       const err = error as Error;
-  //       erroredEntries.push({
-  //         profile: entry,
-  //         error: err.message || "Unknown error occured",
-  //       });
-  //       console.log("Errored Entry");
-  //     }
-  //   });
-  //   setLoading(false);
-  //   setMigrationStatus("");
-  //   setRevealErrorEntries(true);
-  //   setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
-  // };
-
   const handleConfirmStudentMigration = async () => {
     setLoading(true);
     const erroredEntries: ErrorEntry[] = [];
@@ -599,49 +401,92 @@ export default function MigrateDataPage() {
     setRevealErrorEntries(true);
   };
 
+  const getProfileByEmail = async (email: string) => {
+    const { data, error } = await supabase
+      .from("Profiles")
+      .select()
+      .eq("email", email)
+      .single();
+    if (error) throw new Error(`Profile fetch failed: ${error.message}`);
+    if (!data) throw new Error(`No Profile found for email ${email}`);
+
+    return data;
+  };
+
+  const createEnrollment = async (
+    entry: any,
+    studentData: any,
+    tutorData: any
+  ) => {
+    const migratedPairing: Enrollment = {
+      id: "",
+      createdAt: "",
+      student: studentData,
+      tutor: tutorData,
+      summary: entry.summary,
+      startDate: entry.startDate,
+      endDate: entry.endDate,
+      availability: entry.availability,
+      meetingId: entry.meetingId,
+    };
+
+    return await addEnrollment(migratedPairing);
+  };
+
   const handleConfirmPairingMigration = async () => {
     setLoading(true);
     const migrations: number[] = [];
 
-    await Promise.all(
-      Array.from(selectedPairings).map(async (index) => {
-        migrations.push(index);
-        const entry = pairings[index];
-        try {
-          if (entry?.student) {
-            await addStudent(entry?.student);
+    const results = {
+      success: [] as number[],
+      failed: [] as { index: number; error: string }[],
+    };
+
+    try {
+      await Promise.all(
+        Array.from(selectedPairings).map(async (index) => {
+          const entry = pairings[index];
+          migrations.push(index);
+
+          try {
+            if (entry.student && entry.tutor) {
+              const [studentData, tutorData] = await Promise.all([
+                getProfileByEmail(entry.student.email),
+                getProfileByEmail(entry.tutor.email),
+              ]);
+
+              await createEnrollment(entry, studentData, tutorData);
+              results.success.push(index);
+            } else {
+              results.failed.push({
+                index,
+                error: "missing student or tutor email",
+              });
+            }
+          } catch (error) {
+            results.failed.push({
+              index,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
           }
-        } catch {
-          console.log("Student already exists");
-        }
-        try {
-          if (entry?.tutor) {
-            await addTutor(entry?.tutor);
-          }
-        } catch {
-          console.log("Tutor already exists");
-        }
-        try {
-          await addEnrollment(entry);
-        } catch (error) {
-          const err = error as Error;
-          console.error(err);
-        }
-      })
-    );
-
-    const remainingpairings = pairings.filter(
-      (_, index) => !migrations.includes(index)
-    );
-
-    setPairings(remainingpairings);
-    setSelectedPairings(new Set());
-    setLoading(false);
-  };
-
-  const handleUserSwitch = async () => {
-    console.log("switched");
-    setUserOption((prev) => !prev);
+        })
+      );
+    } catch (error) {
+      console.error("Migration failed: ", error);
+    } finally {
+      const remainingpairings = pairings.filter(
+        (_, index) => !migrations.includes(index)
+      );
+      setLoading(false);
+      setPairings(remainingpairings);
+      setSelectedPairings(new Set());
+      console.log(
+        `Succeeded: ${results.success.length} : Failed ${results.failed.length}`
+      );
+      if (results.failed.length > 0) {
+        console.error(results.failed);
+      }
+    }
   };
 
   const handleShowErrorEntries = async () => {
@@ -649,12 +494,6 @@ export default function MigrateDataPage() {
   };
 
   return (
-    // <div>
-    //   <input type="file" onChange={handleFileChange} />
-    //   <button onClick={handleUpload} disabled={uploading}>
-    //     {uploading ? "Uploading..." : "Upload"}
-    //   </button>
-    // </div>
     <>
       <Toaster />
 
@@ -697,12 +536,6 @@ export default function MigrateDataPage() {
                 >
                   Make Pairings
                 </DialogTitle>
-                {/* <DialogTitle
-                  className={`${revealErrorEntries ? "" : "invisible"}`}
-                >
-                  {" "}
-                  |{" "}
-                </DialogTitle> */}
                 <DialogTitle
                   onClick={handleShowErrorEntries}
                   className={`${
@@ -747,6 +580,7 @@ export default function MigrateDataPage() {
                         <TableHead>Student</TableHead>
                         <TableHead>Start Date</TableHead>
                         <TableHead>End Date</TableHead>
+                        <TableHead>Time</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -765,6 +599,9 @@ export default function MigrateDataPage() {
                           <TableCell>{`${pairing.student?.firstName} ${pairing.student?.lastName}`}</TableCell>
                           <TableCell>{`${pairing.startDate}`}</TableCell>
                           <TableCell>{`${pairing.endDate}`}</TableCell>
+                          <TableCell>{`${formatAvailability(
+                            pairing.availability
+                          )}`}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -819,9 +656,7 @@ export default function MigrateDataPage() {
                       <TableRow>
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={
-                              selectedStudents.size === currentStudents.length
-                            }
+                            checked={selectedStudents.size === students.length}
                             onCheckedChange={toggleSelectAllStudents}
                             aria-label="Select all students"
                           />
@@ -884,17 +719,6 @@ export default function MigrateDataPage() {
               ""
             )}
 
-            {/* Fix this later */}
-
-            {/* //   : loading ? (
-          //     <div className="flex justify-center items-center p-8">
-          //       <Loader2 className="h-8 w-8 animate-spin" />
-          //     </div>
-          //   ) : (
-          //     <p className="text-center p-8">No students found</p>
-          //   ) //-----Migrating Tutors-----
-          // ) : ( */}
-
             {showTutors ? (
               showErrorEntries ? (
                 erroredTutorEntries?.length > 0 ? (
@@ -935,9 +759,7 @@ export default function MigrateDataPage() {
                       <TableRow>
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={
-                              selectedTutors.size === currentTutors.length
-                            }
+                            checked={selectedTutors.size === tutors.length}
                             onCheckedChange={toggleSelectAllTutors}
                             aria-label="Select all students"
                           />
@@ -1070,262 +892,3 @@ export default function MigrateDataPage() {
     </>
   );
 }
-
-// 'use client'
-// import React, { useState } from 'react';
-// import { Button } from '@/components/ui/button';
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogFooter,
-// } from '@/components/ui/dialog';
-// import { Checkbox } from '@/components/ui/checkbox';
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from '@/components/ui/table';
-// import {
-//   Pagination,
-//   PaginationContent,
-//   PaginationEllipsis,
-//   PaginationItem,
-//   PaginationLink,
-//   PaginationNext,
-//   PaginationPrevious,
-// } from '@/components/ui/pagination';
-// import { Loader2 } from 'lucide-react';
-// import { Alert, AlertDescription } from '@/components/ui/alert';
-// import { analyzeAndTransformStudents, migrateSelectedStudents,
-//     type Profile  } from '@/lib/actions/migrate.actions';
-
-// const ITEMS_PER_PAGE = 10;
-
-// const formatAvailability = (availability: Profile['availability']): string => {
-//     return availability
-//       .map(slot => `${slot.day} ${slot.startTime}-${slot.endTime}`)
-//       .join(', ');
-// };
-
-// const MigrateDataPage: React.FC = () => {
-//     const [isOpen, setIsOpen] = useState(false);
-//     const [loading, setLoading] = useState(false);
-//     const [error, setError] = useState<string | null>(null);
-//     const [students, setStudents] = useState<Profile[]>([]);
-//     const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
-//     const [currentPage, setCurrentPage] = useState(1);
-//     const [migrationStatus, setMigrationStatus] = useState('');
-
-//   const totalPages = Math.ceil(students?.length / ITEMS_PER_PAGE);
-//   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-//   const endIndex = startIndex + ITEMS_PER_PAGE;
-//   const currentStudents = students?.slice(startIndex, endIndex);
-
-//   const handleMigrateClick = async () => {
-//     setLoading(true);
-//     setIsOpen(true);
-//     try {
-//       const fetchedStudents = await analyzeAndTransformStudents();
-//       if (fetchedStudents) {
-//         setStudents(fetchedStudents.data as Profile[]);
-//       }
-//     } catch (error) {
-//       console.error('Failed to fetch students:', error);
-//       setMigrationStatus('Failed to fetch students. Please try again.');
-//     }
-//     setLoading(false);
-//   };
-
-//   const toggleSelectAll = () => {
-//     if (selectedStudents.size === currentStudents.length) {
-//       setSelectedStudents(new Set());
-//     } else {
-//       setSelectedStudents(new Set(currentStudents.map((_, index) => startIndex + index)));
-//     }
-//   };
-
-//   const toggleSelectStudent = (index: number) => {
-//     const newSelected = new Set(selectedStudents);
-//     if (newSelected.has(index)) {
-//       newSelected.delete(index);
-//     } else {
-//       newSelected.add(index);
-//     }
-//     setSelectedStudents(newSelected);
-//   };
-
-//   const handleConfirmMigration = async () => {
-//     setLoading(true);
-//     setError(null);
-//     setMigrationStatus('Migrating selected students...');
-
-//     try {
-//       const selectedStudentData = Array.from(selectedStudents).map(index => students[index]);
-//       const response = await migrateSelectedStudents(selectedStudentData);
-
-//       if (response.success) {
-//         setMigrationStatus(`Successfully migrated ${response.migratedCount} students!`);
-//         setTimeout(() => {
-//           setIsOpen(false);
-//           setStudents([]);
-//           setSelectedStudents(new Set());
-//           setMigrationStatus('');
-//         }, 2000);
-//       } else {
-//         throw new Error(response.error);
-//       }
-//     } catch (error) {
-//       const errorMessage = error instanceof Error ? error.message : 'Migration failed';
-//       setError(errorMessage);
-//       setMigrationStatus('Migration failed. Please try again.');
-//       console.error('Migration failed:', error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="container mx-auto p-8">
-//       <h1 className="text-3xl font-bold mb-8">Migrate Data</h1>
-
-//       <Button
-//         onClick={handleMigrateClick}
-//         disabled={loading}
-//       >
-//         {loading ? (
-//           <>
-//             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-//             Processing...
-//           </>
-//         ) : (
-//           'Migrate Students'
-//         )}
-//       </Button>
-
-//       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-//         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-//           <DialogHeader>
-//             <DialogTitle>Student Migration</DialogTitle>
-//             <DialogDescription>
-//               Select the students you want to migrate to the system.
-//             </DialogDescription>
-//           </DialogHeader>
-
-//           {students?.length > 0 ? (
-//             <>
-//                 <Table>
-//                     <TableHeader>
-//                     <TableRow>
-//                         <TableHead className="w-12">
-//                         <Checkbox
-//                             checked={selectedStudents.size === currentStudents.length}
-//                             onCheckedChange={toggleSelectAll}
-//                             aria-label="Select all students"
-//                         />
-//                         </TableHead>
-//                         <TableHead>Name</TableHead>
-//                         <TableHead>Email</TableHead>
-//                         <TableHead>Subjects</TableHead>
-//                         <TableHead>Availability</TableHead>
-//                         <TableHead>Parent Info</TableHead>
-//                     </TableRow>
-//                     </TableHeader>
-//                     <TableBody>
-//                     {currentStudents.map((student, index) => (
-//                         <TableRow key={student.id}>
-//                         <TableCell>
-//                             <Checkbox
-//                             checked={selectedStudents.has(startIndex + index)}
-//                             onCheckedChange={() => toggleSelectStudent(startIndex + index)}
-//                             aria-label={`Select ${student.firstName} ${student.lastName}`}
-//                             />
-//                         </TableCell>
-//                         <TableCell>{`${student.firstName} ${student.lastName}`}</TableCell>
-//                         <TableCell>{student.email}</TableCell>
-//                         <TableCell>{student.subjectsOfInterest.join(', ')}</TableCell>
-//                         <TableCell>{formatAvailability(student.availability)}</TableCell>
-//                         <TableCell>
-//                             {student.parentName && (
-//                             <div className="text-sm">
-//                                 <div>{student.parentName}</div>
-//                                 {student.parentEmail && <div>{student.parentEmail}</div>}
-//                                 {student.parentPhone && <div>{student.parentPhone}</div>}
-//                             </div>
-//                             )}
-//                         </TableCell>
-//                         </TableRow>
-//                     ))}
-//                     </TableBody>
-//                 </Table>
-
-//               <Pagination>
-//                 <PaginationContent>
-//                   <PaginationItem>
-//                     <PaginationPrevious
-//                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-//                       aria-disabled={currentPage === 1}
-//                     />
-//                   </PaginationItem>
-
-//                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-//                     <PaginationItem key={page}>
-//                       <PaginationLink
-//                         onClick={() => setCurrentPage(page)}
-//                         isActive={currentPage === page}
-//                       >
-//                         {page}
-//                       </PaginationLink>
-//                     </PaginationItem>
-//                   ))}
-
-//                   <PaginationItem>
-//                     <PaginationNext
-//                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-//                       aria-disabled={currentPage === totalPages}
-//                     />
-//                   </PaginationItem>
-//                 </PaginationContent>
-//               </Pagination>
-//             </>
-//           ) : loading ? (
-//             <div className="flex justify-center items-center p-8">
-//               <Loader2 className="h-8 w-8 animate-spin" />
-//             </div>
-//           ) : (
-//             <p className="text-center p-8">No students found</p>
-//           )}
-
-//           {migrationStatus && (
-//             <p className="text-center text-sm text-muted-foreground">
-//               {migrationStatus}
-//             </p>
-//           )}
-
-//           <DialogFooter>
-//             <Button
-//               onClick={handleConfirmMigration}
-//               disabled={loading || selectedStudents.size === 0}
-//             >
-//               {loading ? (
-//                 <>
-//                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-//                   Processing...
-//                 </>
-//               ) : (
-//                 `Migrate Selected (${selectedStudents.size})`
-//               )}
-//             </Button>
-//           </DialogFooter>
-//         </DialogContent>
-//       </Dialog>
-//     </div>
-//   );
-// };
-
-// export default MigrateDataPage;

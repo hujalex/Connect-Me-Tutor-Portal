@@ -69,29 +69,6 @@ import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
 
-const frameworks = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-];
-
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
   const [open, setOpen] = React.useState(false);
@@ -152,18 +129,6 @@ const EnrollmentList = () => {
   }, [filterValue, enrollments]);
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
-
-  // const filteredTutors = tutors.filter((tutor) => {
-  //   const searchText = normalizeText(tutorSearch);
-  //   const tutorName = normalizeText(`${tutor.firstName} ${tutor.lastName}`);
-  //   const firstName = normalizeText(tutor.firstName);
-  //   const lastName = normalizeText(tutor.lastName);
-  //   return (
-  //     tutorName.includes(searchText) ||
-  //     firstName.includes(searchText) ||
-  //     lastName.includes(searchText)
-  //   );
-  // });
 
   const isMeetingAvailable = (
     meetingId: string,
@@ -317,6 +282,8 @@ const EnrollmentList = () => {
         setEnrollments([addedEnrollment, ...enrollments]);
         setIsAddModalOpen(false);
         resetNewEnrollment();
+        setSelectedTutorId("");
+        setSelectedStudentId("");
         toast.success("Enrollment added successfully");
       }
     } catch (error) {
@@ -442,7 +409,9 @@ const EnrollmentList = () => {
                         <PopoverContent className="">
                           <Command>
                             <CommandInput
-                              placeholder="Search Student..."
+
+                              placeholder="Search student..."
+
                               value={studentSearch}
                               onValueChange={setStudentSearch}
                             />
@@ -574,7 +543,6 @@ const EnrollmentList = () => {
                         </PopoverContent>
                       </Popover>
                     </div>
-
                     <AvailabilityForm
                       availabilityList={newEnrollment.availability}
                       setAvailabilityList={(availability) =>
@@ -734,13 +702,9 @@ const EnrollmentList = () => {
                     />
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
-                  <TableCell>{formatDate(enrollment.endDate)}</TableCell>
+                  <TableCell>{formatDate(enrollment.startDate)}</TableCell>
                   <TableCell>{formatDate(enrollment.endDate)}</TableCell>
                   <TableCell>
-                    {/* {console.log("Meeting ID:", enrollment.meetingId)} */}
-
-                    {/* {console.log("Available Meetings:", meetings)} */}
-
                     <TableCell>
                       {enrollment.meetingId
                         ? meetings.find(
@@ -1104,6 +1068,7 @@ const EnrollmentList = () => {
                   className="col-span-3"
                 />
               </div>
+
 
               <div>
                 <Label>Meeting Link</Label>
