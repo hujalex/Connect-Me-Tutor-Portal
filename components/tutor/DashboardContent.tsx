@@ -300,7 +300,7 @@ const StudentDashboard = () => {
                             //   (window.location.href = `/meeting/${session.meetingId}`)
                             // }
                             onClick={() =>
-                              (window.location.href = `/meeting/${session?.meeting?.meetingId}`)
+                              (window.location.href = `/meeting/${session?.meeting?.id}`)
                             }
                             className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                           >
