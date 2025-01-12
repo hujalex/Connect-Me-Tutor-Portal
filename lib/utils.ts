@@ -1,13 +1,13 @@
+
 import { type ClassValue, clsx } from "clsx"
 import { yearsToDays } from "date-fns";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-
-export const getData = async (endpoint:any) => {
+export const getData = async (endpoint: any) => {
   const response = await fetch(`/${endpoint}`, {
     method: "",
   });
@@ -16,7 +16,7 @@ export const getData = async (endpoint:any) => {
   return data;
 };
 
-export const postData = async (endpoint:any, body:any) => {
+export const postData = async (endpoint: any, body: any) => {
   const allHeaders = { "Content-Type": "application/json" };
 
   const response = await fetch(`/${endpoint}`, {
@@ -24,71 +24,70 @@ export const postData = async (endpoint:any, body:any) => {
     headers: allHeaders,
     body: JSON.stringify(body),
   });
-  
-  console.log(response, 'GIOFAJIOAFD')
+
+  console.log(response, "GIOFAJIOAFD");
   const data = await response.json();
-  console.log(data, 'GIOFAJIOAFD')
+  console.log(data, "GIOFAJIOAFD");
   return data;
 };
-
 
 export function formatSessionDate(dateString: string): string {
   // Create a new Date object
   const date: Date = new Date(dateString);
-  
+
   // Define options for formatting
   const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',  // Can be 'short' or 'numeric' for different formats
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      timeZoneName: 'short'  // To include time zone information
+    year: "numeric",
+    month: "long", // Can be 'short' or 'numeric' for different formats
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    timeZoneName: "short", // To include time zone information
   };
-  
+
   // Format the date using toLocaleDateString
-  return date.toLocaleDateString('en-US', options);
+  return date.toLocaleDateString("en-US", options);
 }
 
 export function formatDate(dateString: string): string {
   // Create a new Date object
   const date: Date = new Date(dateString);
-  
+
   // Define options for formatting
   const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',  // Can be 'short' or 'numeric' for different formats
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      timeZoneName: 'short'  // To include time zone information
+    year: "numeric",
+    month: "long", // Can be 'short' or 'numeric' for different formats
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    timeZoneName: "short", // To include time zone information
   };
-  
+
   // Format the date using toLocaleDateString
-  return date.toLocaleDateString('en-US', options);
+  return date.toLocaleDateString("en-US", options);
 }
 
 export function getSessionTimespan(timeStr: string): string {
-    // Parse the input string into a Date object
-    const originalTime = new Date(timeStr);
+  // Parse the input string into a Date object
+  const originalTime = new Date(timeStr);
 
-    // Check if the date is valid
-    if (isNaN(originalTime.getTime())) {
-        throw new Error("Invalid date format: " + timeStr);
-    }
+  // Check if the date is valid
+  if (isNaN(originalTime.getTime())) {
+    throw new Error("Invalid date format: " + timeStr);
+  }
 
-    // Add 1.5 hours (1 hour and 30 minutes)
-    const endTime = new Date(originalTime.getTime() + 1.5 * 60 * 60 * 1000);
-    
-    // Format start and end times
-    const startTimeStr = formatTime(originalTime);
-    const endTimeStr = formatTime(endTime);
+  // // Add 1.5 hours (1 hour and 30 minutes)
+  // Add 1 hour
+  const endTime = new Date(originalTime.getTime() + 60 * 60 * 1000); // Had originally multiplied by 1.5 for endtime
 
-    return `${startTimeStr} - ${endTimeStr}`;
+  // Format start and end times
+  const startTimeStr = formatTime(originalTime);
+  const endTimeStr = formatTime(endTime);
+
+  return `${startTimeStr} - ${endTimeStr}`;
 }
-
 
 function formatTime(date: Date): string {
   let hours = date.getHours();
@@ -99,10 +98,11 @@ function formatTime(date: Date): string {
   hours = hours % 12 || 12; // convert 0 to 12
 
   // Format minutes to be 0 or 30 if applicable
-  const formattedMinutes = minutes === 0 ? '' : `:${minutes < 10 ? '0' : ''}${minutes}`;
-  
+  const formattedMinutes =
+    minutes === 0 ? "" : `:${minutes < 10 ? "0" : ""}${minutes}`;
+
   // Construct the final formatted string
-  return `${hours}${formattedMinutes} ${isPM ? 'PM' : 'AM'}`;
+  return `${hours}${formattedMinutes} ${isPM ? "PM" : "AM"}`;
 }
 
 export function formatStandardToMilitaryTime(standardTime: string): string {
@@ -155,6 +155,7 @@ export function addOneHourToMilitaryTime(time: string) {
 }
 
 export function formatMilitaryToStandardTime(militaryTime:string) {
+
   // Check if the input is in valid military time format
   if (!/^\d{2}:\d{2}$/.test(militaryTime)) {
     return "Invalid time format";
