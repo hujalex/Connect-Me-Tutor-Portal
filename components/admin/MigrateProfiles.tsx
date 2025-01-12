@@ -1,7 +1,6 @@
 "use client";
 import AvaiabilityFormat from "@/components/student/AvailabilityFormat"
-import { formatMilitaryToStandardTime } from "@/lib/utils";
-import { formatStandardToMilitaryTime, addOneHourToMilitaryTime } from "@/lib/utils";
+import { formatStandardToMilitaryTime, addOneHourToMilitaryTime, getToday, addYearsToDate } from "@/lib/utils";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   analyzeAndTransformStudents,
   migrateSelectedStudents,
-  type Profile,
+  parseNames,
+  CSV_COLUMNS,
+  type Profile, ErrorEntry
 } from "@/lib/actions/migrate.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Papa from "papaparse";
@@ -56,25 +57,8 @@ import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 import { Enrollment } from "@/types";
 import { resourceLimits } from "worker_threads";
 
-//-------------Indexing based on Data from imported CSV FILE-----------
-const col_idx = {
-  "Tutor Name": 1,
-  "Student Name": 2,
-  "Tutor Email": 3,
-  "Tutor Timezone": 4,
-  "Student Email": 5,
-  "Parent Phone": 6,
-  "Parent Email": 7,
-  "Student Timezone": 8,
-  "Day of the Week": 9,
-  "Session Time": 10,
-  "Zoom Link": 11,
-};
 
-interface ErrorEntry {
-  profile: Profile;
-  error: string;
-}
+
 
 export default function MigrateDataPage() {
   const supabase = createClientComponentClient({
@@ -244,16 +228,7 @@ export default function MigrateDataPage() {
     setShowPairings(true);
   };
 
-  const parseNames = (name: string) => {
-    if (!name.trim()) {
-      return ["", ""];
-    }
-    const words_in_name = name.split(" ");
-    if (words_in_name.length > 1) {
-      return [words_in_name[0], words_in_name[words_in_name.length - 1]];
-    }
-    return [words_in_name[0], ""];
-  };
+
 
   const handleMigrateUsers = async (len: number, data: any) => {
     const tutors: Profile[] = [];
@@ -264,12 +239,12 @@ export default function MigrateDataPage() {
 
       const migratedTutor: Profile = {
         role: "Tutor",
-        firstName: parseNames(entry[col_idx["Tutor Name"]])[0],
-        lastName: parseNames(entry[col_idx["Tutor Name"]])[1],
-        dateOfBirth: "01/11/1111",
-        startDate: "01/11/1111",
+        firstName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[0],
+        lastName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[1],
+        dateOfBirth: getToday(),
+        startDate: getToday(),
         availability: [],
-        email: entry[col_idx["Tutor Email"]],
+        email: entry[CSV_COLUMNS["Tutor Email"]],
         parentName: "",
         parentPhone: "",
         parentEmail: "",
@@ -284,12 +259,12 @@ export default function MigrateDataPage() {
 
       const migratedStudent: Profile = {
         role: "Student",
-        firstName: parseNames(entry[col_idx["Student Name"]])[0],
-        lastName: parseNames(entry[col_idx["Student Name"]])[1],
-        dateOfBirth: "01/11/1111",
-        startDate: "01/11/1111",
+        firstName: parseNames(entry[CSV_COLUMNS["Student Name"]])[0],
+        lastName: parseNames(entry[CSV_COLUMNS["Student Name"]])[1],
+        dateOfBirth: getToday(),
+        startDate: getToday(),
         availability: [],
-        email: entry[col_idx["Student Email"]],
+        email: entry[CSV_COLUMNS["Student Email"]],
         parentName: "",
         parentPhone: "",
         parentEmail: "",
@@ -306,13 +281,13 @@ export default function MigrateDataPage() {
         student: migratedStudent, // Initialize as an empty Profile
         tutor: migratedTutor, // Initialize as an empty Profile
         summary: `${migratedTutor.firstName} - ${migratedStudent.firstName}`,
-        startDate: "01/03/2025",
-        endDate: "01/03/2026",
+        startDate: getToday(),
+        endDate: addYearsToDate(getToday(), 1),
         availability: [
           {
-            day: entry[col_idx["Day of the Week"]],
-            startTime: formatStandardToMilitaryTime(entry[col_idx["Session Time"]]),
-            endTime: addOneHourToMilitaryTime(formatStandardToMilitaryTime(entry[col_idx["Session Time"]])),
+            day: entry[CSV_COLUMNS["Day of the Week"]],
+            startTime: formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]]),
+            endTime: addOneHourToMilitaryTime(formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]])),
           },
         ], //based on one hour sessions
         meetingId: "",
@@ -561,12 +536,6 @@ export default function MigrateDataPage() {
                 >
                   Make Pairings
                 </DialogTitle>
-                {/* <DialogTitle
-                  className={`${revealErrorEntries ? "" : "invisible"}`}
-                >
-                  {" "}
-                  |{" "}
-                </DialogTitle> */}
                 <DialogTitle
                   onClick={handleShowErrorEntries}
                   className={`${

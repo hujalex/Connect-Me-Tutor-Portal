@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
+import { yearsToDays } from "date-fns";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -121,6 +122,23 @@ export function formatStandardToMilitaryTime(standardTime: string): string {
     hours = 0;
   }
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
+
+export function getToday(): string {
+  const today = new Date();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const yyyy = today.getFullYear();
+  
+  const currentDate = `${mm}/${dd}/${yyyy}`;
+  
+  return currentDate
+}
+
+export function addYearsToDate(date: string, years: number): string {
+  const [month, day, year] = date.split("/").map(Number)
+  let newYear = year+years
+  return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${newYear.toString().padStart(2, '0')} `
 }
 
 export function addOneHourToMilitaryTime(time: string) {

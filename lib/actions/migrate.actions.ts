@@ -1,6 +1,47 @@
 // lib/actions/migrate.actions.ts
 import axios from 'axios';
 
+//-------------Indexing based on Data from imported CSV FILE-----------
+export const CSV_COLUMNS = {
+  "Tutor Name": 1,
+  "Student Name": 2,
+  "Tutor Email": 3,
+  "Tutor Timezone": 4,
+  "Student Email": 5,
+  "Parent Phone": 6,
+  "Parent Email": 7,
+  "Student Timezone": 8,
+  "Day of the Week": 9,
+  "Session Time": 10,
+  "Zoom Link": 11,
+};
+
+
+export interface ErrorEntry {
+  profile: Profile;
+  error: string;
+}
+
+export function parseNames(name:string) {
+  if (!name.trim()) {
+    return ["", ""];
+  }
+  const words_in_name = name.split(" ");
+  if (words_in_name.length > 1) {
+    return [words_in_name[0], words_in_name[words_in_name.length - 1]];
+  }
+  return [words_in_name[0], ""];
+};
+
+
+
+
+
+
+
+
+
+
 export interface Profile {
   id: string;
   createdAt: string;
