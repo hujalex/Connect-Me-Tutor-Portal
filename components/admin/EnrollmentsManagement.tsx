@@ -94,8 +94,8 @@ const frameworks = [
 
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
-  const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState("");
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>(
     []
@@ -152,18 +152,6 @@ const EnrollmentList = () => {
   }, [filterValue, enrollments]);
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
-
-  // const filteredTutors = tutors.filter((tutor) => {
-  //   const searchText = normalizeText(tutorSearch);
-  //   const tutorName = normalizeText(`${tutor.firstName} ${tutor.lastName}`);
-  //   const firstName = normalizeText(tutor.firstName);
-  //   const lastName = normalizeText(tutor.lastName);
-  //   return (
-  //     tutorName.includes(searchText) ||
-  //     firstName.includes(searchText) ||
-  //     lastName.includes(searchText)
-  //   );
-  // });
 
   const isMeetingAvailable = (
     meetingId: string,
@@ -317,6 +305,8 @@ const EnrollmentList = () => {
         setEnrollments([addedEnrollment, ...enrollments]);
         setIsAddModalOpen(false);
         resetNewEnrollment();
+        setSelectedTutorId("");
+        setSelectedStudentId("");
         toast.success("Enrollment added successfully");
       }
     } catch (error) {
@@ -377,7 +367,6 @@ const EnrollmentList = () => {
 
   return (
     <main className="p-8">
-
       <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
@@ -400,14 +389,13 @@ const EnrollmentList = () => {
                   <DialogHeader>
                     <DialogTitle>Add New Enrollment</DialogTitle>
                   </DialogHeader>
-                  
+
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       {" "}
                       <Label htmlFor="tutor" className="text-right">
                         Student
                       </Label>
-                      
                       <Popover
                         open={openStudentOptions}
                         onOpenChange={setOpenStudentOptions}
@@ -443,7 +431,7 @@ const EnrollmentList = () => {
                         <PopoverContent className="">
                           <Command>
                             <CommandInput
-                              placeholder="Search framework..."
+                              placeholder="Search student..."
                               value={studentSearch}
                               onValueChange={setStudentSearch}
                             />
@@ -529,7 +517,7 @@ const EnrollmentList = () => {
                         <PopoverContent className="">
                           <Command>
                             <CommandInput
-                              placeholder="Search framework..."
+                              placeholder="Search tutor..."
                               value={tutorSearch}
                               onValueChange={setTutorSearch}
                             />
@@ -575,7 +563,6 @@ const EnrollmentList = () => {
                         </PopoverContent>
                       </Popover>
                     </div>
-
                     <AvailabilityForm
                       availabilityList={newEnrollment.availability}
                       setAvailabilityList={(availability) =>
@@ -735,13 +722,9 @@ const EnrollmentList = () => {
                     />
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
-                  <TableCell>{formatDate(enrollment.endDate)}</TableCell>
+                  <TableCell>{formatDate(enrollment.startDate)}</TableCell>
                   <TableCell>{formatDate(enrollment.endDate)}</TableCell>
                   <TableCell>
-                    {/* {console.log("Meeting ID:", enrollment.meetingId)} */}
-
-                    {/* {console.log("Available Meetings:", meetings)} */}
-
                     <TableCell>
                       {enrollment.meetingId
                         ? meetings.find(
@@ -943,56 +926,6 @@ const EnrollmentList = () => {
                   className="col-span-3"
                 />
               </div>
-
-              {/* <div>
-                <Label>Meeting Link</Label>
-                <Select
-                  name="meetingId"
-                  value={selectedEnrollment.meetingId}
-                  // onValueChange={(value) =>
-                  //   setSelectedEnrollment({
-                  //     ...selectedEnrollment,
-                  //     meetingId: value,
-                  //   })
-                  // }
-                  onValueChange={(value) =>
-                    handleInputChange({
-                      target: { name: "meetingId", value },
-                    } as any)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a meeting link">
-                      {selectedEnrollment.meetingId
-                        ? meetings.find(
-                            (meeting) =>
-                              meeting.id === selectedEnrollment.meetingId
-                          )?.name
-                        : "Select a meeting"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {meetings.map((meeting) => (
-                      <SelectItem
-                        key={meeting.id}
-                        value={meeting.id}
-                        className="flex items-center justify-between"
-                      >
-                        <span>
-                          {meeting.name} - {meeting.id}
-                        </span>
-                        <Circle
-                          className={`w-2 h-2 ml-2 ${
-                            isMeetingAvailable(meeting.id, selectedEnrollment)
-                              ? "text-green-500"
-                              : "text-red-500"
-                          } fill-current`}
-                        />
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div> */}
             </div>
           )}
           <Button onClick={handleUpdateEnrollment}>Update Enrollment</Button>
