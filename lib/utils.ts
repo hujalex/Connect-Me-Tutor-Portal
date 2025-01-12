@@ -104,6 +104,38 @@ function formatTime(date: Date): string {
   return `${hours}${formattedMinutes} ${isPM ? 'PM' : 'AM'}`;
 }
 
+export function formatStandardToMilitaryTime(standardTime: string): string {
+  
+  const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]:[0-5][0-9] [APap][Mm]$/;
+
+  if (!regex.test(standardTime)) {
+    return "Invalid time format";
+  }
+
+  let [time, period] = standardTime.split(" ")
+  let [hours, minutes, seconds] = time.split(":").map(Number)
+
+  if (period.toUpperCase() === 'PM') {
+    hours = hours%12 + 12;
+  } else if (hours === 12) { // handles edge case of 12 AM
+    hours = 0;
+  }
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
+
+export function addOneHourToMilitaryTime(time: string) {
+  const [hours, minutes] = time.split(':').map(Number)
+
+  let newHours = hours + 1;
+  let newMinutes = minutes;
+
+  if (newHours === 24) {
+    newHours = 0;
+  }
+
+  return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`
+}
+
 export function formatMilitaryToStandardTime(militaryTime:string) {
   // Check if the input is in valid military time format
   if (!/^\d{2}:\d{2}$/.test(militaryTime)) {

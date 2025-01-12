@@ -69,29 +69,6 @@ import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
 
-const frameworks = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-];
-
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
   const [open, setOpen] = React.useState(false);
