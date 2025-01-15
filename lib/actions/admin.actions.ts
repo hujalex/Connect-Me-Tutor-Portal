@@ -531,6 +531,9 @@ export async function addSessions(
           // Create session without requiring a meeting link
 
           //!Create Session with Meeting Link
+
+          console.log(enrollment);
+
           const { data: session, error } = await supabase
             .from("Sessions")
             .insert({

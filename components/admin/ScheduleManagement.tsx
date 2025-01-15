@@ -41,7 +41,7 @@ import {
   getMeeting,
 } from "@/lib/actions/admin.actions";
 import { getProfileWithProfileId } from "@/lib/actions/user.actions";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { Session, Enrollment, Meeting, Profile } from "@/types";
 import { getSessionTimespan } from "@/lib/utils";
 import {
@@ -194,6 +194,7 @@ const Schedule = () => {
       setSessions((prevSessions) => [...prevSessions, ...newSessions]);
       fetchSessions(); // Reloads only sessions
       toast.success(`${newSessions.length} new sessions added successfully`);
+      console.log(`${newSessions.length} new sessions added sucessfully`);
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);
@@ -286,293 +287,300 @@ const Schedule = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-left text-gray-800">
-        Schedule
-      </h1>
+    <>
+      <Toaster />
+      <div className="p-8 bg-gray-100 min-h-screen">
+        <h1 className="text-3xl font-bold mb-6 text-left text-gray-800">
+          Schedule
+        </h1>
 
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex justify-between items-center mb-6">
-          <Button
-            variant="outline"
-            onClick={goToPreviousWeek}
-            className="flex items-center"
-          >
-            <ChevronLeft className="w-5 h-5 mr-2" /> Previous Week
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <Button
+              variant="outline"
+              onClick={goToPreviousWeek}
+              className="flex items-center"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2" /> Previous Week
+            </Button>
+            <h2 className="text-xl font-semibold text-gray-700">
+              {format(weekDays[0], "MMMM d, yyyy")} -{" "}
+              {format(weekDays[6], "MMMM d, yyyy")}
+            </h2>
+            <Button
+              variant="outline"
+              onClick={goToNextWeek}
+              className="flex items-center"
+            >
+              Next Week <ChevronRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+
+          <Button onClick={handleUpdateWeek} className="mb-4">
+            Update Week
           </Button>
-          <h2 className="text-xl font-semibold text-gray-700">
-            {format(weekDays[0], "MMMM d, yyyy")} -{" "}
-            {format(weekDays[6], "MMMM d, yyyy")}
-          </h2>
-          <Button
-            variant="outline"
-            onClick={goToNextWeek}
-            className="flex items-center"
-          >
-            Next Week <ChevronRight className="w-5 h-5 ml-2" />
-          </Button>
+
+          {loading ? (
+            <div className="text-center py-10">
+              <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
+              <p className="mt-4 text-gray-600">Loading sessions...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map((day) => (
+                <div
+                  key={day.toISOString()}
+                  className="border rounded-lg px-2 py-3 bg-gray-50"
+                >
+                  <h3 className="font-semibold mb-2 text-gray-700">
+                    {format(day, "EEEE")}
+                  </h3>
+                  <p className="text-sm mb-4 text-gray-500">
+                    {format(day, "MMM d")}
+                  </p>
+                  {getValidSessionsForDay(day).map((session) => (
+                    <Card
+                      onClick={() => {
+                        setSelectedSession(session);
+                        setIsModalOpen(true);
+                      }}
+                      key={session.id}
+                      className={`hover:cursor-pointer hover:shadow-md mb-2 ${
+                        session.status === "Complete"
+                          ? "bg-green-500/10 border-2"
+                          : session.status === "Cancelled"
+                          ? "bg-red-500/10 border-2"
+                          : "bg-white"
+                      }`}
+                    >
+                      <CardContent className="p-3">
+                        <p className="text-xs font-semibold">
+                          {session.tutor?.firstName} {session.tutor?.lastName}
+                        </p>
+                        <p className="text-xs font-normal">
+                          {session?.student?.firstName}{" "}
+                          {session?.student?.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {session.summary}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {getSessionTimespan(session.date)}
+                        </p>
+                        <div
+                          className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${
+                            session.meeting != null
+                              ? "border-green-300 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {session?.meeting != null &&
+                          session?.meeting.name != null
+                            ? session?.meeting.name
+                            : "No Meeting Link"}
+                        </div>
+
+                        <Button
+                          className="hidden mt-2 w-full text-xs h-6"
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsModalOpen(true);
+                          }}
+                          variant="outline"
+                        >
+                          View Details
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {sessions.filter(
+                    (session) =>
+                      session?.date &&
+                      format(parseISO(session.date), "yyyy-MM-dd") ===
+                        format(day, "yyyy-MM-dd")
+                  ).length === 0 && (
+                    <p className="text-sm text-gray-400 text-center">
+                      No sessions
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <Button onClick={handleUpdateWeek} className="mb-4">
-          Update Week
-        </Button>
+        <div>
+          <h3 className="text-3xl font-bold mb-6 text-left text-gray-800">
+            Enrollment Progress
+          </h3>
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="font-medium">Total Students:</p>
+                  <p>{getEnrollmentProgress().totalStudents}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Students This Week:</p>
+                  <p>{getEnrollmentProgress().studentsThisWeek}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        {loading ? (
-          <div className="text-center py-10">
-            <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
-            <p className="mt-4 text-gray-600">Loading sessions...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-7 gap-2">
-            {weekDays.map((day) => (
-              <div
-                key={day.toISOString()}
-                className="border rounded-lg px-2 py-3 bg-gray-50"
-              >
-                <h3 className="font-semibold mb-2 text-gray-700">
-                  {format(day, "EEEE")}
-                </h3>
-                <p className="text-sm mb-4 text-gray-500">
-                  {format(day, "MMM d")}
-                </p>
-                {getValidSessionsForDay(day).map((session) => (
-                  <Card
-                    onClick={() => {
-                      setSelectedSession(session);
-                      setIsModalOpen(true);
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Session Details</DialogTitle>
+            </DialogHeader>
+            {selectedSession && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Status</Label>
+                  <Select
+                    value={selectedSession?.status}
+                    onValueChange={(value) => {
+                      console.log("Selected value:", value); // Log the selected value
+                      if (value) {
+                        const updatedSession = {
+                          ...selectedSession,
+                          status: value,
+                        };
+                        console.log("Updated session:", updatedSession); // Log the updated session
+                        setSelectedSession(updatedSession);
+                      }
                     }}
-                    key={session.id}
-                    className={`hover:cursor-pointer hover:shadow-md mb-2 ${
-                      session.status === "Complete"
-                        ? "bg-green-500/10 border-2"
-                        : session.status === "Cancelled"
-                        ? "bg-red-500/10 border-2"
-                        : "bg-white"
-                    }`}
                   >
-                    <CardContent className="p-3">
-                      <p className="text-xs font-semibold">
-                        {session.tutor?.firstName} {session.tutor?.lastName}
-                      </p>
-                      <p className="text-xs font-normal">
-                        {session?.student?.firstName}{" "}
-                        {session?.student?.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500">{session.summary}</p>
-                      <p className="text-xs text-gray-500">
-                        {getSessionTimespan(session.date)}
-                      </p>
-                      <div
-                        className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${
-                          session.meeting != null
-                            ? "border-green-300 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {session?.meeting != null &&
-                        session?.meeting.name != null
-                          ? session?.meeting.name
-                          : "No Meeting Link"}
-                      </div>
-
-                      <Button
-                        className="hidden mt-2 w-full text-xs h-6"
-                        onClick={() => {
-                          setSelectedSession(session);
-                          setIsModalOpen(true);
-                        }}
-                        variant="outline"
-                      >
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-                {sessions.filter(
-                  (session) =>
-                    session?.date &&
-                    format(parseISO(session.date), "yyyy-MM-dd") ===
-                      format(day, "yyyy-MM-dd")
-                ).length === 0 && (
-                  <p className="text-sm text-gray-400 text-center">
-                    No sessions
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <h3 className="text-3xl font-bold mb-6 text-left text-gray-800">
-          Enrollment Progress
-        </h3>
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="font-medium">Total Students:</p>
-                <p>{getEnrollmentProgress().totalStudents}</p>
-              </div>
-              <div>
-                <p className="font-medium">Students This Week:</p>
-                <p>{getEnrollmentProgress().studentsThisWeek}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Session Details</DialogTitle>
-          </DialogHeader>
-          {selectedSession && (
-            <div className="space-y-4">
-              <div>
-                <Label>Status</Label>
-                <Select
-                  value={selectedSession?.status}
-                  onValueChange={(value) => {
-                    console.log("Selected value:", value); // Log the selected value
-                    if (value) {
-                      const updatedSession = {
-                        ...selectedSession,
-                        status: value,
-                      };
-                      console.log("Updated session:", updatedSession); // Log the updated session
-                      setSelectedSession(updatedSession);
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue>
-                      {selectedSession?.status
-                        ? selectedSession.status
-                        : "Select status"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Complete">Complete</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Tutor</Label>
-                <Select
-                  value={selectedSession.tutor?.id}
-                  onValueChange={async (value) => {
-                    console.log(value);
-                    const selectedTutor = await getProfileWithProfileId(value);
-                    if (selectedTutor) {
+                    <SelectTrigger>
+                      <SelectValue>
+                        {selectedSession?.status
+                          ? selectedSession.status
+                          : "Select status"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Complete">Complete</SelectItem>
+                      <SelectItem value="Cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Tutor</Label>
+                  <Select
+                    value={selectedSession.tutor?.id}
+                    onValueChange={async (value) => {
+                      console.log(value);
+                      const selectedTutor = await getProfileWithProfileId(
+                        value
+                      );
+                      if (selectedTutor) {
+                        setSelectedSession({
+                          ...selectedSession,
+                          tutor: selectedTutor,
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>
+                        {selectedSession.tutor
+                          ? `${selectedSession.tutor.firstName} ${selectedSession.tutor.lastName}`
+                          : "Select a tutor"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tutors.map(
+                        (tutor) =>
+                          tutor.status !== "Inactive" && (
+                            <SelectItem key={tutor.id} value={tutor.id}>
+                              {tutor.firstName} {tutor.lastName}
+                            </SelectItem>
+                          )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Date</Label>
+                  <Input
+                    type="datetime-local"
+                    defaultValue={format(
+                      parseISO(selectedSession.date),
+                      "yyyy-MM-dd'T'HH:mm"
+                    )}
+                    onChange={(e) =>
                       setSelectedSession({
                         ...selectedSession,
-                        tutor: selectedTutor,
-                      });
+                        date: new Date(e.target.value).toISOString(),
+                      })
                     }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue>
-                      {selectedSession.tutor
-                        ? `${selectedSession.tutor.firstName} ${selectedSession.tutor.lastName}`
-                        : "Select a tutor"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tutors.map(
-                      (tutor) =>
-                        tutor.status !== "Inactive" && (
-                          <SelectItem key={tutor.id} value={tutor.id}>
-                            {tutor.firstName} {tutor.lastName}
-                          </SelectItem>
-                        )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Date</Label>
-                <Input
-                  type="datetime-local"
-                  defaultValue={format(
-                    parseISO(selectedSession.date),
-                    "yyyy-MM-dd'T'HH:mm"
-                  )}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      date: new Date(e.target.value).toISOString(),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Meeting</Label>
-                <Select
-                  value={selectedSession?.meeting?.id || ""}
-                  onValueChange={async (value) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      meeting: await getMeeting(value),
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue>
-                      {/* {(selectedSession.meetingId &&
+                  />
+                </div>
+                <div>
+                  <Label>Meeting</Label>
+                  <Select
+                    value={selectedSession?.meeting?.id || ""}
+                    onValueChange={async (value) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        meeting: await getMeeting(value),
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue>
+                        {/* {(selectedSession.meetingId &&
                         meetings.find(
                           (meeting) => meeting.id === selectedSession.meetingId
                         )?.name) ||
                         "Select a meeting"} */}
-                      {selectedSession?.meeting == null || "Select a meeting"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {meetings.map((meeting) => (
-                      <SelectItem
-                        key={meeting.id}
-                        value={meeting.id}
-                        className="flex items-center justify-between"
-                      >
-                        {/* <span>
+                        {selectedSession?.meeting == null || "Select a meeting"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {meetings.map((meeting) => (
+                        <SelectItem
+                          key={meeting.id}
+                          value={meeting.id}
+                          className="flex items-center justify-between"
+                        >
+                          {/* <span>
                           {meeting.name} - {meeting.id}
                         </span> */}
-                        <span>
-                          {meeting.name} | {meeting.meetingId}
-                        </span>
-                        <Circle
-                          className={`w-2 h-2 ml-2 ${
-                            isMeetingAvailable(meeting)
-                              ? "text-green-500"
-                              : "text-red-500"
-                          } fill-current`}
-                        />
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                          <span>
+                            {meeting.name} | {meeting.meetingId}
+                          </span>
+                          <Circle
+                            className={`w-2 h-2 ml-2 ${
+                              isMeetingAvailable(meeting)
+                                ? "text-green-500"
+                                : "text-red-500"
+                            } fill-current`}
+                          />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-row justify-between">
+                  <Button onClick={() => handleUpdateSession(selectedSession)}>
+                    Update Session
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleRemoveSession(selectedSession.id)}
+                  >
+                    Delete Session
+                  </Button>
+                </div>
               </div>
-              <div className="flex flex-row justify-between">
-                <Button onClick={() => handleUpdateSession(selectedSession)}>
-                  Update Session
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleRemoveSession(selectedSession.id)}
-                >
-                  Delete Session
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   );
 };
 
