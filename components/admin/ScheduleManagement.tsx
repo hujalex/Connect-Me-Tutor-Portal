@@ -164,6 +164,8 @@ const Schedule = () => {
       const weekStart = startOfWeek(currentWeek);
       const weekEnd = endOfWeek(currentWeek);
 
+      console.log("FLAG");
+
       // Create sessions for all enrollments without checking meeting availability
       const newSessions = await addSessions(
         weekStart.toISOString(),
@@ -335,27 +337,46 @@ const Schedule = () => {
                 </p>
                 {getValidSessionsForDay(day).map((session) => (
                   <Card
-                    onClick = {() => {
+                    onClick={() => {
                       setSelectedSession(session);
                       setIsModalOpen(true);
                     }}
-
                     key={session.id}
-                    className={`hover:cursor-pointer hover:shadow-md mb-2 ${session.status === 'Complete' ? 'bg-green-500/10 border-2' : session.status === 'Cancelled' ? 'bg-red-500/10 border-2' : 'bg-white'}`}
+                    className={`hover:cursor-pointer hover:shadow-md mb-2 ${
+                      session.status === "Complete"
+                        ? "bg-green-500/10 border-2"
+                        : session.status === "Cancelled"
+                        ? "bg-red-500/10 border-2"
+                        : "bg-white"
+                    }`}
                   >
                     <CardContent className="p-3">
-                    <p className="text-xs font-semibold">{session.tutor?.firstName} {session.tutor?.lastName}</p>
-                    <p className="text-xs font-normal">{session?.student?.firstName} {session?.student?.lastName}</p>
+                      <p className="text-xs font-semibold">
+                        {session.tutor?.firstName} {session.tutor?.lastName}
+                      </p>
+                      <p className="text-xs font-normal">
+                        {session?.student?.firstName}{" "}
+                        {session?.student?.lastName}
+                      </p>
                       <p className="text-xs text-gray-500">{session.summary}</p>
                       <p className="text-xs text-gray-500">
                         {getSessionTimespan(session.date)}
                       </p>
-                      <div className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${session.meeting != null ? 'border-green-300 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {session?.meeting != null && session?.meeting.name != null ? session?.meeting.name  : 'No Meeting Link'}
+                      <div
+                        className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${
+                          session.meeting != null
+                            ? "border-green-300 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {session?.meeting != null &&
+                        session?.meeting.name != null
+                          ? session?.meeting.name
+                          : "No Meeting Link"}
                       </div>
 
                       <Button
-                        className="hidden mt-2 w-full text-xs h-6" 
+                        className="hidden mt-2 w-full text-xs h-6"
                         onClick={() => {
                           setSelectedSession(session);
                           setIsModalOpen(true);
@@ -493,8 +514,13 @@ const Schedule = () => {
               <div>
                 <Label>Meeting</Label>
                 <Select
-                  value={selectedSession?.meeting?.id || ''}
-                  onValueChange={async (value) => setSelectedSession({...selectedSession, meeting: await getMeeting(value)})}
+                  value={selectedSession?.meeting?.id || ""}
+                  onValueChange={async (value) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      meeting: await getMeeting(value),
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue>
@@ -503,7 +529,7 @@ const Schedule = () => {
                           (meeting) => meeting.id === selectedSession.meetingId
                         )?.name) ||
                         "Select a meeting"} */}
-                        {selectedSession?.meeting == null || 'Select a meeting'}
+                      {selectedSession?.meeting == null || "Select a meeting"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -516,9 +542,15 @@ const Schedule = () => {
                         {/* <span>
                           {meeting.name} - {meeting.id}
                         </span> */}
-                               <span>{meeting.name} | {meeting.meetingId}</span>
+                        <span>
+                          {meeting.name} | {meeting.meetingId}
+                        </span>
                         <Circle
-                          className={`w-2 h-2 ml-2 ${isMeetingAvailable(meeting) ? 'text-green-500' : 'text-red-500'} fill-current`}
+                          className={`w-2 h-2 ml-2 ${
+                            isMeetingAvailable(meeting)
+                              ? "text-green-500"
+                              : "text-red-500"
+                          } fill-current`}
                         />
                       </SelectItem>
                     ))}

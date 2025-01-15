@@ -46,8 +46,9 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
           day: selectedDay,
           startTime: selectedStartTime,
           endTime: selectedEndTime,
-        },
+      },
       ];
+      console.log(updatedList);
       setAvailabilityList(updatedList);
       setSelectedDay("");
       setSelectedStartTime("");
@@ -122,26 +123,20 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
       <div className="mt-4">
         <Label>Availability List:</Label>
         <ul className="list-disc pl-5">
-          {availabilityList.length > 1 ? (
-            availabilityList?.map((availability, index) =>
-              availability.day &&
-              availability.startTime &&
-              availability.endTime ? (
-                <li key={index} className="flex justify-between">
-                  {availability.day} from {formatTime(availability.startTime)}{" "}
-                  to {formatTime(availability.endTime)}
-                  <Button
-                    variant="link"
-                    onClick={() => removeAvailability(index)}
-                    className="text-red-500"
-                  >
-                    Remove
-                  </Button>
-                </li>
-              ) : (
-                ""
-              )
-            )
+          {availabilityList.length > 0 ? (
+            availabilityList?.map((availability, index) => (
+              <li key={index} className="flex justify-between">
+                {availability.day} from {formatTime(availability.startTime)} to{" "}
+                {formatTime(availability.endTime)}
+                <Button
+                  variant="link"
+                  onClick={() => removeAvailability(index)}
+                  className="text-red-500"
+                >
+                  Remove
+                </Button>
+              </li>
+            ))
           ) : (
             <p className="text-[#ff0000]">Select a date and time</p>
           )}

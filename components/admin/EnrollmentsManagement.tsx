@@ -62,12 +62,13 @@ import {
   getMeetings,
 } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Enrollment, Profile, Event, Meeting } from "@/types";
+import { Enrollment, Profile, Event, Meeting, Availability } from "@/types";
 import toast from "react-hot-toast";
 import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
+// import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
@@ -107,6 +108,7 @@ const EnrollmentList = () => {
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
   });
+  const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
 
   useEffect(() => {
     fetchEnrollments();
@@ -284,6 +286,7 @@ const EnrollmentList = () => {
         resetNewEnrollment();
         setSelectedTutorId("");
         setSelectedStudentId("");
+        setAvailabilityList([]);
         toast.success("Enrollment added successfully");
       }
     } catch (error) {
@@ -409,9 +412,7 @@ const EnrollmentList = () => {
                         <PopoverContent className="">
                           <Command>
                             <CommandInput
-
                               placeholder="Search student..."
-
                               value={studentSearch}
                               onValueChange={setStudentSearch}
                             />
@@ -544,10 +545,12 @@ const EnrollmentList = () => {
                       </Popover>
                     </div>
                     <AvailabilityForm
-                      availabilityList={newEnrollment.availability}
-                      setAvailabilityList={(availability) =>
-                        setNewEnrollment({ ...newEnrollment, availability })
-                      }
+                      // availabilityList={newEnrollment.availability}
+                      availabilityList={availabilityList} // new enrollment by default will not have an availability
+                      setAvailabilityList={(availability) => {
+                        setAvailabilityList(availability);
+                        setNewEnrollment({ ...newEnrollment, availability });
+                      }}
                     />
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="summary" className="text-right">
@@ -1068,7 +1071,6 @@ const EnrollmentList = () => {
                   className="col-span-3"
                 />
               </div>
-
 
               <div>
                 <Label>Meeting Link</Label>
