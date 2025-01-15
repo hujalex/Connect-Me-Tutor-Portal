@@ -76,3 +76,10 @@ interface Enrollment {
   availability: { day: string; startTime: string; endTime: string }[]; // Ensure startTime and endTime have AM/PM format
   meetingId: string;
 }
+
+// Define the type for availability
+interface Availability {
+  day: string;
+  startTime: string;
+  endTime: string;
+}

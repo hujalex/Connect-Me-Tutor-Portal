@@ -464,6 +464,7 @@ export async function addSessions(
 
       if (!startTime || startTime.includes("-")) {
         console.error(`Invalid time format for availability: ${startTime}`);
+        console.log('Errored Enrollment', enrollment)
         continue;
       }
 
@@ -528,9 +529,8 @@ export async function addSessions(
             continue;
           }
 
-          // Create session without requiring a meeting link
+          console.log(enrollment);
 
-          //!Create Session with Meeting Link
           const { data: session, error } = await supabase
             .from("Sessions")
             .insert({
@@ -539,7 +539,7 @@ export async function addSessions(
               tutor_id: tutor.id,
               status: "Active",
               summary: enrollment.summary,
-              meeting_id: enrollment.meetingId,
+              meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
             })
             .single();
 
