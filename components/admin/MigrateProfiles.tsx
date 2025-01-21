@@ -1,6 +1,11 @@
 "use client";
-import AvaiabilityFormat from "@/components/student/AvailabilityFormat"
-import { formatStandardToMilitaryTime, addOneHourToMilitaryTime, getToday, addYearsToDate } from "@/lib/utils";
+import AvaiabilityFormat from "@/components/student/AvailabilityFormat";
+import {
+  formatStandardToMilitaryTime,
+  addOneHourToMilitaryTime,
+  getToday,
+  addYearsToDate,
+} from "@/lib/utils";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -13,6 +18,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -47,7 +54,9 @@ import {
   migrateSelectedStudents,
   parseNames,
   CSV_COLUMNS,
-  type Profile, ErrorEntry
+  type Profile,
+  ErrorEntry,
+  ErrorEnrollment,
 } from "@/lib/actions/migrate.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Papa from "papaparse";
@@ -56,9 +65,6 @@ import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 import { Enrollment } from "@/types";
 import { resourceLimits } from "worker_threads";
-
-
-
 
 export default function MigrateDataPage() {
   const supabase = createClientComponentClient({
@@ -72,6 +78,9 @@ export default function MigrateDataPage() {
   );
   const [erroredStudentEntries, setErroredStudentEntries] = useState<
     ErrorEntry[]
+  >([]);
+  const [erroredPairingEntries, setErroredPairingEntries] = useState<
+    ErrorEnrollment[]
   >([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -228,8 +237,6 @@ export default function MigrateDataPage() {
     setShowPairings(true);
   };
 
-
-
   const handleMigrateUsers = async (len: number, data: any) => {
     const tutors: Profile[] = [];
     const students: Profile[] = [];
@@ -286,8 +293,12 @@ export default function MigrateDataPage() {
         availability: [
           {
             day: entry[CSV_COLUMNS["Day of the Week"]],
-            startTime: formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]]),
-            endTime: addOneHourToMilitaryTime(formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]])),
+            startTime: formatStandardToMilitaryTime(
+              entry[CSV_COLUMNS["Session Time"]]
+            ),
+            endTime: addOneHourToMilitaryTime(
+              formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]])
+            ),
           },
         ], //based on one hour sessions
         meetingId: "",
@@ -436,6 +447,7 @@ export default function MigrateDataPage() {
   const handleConfirmPairingMigration = async () => {
     setLoading(true);
     const migrations: number[] = [];
+    const erroredEntries: ErrorEnrollment[] = [];
 
     const results = {
       success: [] as number[],
@@ -464,6 +476,10 @@ export default function MigrateDataPage() {
               });
             }
           } catch (error) {
+            erroredEntries.push({
+              enrollment: entry,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
             results.failed.push({
               index,
               error: error instanceof Error ? error.message : "Unknown error",
@@ -480,6 +496,7 @@ export default function MigrateDataPage() {
       setLoading(false);
       setPairings(remainingpairings);
       setSelectedPairings(new Set());
+      setErroredPairingEntries(erroredEntries);
       console.log(
         `Succeeded: ${results.success.length} : Failed ${results.failed.length}`
       );
@@ -548,20 +565,70 @@ export default function MigrateDataPage() {
                 >
                   {showErrorEntries ? "Show Remaining" : "Show Errors"}
                 </DialogTitle>
+                <Switch
+                  onCheckedChange={handleShowErrorEntries}
+                  checked={showErrorEntries}
+                  id="Show Error"
+                />
+                <DialogTitle>Show Errors</DialogTitle>
               </div>
-
               <DialogDescription>
                 {showErrorEntries
                   ? "Entries with errors"
-                  : userOption
-                  ? "Select the Students you want to migrate to the system."
-                  : "Select the Tutors you want to migrate to the system."}
+                  : showStudents
+                  ? "Select the Students you want to migrate to the portal."
+                  : showTutors
+                  ? "Select the Tutors you want to migrate to the portal."
+                  : showPairings
+                  ? "Select the pairings you want to migrate to the portal"
+                  : ""}
               </DialogDescription>
             </DialogHeader>
 
             {showPairings ? (
               showErrorEntries ? (
-                "Hi"
+                erroredPairingEntries.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tutor</TableHead>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Error</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {erroredPairingEntries.map((pairing, index) => (
+                        <TableRow key={pairing.enrollment.id}>
+                          <TableCell>
+                            {`${pairing.enrollment.student?.firstName}`}{" "}
+                            {`${pairing.enrollment.student?.lastName}`}
+                          </TableCell>
+                          <TableCell>
+                            {`${pairing.enrollment.tutor?.firstName}`}{" "}
+                            {`${pairing.enrollment.tutor?.lastName}`}
+                          </TableCell>
+                          <TableCell>
+                            {`${pairing.enrollment.startDate}`}
+                          </TableCell>
+                          <TableCell>
+                            {`${pairing.enrollment.endDate}`}
+                          </TableCell>
+                          <TableCell>
+                            {`${formatAvailability(
+                              pairing.enrollment.availability
+                            )}`}
+                          </TableCell>
+                          <TableCell>{`${pairing.error}`}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-center p-8">No Errors found in pairings</p>
+                )
               ) : pairings.length > 0 ? (
                 <>
                   <Table>
