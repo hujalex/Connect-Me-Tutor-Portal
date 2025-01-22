@@ -15,7 +15,7 @@ export const CSV_COLUMNS = {
   "Day of the Week": 9,
   "Session Time": 10,
   "Zoom Link": 11,
-};
+} as const;
 
 export interface ErrorEntry {
   profile: Profile;
