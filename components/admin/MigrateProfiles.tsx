@@ -526,7 +526,7 @@ export default function MigrateDataPage() {
 
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Migrate Data</h1>
-        <div className="">
+        <div className="flex grid grid-cols-3 gap-6">
           {" "}
           <Input
             id="file"
