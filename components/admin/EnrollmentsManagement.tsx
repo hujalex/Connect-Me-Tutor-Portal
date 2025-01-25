@@ -109,6 +109,9 @@ const EnrollmentList = () => {
     meetingId: "",
   });
   const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
+  const [meetingAvailability, setMeetingAvailability] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
     fetchEnrollments();
@@ -131,6 +134,11 @@ const EnrollmentList = () => {
   }, [filterValue, enrollments]);
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
+
+  const areMeetingsAvailable = () => {
+    console.log("logged");
+    
+  };
 
   const isMeetingAvailable = (
     meetingId: string,
@@ -590,51 +598,18 @@ const EnrollmentList = () => {
                         className="col-span-3"
                       />
                     </div>
-                    {/* 
-                    <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tutorId" className="text-right">
-                  Tutor
-                </Label>
-                <Select
-                  name="tutorId"
-                  value={selectedEnrollment.tutor?.id}
-                  onValueChange={(value) =>
-                    handleInputChange({
-                      target: { name: "tutorId", value },
-                    } as any)
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a tutor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tutors.map((tutor) => (
-                      <SelectItem key={tutor.id} value={tutor.id}>
-                        {tutor.firstName} {tutor.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div> */}
-
                     <div>
                       <Label>Meeting Link</Label>
                       <Select
                         name="meetingId"
                         value={newEnrollment.meetingId}
-                        // onValueChange={(value) =>
-                        //   setSelectedEnrollment({
-                        //     ...selectedEnrollment,
-                        //     meetingId: value,
-                        //   })
-                        // }
                         onValueChange={(value) =>
                           handleInputChange({
                             target: { name: "meetingId", value },
                           } as any)
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger onClick={() => areMeetingsAvailable()}>
                           <SelectValue placeholder="Select a meeting link">
                             {newEnrollment.meetingId
                               ? meetings.find(
@@ -656,7 +631,7 @@ const EnrollmentList = () => {
                               </span>
                               <Circle
                                 className={`w-2 h-2 ml-2 ${
-                                  isMeetingAvailable(meeting.id, newEnrollment)
+                                  meetingAvailability[meeting.id]
                                     ? "text-green-500"
                                     : "text-red-500"
                                 } fill-current`}
