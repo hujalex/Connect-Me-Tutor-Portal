@@ -1,6 +1,11 @@
 "use client";
-import AvaiabilityFormat from "@/components/student/AvailabilityFormat"
-import { formatStandardToMilitaryTime, addOneHourToMilitaryTime, getToday, addYearsToDate } from "@/lib/utils";
+import AvaiabilityFormat from "@/components/student/AvailabilityFormat";
+import {
+  formatStandardToMilitaryTime,
+  addOneHourToMilitaryTime,
+  getToday,
+  addYearsToDate,
+} from "@/lib/utils";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -13,6 +18,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -30,6 +38,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { FileLoader } from "@/components/ui/fileloader";
 import {
   getAllProfiles,
   addTutor,
@@ -40,6 +49,11 @@ import {
   addStudent,
   addEnrollment,
 } from "@/lib/actions/admin.actions";
+import {
+  MEETING_CONFIG,
+  getIdFromMeetingName,
+  type MeetingName,
+} from "@/lib/actions/meeting.actions";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -47,7 +61,9 @@ import {
   migrateSelectedStudents,
   parseNames,
   CSV_COLUMNS,
-  type Profile, ErrorEntry
+  type Profile,
+  ErrorEntry,
+  ErrorEnrollment,
 } from "@/lib/actions/migrate.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Papa from "papaparse";
@@ -56,9 +72,6 @@ import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 import { Enrollment } from "@/types";
 import { resourceLimits } from "worker_threads";
-
-
-
 
 export default function MigrateDataPage() {
   const supabase = createClientComponentClient({
@@ -72,6 +85,9 @@ export default function MigrateDataPage() {
   );
   const [erroredStudentEntries, setErroredStudentEntries] = useState<
     ErrorEntry[]
+  >([]);
+  const [erroredPairingEntries, setErroredPairingEntries] = useState<
+    ErrorEnrollment[]
   >([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -94,7 +110,6 @@ export default function MigrateDataPage() {
   const [showStudents, setShowStudents] = useState(false);
   const [showPairings, setShowPairings] = useState(false);
   const [showErrorEntries, setShowErrorEntries] = useState(false);
-  const [revealErrorEntries, setRevealErrorEntries] = useState(false);
 
   const ITEMS_PER_PAGE = 20;
 
@@ -193,11 +208,11 @@ export default function MigrateDataPage() {
   };
 
   const toggleSelectAllPairings = () => {
-    if (selectedPairings.size === currentPairings.length) {
+    if (selectedPairings.size === pairings.length) {
       setSelectedPairings(new Set());
     } else {
       setSelectedPairings(
-        new Set(currentPairings.map((_, index) => startIndex + index))
+        new Set(pairings.map((_, index) => startIndex + index))
       );
     }
   };
@@ -227,8 +242,6 @@ export default function MigrateDataPage() {
     setShowStudents(false);
     setShowPairings(true);
   };
-
-
 
   const handleMigrateUsers = async (len: number, data: any) => {
     const tutors: Profile[] = [];
@@ -286,11 +299,17 @@ export default function MigrateDataPage() {
         availability: [
           {
             day: entry[CSV_COLUMNS["Day of the Week"]],
-            startTime: formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]]),
-            endTime: addOneHourToMilitaryTime(formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]])),
+            startTime: formatStandardToMilitaryTime(
+              entry[CSV_COLUMNS["Session Time"]]
+            ),
+            endTime: addOneHourToMilitaryTime(
+              formatStandardToMilitaryTime(entry[CSV_COLUMNS["Session Time"]])
+            ),
           },
         ], //based on one hour sessions
-        meetingId: "",
+        meetingId: getIdFromMeetingName(
+          entry[CSV_COLUMNS["Zoom Link"]] as MeetingName
+        ),
         id: "",
         createdAt: "",
       };
@@ -363,7 +382,7 @@ export default function MigrateDataPage() {
     setSelectedTutors(new Set());
     setErroredTutorEntries((prev) => [...prev, ...erroredEntries]);
     setLoading(false);
-    setRevealErrorEntries(true);
+    setShowErrorEntries(true);
   };
 
   const handleConfirmStudentMigration = async () => {
@@ -398,7 +417,7 @@ export default function MigrateDataPage() {
     setSelectedStudents(new Set());
     setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
     setLoading(false);
-    setRevealErrorEntries(true);
+    setShowErrorEntries(true);
   };
 
   const getProfileByEmail = async (email: string) => {
@@ -436,6 +455,7 @@ export default function MigrateDataPage() {
   const handleConfirmPairingMigration = async () => {
     setLoading(true);
     const migrations: number[] = [];
+    const erroredEntries: ErrorEnrollment[] = [];
 
     const results = {
       success: [] as number[],
@@ -464,6 +484,10 @@ export default function MigrateDataPage() {
               });
             }
           } catch (error) {
+            erroredEntries.push({
+              enrollment: entry,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
             results.failed.push({
               index,
               error: error instanceof Error ? error.message : "Unknown error",
@@ -480,6 +504,9 @@ export default function MigrateDataPage() {
       setLoading(false);
       setPairings(remainingpairings);
       setSelectedPairings(new Set());
+      setErroredPairingEntries(erroredEntries);
+      setShowErrorEntries(true);
+
       console.log(
         `Succeeded: ${results.success.length} : Failed ${results.failed.length}`
       );
@@ -498,19 +525,32 @@ export default function MigrateDataPage() {
       <Toaster />
 
       <div className="container mx-auto p-8">
-        <input type="file" onChange={handleFileChange} />
         <h1 className="text-3xl font-bold mb-8">Migrate Data</h1>
-
-        <Button onClick={handleMigrate} disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            "Migrate Users"
-          )}
-        </Button>
+        <div className="flex grid grid-cols-3 gap-6">
+          {" "}
+          <Input
+            id="file"
+            type="file"
+            onChange={handleFileChange}
+            accept=".csv"
+            className={`${file ? "bg-green-200" : ""}`}
+          />
+          {/* <FileLoader
+            handleFunction={handleFileChange}
+            acceptedFormats=".csv"
+            description="CSV FILE"
+          /> */}
+          <Button onClick={handleMigrate} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Migrate Users"
+            )}
+          </Button>
+        </div>
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -536,48 +576,93 @@ export default function MigrateDataPage() {
                 >
                   Make Pairings
                 </DialogTitle>
-                <DialogTitle
-                  onClick={handleShowErrorEntries}
-                  className={`${
-                    revealErrorEntries
-                      ? showErrorEntries
-                        ? "text-[#008000]"
-                        : "text-[#ff0000]"
-                      : "invisible"
-                  }`}
-                >
-                  {showErrorEntries ? "Show Remaining" : "Show Errors"}
-                </DialogTitle>
+                <div className="flex items-center ml-auto mr-12">
+                  {" "}
+                  <Switch
+                    onCheckedChange={handleShowErrorEntries}
+                    checked={showErrorEntries}
+                    id="Show Error"
+                    className="mx-2"
+                  />
+                  <DialogTitle>Show Errors</DialogTitle>
+                </div>
               </div>
-
               <DialogDescription>
                 {showErrorEntries
                   ? "Entries with errors"
-                  : userOption
-                  ? "Select the Students you want to migrate to the system."
-                  : "Select the Tutors you want to migrate to the system."}
+                  : showStudents
+                  ? "Select the Students you want to migrate to the portal."
+                  : showTutors
+                  ? "Select the Tutors you want to migrate to the portal."
+                  : showPairings
+                  ? "Select the pairings you want to migrate to the portal"
+                  : ""}
               </DialogDescription>
             </DialogHeader>
 
             {showPairings ? (
               showErrorEntries ? (
-                "Hi"
-              ) : pairings.length > 0 ? (
+                erroredPairingEntries.length > 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Tutor</TableHead>
+                          <TableHead>Student</TableHead>
+                          <TableHead>Start Date</TableHead>
+                          <TableHead>End Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Error</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {erroredPairingEntries.map((pairing, index) => (
+                          <TableRow key={pairing.enrollment.id}>
+                            <TableCell>
+                              {`${pairing.enrollment.tutor?.firstName}`}{" "}
+                              {`${pairing.enrollment.tutor?.lastName}`}
+                            </TableCell>
+                            <TableCell>
+                              {`${pairing.enrollment.student?.firstName}`}{" "}
+                              {`${pairing.enrollment.student?.lastName}`}
+                            </TableCell>
+                            <TableCell>
+                              {`${pairing.enrollment.startDate}`}
+                            </TableCell>
+                            <TableCell>
+                              {`${pairing.enrollment.endDate}`}
+                            </TableCell>
+                            <TableCell>
+                              {`${formatAvailability(
+                                pairing.enrollment.availability
+                              )}`}
+                            </TableCell>
+                            <TableCell>{`${pairing.error}`}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {myPagination}
+                  </>
+                ) : (
+                  <p className="text-center p-8">No Errors found in pairings</p>
+                )
+              ) : currentPairings.length > 0 ? (
                 <>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={
-                              selectedPairings.size === currentPairings.length
-                            }
+                            checked={selectedPairings.size === pairings.length}
                             onCheckedChange={toggleSelectAllPairings}
                             aria-label="Select all Pairings"
                           />
                         </TableHead>
                         <TableHead>Tutor</TableHead>
                         <TableHead>Student</TableHead>
+                        {/* <TableHead>Tutor Email</TableHead> */}
+                        {/* <TableHead>Student Email</TableHead> */}
                         <TableHead>Start Date</TableHead>
                         <TableHead>End Date</TableHead>
                         <TableHead>Time</TableHead>
@@ -597,6 +682,8 @@ export default function MigrateDataPage() {
                           </TableCell>
                           <TableCell>{`${pairing.tutor?.firstName} ${pairing.tutor?.lastName}`}</TableCell>
                           <TableCell>{`${pairing.student?.firstName} ${pairing.student?.lastName}`}</TableCell>
+                          {/* <TableCell>{`${pairing.tutor?.email}`}</TableCell> */}
+                          {/* <TableCell>{`${pairing.student?.email}`}</TableCell> */}
                           <TableCell>{`${pairing.startDate}`}</TableCell>
                           <TableCell>{`${pairing.endDate}`}</TableCell>
                           <TableCell>{`${formatAvailability(
