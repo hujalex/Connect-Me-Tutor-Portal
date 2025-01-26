@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { Search } from "lucide-react";
+import { AlarmClockMinus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ChevronDown,
@@ -135,9 +135,132 @@ const EnrollmentList = () => {
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
 
-  const areMeetingsAvailable = () => {
-    console.log("logged");
-    
+  // const isMeetingAvailable = (meeting: Meeting) => {
+  //     try {
+  //       const now = new Date();
+  //       return !sessions.some((session) => {
+  //         // Skip sessions without dates or meeting IDs
+  //         if (!session?.date || !session?.meeting) return false;
+
+  //         try {
+  //           const sessionEndTime = new Date(session.date);
+  //           sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
+  //           return (
+  //             (session.status === "Complete" || sessionEndTime < now) &&
+  //             session.meeting.id === meeting.id
+  //           );
+  //         } catch (error) {
+  //           console.error("Error processing session date:", error);
+  //           return false;
+  //         }
+  //       });
+  //     } catch (error) {
+  //       console.error("Error checking meeting availability:", error);
+  //       return true; // Default to available if there's an error
+  //     }
+  //   };
+
+  const toDateTime = (time: string, day: Number) => {
+    if (!time) {
+      return new Date(NaN);
+    }
+    const [hourStr, minuteStr] = time.split(":");
+    const parsedDate = new Date();
+    while (parsedDate.getDay() !== day) {
+      parsedDate.setDate(parsedDate.getDate() + 1);
+    }
+    parsedDate.setHours(parseInt(hourStr), parseInt(minuteStr), 0, 0);
+    return parsedDate;
+  };
+
+  const formatAvailabilityAsDate = (date: Availability): Date[] => {
+    type DayName =
+      | "Sunday"
+      | "Monday"
+      | "Tuesday"
+      | "Wednesday"
+      | "Thursday"
+      | "Friday"
+      | "Saturday";
+    const dayMap: { [key in DayName]: number } = {
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
+    };
+
+    const dayIndex = dayMap[date.day as DayName];
+    return [
+      toDateTime(date.startTime, dayIndex),
+      toDateTime(date.endTime, dayIndex),
+    ];
+  };
+
+  const areMeetingsAvailable = (
+    enroll: Omit<Enrollment, "id" | "createdAt">
+  ) => {
+    const updatedMeetingAvailability: { [key: string]: boolean } = {};
+    meetings.forEach((meeting) => {
+      updatedMeetingAvailability[meeting.id] = true;
+    });
+
+    const [newEnrollmentStartTime, newEnrollmentEndTime] = enroll
+      .availability[0]
+      ? formatAvailabilityAsDate(enroll.availability[0])
+      : [new Date(NaN), new Date(NaN)];
+
+    console.log(newEnrollmentStartTime);
+    for (const enrollment of enrollments) {
+      if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
+      try {
+        // console.log(enrollment.availability[0].day);
+
+        const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
+          enrollment.availability[0]
+        );
+        // const enrollmentEndTime = new Date(
+        //   `${enrollment.availability[0].day}, ${enrollment.availability[0].endTime}`
+        // );
+        // enrollmentEndTime.setHours(enrollmentEndTime.getHours() + 1);
+
+        // if (enrollmentEndTime < new_enrollment_date) {
+        //   meetingAvailability[enrollment.meetingId] = false;
+        // }
+
+        const isOverlap =
+          (newEnrollmentStartTime < existingEndTime &&
+            newEnrollmentStartTime > existingStartTime) ||
+          (newEnrollmentEndTime < existingEndTime &&
+            newEnrollmentEndTime > existingStartTime);
+
+        //-----Only change to false if true before-----
+        if (updatedMeetingAvailability[enrollment.meetingId]) {
+          if (isOverlap) {
+            console.log(newEnrollmentStartTime);
+            console.log(newEnrollmentEndTime);
+            console.log(existingStartTime);
+            console.log(existingEndTime);
+          }
+          updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
+        }
+      } catch (error) {
+        console.error("Error processing enrollment date:", error);
+        console.log(enrollment.availability[0]);
+        updatedMeetingAvailability[enrollment.meetingId] = false;
+      }
+    }
+    setMeetingAvailability(updatedMeetingAvailability);
+    Object.entries(updatedMeetingAvailability).forEach(
+      ([meetingId, isAvailable]) => {
+        const meetingName = meetings.find((m) => m.id === meetingId)?.name;
+        console.log(
+          `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
+        );
+      }
+    );
   };
 
   const isMeetingAvailable = (
@@ -177,6 +300,11 @@ const EnrollmentList = () => {
   const fetchMeetings = async () => {
     try {
       const fetchedMeetings = await getMeetings();
+      // if (fetchedMeetings) {
+      //   fetchedMeetings.forEach((meeting) => {
+      //     console.log(meeting);
+      //   });
+      // }
       if (fetchedMeetings) {
         setMeetings(fetchedMeetings);
       }
@@ -609,7 +737,9 @@ const EnrollmentList = () => {
                           } as any)
                         }
                       >
-                        <SelectTrigger onClick={() => areMeetingsAvailable()}>
+                        <SelectTrigger
+                          onClick={() => areMeetingsAvailable(newEnrollment)}
+                        >
                           <SelectValue placeholder="Select a meeting link">
                             {newEnrollment.meetingId
                               ? meetings.find(
@@ -1064,7 +1194,9 @@ const EnrollmentList = () => {
                     } as any)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    onClick={() => areMeetingsAvailable(selectedEnrollment)}
+                  >
                     <SelectValue placeholder="Select a meeting link">
                       {selectedEnrollment.meetingId
                         ? meetings.find(
@@ -1086,7 +1218,7 @@ const EnrollmentList = () => {
                         </span>
                         <Circle
                           className={`w-2 h-2 ml-2 ${
-                            isMeetingAvailable(meeting.id, selectedEnrollment)
+                            meetingAvailability[meeting.id]
                               ? "text-green-500"
                               : "text-red-500"
                           } fill-current`}
@@ -1096,56 +1228,6 @@ const EnrollmentList = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* <div>
-                <Label>Meeting Link</Label>
-                <Select
-                  name="meetingId"
-                  value={selectedEnrollment.meetingId}
-                  // onValueChange={(value) =>
-                  //   setSelectedEnrollment({
-                  //     ...selectedEnrollment,
-                  //     meetingId: value,
-                  //   })
-                  // }
-                  onValueChange={(value) =>
-                    handleInputChange({
-                      target: { name: "meetingId", value },
-                    } as any)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a meeting link">
-                      {selectedEnrollment.meetingId
-                        ? meetings.find(
-                            (meeting) =>
-                              meeting.id === selectedEnrollment.meetingId
-                          )?.name
-                        : "Select a meeting"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {meetings.map((meeting) => (
-                      <SelectItem
-                        key={meeting.id}
-                        value={meeting.id}
-                        className="flex items-center justify-between"
-                      >
-                        <span>
-                          {meeting.name} - {meeting.id}
-                        </span>
-                        <Circle
-                          className={`w-2 h-2 ml-2 ${
-                            isMeetingAvailable(meeting.id, selectedEnrollment)
-                              ? "text-green-500"
-                              : "text-red-500"
-                          } fill-current`}
-                        />
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div> */}
             </div>
           )}
           <Button onClick={handleUpdateEnrollment}>Update Enrollment</Button>
