@@ -244,6 +244,9 @@ export default function MigrateDataPage() {
   };
 
   const handleMigrateUsers = async (len: number, data: any) => {
+    //-----Sets Intended to remove duplciates based on emails-----
+    const tutorEmails = new Set<string>();
+    const studentEmails = new Set<string>();
     const tutors: Profile[] = [];
     const students: Profile[] = [];
     const pairings: Enrollment[] = [];
@@ -314,8 +317,14 @@ export default function MigrateDataPage() {
         createdAt: "",
       };
 
-      tutors.push(migratedTutor);
-      students.push(migratedStudent);
+      if (!tutorEmails.has(migratedTutor.email)) {
+        tutorEmails.add(migratedTutor.email);
+        tutors.push(migratedTutor);
+      }
+      if (!studentEmails.has(migratedStudent.email)) {
+        studentEmails.add(migratedStudent.email);
+        students.push(migratedStudent);
+      }
       pairings.push(migratedPairing);
     }
     setTutors(tutors);
@@ -372,11 +381,32 @@ export default function MigrateDataPage() {
       })
     );
 
+    // for (const index of Array.from(selectedTutors)) {
+    //   try {
+    //     const entry = tutors[index];
+    //     const result = await addTutor(entry);
+    //     if (result === null) {
+    //       throw new Error("Failed to add tutor");
+    //     }
+    //     migrations.push(index);
+    //   } catch (error) {
+    //     const err = error as Error;
+    //     erroredEntries.push({
+    //       profile: tutors[index],
+    //       error: err.message || "Unknown error occurred",
+    //     });
+    //   }
+    // }
+
     const remainingTutors = tutors.filter(
       (_, index) => !migrations.includes(index)
     );
 
-    toast.error(`Unable to register ${erroredEntries.length} tutors`);
+    if (erroredEntries.length == 0) {
+      toast.success("Registered all tutors successfully");
+    } else {
+      toast.error(`Unable to register ${erroredEntries.length} tutors`);
+    }
 
     setTutors(remainingTutors);
     setSelectedTutors(new Set());
@@ -389,6 +419,8 @@ export default function MigrateDataPage() {
     setLoading(true);
     const erroredEntries: ErrorEntry[] = [];
     const migrations: number[] = [];
+
+    //Concurrent much quicker
 
     await Promise.all(
       Array.from(selectedStudents).map(async (index) => {
@@ -407,11 +439,32 @@ export default function MigrateDataPage() {
       })
     );
 
+    // for (const index of Array.from(selectedStudents)) {
+    //   try {
+    //     const entry = students[index];
+    //     const result = await addStudent(entry);
+    //     if (result === null) {
+    //       throw new Error("Failed to add student");
+    //     }
+    //     migrations.push(index);
+    //   } catch (error) {
+    //     const err = error as Error;
+    //     erroredEntries.push({
+    //       profile: students[index],
+    //       error: err.message || "Unknown error occured",
+    //     });
+    //   }
+    // }
+
     const remainingStudents = students.filter(
       (_, index) => !migrations.includes(index)
     );
 
-    toast.error(`Unable to register ${erroredEntries.length} students`);
+    if (erroredEntries.length == 0) {
+      toast.success("Registered all students successfully");
+    } else {
+      toast.error(`Unable to register ${erroredEntries.length} students`);
+    }
 
     setStudents(remainingStudents);
     setSelectedStudents(new Set());

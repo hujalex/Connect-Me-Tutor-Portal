@@ -112,15 +112,14 @@ export const addStudent = async (
     const { data: existingUser, error: userCheckError } = await supabase
       .from("Profiles")
       .select("user_id")
-      .eq("email", studentData.email)
-      .single();
+      .eq("email", studentData.email);
 
     if (userCheckError && userCheckError.code !== "PGRST116") {
       // PGRST116 means no rows returned, which is what we want
       throw userCheckError;
     }
 
-    if (existingUser) {
+    if (existingUser && existingUser.length > 0) {
       throw new Error("A user with this email already exists");
     }
 
@@ -199,25 +198,26 @@ export const addTutor = async (
       throw new Error("Email is required to create a student profile");
     }
 
+    const lowerCaseEmail = tutorData.email.toLowerCase();
+
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
       .from("Profiles")
       .select("user_id")
-      .eq("email", tutorData.email)
-      .single();
+      .eq("email", lowerCaseEmail);
 
     if (userCheckError && userCheckError.code !== "PGRST116") {
       // PGRST116 means no rows returned, which is what we want
       throw userCheckError;
     }
 
-    if (existingUser) {
+    if (existingUser && existingUser.length > 0) {
       throw new Error("A user with this email already exists");
     }
 
     //-----Moved After Duplicate Check to prevent Sending confimration email-----
     const tempPassword = await createPassword();
-    const userId = await createUser(tutorData.email, tempPassword);
+    const userId = await createUser(lowerCaseEmail, tempPassword);
 
     // Create the student profile without id and createdAt
     const newTutorProfile = {
@@ -228,7 +228,7 @@ export const addTutor = async (
       date_of_birth: tutorData.dateOfBirth || "",
       start_date: tutorData.startDate || new Date().toISOString(),
       availability: tutorData.availability || [],
-      email: tutorData.email,
+      email: lowerCaseEmail,
       timezone: tutorData.timeZone || "",
       subjects_of_interest: tutorData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
@@ -464,7 +464,7 @@ export async function addSessions(
 
       if (!startTime || startTime.includes("-")) {
         console.error(`Invalid time format for availability: ${startTime}`);
-        console.log('Errored Enrollment', enrollment)
+        console.log("Errored Enrollment", enrollment);
         continue;
       }
 
