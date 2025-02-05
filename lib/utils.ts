@@ -1,7 +1,6 @@
-
-import { type ClassValue, clsx } from "clsx"
+import { type ClassValue, clsx } from "clsx";
 import { yearsToDays } from "date-fns";
-import { twMerge } from "tailwind-merge"
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,7 +32,10 @@ export const postData = async (endpoint: any, body: any) => {
 
 export function formatSessionDate(dateString: string): string {
   // Create a new Date object
+  console.log(dateString);
   const date: Date = new Date(dateString);
+
+  console.log("Current Date", date);
 
   // Define options for formatting
   const options: Intl.DateTimeFormatOptions = {
@@ -42,7 +44,7 @@ export function formatSessionDate(dateString: string): string {
     day: "numeric",
     hour: "numeric",
     minute: "numeric",
-    second: "numeric",
+    // second: "numeric",
     timeZoneName: "short", // To include time zone information
   };
 
@@ -106,43 +108,47 @@ function formatTime(date: Date): string {
 }
 
 export function formatStandardToMilitaryTime(standardTime: string): string {
-  
   const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9]:[0-5][0-9] [APap][Mm]$/;
 
   if (!regex.test(standardTime)) {
     return "Invalid time format";
   }
 
-  let [time, period] = standardTime.split(" ")
-  let [hours, minutes, seconds] = time.split(":").map(Number)
+  let [time, period] = standardTime.split(" ");
+  let [hours, minutes, seconds] = time.split(":").map(Number);
 
-  if (period.toUpperCase() === 'PM') {
-    hours = hours%12 + 12;
-  } else if (hours === 12) { // handles edge case of 12 AM
+  if (period.toUpperCase() === "PM") {
+    hours = (hours % 12) + 12;
+  } else if (hours === 12) {
+    // handles edge case of 12 AM
     hours = 0;
   }
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
 export function getToday(): string {
   const today = new Date();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
   const yyyy = today.getFullYear();
-  
+
   const currentDate = `${mm}/${dd}/${yyyy}`;
-  
-  return currentDate
+
+  return currentDate;
 }
 
 export function addYearsToDate(date: string, years: number): string {
-  const [month, day, year] = date.split("/").map(Number)
-  let newYear = year+years
-  return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${newYear.toString().padStart(2, '0')} `
+  const [month, day, year] = date.split("/").map(Number);
+  let newYear = year + years;
+  return `${month.toString().padStart(2, "0")}/${day
+    .toString()
+    .padStart(2, "0")}/${newYear.toString().padStart(2, "0")} `;
 }
 
 export function addOneHourToMilitaryTime(time: string) {
-  const [hours, minutes] = time.split(':').map(Number)
+  const [hours, minutes] = time.split(":").map(Number);
 
   let newHours = hours + 1;
   let newMinutes = minutes;
@@ -151,11 +157,12 @@ export function addOneHourToMilitaryTime(time: string) {
     newHours = 0;
   }
 
-  return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`
+  return `${newHours.toString().padStart(2, "0")}:${newMinutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-export function formatMilitaryToStandardTime(militaryTime:string) {
-
+export function formatMilitaryToStandardTime(militaryTime: string) {
   // Check if the input is in valid military time format
   if (!/^\d{2}:\d{2}$/.test(militaryTime)) {
     return "Invalid time format";

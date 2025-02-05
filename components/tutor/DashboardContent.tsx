@@ -74,49 +74,52 @@ const StudentDashboard = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-
   useEffect(() => {
     console.log(isDialogOpen);
   }, [isDialogOpen]);
 
   useEffect(() => {
-    const getUserData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError) throw new Error(userError.message);
-        if (!user) throw new Error("No user found");
-
-        const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error("No profile found");
-
-        setProfile(profileData);
-
-        const endWeek = endOfWeek(new Date()).toISOString();
-
-        const sessionsData = await getTutorSessions(profileData.id, undefined, endWeek); // Params so that way tutor doesn't see sessions in later weeks
-        if (!sessionsData) throw new Error("No sessions found");
-
-        setSessions(sessionsData);
-        setFilteredSessions(sessionsData);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     getUserData();
   }, [supabase.auth]);
+
+  const getUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) throw new Error(userError.message);
+      if (!user) throw new Error("No user found");
+
+      const profileData = await getProfile(user.id);
+      if (!profileData) throw new Error("No profile found");
+
+      setProfile(profileData);
+
+      const endWeek = endOfWeek(new Date()).toISOString();
+
+      const sessionsData = await getTutorSessions(
+        profileData.id,
+        undefined,
+        endWeek
+      ); // Params so that way tutor doesn't see sessions in later weeks
+      if (!sessionsData) throw new Error("No sessions found");
+
+      setSessions(sessionsData);
+      setFilteredSessions(sessionsData);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const filtered = sessions.filter(
@@ -154,11 +157,13 @@ const StudentDashboard = () => {
           ) as Session[]
         ); // Explicitly cast as Enrollment[]
       }
+      getUserData();
       setSelectedSession(null);
       setIsDialogOpen(false);
-      toast.success("Enrollment updated successfully");
+      toast.success("Session updated successfully");
       // You might want to show a success message to the user here
       console.log("Reschedule request submitted successfully");
+      //Update dashboard
     } catch (error) {
       console.error("Error requesting session reschedule:", error);
       // You might want to show an error message to the user here
@@ -234,25 +239,6 @@ const StudentDashboard = () => {
                   }
                 >
                   <TableCell>
-                    {/* <Select
-                      value={selectedSession?.status}
-                      onValueChange={(value) => {
-                        console.log("Selected value:", value); // Log the selected value
-                        console.log(selectedSession);
-                        console.log(session);
-                        if (
-                          value &&
-                          selectedSession &&
-                          "id" in selectedSession
-                        ) {
-                          const updatedSession: Session = {
-                            ...selectedSession,
-                            status: value,
-                          };
-                          handleStatusChange(updatedSession);
-                        }
-                      }}
-                    > */}
                     <Select
                       value={session?.status}
                       onValueChange={(value) => {
@@ -292,13 +278,8 @@ const StudentDashboard = () => {
                   <TableCell>
                     {session.environment !== "In-Person" && (
                       <>
-                        {/* {session.meetingId ? ( */}
-
                         {session?.meeting?.meetingId ? (
                           <button
-                            // onClick={() =>
-                            //   (window.location.href = `/meeting/${session.meetingId}`)
-                            // }
                             onClick={() =>
                               (window.location.href = `/meeting/${session?.meeting?.id}`)
                             }
@@ -344,10 +325,20 @@ const StudentDashboard = () => {
                         <div className="py-4 space-y-6">
                           <Input
                             type="datetime-local"
-                            defaultValue={selectedSession?.date}
+                            // defaultValue={selectedSession?.date}
+                            defaultValue={
+                              selectedSession?.date
+                                ? format(
+                                    parseISO(selectedSession.date),
+                                    "yyyy-MM-dd'T'HH:mm"
+                                  )
+                                : ""
+                            }
                             onChange={(e) => {
                               if (selectedSession) {
-                                setSelectedSessionDate(e.target.value);
+                                setSelectedSessionDate(
+                                  new Date(e.target.value).toISOString() //Converts chosen time to UTC for correct timezone conversions later
+                                );
                               }
                             }}
                           />
