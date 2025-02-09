@@ -100,39 +100,39 @@ const StudentList = () =>
     );
     const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
 
+    const getStudentData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError) throw new Error(userError.message);
+        if (!user) throw new Error("No user found");
+
+        const profileData = await getProfile(user.id);
+        if (!profileData) throw new Error("No profile found");
+
+        setProfile(profileData);
+
+        const studentsData = await getAllProfiles("Student");
+        if (!studentsData) throw new Error("No students found");
+
+        setStudents(studentsData);
+        setFilteredStudents(studentsData);
+      } catch (error) {
+        console.error("Error fetching tutor data:", error);
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     useEffect(() => {
-      const getStudentData = async () => {
-        try {
-          setLoading(true);
-          setError(null);
-
-          const {
-            data: { user },
-            error: userError,
-          } = await supabase.auth.getUser();
-          if (userError) throw new Error(userError.message);
-          if (!user) throw new Error("No user found");
-
-          const profileData = await getProfile(user.id);
-          if (!profileData) throw new Error("No profile found");
-
-          setProfile(profileData);
-
-          const studentsData = await getAllProfiles("Student");
-          if (!studentsData) throw new Error("No students found");
-
-          setStudents(studentsData);
-          setFilteredStudents(studentsData);
-        } catch (error) {
-          console.error("Error fetching tutor data:", error);
-          setError(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
-        } finally {
-          setLoading(false);
-        }
-      };
-
       getStudentData();
     }, [supabase.auth, students]);
 
@@ -255,6 +255,7 @@ const StudentList = () =>
             toast.success("Student deactivated successfully");
             setIsDeactivateModalOpen(false);
             setSelectedStudentId(null);
+            getStudentData();
           }
         } catch (error) {
           toast.error("Failed to deactivate student");
@@ -270,6 +271,7 @@ const StudentList = () =>
             toast.success("Student reactivated successfully");
             setIsReactivateModalOpen(false);
             setSelectedStudentId(null);
+            getStudentData();
           }
         } catch (error) {
           toast.error("Failed to deactivate student");

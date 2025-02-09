@@ -48,7 +48,9 @@ import {
   getEventsWithTutorMonth,
   addStudent,
   addEnrollment,
+  createEnrollment,
 } from "@/lib/actions/admin.actions";
+import { getProfileByEmail } from "@/lib/actions/user.actions";
 import {
   MEETING_CONFIG,
   getIdFromMeetingName,
@@ -61,7 +63,7 @@ import {
   migrateSelectedStudents,
   parseNames,
   CSV_COLUMNS,
-  type Profile,
+  // type Profile,
   ErrorEntry,
   ErrorEnrollment,
 } from "@/lib/actions/migrate.actions";
@@ -70,7 +72,7 @@ import Papa from "papaparse";
 import { map, string } from "zod";
 import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
-import { Enrollment } from "@/types";
+import { Enrollment, Profile } from "@/types";
 import { resourceLimits } from "worker_threads";
 
 export default function MigrateDataPage() {
@@ -471,38 +473,6 @@ export default function MigrateDataPage() {
     setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
     setLoading(false);
     setShowErrorEntries(true);
-  };
-
-  const getProfileByEmail = async (email: string) => {
-    const { data, error } = await supabase
-      .from("Profiles")
-      .select()
-      .eq("email", email)
-      .single();
-    if (error) throw new Error(`Profile fetch failed: ${error.message}`);
-    if (!data) throw new Error(`No Profile found for email ${email}`);
-
-    return data;
-  };
-
-  const createEnrollment = async (
-    entry: any,
-    studentData: any,
-    tutorData: any
-  ) => {
-    const migratedPairing: Enrollment = {
-      id: "",
-      createdAt: "",
-      student: studentData,
-      tutor: tutorData,
-      summary: entry.summary,
-      startDate: entry.startDate,
-      endDate: entry.endDate,
-      availability: entry.availability,
-      meetingId: entry.meetingId,
-    };
-
-    return await addEnrollment(migratedPairing);
   };
 
   const handleConfirmPairingMigration = async () => {

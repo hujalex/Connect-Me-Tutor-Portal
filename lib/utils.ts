@@ -32,11 +32,7 @@ export const postData = async (endpoint: any, body: any) => {
 
 export function formatSessionDate(dateString: string): string {
   // Create a new Date object
-  console.log(dateString);
   const date: Date = new Date(dateString);
-
-  console.log("Current Date", date);
-
   // Define options for formatting
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",

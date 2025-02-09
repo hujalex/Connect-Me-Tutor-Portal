@@ -27,17 +27,6 @@ export interface ErrorEnrollment {
   error: string;
 }
 
-export function parseNames(name: string) {
-  if (!name.trim()) {
-    return ["", ""];
-  }
-  const words_in_name = name.split(" ");
-  if (words_in_name.length > 1) {
-    return [words_in_name[0], words_in_name[words_in_name.length - 1]];
-  }
-  return [words_in_name[0], ""];
-}
-
 export interface Profile {
   id: string;
   createdAt: string;
@@ -60,6 +49,17 @@ export interface Profile {
   subjectsOfInterest: string[];
   status: "Active" | "Inactive" | "Deleted";
   tutorIds: string[];
+}
+
+export function parseNames(name: string) {
+  if (!name.trim()) {
+    return ["", ""];
+  }
+  const words_in_name = name.split(" ");
+  if (words_in_name.length > 1) {
+    return [words_in_name[0], words_in_name[words_in_name.length - 1]];
+  }
+  return [words_in_name[0], ""];
 }
 
 interface FetchStudentsResponse {

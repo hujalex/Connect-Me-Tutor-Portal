@@ -215,3 +215,12 @@ export async function logSessionAttendance(
   if (error) throw error;
   return data;
 }
+
+export async function recordSessionExitForm(sessionId: string, notes: string) {
+
+  const { data, error } = await supabase.from("Sessions")
+          .update({session_exit_form: notes})
+          .eq("id", sessionId)
+          .single();
+  if (error) throw error;
+}

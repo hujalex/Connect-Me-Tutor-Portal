@@ -10,7 +10,7 @@ import {
   Enrollment,
   Meeting,
 } from "@/types";
-import { getProfileWithProfileId } from "./user.actions";
+import { getProfileWithProfileId, getProfileByEmail } from "./user.actions";
 import {
   addDays,
   format,
@@ -279,6 +279,7 @@ export const addTutor = async (
 
 export async function deactivateUser(profileId: string) {
   try {
+    console.log("Hi");
     const { data, error } = await supabase
       .from("Profiles")
       .update({ status: "Inactive" })
@@ -562,7 +563,8 @@ export async function addSessions(
 // Function to update a session
 export async function updateSession(updatedSession: Session) {
   // const { id, status, tutor, student, date, meetingId } = updatedSession;
-  const { id, status, tutor, student, date, meeting } = updatedSession;
+  const { id, status, tutor, student, date, meeting, session_exit_form } =
+    updatedSession;
 
   console.log(id);
   console.log(status);
@@ -578,6 +580,7 @@ export async function updateSession(updatedSession: Session) {
       // meeting_id: meetingId,
       // meeting: meeting,
       meeting_id: meeting?.id,
+      session_exit_form: session_exit_form,
     })
     .eq("id", id);
   console.log("UPDATING...");
@@ -653,6 +656,26 @@ export async function getMeetings(): Promise<Meeting[] | null> {
     return null; // Valid return
   }
 }
+
+export const createEnrollment = async (
+  entry: any,
+  studentData: any,
+  tutorData: any
+) => {
+  const migratedPairing: Enrollment = {
+    id: "",
+    createdAt: "",
+    student: studentData,
+    tutor: tutorData,
+    summary: entry.summary,
+    startDate: entry.startDate,
+    endDate: entry.endDate,
+    availability: entry.availability,
+    meetingId: entry.meetingId,
+  };
+
+  return await addEnrollment(migratedPairing);
+};
 
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {

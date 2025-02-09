@@ -31,6 +31,7 @@ interface Session {
   // meetingId: string;
   meeting?: Meeting | null;
   status: string;
+  session_exit_form: string;
 }
 
 interface Meeting {

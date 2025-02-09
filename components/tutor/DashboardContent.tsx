@@ -36,6 +36,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getProfile } from "@/lib/actions/user.actions";
 import { updateSession } from "@/lib/actions/admin.actions";
 import {
@@ -57,6 +59,8 @@ import {
   isAfter,
   isValid,
 } from "date-fns";
+import SessionExitForm from "./SessionExitForm";
+import { recordSessionExitForm } from "@/lib/actions/tutor.actions";
 
 const StudentDashboard = () => {
   const supabase = createClientComponentClient();
@@ -73,6 +77,7 @@ const StudentDashboard = () => {
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSessionExitFormOpen, setIsSessionExitFormOpen] = useState(false);
 
   useEffect(() => {
     console.log(isDialogOpen);
@@ -188,6 +193,28 @@ const StudentDashboard = () => {
     }
   };
 
+  const handleSessionExitForm = async () => {
+    console.log("Set");
+    setIsSessionExitFormOpen(true);
+  };
+
+  const handleSessionComplete = async (
+    updatedSession: Session,
+    notes: string
+  ) => {
+    try {
+      console.log(updatedSession);
+      console.log(notes);
+      await recordSessionExitForm(updatedSession.id, notes);
+      updatedSession.status = "Complete";
+      await updateSession(updatedSession);
+      toast.success("Session Marked Complete");
+    } catch (error) {
+      console.error("Failed to record Session Exit Form", error);
+      toast.error("Failed to record Session Exit Form");
+    }
+  };
+
   const paginatedSessions = filteredSessions.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
@@ -218,10 +245,10 @@ const StudentDashboard = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Student</TableHead>
-                <TableHead>Location</TableHead>
                 <TableHead>Meeting</TableHead>
                 <TableHead>Reschedule</TableHead>
                 <TableHead>Request Substitute</TableHead>
+                <TableHead>Mark Complete</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -251,11 +278,6 @@ const StudentDashboard = () => {
                     >
                       <SelectTrigger>
                         <SelectValue placeholder={session?.status}>
-                          {/* {session
-                            ? session.status
-                              ? session.status
-                              : "Select status"
-                            : "Loading..."} */}
                           {session.status ? session.status : "Select Status"}
                         </SelectValue>
                       </SelectTrigger>
@@ -274,7 +296,6 @@ const StudentDashboard = () => {
                   <TableCell>
                     {session.student?.firstName} {session.student?.lastName}
                   </TableCell>
-                  <TableCell>{session.environment}</TableCell>
                   <TableCell>
                     {session.environment !== "In-Person" && (
                       <>
@@ -310,11 +331,6 @@ const StudentDashboard = () => {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          {/* <DialogTitle>
-                            Reschedule Session with {session.student?.firstName}{" "}
-                            {session.student?.lastName} on{" "}
-                            {formatSessionDate(session.date)}
-                          </DialogTitle> */}
                           <DialogTitle>
                             Reschedule Session with{" "}
                             {selectedSession?.student?.firstName}{" "}
@@ -370,6 +386,15 @@ const StudentDashboard = () => {
                     >
                       Request a Sub
                     </Button>
+                  </TableCell>
+                  {/* <TableCell>{session.environment}</TableCell> */}
+                  <TableCell>
+                    <SessionExitForm
+                      isOpen={isSessionExitFormOpen}
+                      onOpenChange={setIsSessionExitFormOpen}
+                      session={session}
+                      onComplete={handleSessionComplete}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
