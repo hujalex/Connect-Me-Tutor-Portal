@@ -174,29 +174,39 @@ const EnrollmentList = () => {
   };
 
   const formatAvailabilityAsDate = (date: Availability): Date[] => {
-    type DayName =
-      | "Sunday"
-      | "Monday"
-      | "Tuesday"
-      | "Wednesday"
-      | "Thursday"
-      | "Friday"
-      | "Saturday";
-    const dayMap: { [key in DayName]: number } = {
-      Sunday: 0,
-      Monday: 1,
-      Tuesday: 2,
-      Wednesday: 3,
-      Thursday: 4,
-      Friday: 5,
-      Saturday: 6,
-    };
+    try {
+      type DayName =
+        | "Sunday"
+        | "Monday"
+        | "Tuesday"
+        | "Wednesday"
+        | "Thursday"
+        | "Friday"
+        | "Saturday";
+      const dayMap: { [key in DayName]: number } = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+      };
 
-    const dayIndex = dayMap[date.day as DayName];
-    return [
-      toDateTime(date.startTime, dayIndex),
-      toDateTime(date.endTime, dayIndex),
-    ];
+      const dayIndex = dayMap[date.day as DayName];
+      if (dayIndex === undefined) {
+        throw new Error("Invalid Day of the Week");
+      }
+      return [
+        toDateTime(date.startTime, dayIndex),
+        toDateTime(date.endTime, dayIndex),
+      ];
+    } catch (error) {
+      console.error("Failed to Format Date", error);
+
+      const date5am = new Date(2024, 1, 23, 5, 0, 0, 0);
+      return [date5am, date5am];
+    }
   };
 
   const areMeetingsAvailable = (
@@ -215,41 +225,44 @@ const EnrollmentList = () => {
       if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
       try {
         //     // console.log(enrollment.availability[0].day);
+        console.log(enrollment.availability[0]);
 
         //!CRASHING FIX IMMEDIATELY ASAP
         const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
           enrollment.availability[0]
         );
-        //     const isOverlap =
-        //       (newEnrollmentStartTime < existingEndTime &&
-        //         newEnrollmentStartTime > existingStartTime) ||
-        //       (newEnrollmentEndTime < existingEndTime &&
-        //         newEnrollmentEndTime > existingStartTime);
-        //     //-----Only change to false if true before-----
-        //     if (updatedMeetingAvailability[enrollment.meetingId]) {
-        //       // if (isOverlap) {
-        //       //   console.log(newEnrollmentStartTime);
-        //       //   console.log(newEnrollmentEndTime);
-        //       //   console.log(existingStartTime);
-        //       //   console.log(existingEndTime);
-        //       // }
-        //       updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
-        // }
+        const isOverlap =
+          (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
+            newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
+          (newEnrollmentStartTime < existingEndTime &&
+            newEnrollmentStartTime > existingStartTime) ||
+          (newEnrollmentEndTime < existingEndTime &&
+            newEnrollmentEndTime > existingStartTime);
+        //-----Only change to false if true before-----
+        if (updatedMeetingAvailability[enrollment.meetingId]) {
+          // if (isOverlap) {
+          //   console.log(newEnrollmentStartTime);
+          //   console.log(newEnrollmentEndTime);
+          //   console.log(existingStartTime);
+          //   console.log(existingEndTime);
+          // }
+          updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
+        }
       } catch (error) {
         console.error("Error processing enrollment date:", error);
         console.log(enrollment.availability[0]);
         updatedMeetingAvailability[enrollment.meetingId] = false;
       }
     }
-    // setMeetingAvailability(updatedMeetingAvailability);
-    // Object.entries(updatedMeetingAvailability).forEach(
-    //   ([meetingId, isAvailable]) => {
-    //     const meetingName = meetings.find((m) => m.id === meetingId)?.name;
-    //     console.log(
-    //       `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
-    //     );
-    //   }
-    // );
+    setMeetingAvailability(updatedMeetingAvailability);
+    Object.entries(updatedMeetingAvailability).forEach(
+      ([meetingId, isAvailable]) => {
+        const meetingName = meetings.find((m) => m.id === meetingId)?.name;
+        console.log(
+          `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
+        );
+      }
+    );
   };
 
   const isMeetingAvailable = (
