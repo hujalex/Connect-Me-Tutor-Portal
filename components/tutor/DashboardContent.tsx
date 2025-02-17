@@ -385,6 +385,7 @@ const StudentDashboard = () => {
                               }
                             }}
                           />
+
                           <Button
                             variant="destructive"
                             onClick={() =>
@@ -396,7 +397,7 @@ const StudentDashboard = () => {
                               )
                             }
                           >
-                            Reschedule
+                            Send Reschedule Request
                           </Button>
                         </div>
                       </DialogContent>

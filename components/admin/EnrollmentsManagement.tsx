@@ -206,61 +206,50 @@ const EnrollmentList = () => {
     meetings.forEach((meeting) => {
       updatedMeetingAvailability[meeting.id] = true;
     });
-
     const [newEnrollmentStartTime, newEnrollmentEndTime] = enroll
       .availability[0]
       ? formatAvailabilityAsDate(enroll.availability[0])
       : [new Date(NaN), new Date(NaN)];
-
     console.log(newEnrollmentStartTime);
     for (const enrollment of enrollments) {
       if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
       try {
-        // console.log(enrollment.availability[0].day);
+        //     // console.log(enrollment.availability[0].day);
 
+        //!CRASHING FIX IMMEDIATELY ASAP
         const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
           enrollment.availability[0]
         );
-        // const enrollmentEndTime = new Date(
-        //   `${enrollment.availability[0].day}, ${enrollment.availability[0].endTime}`
-        // );
-        // enrollmentEndTime.setHours(enrollmentEndTime.getHours() + 1);
-
-        // if (enrollmentEndTime < new_enrollment_date) {
-        //   meetingAvailability[enrollment.meetingId] = false;
+        //     const isOverlap =
+        //       (newEnrollmentStartTime < existingEndTime &&
+        //         newEnrollmentStartTime > existingStartTime) ||
+        //       (newEnrollmentEndTime < existingEndTime &&
+        //         newEnrollmentEndTime > existingStartTime);
+        //     //-----Only change to false if true before-----
+        //     if (updatedMeetingAvailability[enrollment.meetingId]) {
+        //       // if (isOverlap) {
+        //       //   console.log(newEnrollmentStartTime);
+        //       //   console.log(newEnrollmentEndTime);
+        //       //   console.log(existingStartTime);
+        //       //   console.log(existingEndTime);
+        //       // }
+        //       updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
         // }
-
-        const isOverlap =
-          (newEnrollmentStartTime < existingEndTime &&
-            newEnrollmentStartTime > existingStartTime) ||
-          (newEnrollmentEndTime < existingEndTime &&
-            newEnrollmentEndTime > existingStartTime);
-
-        //-----Only change to false if true before-----
-        if (updatedMeetingAvailability[enrollment.meetingId]) {
-          if (isOverlap) {
-            console.log(newEnrollmentStartTime);
-            console.log(newEnrollmentEndTime);
-            console.log(existingStartTime);
-            console.log(existingEndTime);
-          }
-          updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
-        }
       } catch (error) {
         console.error("Error processing enrollment date:", error);
         console.log(enrollment.availability[0]);
         updatedMeetingAvailability[enrollment.meetingId] = false;
       }
     }
-    setMeetingAvailability(updatedMeetingAvailability);
-    Object.entries(updatedMeetingAvailability).forEach(
-      ([meetingId, isAvailable]) => {
-        const meetingName = meetings.find((m) => m.id === meetingId)?.name;
-        console.log(
-          `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
-        );
-      }
-    );
+    // setMeetingAvailability(updatedMeetingAvailability);
+    // Object.entries(updatedMeetingAvailability).forEach(
+    //   ([meetingId, isAvailable]) => {
+    //     const meetingName = meetings.find((m) => m.id === meetingId)?.name;
+    //     console.log(
+    //       `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
+    //     );
+    //   }
+    // );
   };
 
   const isMeetingAvailable = (
