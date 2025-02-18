@@ -611,7 +611,9 @@ export default function MigrateDataPage() {
                     id="Show Error"
                     className="mx-2"
                   />
-                  <DialogTitle>Show Errors</DialogTitle>
+                  <DialogTitle className="text-[#FF0000]">
+                    Show Errors
+                  </DialogTitle>
                 </div>
               </div>
               <DialogDescription>
