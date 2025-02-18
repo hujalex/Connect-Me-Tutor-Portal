@@ -224,10 +224,6 @@ const EnrollmentList = () => {
     for (const enrollment of enrollments) {
       if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
       try {
-        //     // console.log(enrollment.availability[0].day);
-        console.log(enrollment.availability[0]);
-
-        //!CRASHING FIX IMMEDIATELY ASAP
         const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
           enrollment.availability[0]
         );
