@@ -395,7 +395,7 @@ export async function getAllSessions(
       student: await getProfileWithProfileId(session.student_id),
       tutor: await getProfileWithProfileId(session.tutor_id),
       status: session.status,
-      session_exit_form: session.session_exit_form
+      session_exit_form: session.session_exit_form,
     }))
   );
 
@@ -452,9 +452,7 @@ export async function addSessions(
   const weekEnd = parseISO(weekEndString);
   const sessions: Session[] = [];
 
-  // const scheduledSessions: Set<string> = new Set();
-  // ! Fixed issue with duplicate sessions created and shown in the schedule
-  const scheduledSessions: Set<string> = await getSessionKeys(); //!
+  const scheduledSessions: Set<string> = await getSessionKeys();
 
   for (const enrollment of enrollments) {
     const { student, tutor, availability } = enrollment;
@@ -799,10 +797,21 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
   return data;
 };
 
+const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
 export const addEnrollment = async (
   enrollment: Omit<Enrollment, "id" | "createdAt">
 ) => {
   console.log(enrollment);
+
+  if (enrollment.meetingId && !isValidUUID(enrollment.meetingId)) {
+    throw new Error("Invalid or no meeting link");
+  }
+
   const { data, error } = await supabase
     .from("Enrollments")
     .insert({

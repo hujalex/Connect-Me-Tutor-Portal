@@ -28,7 +28,7 @@ export type MeetingName = (typeof MEETING_CONFIG.meetings)[number]["name"];
 export function getIdFromMeetingName(meetingName: MeetingName): string {
   const meeting = MEETING_CONFIG.meetings.find((m) => m.name === meetingName);
   if (!meeting) {
-    return "Meeting not found";
+    return "";
   }
   return meeting.id;
 }
