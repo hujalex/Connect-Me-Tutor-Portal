@@ -48,7 +48,9 @@ import {
   getEventsWithTutorMonth,
   addStudent,
   addEnrollment,
+  createEnrollment,
 } from "@/lib/actions/admin.actions";
+import { getProfileByEmail } from "@/lib/actions/user.actions";
 import {
   MEETING_CONFIG,
   getIdFromMeetingName,
@@ -61,7 +63,7 @@ import {
   migrateSelectedStudents,
   parseNames,
   CSV_COLUMNS,
-  type Profile,
+  // type Profile,
   ErrorEntry,
   ErrorEnrollment,
 } from "@/lib/actions/migrate.actions";
@@ -70,7 +72,7 @@ import Papa from "papaparse";
 import { map, string } from "zod";
 import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
-import { Enrollment } from "@/types";
+import { Enrollment, Profile } from "@/types";
 import { resourceLimits } from "worker_threads";
 
 export default function MigrateDataPage() {
@@ -359,44 +361,47 @@ export default function MigrateDataPage() {
     }
   };
 
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
   const handleConfirmTutorMigration = async () => {
     setLoading(true);
     const erroredEntries: ErrorEntry[] = [];
     const migrations: number[] = [];
 
-    await Promise.all(
-      Array.from(selectedTutors).map(async (index) => {
-        try {
-          migrations.push(index);
-          const entry = tutors[index];
-          if ((await addTutor(entry)) !== null) {
-          }
-        } catch (error) {
-          const err = error as Error;
-          erroredEntries.push({
-            profile: tutors[index],
-            error: err.message || "Unknown error occurred",
-          });
-        }
-      })
-    );
-
-    // for (const index of Array.from(selectedTutors)) {
-    //   try {
-    //     const entry = tutors[index];
-    //     const result = await addTutor(entry);
-    //     if (result === null) {
-    //       throw new Error("Failed to add tutor");
+    // await Promise.all(
+    //   Array.from(selectedTutors).map(async (index) => {
+    //     try {
+    //       migrations.push(index);
+    //       const entry = tutors[index];
+    //       if ((await addTutor(entry)) !== null) {
+    //       }
+    //     } catch (error) {
+    //       const err = error as Error;
+    //       erroredEntries.push({
+    //         profile: tutors[index],
+    //         error: err.message || "Unknown error occurred",
+    //       });
     //     }
-    //     migrations.push(index);
-    //   } catch (error) {
-    //     const err = error as Error;
-    //     erroredEntries.push({
-    //       profile: tutors[index],
-    //       error: err.message || "Unknown error occurred",
-    //     });
-    //   }
-    // }
+    //   })
+    // );
+
+    for (const index of Array.from(selectedTutors)) {
+      try {
+        const entry = tutors[index];
+        const result = await addTutor(entry);
+        if (result === null) {
+          throw new Error("Failed to add tutor");
+        }
+        migrations.push(index);
+      } catch (error) {
+        const err = error as Error;
+        erroredEntries.push({
+          profile: tutors[index],
+          error: err.message || "Unknown error occurred",
+        });
+      }
+      sleep(1000);
+    }
 
     const remainingTutors = tutors.filter(
       (_, index) => !migrations.includes(index)
@@ -422,39 +427,40 @@ export default function MigrateDataPage() {
 
     //Concurrent much quicker
 
-    await Promise.all(
-      Array.from(selectedStudents).map(async (index) => {
-        try {
-          migrations.push(index);
-          const entry = students[index];
-          if ((await addStudent(entry)) !== null) {
-          }
-        } catch (error) {
-          const err = error as Error;
-          erroredEntries.push({
-            profile: students[index],
-            error: err.message || "Unknown error occurred",
-          });
-        }
-      })
-    );
-
-    // for (const index of Array.from(selectedStudents)) {
-    //   try {
-    //     const entry = students[index];
-    //     const result = await addStudent(entry);
-    //     if (result === null) {
-    //       throw new Error("Failed to add student");
+    // await Promise.all(
+    //   Array.from(selectedStudents).map(async (index) => {
+    //     try {
+    //       migrations.push(index);
+    //       const entry = students[index];
+    //       if ((await addStudent(entry)) !== null) {
+    //       }
+    //     } catch (error) {
+    //       const err = error as Error;
+    //       erroredEntries.push({
+    //         profile: students[index],
+    //         error: err.message || "Unknown error occurred",
+    //       });
     //     }
-    //     migrations.push(index);
-    //   } catch (error) {
-    //     const err = error as Error;
-    //     erroredEntries.push({
-    //       profile: students[index],
-    //       error: err.message || "Unknown error occured",
-    //     });
-    //   }
-    // }
+    //   })
+    // );
+
+    for (const index of Array.from(selectedStudents)) {
+      try {
+        const entry = students[index];
+        const result = await addStudent(entry);
+        if (result === null) {
+          throw new Error("Failed to add student");
+        }
+        migrations.push(index);
+      } catch (error) {
+        const err = error as Error;
+        erroredEntries.push({
+          profile: students[index],
+          error: err.message || "Unknown error occured",
+        });
+      }
+      sleep(1000);
+    }
 
     const remainingStudents = students.filter(
       (_, index) => !migrations.includes(index)
@@ -471,38 +477,6 @@ export default function MigrateDataPage() {
     setErroredStudentEntries((prev) => [...prev, ...erroredEntries]);
     setLoading(false);
     setShowErrorEntries(true);
-  };
-
-  const getProfileByEmail = async (email: string) => {
-    const { data, error } = await supabase
-      .from("Profiles")
-      .select()
-      .eq("email", email)
-      .single();
-    if (error) throw new Error(`Profile fetch failed: ${error.message}`);
-    if (!data) throw new Error(`No Profile found for email ${email}`);
-
-    return data;
-  };
-
-  const createEnrollment = async (
-    entry: any,
-    studentData: any,
-    tutorData: any
-  ) => {
-    const migratedPairing: Enrollment = {
-      id: "",
-      createdAt: "",
-      student: studentData,
-      tutor: tutorData,
-      summary: entry.summary,
-      startDate: entry.startDate,
-      endDate: entry.endDate,
-      availability: entry.availability,
-      meetingId: entry.meetingId,
-    };
-
-    return await addEnrollment(migratedPairing);
   };
 
   const handleConfirmPairingMigration = async () => {

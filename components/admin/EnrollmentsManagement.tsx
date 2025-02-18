@@ -174,29 +174,39 @@ const EnrollmentList = () => {
   };
 
   const formatAvailabilityAsDate = (date: Availability): Date[] => {
-    type DayName =
-      | "Sunday"
-      | "Monday"
-      | "Tuesday"
-      | "Wednesday"
-      | "Thursday"
-      | "Friday"
-      | "Saturday";
-    const dayMap: { [key in DayName]: number } = {
-      Sunday: 0,
-      Monday: 1,
-      Tuesday: 2,
-      Wednesday: 3,
-      Thursday: 4,
-      Friday: 5,
-      Saturday: 6,
-    };
+    try {
+      type DayName =
+        | "Sunday"
+        | "Monday"
+        | "Tuesday"
+        | "Wednesday"
+        | "Thursday"
+        | "Friday"
+        | "Saturday";
+      const dayMap: { [key in DayName]: number } = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+      };
 
-    const dayIndex = dayMap[date.day as DayName];
-    return [
-      toDateTime(date.startTime, dayIndex),
-      toDateTime(date.endTime, dayIndex),
-    ];
+      const dayIndex = dayMap[date.day as DayName];
+      if (dayIndex === undefined) {
+        throw new Error("Invalid Day of the Week");
+      }
+      return [
+        toDateTime(date.startTime, dayIndex),
+        toDateTime(date.endTime, dayIndex),
+      ];
+    } catch (error) {
+      console.error("Failed to Format Date", error);
+
+      const date5am = new Date(2024, 1, 23, 5, 0, 0, 0);
+      return [date5am, date5am];
+    }
   };
 
   const areMeetingsAvailable = (
@@ -206,44 +216,32 @@ const EnrollmentList = () => {
     meetings.forEach((meeting) => {
       updatedMeetingAvailability[meeting.id] = true;
     });
-
     const [newEnrollmentStartTime, newEnrollmentEndTime] = enroll
       .availability[0]
       ? formatAvailabilityAsDate(enroll.availability[0])
       : [new Date(NaN), new Date(NaN)];
-
     console.log(newEnrollmentStartTime);
     for (const enrollment of enrollments) {
       if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
       try {
-        // console.log(enrollment.availability[0].day);
-
         const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
           enrollment.availability[0]
         );
-        // const enrollmentEndTime = new Date(
-        //   `${enrollment.availability[0].day}, ${enrollment.availability[0].endTime}`
-        // );
-        // enrollmentEndTime.setHours(enrollmentEndTime.getHours() + 1);
-
-        // if (enrollmentEndTime < new_enrollment_date) {
-        //   meetingAvailability[enrollment.meetingId] = false;
-        // }
-
         const isOverlap =
+          (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
+            newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
           (newEnrollmentStartTime < existingEndTime &&
             newEnrollmentStartTime > existingStartTime) ||
           (newEnrollmentEndTime < existingEndTime &&
             newEnrollmentEndTime > existingStartTime);
-
         //-----Only change to false if true before-----
         if (updatedMeetingAvailability[enrollment.meetingId]) {
-          if (isOverlap) {
-            console.log(newEnrollmentStartTime);
-            console.log(newEnrollmentEndTime);
-            console.log(existingStartTime);
-            console.log(existingEndTime);
-          }
+          // if (isOverlap) {
+          //   console.log(newEnrollmentStartTime);
+          //   console.log(newEnrollmentEndTime);
+          //   console.log(existingStartTime);
+          //   console.log(existingEndTime);
+          // }
           updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
         }
       } catch (error) {

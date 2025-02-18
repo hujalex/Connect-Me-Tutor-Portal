@@ -1,5 +1,5 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import {Profile} from '@/types'
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Profile } from "@/types";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -15,18 +15,19 @@ export const getUser = async () => {
     return null; // Return null if no user or error occurs
   }
   return user;
-}
+};
 
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   if (!userId) {
-    console.error('User ID is required to fetch profile data');
+    console.error("User ID is required to fetch profile data");
     return null;
   }
 
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .select(`
+      .from("Profiles")
+      .select(
+        `
         id,
         created_at,
         role,
@@ -44,18 +45,19 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
         timezone,
         subjects_of_interest,
         status
-      `)
-      .eq('user_id', userId)
+      `
+      )
+      .eq("user_id", userId)
       .single();
 
     if (error) {
-      console.error('Error fetching profile in getProfile:', error.message);
-      console.error('Error details:', error);
+      console.error("Error fetching profile in getProfile:", error.message);
+      console.error("Error details:", error);
       return null;
     }
 
     if (!data) {
-      console.log('No profile found for user ID:', userId);
+      console.log("No profile found for user ID:", userId);
       return null;
     }
 
@@ -80,57 +82,73 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       status: data.status,
     };
 
-    console.log('Mapped profile data:', userProfile);
+    console.log("Mapped profile data:", userProfile);
     return userProfile;
   } catch (error) {
-    console.error('Unexpected error in getProfile:', error);
+    console.error("Unexpected error in getProfile:", error);
     return null;
   }
 };
 
-export const getProfileRole = async (userId: string): Promise<string | null> => {
+export const getProfileByEmail = async (email: string) => {
+  const { data, error } = await supabase
+    .from("Profiles")
+    .select()
+    .eq("email", email)
+    .single();
+  if (error) throw new Error(`Profile fetch failed: ${error.message}`);
+  if (!data) throw new Error(`No Profile found for email ${email}`);
 
+  return data;
+};
+
+export const getProfileRole = async (
+  userId: string
+): Promise<string | null> => {
   if (!userId) {
-    console.error('User ID is required to fetch profile role');
+    console.error("User ID is required to fetch profile role");
     return null;
   }
 
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .select('role')
-      .eq('user_id', userId)
+      .from("Profiles")
+      .select("role")
+      .eq("user_id", userId)
       .single();
 
     if (error) {
-      console.error('Error fetching profile role in getProfileRole:', error.message);
-      console.error('Error details:', error);
+      console.error(
+        "Error fetching profile role in getProfileRole:",
+        error.message
+      );
+      console.error("Error details:", error);
       return null;
     }
 
-    console.log('Fetched profile data:', data);
+    console.log("Fetched profile data:", data);
 
     if (!data) {
-      console.log('No profile found for user ID:', userId);
+      console.log("No profile found for user ID:", userId);
       return null;
     }
 
     return data.role || null;
   } catch (error) {
-    console.error('Unexpected error in getProfileRole:', error);
+    console.error("Unexpected error in getProfileRole:", error);
     return null;
   }
 };
 
 export const getSessionUserProfile = async (): Promise<Profile | null> => {
-  
-  const user = await getUser()
-  const userId = user?.id
+  const user = await getUser();
+  const userId = user?.id;
 
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .select(`
+      .from("Profiles")
+      .select(
+        `
         id,
         created_at,
         role,
@@ -148,18 +166,22 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
         timezone,
         subjects_of_interest,
         status
-      `)
-      .eq('user_id', userId)
+      `
+      )
+      .eq("user_id", userId)
       .single();
 
     if (error) {
-      console.error('Error fetching profile in getSessionUserProfile:', error.message);
-      console.error('Error details:', error);
+      console.error(
+        "Error fetching profile in getSessionUserProfile:",
+        error.message
+      );
+      console.error("Error details:", error);
       return null;
     }
 
     if (!data) {
-      console.log('No profile found for user ID:', userId);
+      console.log("No profile found for user ID:", userId);
       return null;
     }
 
@@ -184,19 +206,22 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
       status: data.status,
     };
 
-    console.log('Mapped profile data:', userProfile);
+    console.log("Mapped profile data:", userProfile);
     return userProfile;
   } catch (error) {
-    console.error('Unexpected error in getProfile:', error);
+    console.error("Unexpected error in getProfile:", error);
     return null;
   }
 };
 
-export async function getProfileWithProfileId(profileId: string): Promise<Profile | null> {
+export async function getProfileWithProfileId(
+  profileId: string
+): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
-      .from('Profiles')
-      .select(`
+      .from("Profiles")
+      .select(
+        `
         id,
         created_at,
         role,
@@ -214,18 +239,22 @@ export async function getProfileWithProfileId(profileId: string): Promise<Profil
         timezone,
         subjects_of_interest,
         status
-      `)
-      .eq('id', profileId)
+      `
+      )
+      .eq("id", profileId)
       .single();
 
     if (error) {
-      console.error('Error fetching profile in getProfileWithProfileId:', error.message);
-      console.error('Error details:', error);
+      console.error(
+        "Error fetching profile in getProfileWithProfileId:",
+        error.message
+      );
+      console.error("Error details:", error);
       return null;
     }
 
     if (!data) {
-      console.log('No profile found for user ID:', profileId);
+      console.log("No profile found for user ID:", profileId);
       return null;
     }
 
@@ -250,10 +279,10 @@ export async function getProfileWithProfileId(profileId: string): Promise<Profil
       status: data.status,
     };
 
-    console.log('Mapped profile data:', userProfile);
+    console.log("Mapped profile data:", userProfile);
     return userProfile;
   } catch (error) {
-    console.error('Unexpected error in getProfile:', error);
+    console.error("Unexpected error in getProfile:", error);
     return null;
   }
 }
@@ -272,60 +301,56 @@ export async function getUserInfo() {
 export async function updateProfile(userId: string, profileData: any) {
   try {
     const { data, error } = await supabase
-      .from('Profiles')
+      .from("Profiles")
       .update(profileData)
-      .eq('user_id', userId)
-      .single()
+      .eq("user_id", userId)
+      .single();
 
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return data;
   } catch (error) {
-    console.error('Error updating profile:', error)
-    throw error
+    console.error("Error updating profile:", error);
+    throw error;
   }
 }
 
 export async function createUser(userData: any) {
   try {
-    const { data, error } = await supabase
-      .auth.admin.createUser({
-        email: userData.email,
-        password: userData.password,
-        email_confirm: true
-      })
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.password,
+      email_confirm: true,
+    });
 
-    if (error) throw error
+    if (error) throw error;
 
     // If you need to store additional user data, you can do it here
     const { data: profileData, error: profileError } = await supabase
-      .from('Profiles')
+      .from("Profiles")
       .insert({
         user_id: data.user.id,
-        ...userData
+        ...userData,
       })
-      .single()
+      .single();
 
-    if (profileError) throw profileError
+    if (profileError) throw profileError;
 
-    return { user: data.user, profile: profileData }
+    return { user: data.user, profile: profileData };
   } catch (error) {
-    console.error('Error creating user:', error)
-    throw error
+    console.error("Error creating user:", error);
+    throw error;
   }
 }
-
 
 export const logoutUser = async () => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error logging out:', error.message);
+      console.error("Error logging out:", error.message);
     } else {
-      console.log('User logged out successfully');
+      console.log("User logged out successfully");
     }
   } catch (error) {
-    console.error('Unexpected error logging out:', error);
+    console.error("Unexpected error logging out:", error);
   }
 };
-
-

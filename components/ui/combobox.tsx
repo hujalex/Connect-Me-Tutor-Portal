@@ -57,7 +57,7 @@ export function Combobox({
   defaultValue = "",
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState(defaultValue);
+  const [value, setValue] = React.useState<string>(defaultValue);
   const [selectedLabel, setSelectedLabel] = React.useState(
     defaultValue
       ? list.find((item) => item.value === defaultValue)?.label || ""
@@ -94,6 +94,7 @@ export function Combobox({
   }, [list, searchTerm]);
 
   const handleValueChange = (newValue: string) => {
+    console.log(newValue);
     setValue(newValue);
     if (onValueChange) {
       onValueChange(newValue);
@@ -101,38 +102,38 @@ export function Combobox({
   };
 
   return (
-    <Select value={value} onValueChange={handleValueChange}>
-      <Command>
-        <CommandInput placeholder={`Search ${category}...`} />
-        <CommandList className="h-[200px]">
-          <CommandEmpty>No {category} found.</CommandEmpty>
-          <CommandGroup>
-            {list.map((item) => (
-              <CommandItem
-                key={item.value}
-                value={item.label}
-                onSelect={() => handleSelect(item)}
-              >
-                {item.label}
-                <Check
-                  className={cn(
-                    "ml-auto",
-                    selectedLabel === item.label ? "opacity-100" : "opacity-0"
-                  )}
-                />
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
-        <Separator />
-        <CommandList onClick={() => handleSelect(null)}>
-          <CommandItem>
-            <span className="font-medium py-1">Clear Selection</span>
-            <SquareMinus />
-          </CommandItem>
-        </CommandList>
-      </Command>
-    </Select>
+    // <Select value={value} onValueChange={handleValueChange}>
+    <Command>
+      <CommandInput placeholder={`Search ${category}...`} />
+      <CommandList className="h-[200px]">
+        <CommandEmpty>No {category} found.</CommandEmpty>
+        <CommandGroup>
+          {list.map((item) => (
+            <CommandItem
+              key={item.value}
+              value={item.label}
+              onSelect={() => handleSelect(item)}
+            >
+              {item.label}
+              <Check
+                className={cn(
+                  "ml-auto",
+                  selectedLabel === item.label ? "opacity-100" : "opacity-0"
+                )}
+              />
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+      <Separator />
+      <CommandList onClick={() => handleSelect(null)}>
+        <CommandItem>
+          <span className="font-medium py-1">Clear Selection</span>
+          <SquareMinus />
+        </CommandItem>
+      </CommandList>
+    </Command>
+    // </Select>
   );
 }
 // "use client";
@@ -156,5 +157,3 @@ export function Combobox({
 //     PopoverContent,
 //     PopoverTrigger,
 // } from "@/components/ui/popover"
-
-

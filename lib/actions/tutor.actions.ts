@@ -59,6 +59,7 @@ export async function getTutorSessions(
       student: await getProfileWithProfileId(session.student_id),
       tutor: await getProfileWithProfileId(session.tutor_id),
       status: session.status,
+      session_exit_form: session.session_exit_form
     }))
   );
 
@@ -214,4 +215,13 @@ export async function logSessionAttendance(
 
   if (error) throw error;
   return data;
+}
+
+export async function recordSessionExitForm(sessionId: string, notes: string) {
+
+  const { data, error } = await supabase.from("Sessions")
+          .update({session_exit_form: notes})
+          .eq("id", sessionId)
+          .single();
+  if (error) throw error;
 }

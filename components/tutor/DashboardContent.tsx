@@ -36,6 +36,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getProfile } from "@/lib/actions/user.actions";
 import { updateSession } from "@/lib/actions/admin.actions";
 import {
@@ -57,6 +59,8 @@ import {
   isAfter,
   isValid,
 } from "date-fns";
+// import SessionExitForm from "./SessionExitForm";
+import { recordSessionExitForm } from "@/lib/actions/tutor.actions";
 
 const StudentDashboard = () => {
   const supabase = createClientComponentClient();
@@ -73,6 +77,9 @@ const StudentDashboard = () => {
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSessionExitFormOpen, setIsSessionExitFormOpen] = useState(false);
+  const [notes, setNotes] = useState<string>("");
+  const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
 
   useEffect(() => {
     console.log(isDialogOpen);
@@ -188,6 +195,31 @@ const StudentDashboard = () => {
     }
   };
 
+  // const handleSessionExitForm = async () => {
+  //   console.log("Set");
+  //   setIsSessionExitFormOpen(true);
+  // };
+
+  const handleSessionComplete = async (
+    updatedSession: Session,
+    notes: string
+  ) => {
+    try {
+      console.log(updatedSession);
+      console.log(notes);
+      await recordSessionExitForm(updatedSession.id, notes);
+      updatedSession.status = "Complete";
+      await updateSession(updatedSession);
+      toast.success("Session Marked Complete");
+      setIsSessionExitFormOpen(false);
+      setNotes("");
+      setNextClassConfirmed(false);
+    } catch (error) {
+      console.error("Failed to record Session Exit Form", error);
+      toast.error("Failed to record Session Exit Form");
+    }
+  };
+
   const paginatedSessions = filteredSessions.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
@@ -218,10 +250,10 @@ const StudentDashboard = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Student</TableHead>
-                <TableHead>Location</TableHead>
                 <TableHead>Meeting</TableHead>
                 <TableHead>Reschedule</TableHead>
                 <TableHead>Request Substitute</TableHead>
+                <TableHead>Mark Complete</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -251,18 +283,35 @@ const StudentDashboard = () => {
                     >
                       <SelectTrigger>
                         <SelectValue placeholder={session?.status}>
-                          {/* {session
-                            ? session.status
-                              ? session.status
-                              : "Select status"
-                            : "Loading..."} */}
                           {session.status ? session.status : "Select Status"}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Complete">Complete</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                      <SelectContent
+                        className={
+                          session.status === "Complete" ? "opacity-50" : ""
+                        }
+                      >
+                        <SelectItem
+                          value="Active"
+                          className={
+                            session.status === "Complete"
+                              ? "pointer-events-none"
+                              : ""
+                          }
+                        >
+                          Active
+                        </SelectItem>
+                        {/* <SelectItem value="Complete">Complete</SelectItem> */}
+                        <SelectItem
+                          value="Cancelled"
+                          className={
+                            session.status === "Complete"
+                              ? "pointer-events-none"
+                              : ""
+                          }
+                        >
+                          Cancelled
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -274,7 +323,6 @@ const StudentDashboard = () => {
                   <TableCell>
                     {session.student?.firstName} {session.student?.lastName}
                   </TableCell>
-                  <TableCell>{session.environment}</TableCell>
                   <TableCell>
                     {session.environment !== "In-Person" && (
                       <>
@@ -310,11 +358,6 @@ const StudentDashboard = () => {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          {/* <DialogTitle>
-                            Reschedule Session with {session.student?.firstName}{" "}
-                            {session.student?.lastName} on{" "}
-                            {formatSessionDate(session.date)}
-                          </DialogTitle> */}
                           <DialogTitle>
                             Reschedule Session with{" "}
                             {selectedSession?.student?.firstName}{" "}
@@ -342,6 +385,7 @@ const StudentDashboard = () => {
                               }
                             }}
                           />
+
                           <Button
                             variant="destructive"
                             onClick={() =>
@@ -353,7 +397,7 @@ const StudentDashboard = () => {
                               )
                             }
                           >
-                            Reschedule
+                            Send Reschedule Request
                           </Button>
                         </div>
                       </DialogContent>
@@ -370,6 +414,58 @@ const StudentDashboard = () => {
                     >
                       Request a Sub
                     </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Dialog
+                      open={isSessionExitFormOpen}
+                      onOpenChange={setIsSessionExitFormOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsSessionExitFormOpen(true);
+                          }}
+                        >
+                          SEF
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Session Exit Form</DialogTitle>
+                        </DialogHeader>
+                        <Textarea
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          placeholder="In 2-4 sentences, What did you cover during your session?"
+                        />
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="next-class"
+                            checked={nextClassConfirmed}
+                            onCheckedChange={(checked) =>
+                              setNextClassConfirmed(checked === true)
+                            }
+                          />
+                          <label
+                            htmlFor="next-class"
+                            className="text-sm font-medium"
+                          >
+                            Does your student know about your next class?
+                          </label>
+                        </div>
+                        <Button
+                          onClick={() =>
+                            selectedSession &&
+                            handleSessionComplete(selectedSession, notes)
+                          }
+                          disabled={!notes || !nextClassConfirmed}
+                        >
+                          Mark Session Complete
+                        </Button>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))}

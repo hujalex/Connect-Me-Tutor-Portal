@@ -100,39 +100,39 @@ const TutorList = () => {
     {}
   );
 
+  const getTutorData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) throw new Error(userError.message);
+      if (!user) throw new Error("No user found");
+
+      const profileData = await getProfile(user.id);
+      if (!profileData) throw new Error("No profile found");
+
+      setProfile(profileData);
+
+      const tutorsData = await getAllProfiles("Tutor");
+      if (!tutorsData) throw new Error("No tutors found");
+
+      setTutors(tutorsData);
+      setFilteredTutors(tutorsData);
+    } catch (error) {
+      console.error("Error fetching tutor data:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const getTutorData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError) throw new Error(userError.message);
-        if (!user) throw new Error("No user found");
-
-        const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error("No profile found");
-
-        setProfile(profileData);
-
-        const tutorsData = await getAllProfiles("Tutor");
-        if (!tutorsData) throw new Error("No tutors found");
-
-        setTutors(tutorsData);
-        setFilteredTutors(tutorsData);
-      } catch (error) {
-        console.error("Error fetching tutor data:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     getTutorData();
   }, [supabase.auth, tutors]);
 
@@ -250,6 +250,7 @@ const TutorList = () => {
           toast.success("Tutor deactivated successfully");
           setIsDeactivateModalOpen(false);
           setSelectedTutorId(null);
+          getTutorData();
         }
       } catch (error) {
         toast.error("Failed to deactivate tutor");
@@ -265,6 +266,7 @@ const TutorList = () => {
           toast.success("Tutor reactivated successfully");
           setIsReactivateModalOpen(false);
           setSelectedTutorId(null);
+          getTutorData();
         }
       } catch (error) {
         toast.error("Failed to deactivate student");
@@ -475,24 +477,6 @@ const TutorList = () => {
                     <Label htmlFor="tutorSelect" className="text-right">
                       Tutor
                     </Label>
-                    {/* <Select
-                      onValueChange={setSelectedTutorId}
-                      value={selectedTutorId || ""}
-                    >
-                      <SelectTrigger id="tutorSelect">
-                        <SelectValue placeholder="Select a tutor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {tutors.map(
-                          (tutor) =>
-                            tutor.status === "Active" && (
-                              <SelectItem key={tutor.id} value={tutor.id}>
-                                {tutor.firstName} {tutor.lastName}
-                              </SelectItem>
-                            )
-                        )}
-                      </SelectContent>
-                    </Select> */}
                     <div className="relative">
                       <Combobox
                         list={tutors
