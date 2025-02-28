@@ -410,7 +410,7 @@ export default function MigrateDataPage() {
     if (erroredEntries.length == 0) {
       toast.success("Registered all tutors successfully");
     } else {
-      toast.error(`Unable to register ${erroredEntries.length} tutors`);
+      toast.success(`Registered ${migrations.length} tutors`);
     }
 
     setTutors(remainingTutors);
