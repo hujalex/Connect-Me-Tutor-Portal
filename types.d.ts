@@ -18,6 +18,7 @@ interface Profile {
   subjectsOfInterest: string[]; // Array of subjects
   status: "Active" | "Inactive" | "Deleted";
   tutorIds: string[];
+  studentNumber: string | null;
 }
 
 interface Session {
@@ -75,7 +76,7 @@ interface Enrollment {
   startDate: string;
   endDate: string;
   availability: { day: string; startTime: string; endTime: string }[]; // Ensure startTime and endTime have AM/PM format
-  meetingId: string
+  meetingId: string;
 }
 
 // Define the type for availability

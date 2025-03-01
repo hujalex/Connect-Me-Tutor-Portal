@@ -257,6 +257,7 @@ export default function MigrateDataPage() {
 
       const migratedTutor: Profile = {
         role: "Tutor",
+        studentNumber: null,
         firstName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[0],
         lastName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[1],
         dateOfBirth: getToday(),
@@ -277,6 +278,7 @@ export default function MigrateDataPage() {
 
       const migratedStudent: Profile = {
         role: "Student",
+        studentNumber: null,
         firstName: parseNames(entry[CSV_COLUMNS["Student Name"]])[0],
         lastName: parseNames(entry[CSV_COLUMNS["Student Name"]])[1],
         dateOfBirth: getToday(),

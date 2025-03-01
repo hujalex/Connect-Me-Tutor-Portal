@@ -52,7 +52,8 @@ export async function getAllProfiles(role: "Student" | "Tutor" | "Admin") {
         tutor_ids,
         timezone,
         subjects_of_interest,
-        status
+        status,
+        student_number
       `
       )
       .eq("role", role);
@@ -87,6 +88,7 @@ export async function getAllProfiles(role: "Student" | "Tutor" | "Admin") {
       timeZone: profile.timezone,
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
+      studentNumber: profile.student_number,
     }));
 
     console.log("Mapped profile data:", userProfiles);
@@ -144,6 +146,7 @@ export const addStudent = async (
       subjects_of_interest: studentData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
+      student_number: studentData.studentNumber,
     };
 
     // Add student profile to the database
@@ -181,6 +184,7 @@ export const addStudent = async (
       subjectsOfInterest: createdProfile.subjectsOfInterest,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
+      studentNumber: createdProfile.studentNumber,
     };
   } catch (error) {
     console.error("Error adding student:", error);
@@ -233,6 +237,7 @@ export const addTutor = async (
       subjects_of_interest: tutorData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
+      student_number: null,
     };
 
     // Add tutor profile to the database
@@ -270,6 +275,7 @@ export const addTutor = async (
       subjectsOfInterest: createdProfile.subjectsOfInterest,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
+      studentNumber: createdProfile.student_number,
     };
   } catch (error) {
     console.error("Error adding student:", error);
@@ -305,24 +311,25 @@ export async function getUserFromId(profileId: string) {
       .from("Profiles")
       .select(
         `
-        id,
-        created_at,
-        role,
-        user_id,
-        first_name,
-        last_name,
-        date_of_birth,
-        start_date,
-        availability,
-        email,
-        parent_name,
-        parent_phone,
-        parent_email,
-        tutor_ids,
-        timezone,
-        subjects_of_interest,
-        status
-      `
+          id,
+          created_at,
+          role,
+          user_id,
+          first_name,
+          last_name,
+          date_of_birth,
+          start_date,
+          availability,
+          email,
+          parent_name,
+          parent_phone,
+          parent_email,
+          tutor_ids,
+          timezone,
+          subjects_of_interest,
+          status,
+          student_number
+        `
       )
       .eq("id", profileId)
       .single();
@@ -350,6 +357,7 @@ export async function getUserFromId(profileId: string) {
       timeZone: profile.timezone,
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
+      studentNumber: profile.student_number,
     };
     return userProfile;
   } catch (error) {
@@ -360,7 +368,8 @@ export async function getUserFromId(profileId: string) {
 
 //---updateUser
 export async function editUser(profile: Profile) {
-  const { id, role, firstName, lastName, email, timeZone } = profile;
+  const { id, role, firstName, lastName, email, timeZone, studentNumber } =
+    profile;
   try {
     const { data, error } = await supabase
       .from("Profiles")
@@ -370,6 +379,7 @@ export async function editUser(profile: Profile) {
         last_name: lastName,
         email: email,
         timezone: timeZone,
+        student_number: studentNumber,
       })
       .eq("id", id)
       .single();

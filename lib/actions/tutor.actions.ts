@@ -10,7 +10,6 @@ const supabase = createClientComponentClient({
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
-
 export async function getTutorSessions(
   profileId: string,
   startDate?: string,
@@ -60,7 +59,7 @@ export async function getTutorSessions(
       student: await getProfileWithProfileId(session.student_id),
       tutor: await getProfileWithProfileId(session.tutor_id),
       status: session.status,
-      session_exit_form: session.session_exit_form
+      session_exit_form: session.session_exit_form,
     }))
   );
 
@@ -89,7 +88,8 @@ export async function getTutorStudents(tutorId: string) {
         tutor_ids,
         timezone,
         subjects_of_interest,
-        status
+        status,
+        student_number
       `
       )
       .contains("tutor_ids", [tutorId]);
@@ -124,6 +124,7 @@ export async function getTutorStudents(tutorId: string) {
       timeZone: profile.timezone,
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
+      studentNumber: profile.student_number,
     }));
 
     console.log("Mapped profile data:", userProfiles);
@@ -219,10 +220,10 @@ export async function logSessionAttendance(
 }
 
 export async function recordSessionExitForm(sessionId: string, notes: string) {
-
-  const { data, error } = await supabase.from("Sessions")
-          .update({session_exit_form: notes})
-          .eq("id", sessionId)
-          .single();
+  const { data, error } = await supabase
+    .from("Sessions")
+    .update({ session_exit_form: notes })
+    .eq("id", sessionId)
+    .single();
   if (error) throw error;
 }
