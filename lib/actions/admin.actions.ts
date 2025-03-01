@@ -279,28 +279,22 @@ export const addTutor = async (
 
 export async function deleteUser(profileId: string) {
   try {
-    //---delete from profiles
-    const { data: profileData, error: profileError } = await supabase
-      .from("Profiles")
-      .select("user_id")
-      .eq("id", profileId)
-      .single();
-    if (profileError) throw profileError;
-    if (!profileData) throw new Error("Profile not found");
+    const response = await fetch("/api/admin/delete-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ profileId }),
+    });
 
-    //---delete from auth system
-    const { data: authData, error: authError } =
-      await supabase.auth.admin.deleteUser(profileData.user_id);
-    if (authError) throw authError;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to delete user");
+    }
 
-    const { error: deleteError } = await supabase
-      .from("Profiles")
-      .delete()
-      .eq("id", profileId);
-
-    if (deleteError) throw deleteError;
+    return await response.json();
   } catch (error) {
-    console.error("Error Deleting User", error);
+    console.error("Error deleting user:", error);
     throw error;
   }
 }
