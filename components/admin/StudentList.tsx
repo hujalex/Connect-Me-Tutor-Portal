@@ -95,6 +95,7 @@ const StudentList = () =>
       subjectsOfInterest: [],
       status: "Active",
       tutorIds: [],
+      studentNumber: "",
     });
     const [selectedStudent, setSelectedStudent] = useState<Profile | null>(
       null
@@ -365,6 +366,18 @@ const StudentList = () =>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="studentNumber" className="text-right">
+                          Student #
+                        </Label>
+                        <Input
+                          id="studentNumber"
+                          name="studentNumber"
+                          value={newStudent.studentNumber ?? ""}
+                          onChange={handleInputChange}
+                          className="col-span-3"
+                        ></Input>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="firstName" className="text-right">
                           First Name
                         </Label>
@@ -496,39 +509,6 @@ const StudentList = () =>
                     <Button onClick={handleAddStudent}>Add Student</Button>
                   </DialogContent>
                 </Dialog>
-                {/*Deactivate Student*/}
-                {/* <Dialog open={isDeactivateModalOpen} onOpenChange={setIsDeactivateModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="destructive">Deactivate Student</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Select a Student to Deactivate</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <Label htmlFor="studentSelect" className="text-right">Student</Label>
-                    <Select onValueChange={setSelectedStudentId} value={selectedStudentId || ''}>
-                      <SelectTrigger id="studentSelect">
-                        <SelectValue placeholder="Select a student" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {students.map((student) => (
-                            student.status === 'Active' && (
-                            <SelectItem key={student.id} value={student.id}>
-                                {student.firstName} {student.lastName}
-                            </SelectItem>
-                            )
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleDeactivateStudent} disabled={!selectedStudentId}>
-                    Confirm Deactivation
-                  </Button>
-                </DialogContent>
-              </Dialog> */}
-                {/* <Dialog open={isOpen} onOpenChange={onOpenChange}> //!
-                 */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="destructive">Delete Student</Button>
@@ -603,15 +583,31 @@ const StudentList = () =>
                             handleGetSelectedStudent(selectedStudentId)
                           }
                         >
-                          Select Tutor to edit
+                          Select Student to edit
                         </Button>
                       </DialogTrigger>
 
                       <DialogContent className="max-w-md">
                         <DialogHeader>
-                          <DialogTitle>Edit Tutor</DialogTitle>
+                          <DialogTitle>Edit Student</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label
+                              htmlFor="studentNumber"
+                              className="text-right"
+                            >
+                              Student #
+                            </Label>
+                            <Input
+                              id="studentNumber"
+                              name="studentNumber"
+                              value={selectedStudent?.studentNumber ?? ""}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="firstName" className="text-right">
                               First Name
