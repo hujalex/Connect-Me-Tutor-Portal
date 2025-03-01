@@ -544,7 +544,7 @@ const StudentList = () =>
                       <div className="relative">
                         <Combobox
                           list={students
-                            .filter((student) => student.status === "Active")
+                            // .filter((student) => student.status === "Active")
                             .map((student) => ({
                               value: student.id,
                               label: `${student.firstName} ${student.lastName}`,
