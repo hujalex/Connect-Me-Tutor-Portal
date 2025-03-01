@@ -277,16 +277,123 @@ export const addTutor = async (
   }
 };
 
+export async function deleteUser(profileId: string) {
+  try {
+    //---delete from profiles
+    const { data: profileData, error: profileError } = await supabase
+      .from("Profiles")
+      .select("user_id")
+      .eq("id", profileId)
+      .single();
+    if (profileError) throw profileError;
+    if (!profileData) throw new Error("Profile not found");
+
+    //---delete from auth system
+    const { data: authData, error: authError } =
+      await supabase.auth.admin.deleteUser(profileData.user_id);
+    if (authError) throw authError;
+
+    const { error: deleteError } = await supabase
+      .from("Profiles")
+      .delete()
+      .eq("id", profileId);
+
+    if (deleteError) throw deleteError;
+  } catch (error) {
+    console.error("Error Deleting User", error);
+    throw error;
+  }
+}
+
+export async function getUserFromId(profileId: string) {
+  try {
+    const { data: profile, error } = await supabase
+      .from("Profiles")
+      .select(
+        `
+        id,
+        created_at,
+        role,
+        user_id,
+        first_name,
+        last_name,
+        date_of_birth,
+        start_date,
+        availability,
+        email,
+        parent_name,
+        parent_phone,
+        parent_email,
+        tutor_ids,
+        timezone,
+        subjects_of_interest,
+        status
+      `
+      )
+      .eq("id", profileId)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+    if (!profile) return null;
+
+    const userProfile = {
+      id: profile.id,
+      createdAt: profile.created_at,
+      role: profile.role,
+      userId: profile.user_id,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      dateOfBirth: profile.date_of_birth,
+      startDate: profile.start_date,
+      availability: profile.availability,
+      email: profile.email,
+      parentName: profile.parent_name,
+      parentPhone: profile.parent_phone,
+      parentEmail: profile.parent_email,
+      tutorIds: profile.tutor_ids,
+      timeZone: profile.timezone,
+      subjectsOfInterest: profile.subjects_of_interest,
+      status: profile.status,
+    };
+    return userProfile;
+  } catch (error) {
+    console.error("Failed to fetch user");
+    return null;
+  }
+}
+
+//---updateUser
+export async function editUser(profile: Profile) {
+  const { id, role, firstName, lastName, email, timeZone } = profile;
+  try {
+    const { data, error } = await supabase
+      .from("Profiles")
+      .update({
+        role: role,
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        timezone: timeZone,
+      })
+      .eq("id", id)
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error updating user", error);
+  }
+}
+
 export async function deactivateUser(profileId: string) {
   try {
-    console.log("Hi");
     const { data, error } = await supabase
       .from("Profiles")
       .update({ status: "Inactive" })
       .eq("id", profileId)
       .select("*")
       .single();
-
     if (error) throw error;
     return data;
   } catch (error) {
