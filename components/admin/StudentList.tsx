@@ -36,6 +36,9 @@ import {
   addStudent,
   deactivateUser,
   reactivateUser,
+  deleteUser,
+  editUser,
+  getUserFromId,
 } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
@@ -93,12 +96,16 @@ const StudentList = () =>
       status: "Active",
       tutorIds: [],
     });
+    const [selectedStudent, setSelectedStudent] = useState<Profile | null>(
+      null
+    );
 
     const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
       null
     );
     const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const getStudentData = async () => {
       try {
@@ -171,6 +178,17 @@ const StudentList = () =>
     ) => {
       const { name, value } = e.target;
       setNewStudent((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleInputChangeForEdit = (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
+      const { name, value } = e.target;
+      setSelectedStudent((prev) =>
+        prev ? ({ ...prev, [name]: value } as Profile) : null
+      );
     };
 
     const handleAvailabilityChange = (
@@ -247,6 +265,21 @@ const StudentList = () =>
       }
     };
 
+    const handleDeleteStudent = async () => {
+      if (selectedStudentId) {
+        try {
+          await deleteUser(selectedStudentId);
+          toast.success("Student deleted successfully");
+          setIsDeactivateModalOpen(false);
+          setSelectedStudentId(null);
+          getStudentData();
+        } catch (error) {
+          toast.error("Failed to delete student");
+        }
+      }
+    };
+
+    //----Deprecated--->
     const handleDeactivateStudent = async () => {
       if (selectedStudentId) {
         try {
@@ -259,6 +292,33 @@ const StudentList = () =>
           }
         } catch (error) {
           toast.error("Failed to deactivate student");
+        }
+      }
+    };
+    //<---
+
+    const handleGetSelectedStudent = async (profileId: string | null) => {
+      if (profileId) {
+        try {
+          const data = await getUserFromId(profileId);
+          setSelectedStudent(data);
+          // setIsReactivateModalOpen(false);
+        } catch (error) {
+          console.error("Failed to identify tutor");
+        }
+      }
+    };
+
+    const handleEditStudent = async () => {
+      if (selectedStudent) {
+        try {
+          await editUser(selectedStudent);
+          toast.success("Tutor Edited Succesfully");
+          setIsEditModalOpen(false);
+          setSelectedStudent(null);
+          getStudentData();
+        } catch (error) {
+          toast.error("Failed to edit tutor");
         }
       }
     };
@@ -471,11 +531,11 @@ const StudentList = () =>
                  */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="destructive">Deactivate Student</Button>
+                    <Button variant="destructive">Delete Student</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Select a Student to Deactivate</DialogTitle>
+                      <DialogTitle>Select a Student to Delete</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <Label htmlFor="studentSelect" className="text-right">
@@ -495,11 +555,11 @@ const StudentList = () =>
                       </div>
                     </div>
                     <Button
-                      onClick={handleDeactivateStudent}
+                      onClick={handleDeleteStudent}
                       disabled={!selectedStudentId}
                       className="w-full"
                     >
-                      Confirm Deactivation
+                      Confirm Deletion
                     </Button>
                   </DialogContent>
                 </Dialog>
@@ -509,38 +569,20 @@ const StudentList = () =>
                   onOpenChange={setIsReactivateModalOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-500">Reactivate Student</Button>
+                    <Button className="bg-blue-500">Edit Student</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md overflow-auto">
                     <DialogHeader>
-                      <DialogTitle>Select a Student to Reactivate</DialogTitle>
+                      <DialogTitle>Select a Student to Edit</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <Label htmlFor="studentSelect" className="text-right">
                         Student
                       </Label>
-                      {/* <Select
-                      onValueChange={setSelectedStudentId}
-                      value={selectedStudentId || ""}
-                    >
-                      <SelectTrigger id="studentSelect">
-                        <SelectValue placeholder="Select a student" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {students.map(
-                          (student) =>
-                            student.status === "Inactive" && (
-                              <SelectItem key={student.id} value={student.id}>
-                                {student.firstName} {student.lastName}
-                              </SelectItem>
-                            )
-                        )}
-                      </SelectContent>
-                    </Select> */}
                       <div className="relative">
                         <Combobox
                           list={students
-                            .filter((student) => student.status === "Inactive")
+                            // .filter((student) => student.status === "Inactive")
                             .map((student) => ({
                               value: student.id,
                               label: `${student.firstName} ${student.lastName}`,
@@ -550,12 +592,109 @@ const StudentList = () =>
                         />
                       </div>
                     </div>
-                    <Button
-                      onClick={handleReactivateStudent}
-                      disabled={!selectedStudentId}
+                    <Dialog
+                      open={isEditModalOpen}
+                      onOpenChange={setIsEditModalOpen}
                     >
-                      Confirm Reactivation
-                    </Button>
+                      <DialogTrigger asChild>
+                        <Button
+                          disabled={!selectedStudentId}
+                          onClick={() =>
+                            handleGetSelectedStudent(selectedStudentId)
+                          }
+                        >
+                          Select Tutor to edit
+                        </Button>
+                      </DialogTrigger>
+
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Edit Tutor</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="firstName" className="text-right">
+                              First Name
+                            </Label>
+                            <Input
+                              id="firstName"
+                              name="firstName"
+                              value={selectedStudent?.firstName}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="lastName" className="text-right">
+                              Last Name
+                            </Label>
+                            <Input
+                              id="lastName"
+                              name="lastName"
+                              value={selectedStudent?.lastName}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="email" className="text-right">
+                              Email
+                            </Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              disabled={true}
+                              value={selectedStudent?.email}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="dateOfBirth" className="text-right">
+                              Date of Birth
+                            </Label>
+                            <Input
+                              id="dateOfBirth"
+                              name="dateOfBirth"
+                              type="date"
+                              value={selectedStudent?.dateOfBirth}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="startDate" className="text-right">
+                              Start Date
+                            </Label>
+                            <Input
+                              id="startDate"
+                              name="startDate"
+                              type="date"
+                              value={selectedStudent?.startDate}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="timeZone" className="text-right">
+                              Time Zone
+                            </Label>
+                            <Input
+                              id="timeZone"
+                              name="timeZone"
+                              value={selectedStudent?.timeZone}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          {/* Add more fields for availability if needed */}
+                        </div>
+                        <Button onClick={handleEditStudent}>
+                          Finish editing student
+                        </Button>
+                      </DialogContent>
+                    </Dialog>
                   </DialogContent>
                 </Dialog>
               </div>
