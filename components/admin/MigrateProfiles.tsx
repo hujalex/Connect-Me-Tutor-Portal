@@ -441,7 +441,7 @@ export default function MigrateDataPage() {
           error: err.message || "Unknown error occurred",
         });
       }
-      sleep(1000);
+      sleep(5000);
     }
 
     const remainingTutors = tutors.filter(
@@ -500,7 +500,7 @@ export default function MigrateDataPage() {
           error: err.message || "Unknown error occured",
         });
       }
-      sleep(1000);
+      sleep(5000);
     }
 
     const remainingStudents = students.filter(
