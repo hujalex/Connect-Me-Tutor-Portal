@@ -138,11 +138,14 @@ export default function MigrateDataPage() {
   const getTutorEmails = async () => {
     try {
       const tutorData = await getAllProfiles("Tutor");
-      if (!tutorData) throw new Error("No tutors found");
+      if (!tutorData || !Array.isArray(tutorData))
+        throw new Error("No tutors found");
       setTutorEmails((prev) => {
         return new Set([
           ...Array.from(prev),
-          ...tutorData.map((tutor) => tutor.email.toLowerCase()),
+          ...tutorData.map((tutor) =>
+            tutor.email ? tutor.email.toLowerCase() : ""
+          ),
         ]);
       });
     } catch (error) {
@@ -153,11 +156,14 @@ export default function MigrateDataPage() {
   const getStudentEmails = async () => {
     try {
       const studentData = await getAllProfiles("Student");
-      if (!studentData) throw new Error("No students found");
+      if (!studentData || !Array.isArray(studentData))
+        throw new Error("No students found");
       setStudentEmails((prev) => {
         return new Set([
           ...Array.from(prev),
-          ...studentData.map((student) => student.email.toLowerCase()),
+          ...studentData.map((student) =>
+            student.email ? student.email.toLowerCase() : ""
+          ),
         ]);
       });
     } catch (error) {
