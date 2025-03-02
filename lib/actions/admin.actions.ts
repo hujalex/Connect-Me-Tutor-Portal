@@ -30,51 +30,67 @@ const supabase = createClientComponentClient({
 });
 
 /* PROFILES */
-export async function getAllProfiles(role: "Student" | "Tutor" | "Admin") {
+export async function getAllProfiles(
+  role: "Student" | "Tutor" | "Admin",
+  orderBy?: string | null,
+  ascending?: boolean | null
+): Promise<Profile[] | null> {
   try {
-    const { data, error } = await supabase
+    const profileFields = `
+      id,
+      created_at,
+      role,
+      user_id,
+      age,
+      grade,
+      first_name,
+      last_name,
+      date_of_birth,
+      start_date,
+      availability,
+      email,
+      parent_name,
+      parent_phone,
+      parent_email,
+      tutor_ids,
+      timezone,
+      subjects_of_interest,
+      status,
+      student_number
+    `;
+
+    // Build query
+    let query = supabase
       .from("Profiles")
-      .select(
-        `
-        id,
-        created_at,
-        role,
-        user_id,
-        first_name,
-        last_name,
-        date_of_birth,
-        start_date,
-        availability,
-        email,
-        parent_name,
-        parent_phone,
-        parent_email,
-        tutor_ids,
-        timezone,
-        subjects_of_interest,
-        status,
-        student_number
-      `
-      )
+      .select(profileFields)
       .eq("role", role);
 
+    // Add ordering if provided
+    if (orderBy && ascending !== null) {
+      query = query.order(orderBy, { ascending });
+    }
+
+    // Execute query
+    const { data, error } = await query;
+
     if (error) {
-      console.error("Error fetching profile in Admin Actions:", error.message);
-      console.error("Error details:", error);
+      console.error("Error fetching profiles:", error.message);
       return null;
     }
 
-    if (!data) {
+    if (!data || data.length === 0) {
       console.log("No profiles found");
       return null;
     }
 
-    // Mapping the fetched data to the Profile object
-    const userProfiles: Profile[] = data.map((profile: any) => ({
+    // Map database fields to camelCase Profile model
+    const userProfiles: Profile[] = data.map((profile) => ({
       id: profile.id,
       createdAt: profile.created_at,
       role: profile.role,
       userId: profile.user_id,
+      age: profile.age,
+      grade: profile.grade,
       firstName: profile.first_name,
       lastName: profile.last_name,
       dateOfBirth: profile.date_of_birth,
@@ -91,7 +107,6 @@ export async function getAllProfiles(role: "Student" | "Tutor" | "Admin") {
       studentNumber: profile.student_number,
     }));
 
-    console.log("Mapped profile data:", userProfiles);
     return userProfiles;
   } catch (error) {
     console.error("Unexpected error in getProfile:", error);
@@ -133,6 +148,8 @@ export const addStudent = async (
     const newStudentProfile = {
       user_id: userId,
       role: "Student",
+      age: studentData.age || "",
+      grade: studentData.grade || "",
       first_name: studentData.firstName || "",
       last_name: studentData.lastName || "",
       date_of_birth: studentData.dateOfBirth || "",
@@ -171,6 +188,8 @@ export const addStudent = async (
       createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
       userId: createdProfile.userId, // Adjust based on your schema
       role: createdProfile.role,
+      age: createdProfile.age,
+      grade: createdProfile.grade,
       firstName: createdProfile.firstName,
       lastName: createdProfile.lastName,
       dateOfBirth: createdProfile.dateOfBirth,
@@ -315,6 +334,8 @@ export async function getUserFromId(profileId: string) {
           created_at,
           role,
           user_id,
+          age,
+          grade,
           first_name,
           last_name,
           date_of_birth,
@@ -344,6 +365,8 @@ export async function getUserFromId(profileId: string) {
       createdAt: profile.created_at,
       role: profile.role,
       userId: profile.user_id,
+      age: profile.age,
+      grade: profile.grade,
       firstName: profile.first_name,
       lastName: profile.last_name,
       dateOfBirth: profile.date_of_birth,
@@ -368,18 +391,42 @@ export async function getUserFromId(profileId: string) {
 
 //---updateUser
 export async function editUser(profile: Profile) {
-  const { id, role, firstName, lastName, email, timeZone, studentNumber } =
-    profile;
+  console.log(profile);
+  const {
+    id,
+    role,
+    age,
+    grade,
+    firstName,
+    lastName,
+    email,
+    dateOfBirth,
+    startDate,
+    parentName,
+    parentPhone,
+    parentEmail,
+    timeZone,
+    subjectsOfInterest,
+    studentNumber,
+  } = profile;
   try {
     const { data, error } = await supabase
       .from("Profiles")
       .update({
         role: role,
+        age: age,
+        grade: grade,
         first_name: firstName,
         last_name: lastName,
         email: email,
+        date_of_birth: dateOfBirth,
+        start_date: startDate,
+        parent_name: parentName,
+        parent_email: parentEmail,
+        parent_phone: parentPhone,
         timezone: timeZone,
         student_number: studentNumber,
+        subjects_of_interest: subjectsOfInterest,
       })
       .eq("id", id)
       .single();
@@ -387,6 +434,7 @@ export async function editUser(profile: Profile) {
     return data;
   } catch (error) {
     console.error("Error updating user", error);
+    throw new Error("Unable to edit User");
   }
 }
 
@@ -465,9 +513,12 @@ export async function createSession(sessionData: any) {
 
 export async function getAllSessions(
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  orderBy?: string,
+  ascending?: boolean
 ): Promise<Session[]> {
-  let query = supabase.from("Sessions").select(`
+  try {
+    let query = supabase.from("Sessions").select(`
       id,
       created_at,
       environment,
@@ -479,40 +530,48 @@ export async function getAllSessions(
       status
     `);
 
-  if (startDate) {
-    query = query.gte("date", startDate);
+    if (startDate) {
+      query = query.gte("date", startDate);
+    }
+    if (endDate) {
+      query = query.lte("date", endDate);
+    }
+
+    if (orderBy && ascending !== undefined) {
+      query = query.order(orderBy, { ascending });
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching student sessions:", error.message);
+      throw error;
+    }
+
+    // Map the result to the Session interface
+    const sessions: Session[] = await Promise.all(
+      data.map(async (session: any) => ({
+        id: session.id,
+        createdAt: session.created_at,
+        environment: session.environment,
+        date: session.date,
+        summary: session.summary,
+        // meetingId: session.meeting_id,
+        meeting: await getMeeting(session.meeting_id),
+        student: await getProfileWithProfileId(session.student_id),
+        tutor: await getProfileWithProfileId(session.tutor_id),
+        status: session.status,
+        session_exit_form: session.session_exit_form,
+      }))
+    );
+
+    console.log(sessions);
+
+    return sessions;
+  } catch (error) {
+    console.error("Error fetching sessions");
+    return [];
   }
-  if (endDate) {
-    query = query.lte("date", endDate);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error fetching student sessions:", error.message);
-    throw error;
-  }
-
-  // Map the result to the Session interface
-  const sessions: Session[] = await Promise.all(
-    data.map(async (session: any) => ({
-      id: session.id,
-      createdAt: session.created_at,
-      environment: session.environment,
-      date: session.date,
-      summary: session.summary,
-      // meetingId: session.meeting_id,
-      meeting: await getMeeting(session.meeting_id),
-      student: await getProfileWithProfileId(session.student_id),
-      tutor: await getProfileWithProfileId(session.tutor_id),
-      status: session.status,
-      session_exit_form: session.session_exit_form,
-    }))
-  );
-
-  console.log(sessions);
-
-  return sessions;
 }
 
 export async function rescheduleSession(sessionId: string, newDate: string) {

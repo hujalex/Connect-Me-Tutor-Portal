@@ -90,10 +90,11 @@ const TutorList = () => {
     status: "Active",
     tutorIds: [],
   });
+  const [selectedTutor, setSelectedTutor] = useState<Profile | null>(null);
 
+  //---Modals
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
-  const [selectedTutor, setSelectedTutor] = useState<Profile | null>(null);
   const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -104,6 +105,7 @@ const TutorList = () => {
   const [allTimeHours, setAllTimeHours] = useState<{ [key: string]: number }>(
     {}
   );
+  const [addingTutor, setAddingTutor] = useState(false);
 
   const getTutorData = async () => {
     try {
@@ -122,7 +124,7 @@ const TutorList = () => {
 
       setProfile(profileData);
 
-      const tutorsData = await getAllProfiles("Tutor");
+      const tutorsData = await getAllProfiles("Tutor", "created_at", false);
       if (!tutorsData) throw new Error("No tutors found");
 
       setTutors(tutorsData);
@@ -160,6 +162,16 @@ const TutorList = () => {
   const handleRowsPerPageChange = (value: string) => {
     setRowsPerPage(parseInt(value));
     setCurrentPage(1);
+  };
+
+  const handleTimeZone = (value: string) => {
+    setNewTutor((prev) => ({ ...prev, timeZone: value }));
+  };
+
+  const handleTimeZoneForEdit = (value: string) => {
+    setSelectedTutor((prev) =>
+      prev ? ({ ...prev, timeZone: value } as Profile) : null
+    );
   };
 
   const paginatedTutors = filteredTutors.slice(
@@ -206,6 +218,7 @@ const TutorList = () => {
 
   const handleAddTutor = async () => {
     try {
+      setAddingTutor(true);
       // Ensure addStudent returns a Profile
       const addedTutor: Profile = await addTutor(newTutor);
 
@@ -255,6 +268,8 @@ const TutorList = () => {
       const err = error as Error;
       console.error("Error adding tutor:", error);
       toast.error(`Failed to add tutor ${err.message}`);
+    } finally {
+      setAddingTutor(false);
     }
   };
 
@@ -504,17 +519,30 @@ const TutorList = () => {
                       <Label htmlFor="timeZone" className="text-right">
                         Time Zone
                       </Label>
-                      <Input
-                        id="timeZone"
-                        name="timeZone"
-                        value={newTutor.timeZone}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
+                      <div className="col-span-3">
+                        <Select
+                          name="timeZone"
+                          value={newTutor.timeZone}
+                          onValueChange={handleTimeZone}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* Add time zone options here */}
+                            <SelectItem value="EST">EST</SelectItem>
+                            <SelectItem value="CST">CST</SelectItem>
+                            <SelectItem value="MT">MT</SelectItem>
+                            <SelectItem value="PST">PST</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     {/* Add more fields for availability if needed */}
                   </div>
-                  <Button onClick={handleAddTutor}>Add Tutor</Button>
+                  <Button onClick={handleAddTutor} disabled={addingTutor}>
+                    {addingTutor ? "Adding Tutor..." : "Add Tutor"}
+                  </Button>
                 </DialogContent>
               </Dialog>
               {/*Delete Student*/}
@@ -670,15 +698,25 @@ const TutorList = () => {
                           <Label htmlFor="timeZone" className="text-right">
                             Time Zone
                           </Label>
-                          <Input
-                            id="timeZone"
-                            name="timeZone"
-                            value={selectedTutor?.timeZone}
-                            onChange={handleInputChangeForEdit}
-                            className="col-span-3"
-                          />
+                          <div className="col-span-3">
+                            <Select
+                              name="timeZone"
+                              value={selectedTutor?.timeZone}
+                              onValueChange={handleTimeZoneForEdit}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select a timezone" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="EST">EST</SelectItem>
+                                <SelectItem value="CST">CST</SelectItem>
+                                <SelectItem value="MT">MT</SelectItem>
+                                <SelectItem value="PST">PST</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {/* Add more fields for availability if needed */}
                         </div>
-                        {/* Add more fields for availability if needed */}
                       </div>
                       <Button onClick={handleEditTutor}>
                         Finish editing tutor

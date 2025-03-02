@@ -80,7 +80,9 @@ const Schedule = () => {
       const weekEndString = weekEnd.toISOString();
       const fetchedSessions = await getAllSessions(
         weekStartString,
-        weekEndString
+        weekEndString,
+        "date",
+        true
       );
       setSessions(fetchedSessions);
     } catch (error) {
