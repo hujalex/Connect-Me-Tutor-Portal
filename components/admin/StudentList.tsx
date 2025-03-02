@@ -52,6 +52,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import toast, { Toaster } from "react-hot-toast";
+import { set } from "date-fns";
+
+const getOrdinalSuffix = (num: number): string => {
+  if (num === 1) return "st";
+  if (num === 2) return "nd";
+  if (num === 3) return "rd";
+  return "th";
+};
 
 const StudentList = () =>
   //   {
@@ -82,6 +90,8 @@ const StudentList = () =>
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newStudent, setNewStudent] = useState<Partial<Profile>>({
       role: "Student",
+      age: "",
+      grade: "",
       firstName: "",
       lastName: "",
       dateOfBirth: "",
@@ -101,12 +111,15 @@ const StudentList = () =>
       null
     );
 
+    //---Modals
     const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
       null
     );
     const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    const [addingStudent, setAddingStudent] = useState(false);
 
     const getStudentData = async () => {
       try {
@@ -125,7 +138,11 @@ const StudentList = () =>
 
         setProfile(profileData);
 
-        const studentsData = await getAllProfiles("Student");
+        const studentsData = await getAllProfiles(
+          "Student",
+          "created_at",
+          false
+        );
         if (!studentsData) throw new Error("No students found");
 
         setStudents(studentsData);
@@ -160,6 +177,34 @@ const StudentList = () =>
 
     const handlePageChange = (newPage: number) => {
       setCurrentPage(newPage);
+    };
+
+    const handleAgeChange = (value: string) => {
+      setNewStudent((prev) => ({ ...prev, age: value }));
+    };
+
+    const handleAgeChangeForEdit = (value: string) => {
+      setSelectedStudent((prev) =>
+        prev ? ({ ...prev, age: value } as Profile) : null
+      );
+    };
+
+    const handleGradeChange = (value: string) => {
+      setNewStudent((prev) => ({ ...prev, grade: value }));
+    };
+
+    const handleGradeChangeForEdit = (value: string) => {
+      setSelectedStudent((prev) => ({ ...prev, grade: value } as Profile));
+    };
+
+    const handleTimeZone = (value: string) => {
+      setNewStudent((prev) => ({ ...prev, timeZone: value }));
+    };
+
+    const handleTimeZoneForEdit = (value: string) => {
+      setSelectedStudent((prev) =>
+        prev ? ({ ...prev, timeZone: value } as Profile) : null
+      );
     };
 
     const handleRowsPerPageChange = (value: string) => {
@@ -213,6 +258,7 @@ const StudentList = () =>
 
     const handleAddStudent = async () => {
       try {
+        setAddingStudent(true);
         // Ensure addStudent returns a Profile
         const addedStudent: Profile = await addStudent(newStudent);
 
@@ -243,6 +289,8 @@ const StudentList = () =>
           // Reset form
           setNewStudent({
             role: "Student",
+            age: "",
+            grade: "",
             firstName: "",
             lastName: "",
             dateOfBirth: "",
@@ -263,6 +311,8 @@ const StudentList = () =>
         console.error("Error adding student:", error);
         toast.error("Failed to Add Student.");
         toast.error(`${err.message}`);
+      } finally {
+        setAddingStudent(false);
       }
     };
 
@@ -377,6 +427,50 @@ const StudentList = () =>
                           className="col-span-3"
                         ></Input>
                       </div>
+                      <div className="grid grid-cols-8 items-center gap-4">
+                        <Label htmlFor="age" className="text-right col-span-2">
+                          Age
+                        </Label>
+                        <div className="col-span-2">
+                          <Input
+                            id="age"
+                            name="age"
+                            value={newStudent.age}
+                            onChange={handleInputChange}
+                            className="col-span-3"
+                          ></Input>
+                        </div>
+                        <Label htmlFor="grade" className="text-right">
+                          Grade
+                        </Label>
+                        <div className="col-span-3">
+                          <Select
+                            name="grade"
+                            value={newStudent.grade}
+                            onValueChange={handleGradeChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Kindergarten">
+                                Kindergarten
+                              </SelectItem>
+                              <SelectItem value="Kindergarten">K</SelectItem>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <SelectItem
+                                  key={i}
+                                  value={`${i + 1}${getOrdinalSuffix(
+                                    i + 1
+                                  )}-grade`}
+                                >
+                                  {`${i + 1}${getOrdinalSuffix(i + 1)}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="firstName" className="text-right">
                           First Name
@@ -481,13 +575,23 @@ const StudentList = () =>
                         <Label htmlFor="timeZone" className="text-right">
                           Time Zone
                         </Label>
-                        <Input
-                          id="timeZone"
-                          name="timeZone"
-                          value={newStudent.timeZone}
-                          onChange={handleInputChange}
-                          className="col-span-3"
-                        />
+                        <div className="col-span-3">
+                          <Select
+                            name="timeZone"
+                            value={newStudent.timeZone}
+                            onValueChange={handleTimeZone}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="EST">EST</SelectItem>
+                              <SelectItem value="CST">CST</SelectItem>
+                              <SelectItem value="MT">MT</SelectItem>
+                              <SelectItem value="PST">PST</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label
@@ -506,7 +610,9 @@ const StudentList = () =>
                       </div>
                       {/* Add more fields for availability if needed */}
                     </div>
-                    <Button onClick={handleAddStudent}>Add Student</Button>
+                    <Button onClick={handleAddStudent} disabled={addingStudent}>
+                      {addingStudent ? "Adding Student..." : "Add Student"}
+                    </Button>
                   </DialogContent>
                 </Dialog>
                 <Dialog>
@@ -605,9 +711,57 @@ const StudentList = () =>
                               value={selectedStudent?.studentNumber ?? ""}
                               onChange={handleInputChangeForEdit}
                               className="col-span-3"
-                            />
+                            ></Input>
                           </div>
-
+                          <div className="grid grid-cols-8 items-center gap-4">
+                            <Label
+                              htmlFor="age"
+                              className="text-right col-span-2"
+                            >
+                              Age
+                            </Label>
+                            <div className="col-span-2">
+                              <Input
+                                id="age"
+                                name="age"
+                                value={selectedStudent?.age}
+                                onChange={handleInputChangeForEdit}
+                                className="col-span-3"
+                              ></Input>
+                            </div>
+                            <Label htmlFor="grade" className="text-right">
+                              Grade
+                            </Label>
+                            <div className="col-span-3">
+                              <Select
+                                name="grade"
+                                value={selectedStudent?.grade}
+                                onValueChange={handleGradeChangeForEdit}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Kindergarten">
+                                    Kindergarten
+                                  </SelectItem>
+                                  <SelectItem value="Kindergarten">
+                                    K
+                                  </SelectItem>
+                                  {Array.from({ length: 12 }, (_, i) => (
+                                    <SelectItem
+                                      key={i}
+                                      value={`${i + 1}${getOrdinalSuffix(
+                                        i + 1
+                                      )}-grade`}
+                                    >
+                                      {`${i + 1}${getOrdinalSuffix(i + 1)}`}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="firstName" className="text-right">
                               First Name
@@ -640,7 +794,6 @@ const StudentList = () =>
                               id="email"
                               name="email"
                               type="email"
-                              disabled={true}
                               value={selectedStudent?.email}
                               onChange={handleInputChangeForEdit}
                               className="col-span-3"
@@ -673,14 +826,78 @@ const StudentList = () =>
                             />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="parentName" className="text-right">
+                              Parent Name
+                            </Label>
+                            <Input
+                              id="parentName"
+                              name="parentName"
+                              value={selectedStudent?.parentName}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="parentPhone" className="text-right">
+                              Parent Phone
+                            </Label>
+                            <Input
+                              id="parentPhone"
+                              name="parentPhone"
+                              value={selectedStudent?.parentPhone}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="parentEmail" className="text-right">
+                              Parent Email
+                            </Label>
+                            <Input
+                              id="parentEmail"
+                              name="parentEmail"
+                              type="email"
+                              value={selectedStudent?.parentEmail}
+                              onChange={handleInputChangeForEdit}
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="timeZone" className="text-right">
                               Time Zone
                             </Label>
+                            <div className="col-span-3">
+                              <Select
+                                name="timeZone"
+                                value={selectedStudent?.timeZone}
+                                onValueChange={handleTimeZoneForEdit}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="EST">EST</SelectItem>
+                                  <SelectItem value="CST">CST</SelectItem>
+                                  <SelectItem value="MT">MT</SelectItem>
+                                  <SelectItem value="PST">PST</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label
+                              htmlFor="subjectsOfInterest"
+                              className="text-right"
+                            >
+                              Subjects of Interest
+                            </Label>
                             <Input
-                              id="timeZone"
-                              name="timeZone"
-                              value={selectedStudent?.timeZone}
-                              onChange={handleInputChangeForEdit}
+                              id="subjectsOfInterest"
+                              name="subjectsOfInterest"
+                              value={selectedStudent?.subjectsOfInterest?.join(
+                                ", "
+                              )}
+                              onChange={handleSubjectsChange}
                               className="col-span-3"
                             />
                           </div>

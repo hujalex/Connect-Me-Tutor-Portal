@@ -5,6 +5,8 @@ interface Profile {
   createdAt: string; // Date when the profile was created
   role: "Student" | "Tutor" | "Admin";
   userId: string; // Foreign key or identifier
+  age?: string;
+  grade?: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string; // Format: YYYY-MM-DD
