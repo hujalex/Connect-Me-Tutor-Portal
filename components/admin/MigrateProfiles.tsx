@@ -109,6 +109,9 @@ export default function MigrateDataPage() {
 
   const [tutorEmails, setTutorEmails] = useState<Set<String>>(new Set());
   const [studentEmails, setStudentEmails] = useState<Set<String>>(new Set());
+  const [uniqueEnrollments, setUniqueEnrollments] = useState<Set<String[]>>(
+    new Set([])
+  );
 
   const [currentPage, setCurrentPage] = useState(1);
   const [migrationStatus, setMigrationStatus] = useState("");
@@ -139,7 +142,7 @@ export default function MigrateDataPage() {
       setTutorEmails((prev) => {
         return new Set([
           ...Array.from(prev),
-          ...tutorData.map((tutor) => tutor.email),
+          ...tutorData.map((tutor) => tutor.email.toLowerCase()),
         ]);
       });
     } catch (error) {
@@ -154,7 +157,7 @@ export default function MigrateDataPage() {
       setStudentEmails((prev) => {
         return new Set([
           ...Array.from(prev),
-          ...studentData.map((student) => student.email),
+          ...studentData.map((student) => student.email.toLowerCase()),
         ]);
       });
     } catch (error) {
@@ -302,7 +305,7 @@ export default function MigrateDataPage() {
         dateOfBirth: getToday(),
         startDate: getToday(),
         availability: [],
-        email: entry[CSV_COLUMNS["Tutor Email"]],
+        email: entry[CSV_COLUMNS["Tutor Email"]].toLowerCase(),
         parentName: "",
         parentPhone: "",
         parentEmail: "",
@@ -323,7 +326,7 @@ export default function MigrateDataPage() {
         dateOfBirth: getToday(),
         startDate: getToday(),
         availability: [],
-        email: entry[CSV_COLUMNS["Student Email"]],
+        email: entry[CSV_COLUMNS["Student Email"]].toLowerCase(),
         parentName: "",
         parentPhone: "",
         parentEmail: "",
