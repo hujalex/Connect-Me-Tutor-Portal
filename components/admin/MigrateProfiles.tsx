@@ -6,7 +6,7 @@ import {
   getToday,
   addYearsToDate,
 } from "@/lib/utils";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,6 +74,7 @@ import internal from "stream";
 import { checkIsOnDemandRevalidate } from "next/dist/server/api-utils";
 import { Enrollment, Profile } from "@/types";
 import { resourceLimits } from "worker_threads";
+import { previousDay } from "date-fns";
 
 export default function MigrateDataPage() {
   const supabase = createClientComponentClient({
@@ -105,6 +106,10 @@ export default function MigrateDataPage() {
   const [selectedPairings, setSelectedPairings] = useState<Set<number>>(
     new Set()
   );
+
+  const [tutorEmails, setTutorEmails] = useState<Set<String>>(new Set());
+  const [studentEmails, setStudentEmails] = useState<Set<String>>(new Set());
+
   const [currentPage, setCurrentPage] = useState(1);
   const [migrationStatus, setMigrationStatus] = useState("");
   const [userOption, setUserOption] = useState(false);
@@ -121,6 +126,41 @@ export default function MigrateDataPage() {
   const currentStudents = students?.slice(startIndex, endIndex);
   const currentTutors = tutors?.slice(startIndex, endIndex);
   const currentPairings = pairings?.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    getTutorEmails();
+    getStudentEmails();
+  });
+
+  const getTutorEmails = async () => {
+    try {
+      const tutorData = await getAllProfiles("Tutor");
+      if (!tutorData) throw new Error("No tutors found");
+      setTutorEmails((prev) => {
+        return new Set([
+          ...Array.from(prev),
+          ...tutorData.map((tutor) => tutor.email),
+        ]);
+      });
+    } catch (error) {
+      console.error("Failed to load students");
+    }
+  };
+
+  const getStudentEmails = async () => {
+    try {
+      const studentData = await getAllProfiles("Student");
+      if (!studentData) throw new Error("No students found");
+      setStudentEmails((prev) => {
+        return new Set([
+          ...Array.from(prev),
+          ...studentData.map((student) => student.email),
+        ]);
+      });
+    } catch (error) {
+      console.error("Failed to load students");
+    }
+  };
 
   const formatAvailability = (
     availability: Profile["availability"]
@@ -247,8 +287,7 @@ export default function MigrateDataPage() {
 
   const handleMigrateUsers = async (len: number, data: any) => {
     //-----Sets Intended to remove duplciates based on emails-----
-    const tutorEmails = new Set<string>();
-    const studentEmails = new Set<string>();
+
     const tutors: Profile[] = [];
     const students: Profile[] = [];
     const pairings: Enrollment[] = [];
