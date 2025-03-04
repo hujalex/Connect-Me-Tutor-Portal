@@ -68,45 +68,35 @@ export async function getTutorSessions(
 
 export async function getTutorStudents(tutorId: string) {
   try {
-    const { data, error } = await supabase
-      .from("Profiles")
-      .select(
-        `
-        id,
-        created_at,
-        role,
-        user_id,
-        first_name,
-        last_name,
-        date_of_birth,
-        start_date,
-        availability,
-        email,
-        parent_name,
-        parent_phone,
-        parent_email,
-        tutor_ids,
-        timezone,
-        subjects_of_interest,
-        status,
-        student_number
-      `
-      )
-      .contains("tutor_ids", [tutorId]);
+    const { data: enrollments, error: enrollmentError } = await supabase
+      .from("Enrollments")
+      .select("student_id")
+      .eq("tutor_id", tutorId);
 
-    if (error) {
-      console.error("Error fetching profile in Tutor Actions:", error.message);
-      console.error("Error details:", error);
+    if (enrollmentError) {
+      console.error("Error fetching enrollments:", enrollmentError);
       return null;
     }
 
-    if (!data) {
+    if (!enrollments) {
       console.log("No profile found for tutor ID:", tutorId);
       return null;
     }
 
+    const studentIds = enrollments.map((enrollment) => enrollment.student_id);
+
+    const { data: studentProfiles, error: profileError } = await supabase
+      .from("Profiles")
+      .select("*")
+      .in("id", studentIds);
+
+    if (profileError) {
+      console.error("Error fetching student profile", profileError);
+      return null;
+    }
+
     // Mapping the fetched data to the Profile object
-    const userProfiles: Profile[] = data.map((profile: any) => ({
+    const userProfiles: Profile[] = studentProfiles.map((profile: any) => ({
       id: profile.id,
       createdAt: profile.created_at,
       role: profile.role,
@@ -135,22 +125,43 @@ export async function getTutorStudents(tutorId: string) {
   }
 }
 
-export async function rescheduleSession(sessionId: string, newDate: any) {
-  console.log(sessionId);
-  console.log(newDate);
-  const { data, error } = await supabase
-    .from("Sessions")
-    .update({ date: newDate })
-    .eq("id", sessionId)
-    .select("*")
-    .single();
+export async function rescheduleSession(
+  sessionId: string,
+  newDate: any,
+  tutorid?: string
+) {
+  try {
+    console.log(sessionId);
+    console.log(newDate);
+    const { data: sessionData, error } = await supabase
+      .from("Sessions")
+      .update({ date: newDate })
+      .eq("id", sessionId)
+      .select("*")
+      .single();
 
-  if (error) throw error;
-  if (data) {
-    return data[0];
+    if (error) throw error;
+
+    const { error: notificationError } = await supabase
+      .from("Notifications")
+      .insert({
+        session_id: sessionId,
+        previous_date: sessionData.date,
+        suggested_date: newDate,
+        tutor_id: sessionData.tutor_id,
+        student_id: sessionData.student_id,
+        type: "RESCHEDULE_REQUEST",
+        status: "Active",
+      });
+
+    if (notificationError) throw notificationError;
+    if (sessionData) {
+      return sessionData[0];
+    }
+  } catch (error) {
+    console.error("Unable to reschedule", error);
+    throw error;
   }
-
-  console.log(data);
 }
 
 export async function cancelSession(sessionId: string) {

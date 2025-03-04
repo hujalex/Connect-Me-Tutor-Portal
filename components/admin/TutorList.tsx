@@ -567,7 +567,7 @@ const TutorList = () => {
                           .filter((tutor) => tutor.status === "Active")
                           .map((tutor) => ({
                             value: tutor.id,
-                            label: `${tutor.firstName} ${tutor.lastName}`,
+                            label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
                           }))}
                         category="tutor"
                         onValueChange={setSelectedTutorId}

@@ -256,6 +256,17 @@ const StudentList = () =>
       setNewStudent((prev) => ({ ...prev, subjectsOfInterest: subjects }));
     };
 
+    const handleSubjectsChangeForEdit = (
+      e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      const subjects = e.target.value
+        .split(",")
+        .map((subject) => subject.trim());
+      setSelectedStudent(
+        (prev) => ({ ...prev, subjectsOfInterest: subjects } as Profile)
+      );
+    };
+
     const handleAddStudent = async () => {
       try {
         setAddingStudent(true);
@@ -897,7 +908,7 @@ const StudentList = () =>
                               value={selectedStudent?.subjectsOfInterest?.join(
                                 ", "
                               )}
-                              onChange={handleSubjectsChange}
+                              onChange={handleSubjectsChangeForEdit}
                               className="col-span-3"
                             />
                           </div>
