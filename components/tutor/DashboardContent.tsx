@@ -10,6 +10,8 @@ import {
   ChevronsRight,
   ChevronLeft,
   ChevronRight,
+  Circle,
+  Loader2,
 } from "lucide-react";
 import TutorCalendar from "./TutorCalendar";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -39,13 +42,17 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getProfile } from "@/lib/actions/user.actions";
-import { updateSession } from "@/lib/actions/admin.actions";
+import {
+  updateSession,
+  getMeetings,
+  getAllSessions,
+} from "@/lib/actions/admin.actions";
 import {
   getTutorSessions,
   rescheduleSession,
 } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Session, Profile } from "@/types";
+import { Session, Profile, Meeting } from "@/types";
 import { formatSessionDate } from "@/lib/utils";
 import toast from "react-hot-toast";
 import {
@@ -56,15 +63,19 @@ import {
   addWeeks,
   subWeeks,
   parseISO,
+  addHours,
+  areIntervalsOverlapping,
   isAfter,
   isValid,
 } from "date-fns";
 // import SessionExitForm from "./SessionExitForm";
 import { recordSessionExitForm } from "@/lib/actions/tutor.actions";
 
-const StudentDashboard = () => {
+const TutorDashboard = () => {
   const supabase = createClientComponentClient();
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [allSessions, setAllSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,8 +89,15 @@ const StudentDashboard = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSessionExitFormOpen, setIsSessionExitFormOpen] = useState(false);
+  const [isCheckingMeetingAvailability, setisCheckingMeetingAvailability] =
+    useState(false);
   const [notes, setNotes] = useState<string>("");
   const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
+
+  //---Reschedule session
+  const [meetingAvailability, setMeetingAvailability] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
     console.log(isDialogOpen);
@@ -87,7 +105,20 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     getUserData();
+    fetchMeetings();
   }, [supabase.auth]);
+
+  const fetchMeetings = async () => {
+    try {
+      const fetchedMeetings = await getMeetings();
+      if (fetchedMeetings) {
+        setMeetings(fetchedMeetings);
+      }
+    } catch (error) {
+      console.error("Failed to fetch meetings:", error);
+      toast.error("Failed to load meetings");
+    }
+  };
 
   const getUserData = async () => {
     try {
@@ -128,6 +159,66 @@ const StudentDashboard = () => {
     }
   };
 
+  const getMeetingsThisCurrentWeek = async () => {};
+
+  //---Fetches sessions from all tutors found om the tutor schedule
+  const fetchAllSessionsFromSchedule = async () => {
+    try {
+      const data = await getAllSessions();
+      if (!data) throw new Error("Unable to retrieve all sessions");
+      setAllSessions(data);
+    } catch (error) {
+      console.error("Failed to fetch all sessions", error);
+      throw error;
+    }
+  };
+
+  const areMeetingsAvailableInCurrentWeek = async (session: Session) => {
+    try {
+      setisCheckingMeetingAvailability(true);
+      //---Only retrieve sessions again if you haven't already
+      if (Object.keys(meetingAvailability).length === 0)
+        await fetchAllSessionsFromSchedule();
+
+      const updatedMeetingAvailability: { [key: string]: boolean } = {};
+
+      if (!selectedSessionDate || !isValid(parseISO(selectedSessionDate))) {
+        toast.error("Invalid session date selected");
+        return;
+      }
+
+      meetings.forEach((meeting) => {
+        updatedMeetingAvailability[meeting.id] = true;
+      });
+      const requestedSessionStartTime = parseISO(selectedSessionDate); //selectedSessionDate is in UTC
+      const requestedSessionEndTIme = addHours(requestedSessionStartTime, 1);
+
+      meetings.forEach((meeting) => {
+        const hasConflict = allSessions.some(
+          (existingSession) =>
+            session.id !== existingSession.id && //Check if the given and existing are the same session
+            existingSession.meeting?.id === meeting.id &&
+            areIntervalsOverlapping(
+              {
+                start: requestedSessionStartTime,
+                end: requestedSessionEndTIme,
+              },
+              {
+                start: parseISO(existingSession.date),
+                end: addHours(parseISO(existingSession.date), 1),
+              }
+            )
+        );
+        updatedMeetingAvailability[meeting.id] = !hasConflict;
+      });
+      setMeetingAvailability(updatedMeetingAvailability);
+      setisCheckingMeetingAvailability(false);
+    } catch (error) {
+      toast.error("Unable to find available meeting links");
+      console.error("Unable to find available meeting links", error);
+    }
+  };
+
   useEffect(() => {
     const filtered = sessions.filter(
       (session) =>
@@ -155,7 +246,16 @@ const StudentDashboard = () => {
 
   const handleReschedule = async (sessionId: string, newDate: string) => {
     try {
-      const updatedSession = await rescheduleSession(sessionId, newDate);
+      if (!profile || !profile.id) {
+        console.error("No profile found cannot reschedule");
+        return;
+      }
+
+      const updatedSession = await rescheduleSession(
+        sessionId,
+        newDate
+        // profile.id
+      );
 
       if (updatedSession) {
         setSessions(
@@ -224,6 +324,42 @@ const StudentDashboard = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  const handleInputChange = (e: {
+    target: { name: string; value: string };
+  }) => {
+    const { name, value } = e.target;
+
+    // Helper function to handle nested updates
+    const handleNestedChange = (obj: any, key: string, value: any) => {
+      const keys = key.split("."); // Split key by dot notation (e.g., 'tutor.id')
+      let temp = obj;
+
+      keys.forEach((k, index) => {
+        if (index === keys.length - 1) {
+          // Final key, update its value
+          temp[k] = value;
+        } else {
+          // Traverse nested objects
+          temp[k] = temp[k] || {};
+          temp = temp[k];
+        }
+      });
+
+      return { ...obj };
+    };
+
+    if (selectedSession) {
+      setSelectedSession((prevState) =>
+        handleNestedChange({ ...prevState }, name, value)
+      );
+    }
+    // else {
+    //   setNewEnrollment((prevState) =>
+    //     handleNestedChange({ ...prevState }, name, value)
+    //   );
+    // }
+  };
 
   return (
     <main className="p-8">
@@ -351,6 +487,7 @@ const StudentDashboard = () => {
                           onClick={() => {
                             setSelectedSession(session);
                             setIsDialogOpen(true);
+                            setSelectedSessionDate(session.date);
                           }}
                         >
                           Reschedule
@@ -369,6 +506,7 @@ const StudentDashboard = () => {
                           <Input
                             type="datetime-local"
                             // defaultValue={selectedSession?.date}
+                            disabled={isCheckingMeetingAvailability}
                             defaultValue={
                               selectedSession?.date
                                 ? format(
@@ -382,12 +520,84 @@ const StudentDashboard = () => {
                                 setSelectedSessionDate(
                                   new Date(e.target.value).toISOString() //Converts chosen time to UTC for correct timezone conversions later
                                 );
+                                setMeetingAvailability({}); // Reset Meeting Availability upon date change
                               }
                             }}
                           />
 
+                          <div>
+                            <Label>Meeting Link</Label>
+                            <Select
+                              name="meeting.id"
+                              value={selectedSession?.meeting?.id}
+                              onValueChange={(value) =>
+                                handleInputChange({
+                                  target: { name: "meeting.id", value },
+                                } as any)
+                              }
+                            >
+                              <SelectTrigger
+                                onClick={() => {
+                                  if (selectedSession) {
+                                    areMeetingsAvailableInCurrentWeek(
+                                      selectedSession
+                                    );
+                                  }
+                                }}
+                              >
+                                <SelectValue placeholder="Select a meeting link">
+                                  {selectedSession?.meeting?.id
+                                    ? meetingAvailability[
+                                        selectedSession.meeting.id
+                                      ]
+                                      ? meetings.find(
+                                          (meeting) =>
+                                            meeting.id ===
+                                            selectedSession?.meeting?.id
+                                        )?.name
+                                      : "Please select an available link"
+                                    : "Select a meeting"}
+                                  {/* {selectedSession?.meeting?.id
+                                    ? meetingAvailability[
+                                        selectedSession.meeting.id
+                                      ]
+                                      ? ""
+                                      : "Please select another link"
+                                    : ""} */}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {meetings.map((meeting) => (
+                                  <SelectItem
+                                    key={meeting.id}
+                                    value={meeting.id}
+                                    disabled={!meetingAvailability[meeting.id]}
+                                    className={`flex items-center justify-between ${!meetingAvailability[
+                                      meeting.id
+                                    ]} ? "opacity-50" : ""`}
+                                  >
+                                    <span>
+                                      {meeting.name} - {meeting.id}
+                                    </span>
+                                    <Circle
+                                      className={`w-2 h-2 ml-2 ${
+                                        meetingAvailability[meeting.id]
+                                          ? "text-green-500"
+                                          : "text-red-500"
+                                      } fill-current`}
+                                    />
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
                           <Button
-                            variant="destructive"
+                            disabled={
+                              isCheckingMeetingAvailability ||
+                              !selectedSession?.meeting?.id ||
+                              !meetingAvailability[selectedSession.meeting.id]
+                            }
                             onClick={() =>
                               selectedSession &&
                               selectedSessionDate &&
@@ -397,7 +607,14 @@ const StudentDashboard = () => {
                               )
                             }
                           >
-                            Send Reschedule Request
+                            {isCheckingMeetingAvailability ? (
+                              <>
+                                Checking Meeting Link Availability{"   "}
+                                <Loader2 className="mx-2 h-4 w-4 animate-spin" />
+                              </>
+                            ) : (
+                              "Send Reschedule Request"
+                            )}
                           </Button>
                         </div>
                       </DialogContent>
@@ -538,4 +755,4 @@ const StudentDashboard = () => {
   );
 };
 
-export default StudentDashboard;
+export default TutorDashboard;
