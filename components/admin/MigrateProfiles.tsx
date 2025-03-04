@@ -180,11 +180,16 @@ export default function MigrateDataPage() {
       setUniqueEnrollments((prev) => {
         return new Set([
           ...Array.from(prev),
-          ...data.map((pairing) =>
-            pairing.student && pairing.tutor
-              ? `${pairing.tutor.id}-${pairing.student.id}`
-              : ""
-          ),
+          ...data
+            .map((pairing) =>
+              pairing.student &&
+              pairing.tutor &&
+              pairing.tutor.email &&
+              pairing.student.email
+                ? `${pairing.tutor.email}-${pairing.student.email}`
+                : ""
+            )
+            .filter((key) => key !== ""),
         ]);
       });
     } catch (error) {
@@ -400,14 +405,10 @@ export default function MigrateDataPage() {
       }
 
       if (migratedPairing.tutor && migratedPairing.student) {
-        if (
-          !uniqueEnrollments.has(
-            `${migratedPairing.tutor.id}-${migratedPairing.student.id}`
-          )
-        ) {
-          uniqueEnrollments.add(
-            `${migratedPairing.tutor.id}-${migratedPairing.student.id}`
-          );
+        const pairingKey = `${migratedPairing.tutor.email}-${migratedPairing.student.email}`;
+
+        if (!uniqueEnrollments.has(pairingKey)) {
+          uniqueEnrollments.add(pairingKey);
           pairings.push(migratedPairing);
         }
       }
