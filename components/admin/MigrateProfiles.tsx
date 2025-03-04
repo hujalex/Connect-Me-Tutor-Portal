@@ -64,7 +64,6 @@ import {
   migrateSelectedStudents,
   parseNames,
   CSV_COLUMNS,
-  // type Profile,
   ErrorEntry,
   ErrorEnrollment,
 } from "@/lib/actions/migrate.actions";
@@ -334,7 +333,8 @@ export default function MigrateDataPage() {
         studentNumber: null,
         firstName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[0],
         lastName: parseNames(entry[CSV_COLUMNS["Tutor Name"]])[1],
-        dateOfBirth: getToday(),
+        gender: "",
+        // dateOfBirth: getToday(),
         startDate: getToday(),
         availability: [],
         email: entry[CSV_COLUMNS["Tutor Email"]].toLowerCase(),
@@ -355,7 +355,10 @@ export default function MigrateDataPage() {
         studentNumber: null,
         firstName: parseNames(entry[CSV_COLUMNS["Student Name"]])[0],
         lastName: parseNames(entry[CSV_COLUMNS["Student Name"]])[1],
-        dateOfBirth: getToday(),
+        age: "",
+        grade: "",
+        gender: "",
+        // dateOfBirth: getToday(),
         startDate: getToday(),
         availability: [],
         email: entry[CSV_COLUMNS["Student Email"]].toLowerCase(),
@@ -479,8 +482,12 @@ export default function MigrateDataPage() {
         migrations.push(index);
       } catch (error) {
         const err = error as Error;
+        const tutorWithDateOfBirth = {
+          ...tutors[index],
+          dateOfBirth: tutors[index].dateOfBirth || getToday(),
+        };
         erroredEntries.push({
-          profile: tutors[index],
+          profile: tutorWithDateOfBirth,
           error: err.message || "Unknown error occurred",
         });
       }

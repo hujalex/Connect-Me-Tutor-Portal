@@ -91,11 +91,11 @@ const StudentList = () =>
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newStudent, setNewStudent] = useState<Partial<Profile>>({
       role: "Student",
-      age: "",
-      grade: "",
       firstName: "",
       lastName: "",
-      dateOfBirth: "",
+      age: "",
+      grade: "",
+      gender: "",
       startDate: "",
       availability: [],
       email: "",
@@ -185,9 +185,7 @@ const StudentList = () =>
     };
 
     const handleAgeChangeForEdit = (value: string) => {
-      setSelectedStudent((prev) =>
-        prev ? ({ ...prev, age: value } as Profile) : null
-      );
+      setSelectedStudent((prev) => (prev ? { ...prev, age: value } : null));
     };
 
     const handleGradeChange = (value: string) => {
@@ -204,8 +202,16 @@ const StudentList = () =>
 
     const handleTimeZoneForEdit = (value: string) => {
       setSelectedStudent((prev) =>
-        prev ? ({ ...prev, timeZone: value } as Profile) : null
+        prev ? { ...prev, timeZone: value } : null
       );
+    };
+
+    const handleGender = (value: string) => {
+      setNewStudent((prev) => ({ ...prev, gender: value }));
+    };
+
+    const handleGenderForEdit = (value: string) => {
+      setSelectedStudent((prev) => (prev ? { ...prev, gender: value } : null));
     };
 
     const handleRowsPerPageChange = (value: string) => {
@@ -301,11 +307,11 @@ const StudentList = () =>
           // Reset form
           setNewStudent({
             role: "Student",
-            age: "",
-            grade: "",
             firstName: "",
             lastName: "",
-            dateOfBirth: "",
+            age: "",
+            grade: "",
+            gender: "",
             startDate: "",
             availability: [],
             email: "",
@@ -440,6 +446,31 @@ const StudentList = () =>
                             className="col-span-3"
                           ></Input>
                         </div>
+
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="firstName" className="text-right">
+                            First Name
+                          </Label>
+                          <Input
+                            id="firstName"
+                            name="firstName"
+                            value={newStudent.firstName}
+                            onChange={handleInputChange}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="lastName" className="text-right">
+                            Last Name
+                          </Label>
+                          <Input
+                            id="lastName"
+                            name="lastName"
+                            value={newStudent.lastName}
+                            onChange={handleInputChange}
+                            className="col-span-3"
+                          />
+                        </div>
                         <div className="grid grid-cols-8 items-center gap-4">
                           <Label
                             htmlFor="age"
@@ -488,28 +519,26 @@ const StudentList = () =>
                           </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="firstName" className="text-right">
-                            First Name
+                          <Label htmlFor="gender" className="text-right">
+                            Gender
                           </Label>
-                          <Input
-                            id="firstName"
-                            name="firstName"
-                            value={newStudent.firstName}
-                            onChange={handleInputChange}
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="lastName" className="text-right">
-                            Last Name
-                          </Label>
-                          <Input
-                            id="lastName"
-                            name="lastName"
-                            value={newStudent.lastName}
-                            onChange={handleInputChange}
-                            className="col-span-3"
-                          />
+                          <div className="col-span-3">
+                            {" "}
+                            <Select
+                              name="gender"
+                              value={newStudent.gender}
+                              onValueChange={handleGender}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="email" className="text-right">
@@ -524,19 +553,7 @@ const StudentList = () =>
                             className="col-span-3"
                           />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="dateOfBirth" className="text-right">
-                            Date of Birth
-                          </Label>
-                          <Input
-                            id="dateOfBirth"
-                            name="dateOfBirth"
-                            type="date"
-                            value={newStudent.dateOfBirth}
-                            onChange={handleInputChange}
-                            className="col-span-3"
-                          />
-                        </div>
+
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="startDate" className="text-right">
                             Start Date
@@ -822,20 +839,28 @@ const StudentList = () =>
                               />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label
-                                htmlFor="dateOfBirth"
-                                className="text-right"
-                              >
-                                Date of Birth
+                              <Label htmlFor="gender" className="text-right">
+                                Gender
                               </Label>
-                              <Input
-                                id="dateOfBirth"
-                                name="dateOfBirth"
-                                type="date"
-                                value={selectedStudent?.dateOfBirth}
-                                onChange={handleInputChangeForEdit}
-                                className="col-span-3"
-                              />
+                              <div className="col-span-3">
+                                {" "}
+                                <Select
+                                  name="gender"
+                                  value={selectedStudent?.gender}
+                                  onValueChange={handleGenderForEdit}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">
+                                      Female
+                                    </SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="startDate" className="text-right">

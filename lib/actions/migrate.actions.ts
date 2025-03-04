@@ -1,5 +1,5 @@
 // lib/actions/migrate.actions.ts
-import { Enrollment } from "@/types";
+import { Enrollment, Profile } from "@/types";
 import axios from "axios";
 
 //-------------Indexing based on Data from imported CSV FILE-----------
@@ -25,30 +25,6 @@ export interface ErrorEntry {
 export interface ErrorEnrollment {
   enrollment: Enrollment;
   error: string;
-}
-
-export interface Profile {
-  id: string;
-  createdAt: string;
-  role: "Student" | "Tutor" | "Admin";
-  userId: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  startDate: string;
-  availability: {
-    day: string;
-    startTime: string;
-    endTime: string;
-  }[];
-  email: string;
-  parentName?: string;
-  parentPhone?: string;
-  parentEmail?: string;
-  timeZone: string;
-  subjectsOfInterest: string[];
-  status: "Active" | "Inactive" | "Deleted";
-  tutorIds: string[];
 }
 
 export function parseNames(name: string) {
