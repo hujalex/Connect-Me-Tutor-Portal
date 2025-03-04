@@ -10,6 +10,7 @@ import {
   parseISO,
   isAfter,
   isValid,
+  previousDay,
 } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +52,7 @@ import {
   GraduationCap,
   CircleUserRound,
 } from "lucide-react";
+import { Textarea } from "../ui/textarea";
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -565,6 +567,19 @@ const Schedule = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label className="text-right">Summary</Label>
+                  <Textarea
+                    value={selectedSession?.summary}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        summary: e.target.value,
+                      })
+                    }
+                  ></Textarea>
                 </div>
                 <div className="flex flex-row justify-between">
                   <Button onClick={() => handleUpdateSession(selectedSession)}>

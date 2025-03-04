@@ -737,9 +737,16 @@ export async function addSessions(
 
 // Function to update a session
 export async function updateSession(updatedSession: Session) {
-  // const { id, status, tutor, student, date, meetingId } = updatedSession;
-  const { id, status, tutor, student, date, meeting, session_exit_form } =
-    updatedSession;
+  const {
+    id,
+    status,
+    tutor,
+    student,
+    date,
+    summary,
+    meeting,
+    session_exit_form,
+  } = updatedSession;
 
   console.log(id);
   console.log(status);
@@ -754,6 +761,7 @@ export async function updateSession(updatedSession: Session) {
       date: date,
       // meeting_id: meetingId,
       // meeting: meeting,
+      summary: summary,
       meeting_id: meeting?.id,
       session_exit_form: session_exit_form,
     })
