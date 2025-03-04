@@ -49,6 +49,7 @@ import {
   addStudent,
   addEnrollment,
   createEnrollment,
+  getAllEnrollments,
 } from "@/lib/actions/admin.actions";
 import { getProfileByEmail } from "@/lib/actions/user.actions";
 import {
@@ -109,8 +110,8 @@ export default function MigrateDataPage() {
 
   const [tutorEmails, setTutorEmails] = useState<Set<String>>(new Set());
   const [studentEmails, setStudentEmails] = useState<Set<String>>(new Set());
-  const [uniqueEnrollments, setUniqueEnrollments] = useState<Set<String[]>>(
-    new Set([])
+  const [uniqueEnrollments, setUniqueEnrollments] = useState<Set<String>>(
+    new Set()
   );
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,6 +134,7 @@ export default function MigrateDataPage() {
   useEffect(() => {
     getTutorEmails();
     getStudentEmails();
+    getUniqueEnrollments();
   });
 
   const getTutorEmails = async () => {
@@ -168,6 +170,30 @@ export default function MigrateDataPage() {
       });
     } catch (error) {
       console.error("Failed to load students");
+    }
+  };
+
+  const getUniqueEnrollments = async () => {
+    try {
+      const data = await getAllEnrollments();
+      if (!data || !Array.isArray(data)) throw new Error("No pairings");
+      setUniqueEnrollments((prev) => {
+        return new Set([
+          ...Array.from(prev),
+          ...data
+            .map((pairing) =>
+              pairing.student &&
+              pairing.tutor &&
+              pairing.tutor.email &&
+              pairing.student.email
+                ? `${pairing.tutor.email}-${pairing.student.email}`
+                : ""
+            )
+            .filter((key) => key !== ""),
+        ]);
+      });
+    } catch (error) {
+      console.error("failed to fetch enrollments");
     }
   };
 
@@ -377,7 +403,15 @@ export default function MigrateDataPage() {
         studentEmails.add(migratedStudent.email);
         students.push(migratedStudent);
       }
-      pairings.push(migratedPairing);
+
+      if (migratedPairing.tutor && migratedPairing.student) {
+        const pairingKey = `${migratedPairing.tutor.email}-${migratedPairing.student.email}`;
+
+        if (!uniqueEnrollments.has(pairingKey)) {
+          uniqueEnrollments.add(pairingKey);
+          pairings.push(migratedPairing);
+        }
+      }
     }
     setTutors(tutors);
     setStudents(students);

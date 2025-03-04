@@ -889,8 +889,6 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
       }))
     );
 
-    console.log(data[0].student_id);
-
     return enrollments; // Return the array of enrollments
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);
