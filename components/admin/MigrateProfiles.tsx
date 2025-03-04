@@ -134,7 +134,7 @@ export default function MigrateDataPage() {
   useEffect(() => {
     getTutorEmails();
     getStudentEmails();
-    // getUniqueEnrollments();
+    getUniqueEnrollments();
   });
 
   const getTutorEmails = async () => {
@@ -398,7 +398,19 @@ export default function MigrateDataPage() {
         studentEmails.add(migratedStudent.email);
         students.push(migratedStudent);
       }
-      pairings.push(migratedPairing);
+
+      if (migratedPairing.tutor && migratedPairing.student) {
+        if (
+          !uniqueEnrollments.has(
+            `${migratedPairing.tutor.id}-${migratedPairing.student.id}`
+          )
+        ) {
+          uniqueEnrollments.add(
+            `${migratedPairing.tutor.id}-${migratedPairing.student.id}`
+          );
+          pairings.push(migratedPairing);
+        }
+      }
     }
     setTutors(tutors);
     setStudents(students);
