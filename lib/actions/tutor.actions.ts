@@ -4,6 +4,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile, Session } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./admin.actions";
+import { Stats } from "fs";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -13,7 +14,8 @@ const supabase = createClientComponentClient({
 export async function getTutorSessions(
   profileId: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  status?: string
 ): Promise<Session[]> {
   let query = supabase
     .from("Sessions")
@@ -37,6 +39,10 @@ export async function getTutorSessions(
   }
   if (endDate) {
     query = query.lte("date", endDate);
+  }
+
+  if (status) {
+    query = query.eq("status", status)
   }
 
   const { data, error } = await query;
