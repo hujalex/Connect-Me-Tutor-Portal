@@ -5,11 +5,12 @@ interface Profile {
   createdAt: string; // Date when the profile was created
   role: "Student" | "Tutor" | "Admin";
   userId: string; // Foreign key or identifier
-  age?: string;
-  grade?: string;
   firstName: string;
   lastName: string;
-  dateOfBirth: string; // Format: YYYY-MM-DD
+  age?: string;
+  grade?: string;
+  gender?: string;
+  dateOfBirth?: string; // Format: YYYY-MM-DD
   startDate: string; // Format: YYYY-MM-DD, start date of the user's involvement
   availability: { day: string; startTime: string; endTime: string }[]; // Example: [{ day: "Monday", time: "3PM-6PM" }]
   email: string;
@@ -68,7 +69,7 @@ interface Event {
   hours: number;
 }
 
-// Type for Student Enrollments
+// Type for Student s
 interface Enrollment {
   id: string;
   createdAt: string;
