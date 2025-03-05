@@ -670,7 +670,7 @@ const StudentList = () =>
                             // .filter((student) => student.status === "Active")
                             .map((student) => ({
                               value: student.id,
-                              label: `${student.firstName} ${student.lastName}`,
+                              label: `${student.firstName} ${student.lastName} - ${student.email}`,
                             }))}
                           category="student"
                           onValueChange={setSelectedStudentId}
@@ -709,7 +709,7 @@ const StudentList = () =>
                             // .filter((student) => student.status === "Inactive")
                             .map((student) => ({
                               value: student.id,
-                              label: `${student.firstName} ${student.lastName}`,
+                              label: `${student.firstName} ${student.lastName} - ${student.email}`,
                             }))}
                           category="student"
                           onValueChange={setSelectedStudentId}
@@ -751,6 +751,30 @@ const StudentList = () =>
                                 onChange={handleInputChangeForEdit}
                                 className="col-span-3"
                               ></Input>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="firstName" className="text-right">
+                                First Name
+                              </Label>
+                              <Input
+                                id="firstName"
+                                name="firstName"
+                                value={selectedStudent?.firstName}
+                                onChange={handleInputChangeForEdit}
+                                className="col-span-3"
+                              />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="lastName" className="text-right">
+                                Last Name
+                              </Label>
+                              <Input
+                                id="lastName"
+                                name="lastName"
+                                value={selectedStudent?.lastName}
+                                onChange={handleInputChangeForEdit}
+                                className="col-span-3"
+                              />
                             </div>
                             <div className="grid grid-cols-8 items-center gap-4">
                               <Label
@@ -802,43 +826,6 @@ const StudentList = () =>
                               </div>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="firstName" className="text-right">
-                                First Name
-                              </Label>
-                              <Input
-                                id="firstName"
-                                name="firstName"
-                                value={selectedStudent?.firstName}
-                                onChange={handleInputChangeForEdit}
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="lastName" className="text-right">
-                                Last Name
-                              </Label>
-                              <Input
-                                id="lastName"
-                                name="lastName"
-                                value={selectedStudent?.lastName}
-                                onChange={handleInputChangeForEdit}
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="email" className="text-right">
-                                Email
-                              </Label>
-                              <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                value={selectedStudent?.email}
-                                onChange={handleInputChangeForEdit}
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="gender" className="text-right">
                                 Gender
                               </Label>
@@ -862,6 +849,20 @@ const StudentList = () =>
                                 </Select>
                               </div>
                             </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="email" className="text-right">
+                                Email
+                              </Label>
+                              <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                value={selectedStudent?.email}
+                                onChange={handleInputChangeForEdit}
+                                className="col-span-3"
+                              />
+                            </div>
+
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="startDate" className="text-right">
                                 Start Date
