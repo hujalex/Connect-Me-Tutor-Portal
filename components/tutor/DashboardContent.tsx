@@ -39,6 +39,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getProfile } from "@/lib/actions/user.actions";
@@ -143,7 +148,7 @@ const TutorDashboard = () => {
       const sessionsData = await getTutorSessions(
         profileData.id,
         undefined,
-        endWeek
+        undefined
       ); // Params so that way tutor doesn't see sessions in later weeks
       if (!sessionsData) throw new Error("No sessions found");
 
@@ -175,6 +180,7 @@ const TutorDashboard = () => {
 
   const areMeetingsAvailableInCurrentWeek = async (session: Session) => {
     try {
+      console.log("Checking available meetings");
       setisCheckingMeetingAvailability(true);
       //---Only retrieve sessions again if you haven't already
       if (Object.keys(meetingAvailability).length === 0)
@@ -389,7 +395,7 @@ const TutorDashboard = () => {
                 <TableHead>Meeting</TableHead>
                 <TableHead>Reschedule</TableHead>
                 <TableHead>Request Substitute</TableHead>
-                <TableHead>Mark Complete</TableHead>
+                <TableHead>Session Exit Form</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -453,7 +459,7 @@ const TutorDashboard = () => {
                   </TableCell>
                   <TableCell>{formatSessionDate(session.date)}</TableCell>
                   <TableCell className="font-medium">
-                    Meeting with {session.student?.firstName}{" "}
+                    Tutoring Session with {session.student?.firstName}{" "}
                     {session.student?.lastName}
                   </TableCell>
                   <TableCell>
@@ -530,21 +536,20 @@ const TutorDashboard = () => {
                             <Select
                               name="meeting.id"
                               value={selectedSession?.meeting?.id}
+                              onOpenChange={(open) => {
+                                if (open && selectedSession) {
+                                  areMeetingsAvailableInCurrentWeek(
+                                    selectedSession
+                                  );
+                                }
+                              }}
                               onValueChange={(value) =>
                                 handleInputChange({
                                   target: { name: "meeting.id", value },
                                 } as any)
                               }
                             >
-                              <SelectTrigger
-                                onClick={() => {
-                                  if (selectedSession) {
-                                    areMeetingsAvailableInCurrentWeek(
-                                      selectedSession
-                                    );
-                                  }
-                                }}
-                              >
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select a meeting link">
                                   {selectedSession?.meeting?.id
                                     ? meetingAvailability[
@@ -557,13 +562,6 @@ const TutorDashboard = () => {
                                         )?.name
                                       : "Please select an available link"
                                     : "Select a meeting"}
-                                  {/* {selectedSession?.meeting?.id
-                                    ? meetingAvailability[
-                                        selectedSession.meeting.id
-                                      ]
-                                      ? ""
-                                      : "Please select another link"
-                                    : ""} */}
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
@@ -633,20 +631,33 @@ const TutorDashboard = () => {
                     </Button>
                   </TableCell>
                   <TableCell>
+                    {" "}
                     <Dialog
                       open={isSessionExitFormOpen}
                       onOpenChange={setIsSessionExitFormOpen}
                     >
                       <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setIsSessionExitFormOpen(true);
-                          }}
-                        >
-                          SEF
-                        </Button>
+                        <HoverCard>
+                          <HoverCardTrigger>
+                            {" "}
+                            <Button
+                              variant="outline"
+                              disabled={isAfter(session.date, Date.now())}
+                              onClick={() => {
+                                setSelectedSession(session);
+                                setIsSessionExitFormOpen(true);
+                              }}
+                            >
+                              SEF
+                            </Button>
+                          </HoverCardTrigger>
+                          <HoverCardContent>
+                            <div className="space-y-1">
+                              Session Exit Form will be available after your
+                              session
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>

@@ -193,7 +193,7 @@ const AdminDashboard = () => {
                 >
                   <TableCell>{formatSessionDate(session.date)}</TableCell>
                   <TableCell className="font-medium">
-                    Meeting with Tutor {session.tutor?.firstName}{" "}
+                    Tutoring Session with Tutor {session.tutor?.firstName}{" "}
                     {session.tutor?.lastName} and Student{" "}
                     {session.student?.firstName} {session.student?.lastName}
                   </TableCell>

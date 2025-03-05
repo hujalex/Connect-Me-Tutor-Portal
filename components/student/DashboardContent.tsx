@@ -215,7 +215,7 @@ const StudentDashboard = () => {
                 >
                   <TableCell>{formatSessionDate(session.date)}</TableCell>
                   <TableCell className="font-medium">
-                    Meeting with {session.tutor?.firstName}{" "}
+                    Tutoring Session with {session.tutor?.firstName}{" "}
                     {session.tutor?.lastName}
                   </TableCell>
                   <TableCell>

@@ -729,15 +729,18 @@ const EnrollmentList = () => {
                       <Select
                         name="meetingId"
                         value={newEnrollment.meetingId}
+                        onOpenChange={(open) => {
+                          if (open && newEnrollment) {
+                            areMeetingsAvailable(newEnrollment);
+                          }
+                        }}
                         onValueChange={(value) =>
                           handleInputChange({
                             target: { name: "meetingId", value },
                           } as any)
                         }
                       >
-                        <SelectTrigger
-                          onClick={() => areMeetingsAvailable(newEnrollment)}
-                        >
+                        <SelectTrigger>
                           <SelectValue placeholder="Select a meeting link">
                             {newEnrollment.meetingId
                               ? meetings.find(
@@ -1180,21 +1183,18 @@ const EnrollmentList = () => {
                 <Select
                   name="meetingId"
                   value={selectedEnrollment.meetingId}
-                  // onValueChange={(value) =>
-                  //   setSelectedEnrollment({
-                  //     ...selectedEnrollment,
-                  //     meetingId: value,
-                  //   })
-                  // }
+                  onOpenChange={(open) => {
+                    if (open && selectedEnrollment) {
+                      areMeetingsAvailable(selectedEnrollment);
+                    }
+                  }}
                   onValueChange={(value) =>
                     handleInputChange({
                       target: { name: "meetingId", value },
                     } as any)
                   }
                 >
-                  <SelectTrigger
-                    onClick={() => areMeetingsAvailable(selectedEnrollment)}
-                  >
+                  <SelectTrigger>
                     <SelectValue placeholder="Select a meeting link">
                       {selectedEnrollment.meetingId
                         ? meetings.find(
