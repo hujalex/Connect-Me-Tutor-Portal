@@ -15,21 +15,15 @@ export async function getTutorSessions(
   profileId: string,
   startDate?: string,
   endDate?: string,
-  status?: string
+  status?: string | string[],
+  orderby?: string,
+  ascending?: boolean
 ): Promise<Session[]> {
   let query = supabase
     .from("Sessions")
     .select(
       `
-      id,
-      status,
-      created_at,
-      environment,
-      student_id,
-      tutor_id,
-      date,
-      summary,
-      meeting_id
+     *
     `
     )
     .eq("tutor_id", profileId);
@@ -42,7 +36,15 @@ export async function getTutorSessions(
   }
 
   if (status) {
-    query = query.eq("status", status)
+    if (Array.isArray(status)) {
+      query = query.in("status", status);
+    } else {
+      query = query.eq("status", status);
+    }
+  }
+
+  if (orderby && ascending !== undefined) {
+    query = query.order(orderby, { ascending });
   }
 
   const { data, error } = await query;
@@ -68,6 +70,8 @@ export async function getTutorSessions(
       session_exit_form: session.session_exit_form,
     }))
   );
+
+  console.log("Tutor's sessions", sessions);
 
   return sessions;
 }

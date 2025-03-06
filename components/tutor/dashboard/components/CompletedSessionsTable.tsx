@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import { formatSessionDate } from "@/lib/utils";
 import { Session, Meeting } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ import {
   ChevronsRight,
   ChevronLeft,
   ChevronRight,
+  TableCellsMerge,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
 
@@ -102,6 +104,8 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
   handleInputChange,
   areMeetingsAvailableInCurrentWeek,
 }) => {
+  const [isMeetingNotesOpen, setIsMeetingNotesOpen] = useState(false);
+
   return (
     <>
       <Table>
@@ -111,28 +115,35 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Date</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Student</TableHead>
-            <TableHead>Meeting</TableHead>
+            <TableHead>Meeting Notes</TableHead>
+            {/* <TableHead>Meeting</TableHead>
             <TableHead>Reschedule</TableHead>
             <TableHead>Request Substitute</TableHead>
-            <TableHead>Session Exit Form</TableHead>
+            <TableHead>Session Exit Form</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {paginatedSessions.map((session, index) => (
             <TableRow
               key={index}
-              className={
-                session.status === "Active"
-                  ? ""
-                  : session.status === "Complete"
-                  ? "bg-green-200 opacity-50"
-                  : session.status === "Cancelled"
-                  ? "bg-red-100 opacity-50 "
-                  : ""
-              }
+              //   className={
+              //     session.status === "Active"
+              //       ? ""
+              //       : session.status === "Complete"
+              //       ? "bg-green-200 opacity-50"
+              //       : session.status === "Cancelled"
+              //       ? "bg-red-100 opacity-50 "
+              //       : ""
+              //   }
             >
               <TableCell>
-                <Select
+                {session.status === "Complete"
+                  ? "✅Complete "
+                  : session.status === "Cancelled"
+                  ? "❌Cancelled"
+                  : ""}
+
+                {/* <Select
                   value={session?.status}
                   onValueChange={(
                     value: "Active" | "Complete" | "Cancelled"
@@ -175,7 +186,7 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
                       Cancelled
                     </SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
               </TableCell>
               <TableCell>{formatSessionDate(session.date)}</TableCell>
               <TableCell className="font-medium">
@@ -185,7 +196,7 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
               <TableCell>
                 {session.student?.firstName} {session.student?.lastName}
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {session.environment !== "In-Person" && (
                   <>
                     {session?.meeting?.meetingId ? (
@@ -204,8 +215,8 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
                     )}
                   </>
                 )}
-              </TableCell>
-              <TableCell>
+              </TableCell> */}
+              {/* <TableCell>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
@@ -333,9 +344,9 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
                     </div>
                   </DialogContent>
                 </Dialog>
-              </TableCell>
+              </TableCell> */}
 
-              <TableCell>
+              {/* <TableCell>
                 <Button
                   variant="outline"
                   onClick={() =>
@@ -345,8 +356,8 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
                 >
                   Request a Sub
                 </Button>
-              </TableCell>
-              <TableCell>
+              </TableCell> */}
+              {/* <TableCell>
                 <Dialog
                   open={isSessionExitFormOpen}
                   onOpenChange={setIsSessionExitFormOpen}
@@ -405,6 +416,29 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
                     >
                       Mark Session Complete
                     </Button>
+                  </DialogContent>
+                </Dialog>
+              </TableCell> */}
+              <TableCell>
+                <Dialog
+                  open={isMeetingNotesOpen}
+                  onOpenChange={setIsMeetingNotesOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      onClick={() => {
+                        setIsMeetingNotesOpen(true);
+                        setSelectedSession(session);
+                      }}
+                    >
+                      View Session Notes
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Meeting Notes</DialogTitle>
+                    </DialogHeader>
+                    <Textarea>{selectedSession?.session_exit_form}</Textarea>
                   </DialogContent>
                 </Dialog>
               </TableCell>
