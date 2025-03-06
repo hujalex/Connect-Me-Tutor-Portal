@@ -34,7 +34,7 @@ interface Session {
   summary: string;
   // meetingId: string;
   meeting?: Meeting | null;
-  status: string;
+  status: "Active" | "Complete" | "Cancelled";
   session_exit_form: string;
 }
 

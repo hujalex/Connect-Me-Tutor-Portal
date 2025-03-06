@@ -39,6 +39,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getProfile } from "@/lib/actions/user.actions";
@@ -143,7 +148,7 @@ const TutorDashboard = () => {
       const sessionsData = await getTutorSessions(
         profileData.id,
         undefined,
-        endWeek
+        undefined
       ); // Params so that way tutor doesn't see sessions in later weeks
       if (!sessionsData) throw new Error("No sessions found");
 
@@ -175,6 +180,7 @@ const TutorDashboard = () => {
 
   const areMeetingsAvailableInCurrentWeek = async (session: Session) => {
     try {
+      console.log("Checking available meetings");
       setisCheckingMeetingAvailability(true);
       //---Only retrieve sessions again if you haven't already
       if (Object.keys(meetingAvailability).length === 0)
@@ -362,397 +368,415 @@ const TutorDashboard = () => {
   };
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Tutor Dashboard</h1>
+    <>
+      <div className="p-8">
+        <h1 className="text-3xl font-bold mb-6">Tutor Dashboard</h1>
 
-      <div className="flex space-x-6">
-        <div className="flex-grow bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-              <Input
-                type="text"
-                placeholder="Filter sessions..."
-                className="w-64"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
+        <div className="flex space-x-6">
+          <div className="flex-grow bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  placeholder="Filter sessions..."
+                  className="w-64"
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mark Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Meeting</TableHead>
-                <TableHead>Reschedule</TableHead>
-                <TableHead>Request Substitute</TableHead>
-                <TableHead>Mark Complete</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedSessions.map((session, index) => (
-                <TableRow
-                  key={index}
-                  className={
-                    session.status === "Active"
-                      ? ""
-                      : session.status === "Complete"
-                      ? "bg-green-200 opacity-50"
-                      : session.status === "Cancelled"
-                      ? "bg-red-100 opacity-50 "
-                      : ""
-                  }
-                >
-                  <TableCell>
-                    <Select
-                      value={session?.status}
-                      onValueChange={(value) => {
-                        const updatedSession: Session = {
-                          ...session,
-                          status: value,
-                        };
-                        handleStatusChange(updatedSession);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={session?.status}>
-                          {session.status ? session.status : "Select Status"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent
-                        className={
-                          session.status === "Complete" ? "opacity-50" : ""
-                        }
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mark Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Meeting</TableHead>
+                  <TableHead>Reschedule</TableHead>
+                  <TableHead>Request Substitute</TableHead>
+                  <TableHead>Session Exit Form</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedSessions.map((session, index) => (
+                  <TableRow
+                    key={index}
+                    className={
+                      session.status === "Active"
+                        ? ""
+                        : session.status === "Complete"
+                        ? "bg-green-200 opacity-50"
+                        : session.status === "Cancelled"
+                        ? "bg-red-100 opacity-50 "
+                        : ""
+                    }
+                  >
+                    <TableCell>
+                      <Select
+                        value={session?.status}
+                        onValueChange={(
+                          value: "Active" | "Complete" | "Cancelled"
+                        ) => {
+                          const updatedSession: Session = {
+                            ...session,
+                            status: value,
+                          };
+                          handleStatusChange(updatedSession);
+                        }}
                       >
-                        <SelectItem
-                          value="Active"
+                        <SelectTrigger>
+                          <SelectValue placeholder={session?.status}>
+                            {session.status ? session.status : "Select Status"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent
                           className={
-                            session.status === "Complete"
-                              ? "pointer-events-none"
-                              : ""
+                            session.status === "Complete" ? "opacity-50" : ""
                           }
                         >
-                          Active
-                        </SelectItem>
-                        {/* <SelectItem value="Complete">Complete</SelectItem> */}
-                        <SelectItem
-                          value="Cancelled"
-                          className={
-                            session.status === "Complete"
-                              ? "pointer-events-none"
-                              : ""
-                          }
-                        >
-                          Cancelled
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>{formatSessionDate(session.date)}</TableCell>
-                  <TableCell className="font-medium">
-                    Meeting with {session.student?.firstName}{" "}
-                    {session.student?.lastName}
-                  </TableCell>
-                  <TableCell>
-                    {session.student?.firstName} {session.student?.lastName}
-                  </TableCell>
-                  <TableCell>
-                    {session.environment !== "In-Person" && (
-                      <>
-                        {session?.meeting?.meetingId ? (
-                          <button
-                            onClick={() =>
-                              (window.location.href = `/meeting/${session?.meeting?.id}`)
-                            }
-                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                          >
-                            View
-                          </button>
-                        ) : (
-                          <button className="text-black px-3 py-1 border border-gray-200 rounded">
-                            N/A
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setIsDialogOpen(true);
-                            setSelectedSessionDate(session.date);
-                          }}
-                        >
-                          Reschedule
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>
-                            Reschedule Session with{" "}
-                            {selectedSession?.student?.firstName}{" "}
-                            {selectedSession?.student?.lastName} on{" "}
-                            {formatSessionDate(selectedSession?.date || "")}
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className="py-4 space-y-6">
-                          <Input
-                            type="datetime-local"
-                            // defaultValue={selectedSession?.date}
-                            disabled={isCheckingMeetingAvailability}
-                            defaultValue={
-                              selectedSession?.date
-                                ? format(
-                                    parseISO(selectedSession.date),
-                                    "yyyy-MM-dd'T'HH:mm"
-                                  )
+                          <SelectItem
+                            value="Active"
+                            className={
+                              session.status === "Complete"
+                                ? "pointer-events-none"
                                 : ""
                             }
-                            onChange={(e) => {
-                              if (selectedSession) {
-                                setSelectedSessionDate(
-                                  new Date(e.target.value).toISOString() //Converts chosen time to UTC for correct timezone conversions later
-                                );
-                                setMeetingAvailability({}); // Reset Meeting Availability upon date change
+                          >
+                            Active
+                          </SelectItem>
+                          {/* <SelectItem value="Complete">Complete</SelectItem> */}
+                          <SelectItem
+                            value="Cancelled"
+                            className={
+                              session.status === "Complete"
+                                ? "pointer-events-none"
+                                : ""
+                            }
+                          >
+                            Cancelled
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>{formatSessionDate(session.date)}</TableCell>
+                    <TableCell className="font-medium">
+                      Tutoring Session with {session.student?.firstName}{" "}
+                      {session.student?.lastName}
+                    </TableCell>
+                    <TableCell>
+                      {session.student?.firstName} {session.student?.lastName}
+                    </TableCell>
+                    <TableCell>
+                      {session.environment !== "In-Person" && (
+                        <>
+                          {session?.meeting?.meetingId ? (
+                            <button
+                              onClick={() =>
+                                (window.location.href = `/meeting/${session?.meeting?.id}`)
                               }
-                            }}
-                          />
-
-                          <div>
-                            <Label>Meeting Link</Label>
-                            <Select
-                              name="meeting.id"
-                              value={selectedSession?.meeting?.id}
-                              onValueChange={(value) =>
-                                handleInputChange({
-                                  target: { name: "meeting.id", value },
-                                } as any)
-                              }
+                              className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                             >
-                              <SelectTrigger
-                                onClick={() => {
-                                  if (selectedSession) {
+                              View
+                            </button>
+                          ) : (
+                            <button className="text-black px-3 py-1 border border-gray-200 rounded">
+                              N/A
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Dialog
+                        open={isDialogOpen}
+                        onOpenChange={setIsDialogOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedSession(session);
+                              setIsDialogOpen(true);
+                              setSelectedSessionDate(session.date);
+                            }}
+                          >
+                            Reschedule
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>
+                              Reschedule Session with{" "}
+                              {selectedSession?.student?.firstName}{" "}
+                              {selectedSession?.student?.lastName} on{" "}
+                              {formatSessionDate(selectedSession?.date || "")}
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="py-4 space-y-6">
+                            <Input
+                              type="datetime-local"
+                              // defaultValue={selectedSession?.date}
+                              disabled={isCheckingMeetingAvailability}
+                              defaultValue={
+                                selectedSession?.date
+                                  ? format(
+                                      parseISO(selectedSession.date),
+                                      "yyyy-MM-dd'T'HH:mm"
+                                    )
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                if (selectedSession) {
+                                  setSelectedSessionDate(
+                                    new Date(e.target.value).toISOString() //Converts chosen time to UTC for correct timezone conversions later
+                                  );
+                                  setMeetingAvailability({}); // Reset Meeting Availability upon date change
+                                }
+                              }}
+                            />
+
+                            <div>
+                              <Label>Meeting Link</Label>
+                              <Select
+                                name="meeting.id"
+                                value={selectedSession?.meeting?.id}
+                                onOpenChange={(open) => {
+                                  if (open && selectedSession) {
                                     areMeetingsAvailableInCurrentWeek(
                                       selectedSession
                                     );
                                   }
                                 }}
+                                onValueChange={(value) =>
+                                  handleInputChange({
+                                    target: { name: "meeting.id", value },
+                                  } as any)
+                                }
                               >
-                                <SelectValue placeholder="Select a meeting link">
-                                  {selectedSession?.meeting?.id
-                                    ? meetingAvailability[
-                                        selectedSession.meeting.id
-                                      ]
-                                      ? meetings.find(
-                                          (meeting) =>
-                                            meeting.id ===
-                                            selectedSession?.meeting?.id
-                                        )?.name
-                                      : "Please select an available link"
-                                    : "Select a meeting"}
-                                  {/* {selectedSession?.meeting?.id
-                                    ? meetingAvailability[
-                                        selectedSession.meeting.id
-                                      ]
-                                      ? ""
-                                      : "Please select another link"
-                                    : ""} */}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {meetings.map((meeting) => (
-                                  <SelectItem
-                                    key={meeting.id}
-                                    value={meeting.id}
-                                    disabled={!meetingAvailability[meeting.id]}
-                                    className={`flex items-center justify-between ${!meetingAvailability[
-                                      meeting.id
-                                    ]} ? "opacity-50" : ""`}
-                                  >
-                                    <span>
-                                      {meeting.name} - {meeting.id}
-                                    </span>
-                                    <Circle
-                                      className={`w-2 h-2 ml-2 ${
-                                        meetingAvailability[meeting.id]
-                                          ? "text-green-500"
-                                          : "text-red-500"
-                                      } fill-current`}
-                                    />
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a meeting link">
+                                    {selectedSession?.meeting?.id
+                                      ? meetingAvailability[
+                                          selectedSession.meeting.id
+                                        ]
+                                        ? meetings.find(
+                                            (meeting) =>
+                                              meeting.id ===
+                                              selectedSession?.meeting?.id
+                                          )?.name
+                                        : "Please select an available link"
+                                      : "Select a meeting"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {meetings.map((meeting) => (
+                                    <SelectItem
+                                      key={meeting.id}
+                                      value={meeting.id}
+                                      disabled={
+                                        !meetingAvailability[meeting.id]
+                                      }
+                                      className={`flex items-center justify-between ${!meetingAvailability[
+                                        meeting.id
+                                      ]} ? "opacity-50" : ""`}
+                                    >
+                                      <span>
+                                        {meeting.name} - {meeting.id}
+                                      </span>
+                                      <Circle
+                                        className={`w-2 h-2 ml-2 ${
+                                          meetingAvailability[meeting.id]
+                                            ? "text-green-500"
+                                            : "text-red-500"
+                                        } fill-current`}
+                                      />
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
 
+                            <Button
+                              disabled={
+                                isCheckingMeetingAvailability ||
+                                !selectedSession?.meeting?.id ||
+                                !meetingAvailability[selectedSession.meeting.id]
+                              }
+                              onClick={() =>
+                                selectedSession &&
+                                selectedSessionDate &&
+                                handleReschedule(
+                                  selectedSession?.id,
+                                  selectedSessionDate
+                                )
+                              }
+                            >
+                              {isCheckingMeetingAvailability ? (
+                                <>
+                                  Checking Meeting Link Availability{"   "}
+                                  <Loader2 className="mx-2 h-4 w-4 animate-spin" />
+                                </>
+                              ) : (
+                                "Send Reschedule Request"
+                              )}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          (window.location.href =
+                            "https://forms.gle/AC4an7K6NSNumDwKA")
+                        }
+                      >
+                        Request a Sub
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      <Dialog
+                        open={isSessionExitFormOpen}
+                        onOpenChange={setIsSessionExitFormOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <HoverCard>
+                            <HoverCardTrigger>
+                              {" "}
+                              <Button
+                                variant="outline"
+                                disabled={isAfter(session.date, Date.now())}
+                                onClick={() => {
+                                  setSelectedSession(session);
+                                  setIsSessionExitFormOpen(true);
+                                }}
+                              >
+                                SEF
+                              </Button>
+                            </HoverCardTrigger>
+                            <HoverCardContent>
+                              <div className="space-y-1">
+                                Session Exit Form will be available after your
+                                session
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Session Exit Form</DialogTitle>
+                          </DialogHeader>
+                          <Textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="In 2-4 sentences, What did you cover during your session?"
+                          />
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="next-class"
+                              checked={nextClassConfirmed}
+                              onCheckedChange={(checked) =>
+                                setNextClassConfirmed(checked === true)
+                              }
+                            />
+                            <label
+                              htmlFor="next-class"
+                              className="text-sm font-medium"
+                            >
+                              Does your student know about your next class?
+                            </label>
+                          </div>
                           <Button
-                            disabled={
-                              isCheckingMeetingAvailability ||
-                              !selectedSession?.meeting?.id ||
-                              !meetingAvailability[selectedSession.meeting.id]
-                            }
                             onClick={() =>
                               selectedSession &&
-                              selectedSessionDate &&
-                              handleReschedule(
-                                selectedSession?.id,
-                                selectedSessionDate
-                              )
+                              handleSessionComplete(selectedSession, notes)
                             }
+                            disabled={!notes || !nextClassConfirmed}
                           >
-                            {isCheckingMeetingAvailability ? (
-                              <>
-                                Checking Meeting Link Availability{"   "}
-                                <Loader2 className="mx-2 h-4 w-4 animate-spin" />
-                              </>
-                            ) : (
-                              "Send Reschedule Request"
-                            )}
+                            Mark Session Complete
                           </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        (window.location.href =
-                          "https://forms.gle/AC4an7K6NSNumDwKA")
-                      }
-                    >
-                      Request a Sub
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Dialog
-                      open={isSessionExitFormOpen}
-                      onOpenChange={setIsSessionExitFormOpen}
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setIsSessionExitFormOpen(true);
-                          }}
-                        >
-                          SEF
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Session Exit Form</DialogTitle>
-                        </DialogHeader>
-                        <Textarea
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          placeholder="In 2-4 sentences, What did you cover during your session?"
-                        />
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="next-class"
-                            checked={nextClassConfirmed}
-                            onCheckedChange={(checked) =>
-                              setNextClassConfirmed(checked === true)
-                            }
-                          />
-                          <label
-                            htmlFor="next-class"
-                            className="text-sm font-medium"
-                          >
-                            Does your student know about your next class?
-                          </label>
-                        </div>
-                        <Button
-                          onClick={() =>
-                            selectedSession &&
-                            handleSessionComplete(selectedSession, notes)
-                          }
-                          disabled={!notes || !nextClassConfirmed}
-                        >
-                          Mark Session Complete
-                        </Button>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          <div className="mt-4 flex justify-between items-center">
-            <span>{filteredSessions.length} row(s) total.</span>
-            <div className="flex items-center space-x-2">
-              <span>Rows per page</span>
-              <Select
-                value={rowsPerPage.toString()}
-                onValueChange={handleRowsPerPageChange}
-              >
-                <SelectTrigger className="w-[70px]">
-                  <SelectValue placeholder={rowsPerPage.toString()} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex space-x-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
+            <div className="mt-4 flex justify-between items-center">
+              <span>{filteredSessions.length} row(s) total.</span>
+              <div className="flex items-center space-x-2">
+                <span>Rows per page</span>
+                <Select
+                  value={rowsPerPage.toString()}
+                  onValueChange={handleRowsPerPageChange}
                 >
-                  <ChevronsLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
+                  <SelectTrigger className="w-[70px]">
+                    <SelectValue placeholder={rowsPerPage.toString()} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="w-80">
-          <TutorCalendar sessions={sessions} />
+          <div className="w-80">
+            <TutorCalendar sessions={sessions} />
+          </div>
         </div>
       </div>
-    </main>
+    </>
   );
 };
 
 export default TutorDashboard;
+
+// import TutorDashboard from "./dashboard";
+
+// export default TutorDashboard;

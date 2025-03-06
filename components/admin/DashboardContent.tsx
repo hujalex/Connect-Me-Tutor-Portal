@@ -182,18 +182,18 @@ const AdminDashboard = () => {
                 <TableRow
                   key={index}
                   className={
-                    session.status === "ACTIVE"
+                    session.status === "Active"
                       ? ""
-                      : session.status === "COMPLETE"
+                      : session.status === "Complete"
                       ? "bg-green-200 opacity-25 pointer-events-none"
-                      : session.status === "RESCHEDULED"
+                      : session.status === "Cancelled"
                       ? "bg-red-100 opacity-25 pointer-events-none"
                       : ""
                   }
                 >
                   <TableCell>{formatSessionDate(session.date)}</TableCell>
                   <TableCell className="font-medium">
-                    Meeting with Tutor {session.tutor?.firstName}{" "}
+                    Tutoring Session with Tutor {session.tutor?.firstName}{" "}
                     {session.tutor?.lastName} and Student{" "}
                     {session.student?.firstName} {session.student?.lastName}
                   </TableCell>
