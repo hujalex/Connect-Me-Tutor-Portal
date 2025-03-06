@@ -204,11 +204,11 @@ const StudentDashboard = () => {
                 <TableRow
                   key={index}
                   className={
-                    session.status === "ACTIVE"
+                    session.status === "Active"
                       ? ""
-                      : session.status === "COMPLETE"
+                      : session.status === "Complete"
                       ? "bg-green-200 opacity-25 pointer-events-none"
-                      : session.status === "RESCHEDULED"
+                      : session.status === "Cancelled"
                       ? "bg-red-100 opacity-25 pointer-events-none"
                       : ""
                   }
@@ -301,16 +301,16 @@ const StudentDashboard = () => {
                     </Dialog>
                   </TableCell>
                   <TableCell>
-                    {!session.summary && session.status !== "COMPLETE" && (
+                    {!session.summary && session.status !== "Complete" && (
                       <div className="grid w-full gap-2">
                         <Label>NOTE: Please send in your summary.</Label>
                         <Textarea
                           onChange={(e) => {
                             const newSummary = e.target.value;
                             setSessionSummary(newSummary);
-                            if (selectedSession?.id) {
+                            if (session) {
                               const updatedSession: Session = {
-                                ...selectedSession,
+                                ...session,
                                 summary: newSummary,
                               };
                               handleUpdateSessionSummary(updatedSession);

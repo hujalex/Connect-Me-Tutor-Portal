@@ -14,6 +14,7 @@ import {
   ChevronsUpDown,
   Check,
   Circle,
+  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,8 @@ const EnrollmentList = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCheckingMeetingAvailability, setIsCheckingMeetingAvailability] =
+    useState(false);
   const [selectedEnrollment, setSelectedEnrollment] =
     useState<Enrollment | null>(null);
   const [newEnrollment, setNewEnrollment] = useState<
@@ -212,6 +215,7 @@ const EnrollmentList = () => {
   const areMeetingsAvailable = (
     enroll: Omit<Enrollment, "id" | "createdAt">
   ) => {
+    setIsCheckingMeetingAvailability(true);
     const updatedMeetingAvailability: { [key: string]: boolean } = {};
     meetings.forEach((meeting) => {
       updatedMeetingAvailability[meeting.id] = true;
@@ -250,6 +254,7 @@ const EnrollmentList = () => {
         updatedMeetingAvailability[enrollment.meetingId] = false;
       }
     }
+    setIsCheckingMeetingAvailability(false);
     setMeetingAvailability(updatedMeetingAvailability);
     Object.entries(updatedMeetingAvailability).forEach(
       ([meetingId, isAvailable]) => {
@@ -339,6 +344,7 @@ const EnrollmentList = () => {
       setError(
         error instanceof Error ? error.message : "An unknown error occurred"
       );
+      setIsCheckingMeetingAvailability(true); // Ensures that new enrollments are not accidentally added when unable to check for available meeting links
     } finally {
       setLoading(false);
     }
@@ -742,12 +748,19 @@ const EnrollmentList = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a meeting link">
-                            {newEnrollment.meetingId
-                              ? meetings.find(
-                                  (meeting) =>
-                                    meeting.id === newEnrollment.meetingId
-                                )?.name
-                              : "Select a meeting"}
+                            {isCheckingMeetingAvailability ? (
+                              <>
+                                Checking meeting availabilites
+                                <Loader2 className="mx-2 h-4 w-4 animate-spin" />
+                              </>
+                            ) : newEnrollment.meetingId ? (
+                              meetings.find(
+                                (meeting) =>
+                                  meeting.id === newEnrollment.meetingId
+                              )?.name
+                            ) : (
+                              "Select a meeting"
+                            )}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>

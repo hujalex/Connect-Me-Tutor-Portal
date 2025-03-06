@@ -182,11 +182,11 @@ const AdminDashboard = () => {
                 <TableRow
                   key={index}
                   className={
-                    session.status === "ACTIVE"
+                    session.status === "Active"
                       ? ""
-                      : session.status === "COMPLETE"
+                      : session.status === "Complete"
                       ? "bg-green-200 opacity-25 pointer-events-none"
-                      : session.status === "RESCHEDULED"
+                      : session.status === "Cancelled"
                       ? "bg-red-100 opacity-25 pointer-events-none"
                       : ""
                   }

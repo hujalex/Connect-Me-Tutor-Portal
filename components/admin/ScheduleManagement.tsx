@@ -444,14 +444,16 @@ const Schedule = () => {
                   <Label>Status</Label>
                   <Select
                     value={selectedSession?.status}
-                    onValueChange={(value) => {
-                      console.log("Selected value:", value); // Log the selected value
-                      if (value) {
+                    onValueChange={(
+                      value: "Active" | "Complete" | "Cancelled"
+                    ) => {
+                      console.log("Selected value:", value);
+                      if (value && selectedSession) {
                         const updatedSession = {
                           ...selectedSession,
                           status: value,
                         };
-                        console.log("Updated session:", updatedSession); // Log the updated session
+                        console.log("Updated session:", updatedSession);
                         setSelectedSession(updatedSession);
                       }
                     }}
