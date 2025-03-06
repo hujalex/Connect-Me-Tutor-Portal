@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scrollarea";
 import {
   Command,
   CommandEmpty,
@@ -510,282 +511,285 @@ const EnrollmentList = () => {
                   <DialogHeader>
                     <DialogTitle>Add New Enrollment</DialogTitle>
                   </DialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      {" "}
-                      <Label htmlFor="tutor" className="text-right">
-                        Student
-                      </Label>
-                      <Popover
-                        open={openStudentOptions}
-                        onOpenChange={setOpenStudentOptions}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openStudentOptions}
-                            className="col-span-3"
-                          >
-                            {selectedStudentId ? (
-                              <>
-                                {
-                                  students.find(
-                                    (student) =>
-                                      student.id === selectedStudentId
-                                  )?.firstName
-                                }{" "}
-                                {
-                                  students.find(
-                                    (student) =>
-                                      student.id === selectedStudentId
-                                  )?.lastName
-                                }
-                              </>
-                            ) : (
-                              "Select a student"
-                            )}
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search student..."
-                              value={studentSearch}
-                              onValueChange={setStudentSearch}
-                            />
-                            <CommandList>
-                              <CommandEmpty>No student found.</CommandEmpty>
-                              <CommandGroup>
-                                {students.map((student) => (
-                                  <CommandItem
-                                    key={student.id}
-                                    value={`${student.firstName} ${student.lastName}`}
-                                    onSelect={(currentValue: string) => {
-                                      const selectedStudent = students.find(
-                                        (t) =>
-                                          `${t.firstName} ${t.lastName}` ===
-                                          currentValue
-                                      );
-                                      if (selectedStudent) {
-                                        setSelectedStudentId(
-                                          selectedStudent.id
-                                        );
-                                        handleInputChange({
-                                          target: {
-                                            name: "student.id",
-                                            value: selectedStudent.id,
-                                          },
-                                        });
-                                      }
-                                      setOpenStudentOptions(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        selectedStudentId === student.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {student.firstName} {student.lastName}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      {" "}
-                      <Label htmlFor="tutor" className="text-right">
-                        Tutor
-                      </Label>
-                      <Popover
-                        open={openTutorOptions}
-                        onOpenChange={setOpentTutorOptions}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openTutorOptions}
-                            className="col-span-3"
-                          >
-                            {selectedTutorId ? (
-                              <>
-                                {
-                                  tutors.find(
-                                    (tutor) => tutor.id === selectedTutorId
-                                  )?.firstName
-                                }{" "}
-                                {
-                                  tutors.find(
-                                    (tutor) => tutor.id === selectedTutorId
-                                  )?.lastName
-                                }
-                              </>
-                            ) : (
-                              "Select a tutor"
-                            )}
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search Tutor..."
-                              value={tutorSearch}
-                              onValueChange={setTutorSearch}
-                            />
-                            <CommandList>
-                              <CommandEmpty>No Tutor found.</CommandEmpty>
-                              <CommandGroup>
-                                {tutors.map((tutor) => (
-                                  <CommandItem
-                                    key={tutor.id}
-                                    value={`${tutor.firstName} ${tutor.lastName}`}
-                                    onSelect={(currentValue: string) => {
-                                      const selectedTutor = tutors.find(
-                                        (t) =>
-                                          `${t.firstName} ${t.lastName}` ===
-                                          currentValue
-                                      );
-                                      if (selectedTutor) {
-                                        setSelectedTutorId(selectedTutor.id);
-                                        handleInputChange({
-                                          target: {
-                                            name: "tutor.id",
-                                            value: selectedTutor.id,
-                                          },
-                                        });
-                                      }
-                                      setOpentTutorOptions(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        selectedTutorId === tutor.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {tutor.firstName} {tutor.lastName}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <AvailabilityForm
-                      // availabilityList={newEnrollment.availability}
-                      availabilityList={availabilityList} // new enrollment by default will not have an availability
-                      setAvailabilityList={(availability) => {
-                        setAvailabilityList(availability);
-                        setNewEnrollment({ ...newEnrollment, availability });
-                      }}
-                    />
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="summary" className="text-right">
-                        Summary
-                      </Label>
-                      <Input
-                        id="summary"
-                        name="summary"
-                        value={newEnrollment.summary}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="startDate" className="text-right">
-                        Start Date
-                      </Label>
-                      <Input
-                        id="startDate"
-                        name="startDate"
-                        type="date"
-                        value={newEnrollment.startDate}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="endDate" className="text-right">
-                        End Date
-                      </Label>
-                      <Input
-                        id="endDate"
-                        name="endDate"
-                        type="date"
-                        value={newEnrollment.endDate}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div>
-                      <Label>Meeting Link</Label>
-                      <Select
-                        name="meetingId"
-                        value={newEnrollment.meetingId}
-                        onOpenChange={(open) => {
-                          if (open && newEnrollment) {
-                            areMeetingsAvailable(newEnrollment);
-                          }
-                        }}
-                        onValueChange={(value) =>
-                          handleInputChange({
-                            target: { name: "meetingId", value },
-                          } as any)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a meeting link">
-                            {isCheckingMeetingAvailability ? (
-                              <>
-                                Checking meeting availabilites
-                                <Loader2 className="mx-2 h-4 w-4 animate-spin" />
-                              </>
-                            ) : newEnrollment.meetingId ? (
-                              meetings.find(
-                                (meeting) =>
-                                  meeting.id === newEnrollment.meetingId
-                              )?.name
-                            ) : (
-                              "Select a meeting"
-                            )}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {meetings.map((meeting) => (
-                            <SelectItem
-                              key={meeting.id}
-                              value={meeting.id}
-                              className="flex items-center justify-between"
+                  <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+                    {" "}
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        {" "}
+                        <Label htmlFor="tutor" className="text-right">
+                          Student
+                        </Label>
+                        <Popover
+                          open={openStudentOptions}
+                          onOpenChange={setOpenStudentOptions}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openStudentOptions}
+                              className="col-span-3"
                             >
-                              <span>
-                                {meeting.name} - {meeting.id}
-                              </span>
-                              <Circle
-                                className={`w-2 h-2 ml-2 ${
-                                  meetingAvailability[meeting.id]
-                                    ? "text-green-500"
-                                    : "text-red-500"
-                                } fill-current`}
+                              {selectedStudentId ? (
+                                <>
+                                  {
+                                    students.find(
+                                      (student) =>
+                                        student.id === selectedStudentId
+                                    )?.firstName
+                                  }{" "}
+                                  {
+                                    students.find(
+                                      (student) =>
+                                        student.id === selectedStudentId
+                                    )?.lastName
+                                  }
+                                </>
+                              ) : (
+                                "Select a student"
+                              )}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search student..."
+                                value={studentSearch}
+                                onValueChange={setStudentSearch}
                               />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              <CommandList>
+                                <CommandEmpty>No student found.</CommandEmpty>
+                                <CommandGroup>
+                                  {students.map((student) => (
+                                    <CommandItem
+                                      key={student.id}
+                                      value={`${student.firstName} ${student.lastName}`}
+                                      onSelect={(currentValue: string) => {
+                                        const selectedStudent = students.find(
+                                          (t) =>
+                                            `${t.firstName} ${t.lastName}` ===
+                                            currentValue
+                                        );
+                                        if (selectedStudent) {
+                                          setSelectedStudentId(
+                                            selectedStudent.id
+                                          );
+                                          handleInputChange({
+                                            target: {
+                                              name: "student.id",
+                                              value: selectedStudent.id,
+                                            },
+                                          });
+                                        }
+                                        setOpenStudentOptions(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          selectedStudentId === student.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {student.firstName} {student.lastName}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        {" "}
+                        <Label htmlFor="tutor" className="text-right">
+                          Tutor
+                        </Label>
+                        <Popover
+                          open={openTutorOptions}
+                          onOpenChange={setOpentTutorOptions}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openTutorOptions}
+                              className="col-span-3"
+                            >
+                              {selectedTutorId ? (
+                                <>
+                                  {
+                                    tutors.find(
+                                      (tutor) => tutor.id === selectedTutorId
+                                    )?.firstName
+                                  }{" "}
+                                  {
+                                    tutors.find(
+                                      (tutor) => tutor.id === selectedTutorId
+                                    )?.lastName
+                                  }
+                                </>
+                              ) : (
+                                "Select a tutor"
+                              )}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search Tutor..."
+                                value={tutorSearch}
+                                onValueChange={setTutorSearch}
+                              />
+                              <CommandList>
+                                <CommandEmpty>No Tutor found.</CommandEmpty>
+                                <CommandGroup>
+                                  {tutors.map((tutor) => (
+                                    <CommandItem
+                                      key={tutor.id}
+                                      value={`${tutor.firstName} ${tutor.lastName}`}
+                                      onSelect={(currentValue: string) => {
+                                        const selectedTutor = tutors.find(
+                                          (t) =>
+                                            `${t.firstName} ${t.lastName}` ===
+                                            currentValue
+                                        );
+                                        if (selectedTutor) {
+                                          setSelectedTutorId(selectedTutor.id);
+                                          handleInputChange({
+                                            target: {
+                                              name: "tutor.id",
+                                              value: selectedTutor.id,
+                                            },
+                                          });
+                                        }
+                                        setOpentTutorOptions(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          selectedTutorId === tutor.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {tutor.firstName} {tutor.lastName}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <AvailabilityForm
+                        // availabilityList={newEnrollment.availability}
+                        availabilityList={availabilityList} // new enrollment by default will not have an availability
+                        setAvailabilityList={(availability) => {
+                          setAvailabilityList(availability);
+                          setNewEnrollment({ ...newEnrollment, availability });
+                        }}
+                      />
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="summary" className="text-right">
+                          Summary
+                        </Label>
+                        <Input
+                          id="summary"
+                          name="summary"
+                          value={newEnrollment.summary}
+                          onChange={handleInputChange}
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="startDate" className="text-right">
+                          Start Date
+                        </Label>
+                        <Input
+                          id="startDate"
+                          name="startDate"
+                          type="date"
+                          value={newEnrollment.startDate}
+                          onChange={handleInputChange}
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="endDate" className="text-right">
+                          End Date
+                        </Label>
+                        <Input
+                          id="endDate"
+                          name="endDate"
+                          type="date"
+                          value={newEnrollment.endDate}
+                          onChange={handleInputChange}
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div>
+                        <Label>Meeting Link</Label>
+                        <Select
+                          name="meetingId"
+                          value={newEnrollment.meetingId}
+                          onOpenChange={(open) => {
+                            if (open && newEnrollment) {
+                              areMeetingsAvailable(newEnrollment);
+                            }
+                          }}
+                          onValueChange={(value) =>
+                            handleInputChange({
+                              target: { name: "meetingId", value },
+                            } as any)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a meeting link">
+                              {isCheckingMeetingAvailability ? (
+                                <>
+                                  Checking meeting availabilites
+                                  <Loader2 className="mx-2 h-4 w-4 animate-spin" />
+                                </>
+                              ) : newEnrollment.meetingId ? (
+                                meetings.find(
+                                  (meeting) =>
+                                    meeting.id === newEnrollment.meetingId
+                                )?.name
+                              ) : (
+                                "Select a meeting"
+                              )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {meetings.map((meeting) => (
+                              <SelectItem
+                                key={meeting.id}
+                                value={meeting.id}
+                                className="flex items-center justify-between"
+                              >
+                                <span>
+                                  {meeting.name} - {meeting.id}
+                                </span>
+                                <Circle
+                                  className={`w-2 h-2 ml-2 ${
+                                    meetingAvailability[meeting.id]
+                                      ? "text-green-500"
+                                      : "text-red-500"
+                                  } fill-current`}
+                                />
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
+                  </ScrollArea>
+
                   <Button onClick={handleAddEnrollment}>Add Enrollment</Button>
                 </DialogContent>
               </Dialog>
@@ -930,13 +934,15 @@ const EnrollmentList = () => {
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
-          {selectedEnrollment && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="studentId" className="text-right">
-                  Student
-                </Label>
-                {/* <Select
+          <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+            {" "}
+            {selectedEnrollment && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="studentId" className="text-right">
+                    Student
+                  </Label>
+                  {/* <Select
                   name="studentId"
                   value={selectedEnrollment.student?.id}
                   onValueChange={(value) =>
@@ -957,92 +963,92 @@ const EnrollmentList = () => {
                   </SelectContent>
                 </Select> */}
 
-                <Popover
-                  open={openStudentOptions}
-                  onOpenChange={setOpenStudentOptions}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openStudentOptions}
-                      className="col-span-3"
-                    >
-                      {selectedEnrollment.student?.id ? (
-                        <>
-                          {
-                            students.find(
-                              (student) =>
-                                student.id === selectedEnrollment.student?.id
-                            )?.firstName
-                          }{" "}
-                          {
-                            students.find(
-                              (student) =>
-                                student.id === selectedEnrollment.student?.id
-                            )?.lastName
-                          }
-                        </>
-                      ) : (
-                        "Select a student"
-                      )}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search Student..."
-                        value={studentSearch}
-                        onValueChange={setStudentSearch}
-                      />
-                      <CommandList>
-                        <CommandEmpty>No student found.</CommandEmpty>
-                        <CommandGroup>
-                          {students.map((student) => (
-                            <CommandItem
-                              key={student.id}
-                              value={`${student.firstName} ${student.lastName}`}
-                              onSelect={(currentValue: string) => {
-                                const selectedStudent = students.find(
-                                  (t) =>
-                                    `${t.firstName} ${t.lastName}` ===
-                                    currentValue
-                                );
-                                if (selectedStudent) {
-                                  setSelectedStudentId(selectedStudent.id);
-                                  handleInputChange({
-                                    target: {
-                                      name: "student.id",
-                                      value: selectedStudent.id,
-                                    },
-                                  });
-                                }
-                                setOpenStudentOptions(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedStudentId === student.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {student.firstName} {student.lastName}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tutorId" className="text-right">
-                  Tutor
-                </Label>
-                {/* <Select
+                  <Popover
+                    open={openStudentOptions}
+                    onOpenChange={setOpenStudentOptions}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openStudentOptions}
+                        className="col-span-3"
+                      >
+                        {selectedEnrollment.student?.id ? (
+                          <>
+                            {
+                              students.find(
+                                (student) =>
+                                  student.id === selectedEnrollment.student?.id
+                              )?.firstName
+                            }{" "}
+                            {
+                              students.find(
+                                (student) =>
+                                  student.id === selectedEnrollment.student?.id
+                              )?.lastName
+                            }
+                          </>
+                        ) : (
+                          "Select a student"
+                        )}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search Student..."
+                          value={studentSearch}
+                          onValueChange={setStudentSearch}
+                        />
+                        <CommandList>
+                          <CommandEmpty>No student found.</CommandEmpty>
+                          <CommandGroup>
+                            {students.map((student) => (
+                              <CommandItem
+                                key={student.id}
+                                value={`${student.firstName} ${student.lastName}`}
+                                onSelect={(currentValue: string) => {
+                                  const selectedStudent = students.find(
+                                    (t) =>
+                                      `${t.firstName} ${t.lastName}` ===
+                                      currentValue
+                                  );
+                                  if (selectedStudent) {
+                                    setSelectedStudentId(selectedStudent.id);
+                                    handleInputChange({
+                                      target: {
+                                        name: "student.id",
+                                        value: selectedStudent.id,
+                                      },
+                                    });
+                                  }
+                                  setOpenStudentOptions(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedStudentId === student.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {student.firstName} {student.lastName}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="tutorId" className="text-right">
+                    Tutor
+                  </Label>
+                  {/* <Select
                   name="tutorId"
                   value={selectedEnrollment.tutor?.id}
                   onValueChange={(value) =>
@@ -1063,184 +1069,186 @@ const EnrollmentList = () => {
                   </SelectContent>
                 </Select> */}
 
-                <Popover
-                  open={openTutorOptions}
-                  onOpenChange={setOpentTutorOptions}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openTutorOptions}
-                      className="col-span-3"
-                    >
-                      {selectedEnrollment.tutor?.id ? (
-                        <>
-                          {
-                            tutors.find(
-                              (tutor) =>
-                                tutor.id === selectedEnrollment.tutor?.id
-                            )?.firstName
-                          }{" "}
-                          {
-                            tutors.find(
-                              (tutor) =>
-                                tutor.id === selectedEnrollment.tutor?.id
-                            )?.lastName
-                          }
-                        </>
-                      ) : (
-                        "Select a tutor"
-                      )}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search Tutor..."
-                        value={tutorSearch}
-                        onValueChange={setTutorSearch}
-                      />
-                      <CommandList>
-                        <CommandEmpty>No Tutor found.</CommandEmpty>
-                        <CommandGroup>
-                          {tutors.map((tutor) => (
-                            <CommandItem
-                              key={tutor.id}
-                              value={`${tutor.firstName} ${tutor.lastName}`}
-                              onSelect={(currentValue: string) => {
-                                const selectedTutor = tutors.find(
-                                  (t) =>
-                                    `${t.firstName} ${t.lastName}` ===
-                                    currentValue
-                                );
-                                if (selectedTutor) {
-                                  setSelectedTutorId(selectedTutor.id);
-                                  handleInputChange({
-                                    target: {
-                                      name: "tutor.id",
-                                      value: selectedTutor.id,
-                                    },
-                                  });
-                                }
-                                setOpentTutorOptions(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedTutorId === tutor.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {tutor.firstName} {tutor.lastName}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <AvailabilityForm
-                availabilityList={selectedEnrollment?.availability || []} // Default to empty array if undefined
-                setAvailabilityList={(availability) =>
-                  handleInputChange({
-                    target: { name: "availability", value: availability },
-                  } as any)
-                }
-              />
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="summary" className="text-right">
-                  Summary
-                </Label>
-                <Input
-                  id="summary"
-                  name="summary"
-                  value={selectedEnrollment.summary}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="startDate" className="text-right">
-                  Start Date
-                </Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={selectedEnrollment.startDate}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="endDate" className="text-right">
-                  End Date
-                </Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={selectedEnrollment.endDate}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-
-              <div>
-                <Label>Meeting Link</Label>
-                <Select
-                  name="meetingId"
-                  value={selectedEnrollment.meetingId}
-                  onOpenChange={(open) => {
-                    if (open && selectedEnrollment) {
-                      areMeetingsAvailable(selectedEnrollment);
-                    }
-                  }}
-                  onValueChange={(value) =>
+                  <Popover
+                    open={openTutorOptions}
+                    onOpenChange={setOpentTutorOptions}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openTutorOptions}
+                        className="col-span-3"
+                      >
+                        {selectedEnrollment.tutor?.id ? (
+                          <>
+                            {
+                              tutors.find(
+                                (tutor) =>
+                                  tutor.id === selectedEnrollment.tutor?.id
+                              )?.firstName
+                            }{" "}
+                            {
+                              tutors.find(
+                                (tutor) =>
+                                  tutor.id === selectedEnrollment.tutor?.id
+                              )?.lastName
+                            }
+                          </>
+                        ) : (
+                          "Select a tutor"
+                        )}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search Tutor..."
+                          value={tutorSearch}
+                          onValueChange={setTutorSearch}
+                        />
+                        <CommandList>
+                          <CommandEmpty>No Tutor found.</CommandEmpty>
+                          <CommandGroup>
+                            {tutors.map((tutor) => (
+                              <CommandItem
+                                key={tutor.id}
+                                value={`${tutor.firstName} ${tutor.lastName}`}
+                                onSelect={(currentValue: string) => {
+                                  const selectedTutor = tutors.find(
+                                    (t) =>
+                                      `${t.firstName} ${t.lastName}` ===
+                                      currentValue
+                                  );
+                                  if (selectedTutor) {
+                                    setSelectedTutorId(selectedTutor.id);
+                                    handleInputChange({
+                                      target: {
+                                        name: "tutor.id",
+                                        value: selectedTutor.id,
+                                      },
+                                    });
+                                  }
+                                  setOpentTutorOptions(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedTutorId === tutor.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {tutor.firstName} {tutor.lastName}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <AvailabilityForm
+                  availabilityList={selectedEnrollment?.availability || []} // Default to empty array if undefined
+                  setAvailabilityList={(availability) =>
                     handleInputChange({
-                      target: { name: "meetingId", value },
+                      target: { name: "availability", value: availability },
                     } as any)
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a meeting link">
-                      {selectedEnrollment.meetingId
-                        ? meetings.find(
-                            (meeting) =>
-                              meeting.id === selectedEnrollment.meetingId
-                          )?.name
-                        : "Select a meeting"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {meetings.map((meeting) => (
-                      <SelectItem
-                        key={meeting.id}
-                        value={meeting.id}
-                        className="flex items-center justify-between"
-                      >
-                        <span>
-                          {meeting.name} - {meeting.id}
-                        </span>
-                        <Circle
-                          className={`w-2 h-2 ml-2 ${
-                            meetingAvailability[meeting.id]
-                              ? "text-green-500"
-                              : "text-red-500"
-                          } fill-current`}
-                        />
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="summary" className="text-right">
+                    Summary
+                  </Label>
+                  <Input
+                    id="summary"
+                    name="summary"
+                    value={selectedEnrollment.summary}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="startDate" className="text-right">
+                    Start Date
+                  </Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={selectedEnrollment.startDate}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="endDate" className="text-right">
+                    End Date
+                  </Label>
+                  <Input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    value={selectedEnrollment.endDate}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+
+                <div>
+                  <Label>Meeting Link</Label>
+                  <Select
+                    name="meetingId"
+                    value={selectedEnrollment.meetingId}
+                    onOpenChange={(open) => {
+                      if (open && selectedEnrollment) {
+                        areMeetingsAvailable(selectedEnrollment);
+                      }
+                    }}
+                    onValueChange={(value) =>
+                      handleInputChange({
+                        target: { name: "meetingId", value },
+                      } as any)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a meeting link">
+                        {selectedEnrollment.meetingId
+                          ? meetings.find(
+                              (meeting) =>
+                                meeting.id === selectedEnrollment.meetingId
+                            )?.name
+                          : "Select a meeting"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {meetings.map((meeting) => (
+                        <SelectItem
+                          key={meeting.id}
+                          value={meeting.id}
+                          className="flex items-center justify-between"
+                        >
+                          <span>
+                            {meeting.name} - {meeting.id}
+                          </span>
+                          <Circle
+                            className={`w-2 h-2 ml-2 ${
+                              meetingAvailability[meeting.id]
+                                ? "text-green-500"
+                                : "text-red-500"
+                            } fill-current`}
+                          />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </ScrollArea>
+
           <Button onClick={handleUpdateEnrollment}>Update Enrollment</Button>
         </DialogContent>
       </Dialog>

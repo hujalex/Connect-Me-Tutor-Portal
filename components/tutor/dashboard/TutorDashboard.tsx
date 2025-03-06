@@ -25,18 +25,20 @@ const TutorDashboard = () => {
   const supabase = createClientComponentClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [compledtedSessions, setCompletedSessions] = useState<Session[]>([]);
+  const [pastSessions, setPastSessions] = useState<Session[]>([]);
   const [allSessions, setAllSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
-  const [filteredCompletedSessions, setFilteredCompletedSessions] = useState<
-    Session[]
-  >([]);
+  const [filteredPastSessions, setFilteredPastSessions] = useState<Session[]>(
+    []
+  );
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [filterValue, setFilterValue] = useState("");
+  const [filterValueActiveSessions, setFilterValueActiveSessions] =
+    useState("");
+  const [filterValuePastSessions, setFilterValuePastSessions] = useState("");
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(
     null
@@ -90,22 +92,26 @@ const TutorDashboard = () => {
         profileData.id,
         undefined,
         undefined,
-        "Active"
+        "Active",
+        "date",
+        true
       );
       //   if (!activeSessionData) throw new Error("No sessions found");
 
       setSessions(activeSessionData);
       setFilteredSessions(activeSessionData);
 
-      const completedSessionData = await getTutorSessions(
+      const pastSessionData = await getTutorSessions(
         profileData.id,
         undefined,
         undefined,
-        "Complete"
+        ["Complete", "Cancelled"],
+        "date",
+        true
       );
       //   if (!completedSessionData) throw new Error("No sessions found")
-      setCompletedSessions(completedSessionData);
-      setFilteredCompletedSessions(completedSessionData);
+      setPastSessions(pastSessionData);
+      setFilteredPastSessions(pastSessionData);
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError(
@@ -178,14 +184,28 @@ const TutorDashboard = () => {
       (session) =>
         session.student?.firstName
           .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
+          .includes(filterValueActiveSessions.toLowerCase()) ||
         session.student?.lastName
           .toLowerCase()
-          .includes(filterValue.toLowerCase())
+          .includes(filterValueActiveSessions.toLowerCase())
     );
     setFilteredSessions(filtered);
     setCurrentPage(1);
-  }, [filterValue, sessions]);
+  }, [filterValueActiveSessions, sessions]);
+
+  useEffect(() => {
+    const filtered = pastSessions.filter(
+      (session) =>
+        session.student?.firstName
+          .toLowerCase()
+          .includes(filterValuePastSessions.toLowerCase()) ||
+        session.student?.lastName
+          .toLowerCase()
+          .includes(filterValuePastSessions.toLowerCase())
+    );
+    setFilteredPastSessions(filtered);
+    setCurrentPage(1);
+  }, [filterValuePastSessions, sessions]);
 
   const totalPages = Math.ceil(filteredSessions.length / rowsPerPage);
 
@@ -267,7 +287,7 @@ const TutorDashboard = () => {
     currentPage * rowsPerPage
   );
 
-  const paginatedCompletedSessions = filteredCompletedSessions.slice(
+  const paginatedPastSessions = filteredPastSessions.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
@@ -318,8 +338,8 @@ const TutorDashboard = () => {
                   type="text"
                   placeholder="Filter sessions..."
                   className="w-64"
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
+                  value={filterValueActiveSessions}
+                  onChange={(e) => setFilterValueActiveSessions(e.target.value)}
                 />
               </div>
             </div>
@@ -373,15 +393,15 @@ const TutorDashboard = () => {
                   type="text"
                   placeholder="Filter sessions..."
                   className="w-64"
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
+                  value={filterValuePastSessions}
+                  onChange={(e) => setFilterValuePastSessions(e.target.value)}
                 />
               </div>
             </div>
 
             <CompletedSessionsTable
-              paginatedSessions={paginatedCompletedSessions}
-              filteredSessions={filteredCompletedSessions}
+              paginatedSessions={paginatedPastSessions}
+              filteredSessions={filteredPastSessions}
               meetings={meetings}
               currentPage={currentPage}
               totalPages={totalPages}
@@ -413,7 +433,7 @@ const TutorDashboard = () => {
           </div>
 
           <div className="w-80">
-            <TutorCalendar sessions={sessions} />
+            {/* <TutorCalendar sessions={sessions} /> */}
           </div>
         </div>
       </div>
