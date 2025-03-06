@@ -168,7 +168,8 @@ const StudentList = () =>
           student.firstName
             ?.toLowerCase()
             .includes(filterValue.toLowerCase()) ||
-          student.lastName?.toLowerCase().includes(filterValue.toLowerCase())
+          student.lastName?.toLowerCase().includes(filterValue.toLowerCase()) ||
+          student.studentNumber?.includes(filterValue.toLowerCase())
       );
       setFilteredStudents(filtered);
       setCurrentPage(1);
@@ -978,10 +979,11 @@ const StudentList = () =>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Student #</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>Student Name</TableHead>
-                  <TableHead>Availability</TableHead>
+                  {/* <TableHead>Availability</TableHead> */}
                   <TableHead>Subjects Learning</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Parent Phone</TableHead>
@@ -990,14 +992,15 @@ const StudentList = () =>
               <TableBody>
                 {paginatedStudents.map((student, index) => (
                   <TableRow key={index}>
+                    <TableCell>{student.studentNumber}</TableCell>
                     <TableCell>{student.status}</TableCell>
                     <TableCell>{student.startDate}</TableCell>
                     <TableCell>
                       {student.firstName} {student.lastName}
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <AvailabilityFormat availability={student.availability} />
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="flex flex-col">
                       {student.subjectsOfInterest?.map((item, index) => (
                         <span key={index}>{item}</span>
