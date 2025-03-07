@@ -10,8 +10,19 @@ import {
   ChevronsRight,
   ChevronLeft,
   ChevronRight,
+  RefreshCcw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import { Combobox } from "@/components/ui/combobox";
@@ -40,6 +51,7 @@ import {
   deleteUser,
   editUser,
   getUserFromId,
+  resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
@@ -54,6 +66,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import toast, { Toaster } from "react-hot-toast";
 import { set } from "date-fns";
+import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
 
 const getOrdinalSuffix = (num: number): string => {
   if (num === 1) return "st";
@@ -160,7 +173,7 @@ const StudentList = () =>
 
     useEffect(() => {
       getStudentData();
-    }, [supabase.auth, students]);
+    }, [supabase.auth]);
 
     useEffect(() => {
       const filtered = students.filter(
@@ -169,7 +182,8 @@ const StudentList = () =>
             ?.toLowerCase()
             .includes(filterValue.toLowerCase()) ||
           student.lastName?.toLowerCase().includes(filterValue.toLowerCase()) ||
-          student.studentNumber?.includes(filterValue.toLowerCase())
+          student.studentNumber?.includes(filterValue.toLowerCase()) ||
+          student.email?.includes(filterValue.toLowerCase())
       );
       setFilteredStudents(filtered);
       setCurrentPage(1);
@@ -987,6 +1001,7 @@ const StudentList = () =>
                   <TableHead>Subjects Learning</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Parent Phone</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1008,6 +1023,43 @@ const StudentList = () =>
                     </TableCell>
                     <TableCell>{student.email}</TableCell>
                     <TableCell>{student.parentPhone}</TableCell>
+                    <TableCell>
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          <Button variant="ghost" size="icon">
+                            <RefreshCcw className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Resend Email Confirmation for {student.firstName}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {" "}
+                              Note: Will not resend confirmation email if the
+                              user has already signed in before
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                resendEmailConfirmation(student.email)
+                                  .then(() =>
+                                    toast.success("Resent Email Confirmation")
+                                  )
+                                  .catch(() =>
+                                    toast.error("Failed to resend email")
+                                  )
+                              }
+                            >
+                              Resend
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
