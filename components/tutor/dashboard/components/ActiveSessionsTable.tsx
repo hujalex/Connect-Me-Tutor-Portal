@@ -34,14 +34,28 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import {
+  AlertDialog,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import {
   Circle,
   Loader2,
   ChevronsLeft,
   ChevronsRight,
   ChevronLeft,
   ChevronRight,
+  Trash,
+  CalendarDays,
+  UserRoundPlus,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
+import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 
 interface SessionsTableProps {
   paginatedSessions: Session[];
@@ -112,9 +126,10 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Title</TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Meeting</TableHead>
-            <TableHead>Reschedule</TableHead>
-            <TableHead>Request Substitute</TableHead>
+            {/* <TableHead>Reschedule</TableHead> */}
+            {/* <TableHead>Request Substitute</TableHead> */}
             <TableHead>Session Exit Form</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -132,7 +147,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
               }
             >
               <TableCell>
-                <Select
+                {/* <Select
                   value={session?.status}
                   onValueChange={(
                     value: "Active" | "Complete" | "Cancelled"
@@ -175,7 +190,8 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                       Cancelled
                     </SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
+                {session.status}
               </TableCell>
               <TableCell>{formatSessionDate(session.date)}</TableCell>
               <TableCell className="font-medium">
@@ -205,18 +221,84 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   </>
                 )}
               </TableCell>
+              {/* <TableCell></TableCell> */}
+
+              {/* <TableCell></TableCell> */}
               <TableCell>
+                <Dialog
+                  open={isSessionExitFormOpen}
+                  onOpenChange={setIsSessionExitFormOpen}
+                >
+                  <DialogTrigger asChild>
+                    <HoverCard>
+                      <HoverCardTrigger>
+                        <Button
+                          variant="outline"
+                          disabled={isAfter(parseISO(session.date), Date.now())}
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsSessionExitFormOpen(true);
+                          }}
+                        >
+                          SEF
+                        </Button>
+                      </HoverCardTrigger>
+                      <HoverCardContent>
+                        <div className="space-y-1">
+                          Session Exit Form will be available after your session
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Session Exit Form</DialogTitle>
+                    </DialogHeader>
+                    <Textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="In 2-4 sentences, What did you cover during your session?"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="next-class"
+                        checked={nextClassConfirmed}
+                        onCheckedChange={(checked) =>
+                          setNextClassConfirmed(checked === true)
+                        }
+                      />
+                      <label
+                        htmlFor="next-class"
+                        className="text-sm font-medium"
+                      >
+                        Does your student know about your next class?
+                      </label>
+                    </div>
+                    <Button
+                      onClick={() =>
+                        selectedSession &&
+                        handleSessionComplete(selectedSession, notes)
+                      }
+                      disabled={!notes || !nextClassConfirmed}
+                    >
+                      Mark Session Complete
+                    </Button>
+                  </DialogContent>
+                </Dialog>
+              </TableCell>
+              <TableCell className="flex content-center">
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
                         setSelectedSession(session);
                         setIsDialogOpen(true);
                         setSelectedSessionDate(session.date);
                       }}
                     >
-                      Reschedule
+                      <CalendarDays className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -333,80 +415,50 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                     </div>
                   </DialogContent>
                 </Dialog>
-              </TableCell>
-
-              <TableCell>
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  size="icon"
                   onClick={() =>
                     (window.location.href =
                       "https://forms.gle/AC4an7K6NSNumDwKA")
                   }
                 >
-                  Request a Sub
+                  <UserRoundPlus className="h-4 w-4" />
                 </Button>
-              </TableCell>
-              <TableCell>
-                <Dialog
-                  open={isSessionExitFormOpen}
-                  onOpenChange={setIsSessionExitFormOpen}
-                >
-                  <DialogTrigger asChild>
-                    <HoverCard>
-                      <HoverCardTrigger>
-                        <Button
-                          variant="outline"
-                          disabled={isAfter(parseISO(session.date), Date.now())}
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setIsSessionExitFormOpen(true);
-                          }}
-                        >
-                          SEF
-                        </Button>
-                      </HoverCardTrigger>
-                      <HoverCardContent>
-                        <div className="space-y-1">
-                          Session Exit Form will be available after your session
-                        </div>
-                      </HoverCardContent>
-                    </HoverCard>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Session Exit Form</DialogTitle>
-                    </DialogHeader>
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="In 2-4 sentences, What did you cover during your session?"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="next-class"
-                        checked={nextClassConfirmed}
-                        onCheckedChange={(checked) =>
-                          setNextClassConfirmed(checked === true)
-                        }
-                      />
-                      <label
-                        htmlFor="next-class"
-                        className="text-sm font-medium"
-                      >
-                        Does your student know about your next class?
-                      </label>
-                    </div>
-                    <Button
-                      onClick={() =>
-                        selectedSession &&
-                        handleSessionComplete(selectedSession, notes)
-                      }
-                      disabled={!notes || !nextClassConfirmed}
-                    >
-                      Mark Session Complete
+                <AlertDialog>
+                  <AlertDialogTrigger>
+                    <Button variant="ghost" size="icon">
+                      <Trash className="h-4 w-4" />
                     </Button>
-                  </DialogContent>
-                </Dialog>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    {" "}
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel Session</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Your Session will be canceled. This action cannot be
+                        reversed
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>No</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          const updatedSession: Session = {
+                            ...session,
+                            status: "Cancelled" as
+                              | "Active"
+                              | "Complete"
+                              | "Cancelled",
+                          };
+                          handleStatusChange(updatedSession);
+                        }}
+                      >
+                        Yes
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))}
