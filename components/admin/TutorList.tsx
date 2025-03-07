@@ -8,11 +8,23 @@ import {
   parseISO,
 } from "date-fns";
 import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import {
   Bell,
   ChevronDown,
   Plus,
   Link as LinkIcon,
   Eye,
+  RefreshCw,
   ChevronsLeft,
   ChevronsRight,
   ChevronLeft,
@@ -47,6 +59,7 @@ import {
   deleteUser,
   getUserFromId,
   editUser,
+  resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -141,13 +154,14 @@ const TutorList = () => {
 
   useEffect(() => {
     getTutorData();
-  }, [supabase.auth, tutors]);
+  }, [supabase.auth]);
 
   useEffect(() => {
     const filtered = tutors.filter(
       (tutor) =>
         tutor.firstName?.toLowerCase().includes(filterValue.toLowerCase()) ||
-        tutor.lastName?.toLowerCase().includes(filterValue.toLowerCase())
+        tutor.lastName?.toLowerCase().includes(filterValue.toLowerCase()) ||
+        tutor.email?.toLowerCase().includes(filterValue.toLowerCase())
     );
     setFilteredTutors(filtered);
     setCurrentPage(1);
@@ -270,6 +284,20 @@ const TutorList = () => {
       toast.error(`Failed to add tutor ${err.message}`);
     } finally {
       setAddingTutor(false);
+    }
+  };
+
+  const handleResendEmailConfirmation = async () => {
+    if (selectedTutor) {
+      try {
+        console.log("Resent Confirmation Email");
+        console.log(selectedTutor.email);
+        await resendEmailConfirmation(selectedTutor.email);
+        toast.success("Resent Email Confirmation");
+      } catch (error) {
+        console.error("Failed to resend email confirmation", error);
+        toast.error("Failed to resend email confirmation");
+      }
     }
   };
 
@@ -746,6 +774,7 @@ const TutorList = () => {
                 <TableHead>Subjects Teaching </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Total Hours</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -767,6 +796,48 @@ const TutorList = () => {
                   <TableCell>{tutor.email}</TableCell>
                   <TableCell>
                     {allTimeHours[tutor.id]?.toFixed(2) || "0.00"}
+                  </TableCell>
+                  <TableCell>
+                    <AlertDialog>
+                      <AlertDialogTrigger>
+                        {" "}
+                        <Button variant="ghost" size="icon">
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {" "}
+                            Resend Confirmation Email for {tutor.firstName}
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Note: Will not resend confirmation email if the user
+                            has already signed in before
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>{" "}
+                        <AlertDialogFooter>
+                          {" "}
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              resendEmailConfirmation(tutor.email)
+                                .then(() => {
+                                  toast.success("Resent Email Confirmation");
+                                })
+                                .catch(() => {
+                                  toast.error(
+                                    "Failed to resend email confirmation"
+                                  );
+                                });
+                            }}
+                          >
+                            Resend
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}

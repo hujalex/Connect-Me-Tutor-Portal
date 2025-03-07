@@ -509,6 +509,22 @@ export const createUser = async (
   }
 };
 
+export const resendEmailConfirmation = async (email: string) => {
+  try {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}`,
+      },
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.error("Failed to resend Email Confirmation", error);
+    throw error;
+  }
+};
+
 /* SESSIONS */
 export async function createSession(sessionData: any) {
   const { data, error } = await supabase
