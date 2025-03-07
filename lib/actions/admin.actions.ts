@@ -121,15 +121,18 @@ export const addStudent = async (
 
   try {
     console.log(studentData);
+
     if (!studentData.email) {
       throw new Error("Email is required to create a student profile");
     }
+
+    const lower_case_email = studentData.email.toLowerCase().trim();
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
       .from("Profiles")
       .select("user_id")
-      .eq("email", studentData.email);
+      .eq("email", lower_case_email);
 
     if (userCheckError && userCheckError.code !== "PGRST116") {
       // PGRST116 means no rows returned, which is what we want
@@ -142,21 +145,21 @@ export const addStudent = async (
 
     //-----Moved After Duplicate Check to prevent Sending confimration email-----
     const tempPassword = await createPassword();
-    const userId = await createUser(studentData.email, tempPassword);
+    const userId = await createUser(lower_case_email, tempPassword);
 
     // Create the student profile without id and createdAt
     const newStudentProfile = {
       user_id: userId,
       role: "Student",
-      first_name: studentData.firstName?.trim() || "",
-      last_name: studentData.lastName?.trim() || "",
+      first_name: studentData.firstName ? studentData.firstName.trim() : "",
+      last_name: studentData.lastName ? studentData.lastName.trim() : "",
       age: studentData.age || "",
       grade: studentData.grade || "",
       gender: studentData.gender || "",
       // date_of_birth: studentData.dateOfBirth || "",
       start_date: studentData.startDate || new Date().toISOString(),
       availability: studentData.availability || [],
-      email: studentData.email.trim(),
+      email: lower_case_email,
       parent_name: studentData.parentName || "",
       parent_phone: studentData.parentPhone || "",
       parent_email: studentData.parentEmail || "",
@@ -189,15 +192,15 @@ export const addStudent = async (
       createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
       userId: createdProfile.userId, // Adjust based on your schema
       role: createdProfile.role,
-      firstName: createdProfile.firstName.trim(),
-      lastName: createdProfile.lastName.trim(),
+      firstName: createdProfile.firstName,
+      lastName: createdProfile.lastName,
       age: createdProfile.age,
       grade: createdProfile.grade,
       gender: createdProfile.gender,
       // dateOfBirth: createdProfile.dateOfBirth,
       startDate: createdProfile.startDate,
       availability: createdProfile.availability,
-      email: createdProfile.email.trim(),
+      email: createdProfile.email,
       parentName: createdProfile.parentName,
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
@@ -223,7 +226,7 @@ export const addTutor = async (
       throw new Error("Email is required to create a student profile");
     }
 
-    const lowerCaseEmail = tutorData.email.toLowerCase();
+    const lowerCaseEmail = tutorData.email.toLowerCase().trim();
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
@@ -248,12 +251,12 @@ export const addTutor = async (
     const newTutorProfile = {
       user_id: userId,
       role: "Tutor",
-      first_name: tutorData.firstName?.trim() || "",
-      last_name: tutorData.lastName?.trim() || "",
+      first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
+      last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
       date_of_birth: tutorData.dateOfBirth || "",
       start_date: tutorData.startDate || new Date().toISOString(),
       availability: tutorData.availability || [],
-      email: lowerCaseEmail.trim(),
+      email: lowerCaseEmail,
       timezone: tutorData.timeZone || "",
       subjects_of_interest: tutorData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
@@ -283,12 +286,12 @@ export const addTutor = async (
       createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
       userId: createdProfile.userId, // Adjust based on your schema
       role: createdProfile.role,
-      firstName: createdProfile.firstName.trim(),
-      lastName: createdProfile.lastName.trim(),
+      firstName: createdProfile.firstName,
+      lastName: createdProfile.lastName,
       dateOfBirth: createdProfile.dateOfBirth,
       startDate: createdProfile.startDate,
       availability: createdProfile.availability,
-      email: createdProfile.email.trim(),
+      email: createdProfile.email,
       parentName: createdProfile.parentName,
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
@@ -424,7 +427,7 @@ export async function editUser(profile: Profile) {
         age: age,
         grade: grade,
         gender: gender,
-        email: email.trim(),
+        email: email,
         date_of_birth: dateOfBirth,
         start_date: startDate,
         parent_name: parentName,
