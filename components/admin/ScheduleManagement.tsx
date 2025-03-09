@@ -320,7 +320,11 @@ const Schedule = () => {
             </Button>
           </div>
 
-          <Button onClick={handleUpdateWeek} className="mb-4">
+          <Button
+            onClick={handleUpdateWeek}
+            disabled={loading}
+            className="mb-4"
+          >
             Update Week
           </Button>
 

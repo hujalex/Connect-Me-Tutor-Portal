@@ -102,7 +102,8 @@ export default function AuthError() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Enter the email associated with your account.
+                          Enter the email associated with your account to
+                          receive an email to set your login information
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
