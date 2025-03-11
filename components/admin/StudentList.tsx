@@ -176,15 +176,27 @@ const StudentList = () =>
     }, [supabase.auth]);
 
     useEffect(() => {
-      const filtered = students.filter(
-        (student) =>
-          student.firstName
-            ?.toLowerCase()
-            .includes(filterValue.toLowerCase()) ||
-          student.lastName?.toLowerCase().includes(filterValue.toLowerCase()) ||
-          student.studentNumber?.includes(filterValue.toLowerCase()) ||
-          student.email?.includes(filterValue.toLowerCase())
-      );
+      const filtered = students.filter((student) => {
+        const searchTerm = filterValue.toLowerCase().trim();
+
+        if (!searchTerm) return true;
+
+        const studentFirstName = student.firstName?.toLowerCase() || "";
+        const studentLastName = student.lastName?.toLowerCase() || "";
+        const studentEmail = student.email?.toLowerCase() || "";
+        const studentNumber = student.studentNumber?.toLowerCase() || "";
+
+        const fullName = `${studentFirstName} ${studentLastName}`.trim();
+
+        return (
+          studentFirstName.includes(searchTerm) ||
+          studentLastName.includes(searchTerm) ||
+          studentEmail.includes(searchTerm) ||
+          studentNumber.includes(searchTerm) ||
+          fullName.includes(searchTerm)
+        );
+      });
+
       setFilteredStudents(filtered);
       setCurrentPage(1);
     }, [filterValue, students]);

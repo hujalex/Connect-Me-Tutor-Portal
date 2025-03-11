@@ -125,15 +125,31 @@ const EnrollmentList = () => {
   }, [supabase.auth]);
 
   useEffect(() => {
-    const filtered = enrollments.filter(
-      (enrollment) =>
-        enrollment.student?.firstName
-          .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
-        enrollment.tutor?.firstName
-          .toLowerCase()
-          .includes(filterValue.toLowerCase())
-    );
+    const filtered = enrollments.filter((enrollment) => {
+      const searchTerm = filterValue.toLowerCase().trim();
+
+      if (!searchTerm) return true;
+
+      const studentFirstName =
+        enrollment.student?.firstName?.toLowerCase() || "";
+      const studentLastName = enrollment.student?.lastName?.toLowerCase() || "";
+      const studentEmail = enrollment.student?.email?.toLowerCase() || "";
+
+      const tutorFirstName = enrollment.tutor?.firstName?.toLowerCase() || "";
+      const tutorLastName = enrollment.tutor?.lastName?.toLowerCase() || "";
+      const tutorEmail = enrollment.tutor?.email?.toLowerCase() || "";
+
+      return (
+        studentFirstName.includes(searchTerm) ||
+        studentLastName.includes(searchTerm) ||
+        studentEmail.includes(searchTerm) ||
+        tutorFirstName.includes(searchTerm) ||
+        tutorLastName.includes(searchTerm) ||
+        tutorEmail.includes(searchTerm) ||
+        (studentFirstName + " " + studentLastName).includes(searchTerm) ||
+        (tutorFirstName + " " + tutorLastName).includes(searchTerm)
+      );
+    });
     setFilteredEnrollments(filtered);
     setCurrentPage(1);
   }, [filterValue, enrollments]);

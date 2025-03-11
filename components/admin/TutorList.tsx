@@ -157,12 +157,24 @@ const TutorList = () => {
   }, [supabase.auth]);
 
   useEffect(() => {
-    const filtered = tutors.filter(
-      (tutor) =>
-        tutor.firstName?.toLowerCase().includes(filterValue.toLowerCase()) ||
-        tutor.lastName?.toLowerCase().includes(filterValue.toLowerCase()) ||
-        tutor.email?.toLowerCase().includes(filterValue.toLowerCase())
-    );
+    const filtered = tutors.filter((tutor) => {
+      const searchTerm = filterValue.toLowerCase().trim();
+
+      if (!searchTerm) return true;
+
+      const tutorFirstName = tutor.firstName?.toLowerCase() || "";
+      const tutorLastName = tutor.lastName?.toLowerCase() || "";
+      const tutorEmail = tutor.email?.toLowerCase() || "";
+
+      const fullName = `${tutorFirstName} ${tutorLastName}`.trim();
+
+      return (
+        tutorFirstName.includes(searchTerm) ||
+        tutorLastName.includes(searchTerm) ||
+        tutorEmail.includes(searchTerm) ||
+        fullName.includes(searchTerm)
+      );
+    });
     setFilteredTutors(filtered);
     setCurrentPage(1);
   }, [filterValue, tutors]);
