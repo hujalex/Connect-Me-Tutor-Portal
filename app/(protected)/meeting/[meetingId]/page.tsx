@@ -1,18 +1,17 @@
-'use client';
+"use client";
 
-import Link from 'next/link'
-import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
-import axios, { AxiosResponse } from 'axios';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { getMeeting } from '@/lib/actions/meeting.actions'
-import { Meeting } from '@/types'
-import { Loader2 } from "lucide-react"
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useState, useRef } from "react";
+import axios, { AxiosResponse } from "axios";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getMeeting } from "@/lib/actions/meeting.actions";
+import { Meeting } from "@/types";
+import { Loader2 } from "lucide-react";
 
 type ParamsProps = {
-    params:{meetingId:string}
-}
-
+  params: { meetingId: string };
+};
 
 interface ZoomResponseData {
   meetingId: string;
@@ -21,36 +20,33 @@ interface ZoomResponseData {
   sdkKey: any;
 }
 
-const MeetingPage = ({params}:ParamsProps) => {
-
-    const meetingId = params.meetingId
-    console.log("MEETING ID", meetingId)
+const MeetingPage = ({ params }: ParamsProps) => {
+  const meetingId = params.meetingId;
+  console.log("MEETING ID", meetingId);
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const meetingSDKElementRef = useRef<HTMLDivElement>(null);
   const supabase = createClientComponentClient();
-  const [loading,setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const getThisMeeting = async () => {
       try {
-
         const meetingData = await getMeeting(meetingId);
-        console.log('THIS MEETING DATA',meetingData)
-          
-        if (meetingData) {
-            setMeeting(meetingData);
-        }
+        console.log("THIS MEETING DATA", meetingData);
 
+        if (meetingData) {
+          setMeeting(meetingData);
+        }
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error("Error fetching user role:", error);
       } finally {
         setLoading(false);
       }
     };
 
     getThisMeeting();
-  }, );
+  });
 
   /*
   useEffect(() => {
@@ -127,11 +123,17 @@ const MeetingPage = ({params}:ParamsProps) => {
 
         <div>
           {meeting?.link ? (
-              <button onClick = {() => (window.location.href = `${meeting.link}`)}className = "bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Go to {`${meeting.name}`}</button>
-            ) : (
-              <div className="flex items-center justify-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /></div>
-            )
-          }
+            <button
+              onClick={() => (window.location.href = `${meeting.link}`)}
+              className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+            >
+              Go to {`${meeting.name}`}
+            </button>
+          ) : (
+            <div className="flex items-center justify-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -99,15 +99,40 @@ const AdminDashboard = () => {
   }, [supabase.auth]);
 
   useEffect(() => {
-    const filtered = sessions.filter(
-      (session) =>
-        session.tutor?.firstName
-          .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
-        session.tutor?.lastName
-          .toLowerCase()
-          .includes(filterValue.toLowerCase())
-    );
+    const filtered = sessions.filter((session) => {
+      const searchTerm = filterValue.toLowerCase().trim();
+
+      if (!searchTerm) return true;
+
+      const studentFirstName = session.student?.firstName?.toLowerCase();
+      const studentLastName = session.student?.lastName?.toLowerCase();
+      const studentEmail = session.student?.email?.toLowerCase();
+      const tutorFirstName = session.tutor?.firstName?.toLowerCase();
+      const tutorLastName = session.tutor?.lastName?.toLowerCase();
+      const tutorEmail = session.tutor?.email?.toLowerCase();
+      const studentFullName = `${studentFirstName} ${studentLastName}`.trim();
+      const tutorFullName = `${tutorFirstName} ${tutorLastName}`.trim();
+
+      return (
+        studentFirstName?.includes(searchTerm) ||
+        studentLastName?.includes(searchTerm) ||
+        studentEmail?.includes(searchTerm) ||
+        tutorFirstName?.includes(searchTerm) ||
+        tutorLastName?.includes(searchTerm) ||
+        tutorEmail?.includes(searchTerm) ||
+        studentFullName.includes(searchTerm) ||
+        tutorFullName.includes(searchTerm)
+      );
+    });
+    // }) (
+    //   (session) =>
+    //     session.tutor?.firstName
+    //       .toLowerCase()
+    //       .includes(filterValue.toLowerCase()) ||
+    //     session.tutor?.lastName
+    //       .toLowerCase()
+    //       .includes(filterValue.toLowerCase())
+    // );
     setFilteredSessions(filtered);
     setCurrentPage(1);
   }, [filterValue, sessions]);
