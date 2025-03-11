@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Circle } from "lucide-react";
+import { Circle, Loader2 } from "lucide-react";
 import {
   getAllSessions,
   rescheduleSession,
@@ -165,6 +165,9 @@ const Schedule = () => {
 
   const handleUpdateWeek = async () => {
     try {
+      //------Set Loading-------
+      setLoading(true);
+
       const weekStart = startOfWeek(currentWeek);
       const weekEnd = endOfWeek(currentWeek);
 
@@ -202,6 +205,8 @@ const Schedule = () => {
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -253,6 +258,7 @@ const Schedule = () => {
       setSessions((prevSessions) =>
         prevSessions.filter((session) => session.id !== sessionId)
       );
+      fetchSessions();
       toast.success("Session removed successfully");
     } catch (error) {
       console.error("Failed to remove session", error);
@@ -325,7 +331,14 @@ const Schedule = () => {
             disabled={loading}
             className="mb-4"
           >
-            Update Week
+            {loading ? (
+              <>
+                Loading Sessions{"  "}
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              </>
+            ) : (
+              "Update Week"
+            )}
           </Button>
 
           {loading ? (
