@@ -65,6 +65,7 @@ const StudentDashboard = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sessionSummary, setSessionSummary] = useState<string | null>("");
+  const [isMeetingNotesOpen, setIsMeetingNotesOpen] = useState(false);
 
   useEffect(() => {
     const getUserData = async () => {
@@ -85,7 +86,14 @@ const StudentDashboard = () => {
 
         setProfile(profileData);
 
-        const sessionsData = await getStudentSessions(profileData.id);
+        const sessionsData = await getStudentSessions(
+          profileData.id,
+          undefined,
+          undefined,
+          ["Active", "Complete", "Cancelled"],
+          "date",
+          true
+        );
         if (!sessionsData) throw new Error("No sessions found");
 
         setSessions(sessionsData);
@@ -193,10 +201,8 @@ const StudentDashboard = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Tutor</TableHead>
-                <TableHead>Location</TableHead>
                 <TableHead>Meeting</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-                <TableHead>Add Summary</TableHead>
+                <TableHead>Tutor Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -207,9 +213,9 @@ const StudentDashboard = () => {
                     session.status === "Active"
                       ? ""
                       : session.status === "Complete"
-                      ? "bg-green-200 opacity-25 pointer-events-none"
+                      ? "bg-green-200 opacity-25"
                       : session.status === "Cancelled"
-                      ? "bg-red-100 opacity-25 pointer-events-none"
+                      ? "bg-red-100 opacity-25"
                       : ""
                   }
                 >
@@ -221,7 +227,6 @@ const StudentDashboard = () => {
                   <TableCell>
                     {session.tutor?.firstName} {session.tutor?.lastName}
                   </TableCell>
-                  <TableCell>{session.environment}</TableCell>
                   <TableCell>
                     {session.environment !== "In-Person" && (
                       <>
@@ -246,86 +251,32 @@ const StudentDashboard = () => {
                       </>
                     )}
                   </TableCell>
+
                   <TableCell>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <Dialog
+                      open={isMeetingNotesOpen}
+                      onOpenChange={setIsMeetingNotesOpen}
+                    >
                       <DialogTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => {
+                            setIsMeetingNotesOpen(true);
                             setSelectedSession(session);
-                            setIsDialogOpen(true);
                           }}
                         >
-                          Reschedule
+                          View Session Notes
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          {/* <DialogTitle>
-                            Reschedule Session with {session.tutor?.firstName}{" "}
-                            {session.tutor?.lastName} on{" "}
-                            {formatSessionDate(session.date)}
-                          </DialogTitle> */}
-                          <DialogTitle>
-                            Reschedule Session with{" "}
-                            {selectedSession?.tutor?.firstName}{" "}
-                            {selectedSession?.tutor?.lastName} on{" "}
-                            {formatSessionDate(selectedSession?.date || "")}
-                          </DialogTitle>
+                          <DialogTitle>Meeting Notes</DialogTitle>
                         </DialogHeader>
-                        <div className="py-4 space-y-6">
-                          <Input
-                            type="datetime-local"
-                            defaultValue={selectedSession?.date}
-                            onChange={(e) => {
-                              if (selectedSession) {
-                                setSelectedSessionDate(e.target.value);
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="destructive"
-                            onClick={() =>
-                              selectedSession &&
-                              selectedSessionDate &&
-                              handleReschedule(
-                                selectedSession?.id,
-                                selectedSessionDate
-                              )
-                            }
-                          >
-                            Reschedule
-                          </Button>
-                        </div>
+                        <Textarea>
+                          {selectedSession?.session_exit_form}
+                        </Textarea>
                       </DialogContent>
                     </Dialog>
-                  </TableCell>
-                  <TableCell>
-                    {!session.summary && session.status !== "Complete" && (
-                      <div className="grid w-full gap-2">
-                        <Label>NOTE: Please send in your summary.</Label>
-                        <Textarea
-                          onChange={(e) => {
-                            const newSummary = e.target.value;
-                            setSessionSummary(newSummary);
-                            if (session) {
-                              const updatedSession: Session = {
-                                ...session,
-                                summary: newSummary,
-                              };
-                              handleUpdateSessionSummary(updatedSession);
-                            }
-                          }}
-                          placeholder="Type your message here."
-                        />
-                        <Button>Send message</Button>
-                      </div>
-                    )}
-                    {session.summary && (
-                      <div className="grid w-full gap-2 text-sm">
-                        {session.summary}
-                      </div>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
