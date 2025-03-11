@@ -96,7 +96,6 @@ const TutorDashboard = () => {
         "date",
         true
       );
-      //   if (!activeSessionData) throw new Error("No sessions found");
 
       setSessions(activeSessionData);
       setFilteredSessions(activeSessionData);
@@ -109,7 +108,6 @@ const TutorDashboard = () => {
         "date",
         true
       );
-      //   if (!completedSessionData) throw new Error("No sessions found")
       setPastSessions(pastSessionData);
       setFilteredPastSessions(pastSessionData);
     } catch (error) {
@@ -320,9 +318,6 @@ const TutorDashboard = () => {
       );
     }
   };
-
-  //   if (loading) return <div className="p-8">Loading...</div>;
-  //   if (error) return <div className="p-8">Error: {error}</div>;
 
   return (
     <>

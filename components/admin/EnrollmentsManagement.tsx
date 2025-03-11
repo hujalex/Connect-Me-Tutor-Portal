@@ -138,32 +138,14 @@ const EnrollmentList = () => {
     setCurrentPage(1);
   }, [filterValue, enrollments]);
 
+  const studentsMap = useMemo(() => {
+    return students.reduce((map, student) => {
+      map[student.id] = student;
+      return map;
+    }, {} as Record<string, Profile>);
+  }, [students]);
+
   const normalizeText = (text: string) => text.toLowerCase().trim();
-
-  // const isMeetingAvailable = (meeting: Meeting) => {
-  //     try {
-  //       const now = new Date();
-  //       return !sessions.some((session) => {
-  //         // Skip sessions without dates or meeting IDs
-  //         if (!session?.date || !session?.meeting) return false;
-
-  //         try {
-  //           const sessionEndTime = new Date(session.date);
-  //           sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
-  //           return (
-  //             (session.status === "Complete" || sessionEndTime < now) &&
-  //             session.meeting.id === meeting.id
-  //           );
-  //         } catch (error) {
-  //           console.error("Error processing session date:", error);
-  //           return false;
-  //         }
-  //       });
-  //     } catch (error) {
-  //       console.error("Error checking meeting availability:", error);
-  //       return true; // Default to available if there's an error
-  //     }
-  //   };
 
   const toDateTime = (time: string, day: Number) => {
     if (!time) {
@@ -305,11 +287,6 @@ const EnrollmentList = () => {
   const fetchMeetings = async () => {
     try {
       const fetchedMeetings = await getMeetings();
-      // if (fetchedMeetings) {
-      //   fetchedMeetings.forEach((meeting) => {
-      //     console.log(meeting);
-      //   });
-      // }
       if (fetchedMeetings) {
         setMeetings(fetchedMeetings);
       }
@@ -531,24 +508,10 @@ const EnrollmentList = () => {
                               aria-expanded={openStudentOptions}
                               className="col-span-3"
                             >
-                              {selectedStudentId ? (
-                                <>
-                                  {
-                                    students.find(
-                                      (student) =>
-                                        student.id === selectedStudentId
-                                    )?.firstName
-                                  }{" "}
-                                  {
-                                    students.find(
-                                      (student) =>
-                                        student.id === selectedStudentId
-                                    )?.lastName
-                                  }
-                                </>
-                              ) : (
-                                "Select a student"
-                              )}
+                              {selectedStudentId &&
+                              studentsMap[selectedStudentId]
+                                ? `${studentsMap[selectedStudentId].firstName} ${studentsMap[selectedStudentId].lastName}`
+                                : "Select a student"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -594,7 +557,8 @@ const EnrollmentList = () => {
                                             : "opacity-0"
                                         )}
                                       />
-                                      {student.firstName} {student.lastName}
+                                      {student.firstName} {student.lastName} -{" "}
+                                      {student.email}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -678,7 +642,8 @@ const EnrollmentList = () => {
                                             : "opacity-0"
                                         )}
                                       />
-                                      {tutor.firstName} {tutor.lastName}
+                                      {tutor.firstName} {tutor.lastName} -{" "}
+                                      {tutor.email}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>

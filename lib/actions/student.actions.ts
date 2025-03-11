@@ -12,21 +12,16 @@ const supabase = createClientComponentClient({
 export async function getStudentSessions(
   profileId: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  status?: string | string[],
+  orderby?: string,
+  ascending?: boolean
 ): Promise<Session[]> {
   let query = supabase
     .from("Sessions")
     .select(
       `
-      id,
-      created_at,
-      environment,
-      student_id,
-      tutor_id,
-      date,
-      summary,
-      meeting_id,
-      status
+      *
     `
     )
     .eq("student_id", profileId);
@@ -36,6 +31,18 @@ export async function getStudentSessions(
   }
   if (endDate) {
     query = query.lte("date", endDate);
+  }
+
+  if (status) {
+    if (Array.isArray(status)) {
+      query = query.in("status", status);
+    } else {
+      query = query.eq("status", status);
+    }
+  }
+
+  if (orderby && ascending !== undefined) {
+    query = query.order(orderby, { ascending });
   }
 
   const { data, error } = await query;
