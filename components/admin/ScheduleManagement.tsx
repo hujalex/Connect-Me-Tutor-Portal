@@ -526,6 +526,42 @@ const Schedule = () => {
                   </Select>
                 </div>
                 <div>
+                  <Label>Student</Label>
+                  <Select
+                    value={selectedSession.student?.id}
+                    onValueChange={async (value) => {
+                      console.log(value);
+                      const selectedStudent = await getProfileWithProfileId(
+                        value
+                      );
+                      if (selectedStudent) {
+                        setSelectedSession({
+                          ...selectedSession,
+                          student: selectedStudent,
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>
+                        {selectedSession.student
+                          ? `${selectedSession.student.firstName} ${selectedSession.student.lastName}`
+                          : "Select a student"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map(
+                        (student) =>
+                          student.status !== "Inactive" && (
+                            <SelectItem key={student.id} value={student.id}>
+                              {student.firstName} {student.lastName}
+                            </SelectItem>
+                          )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label>Date</Label>
                   <Input
                     type="datetime-local"

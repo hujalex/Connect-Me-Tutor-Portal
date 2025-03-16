@@ -57,7 +57,8 @@ const HoursManager = () => {
     }
   };
 
-  const fetchSessionsAndEvents = async () => {
+  const 
+  fetchSessionsAndEvents = async () => {
     const sessionsPromises = tutors.map(tutor => 
       getTutorSessions(tutor.id, startOfMonth(selectedDate).toISOString(), endOfMonth(selectedDate).toISOString())
     );
