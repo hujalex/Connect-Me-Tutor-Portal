@@ -83,10 +83,10 @@ const Stats = () => {
 
   return (
     <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">My Stats</h1>
+      <h1 className="text-3xl font-bold mb-6">My Hours</h1>
       {loading ? (
         <div className="flex justify-center items-center h-40">
-          <p>Loading stats...</p>
+          <p>Loading Hours...</p>
         </div>
       ) : (
         <div className="flex space-x-6">
