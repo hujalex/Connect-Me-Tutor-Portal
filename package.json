@@ -43,6 +43,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.53.0",
     "react-hot-toast": "^2.4.1",
+    "recharts": "^2.15.1",
     "ssr": "^6.2.78",
     "supabase": "^1.191.3",
     "tailwind-merge": "^2.5.2",
