@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import { formatSessionDate } from "@/lib/utils";
 import { Session, Meeting } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -116,6 +117,9 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
   handleInputChange,
   areMeetingsAvailableInCurrentWeek,
 }) => {
+  const [isFirstSession, setIsFirstSession] = useState(false);
+  const [isQuestionOrConcern, setIsQuestionOrConcern] = useState(false);
+
   return (
     <>
       <Table>
@@ -254,10 +258,30 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                     <DialogHeader>
                       <DialogTitle>Session Exit Form</DialogTitle>
                     </DialogHeader>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="question-or-concern"
+                        checked={isQuestionOrConcern}
+                        onCheckedChange={(checked) =>
+                          setIsQuestionOrConcern(checked === true)
+                        }
+                      />
+                      <label
+                        htmlFor="next-class"
+                        className="text-sm font-medium"
+                      >
+                        I have a question or a concern (e.g my student did not
+                        show up)
+                      </label>
+                    </div>
                     <Textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="In 2-4 sentences, What did you cover during your session?"
+                      placeholder={
+                        isQuestionOrConcern
+                          ? "What is your question or concern?"
+                          : "In 2-4 sentences, What did you cover during your session?"
+                      }
                     />
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -271,7 +295,22 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                         htmlFor="next-class"
                         className="text-sm font-medium"
                       >
-                        Does your student know about your next class?
+                        My student knows about our next class
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="first-session"
+                        checked={isFirstSession}
+                        onCheckedChange={(checked) =>
+                          setIsFirstSession(checked === true)
+                        }
+                      />
+                      <label
+                        htmlFor="next-class"
+                        className="text-sm font-medium"
+                      >
+                        This is my first session
                       </label>
                     </div>
                     <Button
@@ -281,7 +320,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                       }
                       disabled={!notes || !nextClassConfirmed}
                     >
-                      Mark Session Complete
+                      Submit
                     </Button>
                   </DialogContent>
                 </Dialog>
