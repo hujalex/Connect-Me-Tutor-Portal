@@ -239,7 +239,7 @@ const AdminDashboard = () => {
                             }
                             className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                           >
-                            View
+                            View Link
                           </button>
                         ) : (
                           <button className="text-black px-3 py-1 border border-gray-200 rounded">

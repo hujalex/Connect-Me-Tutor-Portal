@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   format,
   startOfWeek,
@@ -12,14 +12,28 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ProfileSelector from "@/components/ui/profile-selector";
+import {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandItem,
+  CommandGroup,
+} from "../ui/command";
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scrollarea";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Select,
   SelectContent,
@@ -29,7 +43,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Circle, Loader2 } from "lucide-react";
+import { Circle, Loader2, ChevronDown, Check } from "lucide-react";
 import {
   getAllSessions,
   rescheduleSession,
@@ -40,6 +54,7 @@ import {
   getAllProfiles,
   removeSession,
   getMeeting,
+  addOneSession,
 } from "@/lib/actions/admin.actions";
 import { getProfileWithProfileId } from "@/lib/actions/user.actions";
 import { toast, Toaster } from "react-hot-toast";
@@ -64,6 +79,75 @@ const Schedule = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCheckingMeetingAvailability, setIsCheckingMeetingAvailability] =
+    useState(false);
+
+  const [openStudentOptions, setOpenStudentOptions] = useState(false);
+  const [openTutorOptions, setOpentTutorOptions] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [selectedTutorId, setSelectedTutorId] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [tutorSearch, setTutorSearch] = useState("");
+  const [newSession, setNewSession] = useState<Partial<Session>>({
+    student: {
+      id: "",
+      createdAt: "",
+      role: "Student",
+      userId: "",
+      firstName: "",
+      lastName: "",
+      startDate: "",
+      availability: [],
+      email: "",
+      timeZone: "",
+      subjectsOfInterest: [],
+      status: "Active",
+      tutorIds: [],
+      studentNumber: null,
+    },
+    tutor: {
+      id: "",
+      createdAt: "",
+      role: "Student",
+      userId: "",
+      firstName: "",
+      lastName: "",
+      startDate: "",
+      availability: [],
+      email: "",
+      timeZone: "",
+      subjectsOfInterest: [],
+      status: "Active",
+      tutorIds: [],
+      studentNumber: null,
+    },
+    date: new Date().toISOString(),
+    summary: "",
+  });
+
+  const formatDateForInput = (isoDate: string | undefined): string => {
+    if (!isoDate) return "";
+    try {
+      return format(parseISO(isoDate), "yyyy-MM-dd'T'HH:mm");
+    } catch (e) {
+      console.error("Invalid date:", e);
+      return "";
+    }
+  };
+
+  interface Session {
+    id: string;
+    createdAt: string;
+    environment: "Virtual" | "In-Person";
+    student: Profile | null;
+    tutor: Profile | null;
+    date: string;
+    summary: string;
+    // meetingId: string;p
+    meeting?: Meeting | null;
+    status: "Active" | "Complete" | "Cancelled";
+    session_exit_form: string;
+  }
 
   useEffect(() => {
     fetchSessions();
@@ -100,7 +184,6 @@ const Schedule = () => {
       console.log("ds");
       const fetchedEnrollments = await getAllEnrollments();
       console.log(fetchedEnrollments);
-      console.log("dosajfksaf");
       const validEnrollments = fetchedEnrollments?.filter((enrollment) => {
         console.log(enrollment.endDate);
         if (!enrollment.endDate) return true;
@@ -177,7 +260,8 @@ const Schedule = () => {
       const newSessions = await addSessions(
         weekStart.toISOString(),
         weekEnd.toISOString(),
-        enrollments
+        enrollments,
+        sessions
       );
 
       if (!newSessions) {
@@ -278,6 +362,55 @@ const Schedule = () => {
     }
   };
 
+  const handleAddSession = async () => {
+    try {
+      if (newSession) {
+        await addOneSession(newSession as Session);
+      }
+      fetchSessions();
+      toast.success("Added Session");
+    } catch (error) {
+      toast.error("Unable to add session");
+      console.log("Unable to add session", error);
+    }
+  };
+
+  const handleInputChange = (e: {
+    target: { name: string; value: string };
+  }) => {
+    const { name, value } = e.target;
+
+    setNewSession((prev) => {
+      if (!prev) return {} as Session;
+
+      // Create a copy of the previous state
+      const updated = { ...prev };
+
+      if (name.includes(".")) {
+        const [parent, child] = name.split(".");
+
+        // Type guard to ensure parent is a valid key of Session
+        if (parent === "student" || parent === "tutor") {
+          // Ensure parent object exists
+          const parentObj = (updated[parent] || {}) as Profile;
+
+          // Update the nested property
+          updated[parent] = {
+            ...parentObj,
+            [child]: value,
+          };
+        }
+      } else {
+        // Type guard to ensure name is a valid key of Session
+        if (name in updated) {
+          (updated as any)[name] = value;
+        }
+      }
+
+      return updated;
+    });
+  };
+
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentWeek),
     end: endOfWeek(currentWeek),
@@ -340,6 +473,115 @@ const Schedule = () => {
               "Update Week"
             )}
           </Button>
+          <Dialog>
+            <DialogTrigger>
+              <Button className="mx-4" variant="secondary">
+                Add Session
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Session</DialogTitle>
+              </DialogHeader>
+
+              <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+                {" "}
+                <div className="grid gap-4 py-4">
+                  <ProfileSelector
+                    label="Student"
+                    profiles={students}
+                    selectedId={selectedStudentId}
+                    onSelect={(id) => {
+                      setSelectedStudentId(id);
+                      handleInputChange({
+                        target: { name: "student.id", value: id },
+                      });
+                    }}
+                    placeholder="Select a student"
+                  />
+
+                  <ProfileSelector
+                    label="Tutor"
+                    profiles={tutors}
+                    selectedId={selectedTutorId}
+                    onSelect={(id) => {
+                      setSelectedTutorId(id);
+                      handleInputChange({
+                        target: { name: "tutor.id", value: id },
+                      });
+                    }}
+                    placeholder="Select a tutor"
+                  />
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="startDate" className="text-right">
+                      Date
+                    </Label>
+                    <Input
+                      id="startDate"
+                      name="startDate"
+                      type="datetime-local"
+                      value={formatDateForInput(newSession.date)}
+                      onChange={(e) => {
+                        setNewSession({
+                          ...newSession,
+                          date: new Date(e.target.value).toISOString(),
+                        });
+                      }}
+                      disabled={isCheckingMeetingAvailability}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="" className="text-right">
+                      Meeting Link
+                    </Label>
+                    <div className="col-span-3">
+                      {" "}
+                      <Select
+                        value={selectedSession?.meeting?.id || ""}
+                        onValueChange={async (value) => {
+                          setNewSession({
+                            ...newSession,
+                            meeting: await getMeeting(value),
+                          });
+                        }}
+                      >
+                        <SelectTrigger >
+                          <SelectValue>
+                            {selectedSession?.meeting == null ||
+                              "Select a meeting"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {meetings.map((meeting) => (
+                            <SelectItem
+                              key={meeting.id}
+                              value={meeting.id}
+                              className="flex items-center justify-between"
+                            >
+                              <span>
+                                {meeting.name} | {meeting.meetingId}
+                              </span>
+                              <Circle
+                                className={`w-2 h-2 ml-2 ${
+                                  isMeetingAvailable(meeting)
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                } fill-current`}
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Other form fields */}
+                  <Button onClick={handleAddSession}>Add Session</Button>
+                </div>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
 
           {loading ? (
             <div className="text-center py-10">
