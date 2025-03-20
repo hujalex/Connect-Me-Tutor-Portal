@@ -22,6 +22,7 @@ import {
   setMinutes,
 } from "date-fns"; // Only use date-fns
 import ResetPassword from "@/app/(public)/set-password/page";
+import { getStudentSessions } from "./student.actions";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -610,16 +611,18 @@ export async function rescheduleSession(sessionId: string, newDate: string) {
   return data;
 }
 
-export async function getSessionKeys() {
+export async function getSessionKeys(data?: Session[]) {
   const sessionKeys: Set<string> = new Set();
 
-  const { data, error } = await supabase
-    .from("Sessions")
-    .select("student_id, tutor_id, date");
+  if (!data) {
+    const { data, error } = await supabase
+      .from("Sessions")
+      .select("student_id, tutor_id, date");
 
-  if (error) {
-    console.error("Error fetching sessions:", error);
-    throw error;
+    if (error) {
+      console.error("Error fetching sessions:", error);
+      throw error;
+    }
   }
 
   if (!data) return sessionKeys;
@@ -627,7 +630,7 @@ export async function getSessionKeys() {
   data.forEach((session) => {
     if (session.date) {
       const sessionDate = new Date(session.date);
-      const key = `${session.student_id}-${session.tutor_id}-${format(
+      const key = `${session.student?.id}-${session.tutor?.id}-${format(
         sessionDate,
         "yyyy-MM-dd-HH:mm"
       )}`;
@@ -638,121 +641,293 @@ export async function getSessionKeys() {
   return sessionKeys;
 }
 
+export async function addOneSession(session: Session): Promise<void> {
+  try {
+    const newSession = {
+      date: session.date,
+      student_id: session.student?.id,
+      tutor_id: session.tutor?.id,
+      status: "Active",
+      summary: session.summary,
+      meeting_id: session.meeting?.id,
+    };
+
+    const { data, error } = await supabase.from("Sessions").insert(newSession);
+  } catch (error) {
+    console.error("Unable to add one session", error);
+    throw error;
+  }
+}
+
 export async function addSessions(
   weekStartString: string,
   weekEndString: string,
-  enrollments: Enrollment[]
-) {
-  const weekStart = parseISO(weekStartString);
-  const weekEnd = parseISO(weekEndString);
-  const sessions: Session[] = [];
+  enrollments: Enrollment[],
+  sessions: Session[]
+): Promise<Session[]> {
+  try {
+    const weekStart = parseISO(weekStartString);
+    const weekEnd = parseISO(weekEndString);
+    const scheduledSessions: Set<string> = await getSessionKeys(sessions);
+    // const scheduledSessions2: Set<string> = await getSessionKeys();
 
-  const scheduledSessions: Set<string> = await getSessionKeys();
+    // scheduledSessions2.forEach(scheduledSessions.add, scheduledSessions);
 
-  for (const enrollment of enrollments) {
-    const { student, tutor, availability } = enrollment;
+    // Prepare bulk insert data
+    const sessionsToCreate: any[] = [];
+    const sessionsToReturn: Session[] = [];
 
-    if (!student || !tutor) continue;
+    // Process all enrollments
+    for (const enrollment of enrollments) {
+      const { student, tutor, availability, meetingId, summary } = enrollment;
 
-    for (const avail of availability) {
-      const { day, startTime, endTime } = avail;
-
-      if (!startTime || startTime.includes("-")) {
-        console.error(`Invalid time format for availability: ${startTime}`);
-        console.log("Errored Enrollment", enrollment);
+      // Skip invalid enrollments
+      if (!student?.id || !tutor?.id || !availability?.length) {
+        console.log("Skipping invalid enrollment:", enrollment);
         continue;
       }
 
-      const [availStart, availEnd] = [startTime, endTime];
+      // Process each availability slot
+      const { day, startTime, endTime } = availability[0];
 
-      if (!availStart || !availEnd) {
-        console.error(
-          `Invalid start or end time: start=${availStart}, end=${availEnd}`
-        );
+      // Skip invalid time formats
+      if (
+        !startTime ||
+        !endTime
+        // startTime.includes("-") ||
+        // endTime.includes("-")
+      ) {
+        console.error(`Invalid time format in availability:`, availability[0]);
         continue;
       }
 
-      let sessionDate = new Date(weekStart);
-      while (sessionDate <= weekEnd) {
-        if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
-          const availStartTime = parse(
-            availStart.toLowerCase(),
-            "HH:mm",
-            sessionDate
-          );
-          const availEndTime = parse(
-            availEnd.toLowerCase(),
-            "HH:mm",
-            sessionDate
-          );
+      // Find matching day in the week range
+      let currentDate = new Date(weekStart);
+      const dayLower = day.toLowerCase();
+
+      while (currentDate <= weekEnd) {
+        const currentDay = format(currentDate, "EEEE").toLowerCase();
+
+        // Skip days that don't match
+        if (currentDay !== dayLower) {
+          currentDate = addDays(currentDate, 1);
+          continue;
+        }
+
+        try {
+          // Parse times correctly
+          const [startHour, startMinute] = startTime.split(":").map(Number);
+          const [endHour, endMinute] = endTime.split(":").map(Number);
 
           if (
-            isNaN(availStartTime.getTime()) ||
-            isNaN(availEndTime.getTime())
+            isNaN(startHour) ||
+            isNaN(startMinute) ||
+            isNaN(endHour) ||
+            isNaN(endMinute)
           ) {
-            console.error(
-              `Invalid parsed time: start=${availStart}, end=${availEnd}`
+            throw new Error(
+              `Invalid time format: start=${startTime}, end=${endTime}`
             );
-            break;
           }
 
+          // Create session date with correct time
+          const sessionDate = new Date(currentDate);
           const sessionStartTime = setMinutes(
-            setHours(sessionDate, availStartTime.getHours()),
-            availStartTime.getMinutes()
-          );
-          const sessionEndTime = setMinutes(
-            setHours(sessionDate, availEndTime.getHours()),
-            availEndTime.getMinutes()
+            setHours(sessionDate, startHour),
+            startMinute
           );
 
-          if (
-            isBefore(sessionStartTime, weekStart) ||
-            isAfter(sessionEndTime, weekEnd)
-          ) {
-            sessionDate = addDays(sessionDate, 1);
+          // Skip if outside the week range (redundant but safer)
+          if (sessionStartTime < weekStart || sessionStartTime > weekEnd) {
+            currentDate = addDays(currentDate, 1);
             continue;
           }
 
-          // Check for duplicates
+          // Check for duplicate session
           const sessionKey = `${student.id}-${tutor.id}-${format(
             sessionStartTime,
             "yyyy-MM-dd-HH:mm"
           )}`;
-          if (scheduledSessions.has(sessionKey)) {
-            console.warn(`Duplicate session detected: ${sessionKey}`);
-            sessionDate = addDays(sessionDate, 1);
-            continue;
-          }
 
-          console.log(enrollment);
-
-          const { data: session, error } = await supabase
-            .from("Sessions")
-            .insert({
+          if (!scheduledSessions.has(sessionKey)) {
+            // Add to batch insert
+            sessionsToCreate.push({
               date: sessionStartTime.toISOString(),
               student_id: student.id,
               tutor_id: tutor.id,
               status: "Active",
-              summary: enrollment.summary,
-              meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
-            })
-            .single();
+              summary: summary || "",
+              meeting_id: meetingId || null,
+            });
 
-          if (error) {
-            console.error("Error creating session:", error);
-            continue;
+            // Track this session to avoid duplicates
+            scheduledSessions.add(sessionKey);
           }
-
-          sessions.push(session);
-          scheduledSessions.add(sessionKey);
+        } catch (err) {
+          console.error(
+            `Error processing time for ${day} ${startTime}-${endTime}:`,
+            err
+          );
         }
-        sessionDate = addDays(sessionDate, 1);
+
+        // Move to next day
+        currentDate = addDays(currentDate, 1);
       }
     }
-  }
 
-  return sessions;
+    // Perform batch insert if we have sessions to create
+    if (sessionsToCreate.length > 0) {
+      const { data, error } = await supabase
+        .from("Sessions")
+        .insert(sessionsToCreate)
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        // Transform returned data to Session objects
+        const sessions = await Promise.all(
+          data.map(async (session: any) => ({
+            id: session.id,
+            createdAt: session.created_at,
+            environment: session.environment,
+            date: session.date,
+            summary: session.summary,
+            meeting: await getMeeting(session.meeting_id),
+            student: await getProfileWithProfileId(session.student_id),
+            tutor: await getProfileWithProfileId(session.tutor_id),
+            status: session.status,
+            session_exit_form: session.session_exit_form || null,
+          }))
+        );
+
+        return sessions;
+      }
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Error creating sessions:", error);
+    throw error;
+  }
 }
+
+// export async function addSessions(
+//   weekStartString: string,
+//   weekEndString: string,
+//   enrollments: Enrollment[],
+//   sessionsFetched: Session[]
+// ) {
+//   const weekStart = parseISO(weekStartString);
+//   const weekEnd = parseISO(weekEndString);
+//   const sessions: Session[] = [];
+
+//   const scheduledSessions: Set<string> = await getSessionKeys(sessionsFetched);
+
+//   for (const enrollment of enrollments) {
+//     const { student, tutor, availability } = enrollment;
+
+//     if (!student || !tutor) continue;
+
+//     for (const avail of availability) {
+//       const { day, startTime, endTime } = avail;
+
+//       if (!startTime || startTime.includes("-")) {
+//         console.error(`Invalid time format for availability: ${startTime}`);
+//         console.log("Errored Enrollment", enrollment);
+//         continue;
+//       }
+
+//       const [availStart, availEnd] = [startTime, endTime];
+
+//       if (!availStart || !availEnd) {
+//         console.error(
+//           `Invalid start or end time: start=${availStart}, end=${availEnd}`
+//         );
+//         continue;
+//       }
+
+//       let sessionDate = new Date(weekStart);
+//       while (sessionDate <= weekEnd) {
+//         if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
+//           const availStartTime = parse(
+//             availStart.toLowerCase(),
+//             "HH:mm",
+//             sessionDate
+//           );
+//           const availEndTime = parse(
+//             availEnd.toLowerCase(),
+//             "HH:mm",
+//             sessionDate
+//           );
+
+//           if (
+//             isNaN(availStartTime.getTime()) ||
+//             isNaN(availEndTime.getTime())
+//           ) {
+//             console.error(
+//               `Invalid parsed time: start=${availStart}, end=${availEnd}`
+//             );
+//             break;
+//           }
+
+//           const sessionStartTime = setMinutes(
+//             setHours(sessionDate, availStartTime.getHours()),
+//             availStartTime.getMinutes()
+//           );
+//           const sessionEndTime = setMinutes(
+//             setHours(sessionDate, availEndTime.getHours()),
+//             availEndTime.getMinutes()
+//           );
+
+//           if (
+//             isBefore(sessionStartTime, weekStart) ||
+//             isAfter(sessionEndTime, weekEnd)
+//           ) {
+//             sessionDate = addDays(sessionDate, 1);
+//             continue;
+//           }
+
+//           // Check for duplicates
+//           const sessionKey = `${student.id}-${tutor.id}-${format(
+//             sessionStartTime,
+//             "yyyy-MM-dd-HH:mm"
+//           )}`;
+//           if (scheduledSessions.has(sessionKey)) {
+//             console.warn(`Duplicate session detected: ${sessionKey}`);
+//             sessionDate = addDays(sessionDate, 1);
+//             continue;
+//           }
+
+//           console.log(enrollment);
+
+//           const { data: session, error } = await supabase
+//             .from("Sessions")
+//             .insert({
+//               date: sessionStartTime.toISOString(),
+//               student_id: student.id,
+//               tutor_id: tutor.id,
+//               status: "Active",
+//               summary: enrollment.summary,
+//               meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
+//             })
+//             .single();
+
+//           if (error) {
+//             console.error("Error creating session:", error);
+//             continue;
+//           }
+
+//           sessions.push(session);
+//           scheduledSessions.add(sessionKey);
+//         }
+//         sessionDate = addDays(sessionDate, 1);
+//       }
+//     }
+//   }
+
+//   return sessions;
+// }
 
 // Function to update a session
 export async function updateSession(updatedSession: Session) {
