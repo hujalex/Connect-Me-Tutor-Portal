@@ -55,7 +55,16 @@ import {
   removeSession,
   getMeeting,
   addOneSession,
+  checkMeetingsAvailability,
+  // isMeetingAvailable,
 } from "@/lib/actions/admin.actions";
+// Add these imports at the top of the file
+import { addHours, areIntervalsOverlapping } from "date-fns";
+
+// Add these state variables to your component
+// const [meetingAvailability, setMeetingAvailability] = useState<
+//   Record<string, boolean>
+// >({});
 import { getProfileWithProfileId } from "@/lib/actions/user.actions";
 import { toast, Toaster } from "react-hot-toast";
 import { Session, Enrollment, Meeting, Profile } from "@/types";
@@ -68,8 +77,10 @@ import {
   CircleUserRound,
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
+import { boolean } from "zod";
 
 const Schedule = () => {
+  console.log("Component rendered"); // Add this to verify component rendering
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [sessions, setSessions] = useState<Session[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -79,8 +90,17 @@ const Schedule = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  //-----Checking Meeting Availability-----
+
   const [isCheckingMeetingAvailability, setIsCheckingMeetingAvailability] =
     useState(false);
+  const [meetingAvailabilityMap, setMeetingAvailabilityMap] = useState<
+    Record<string, boolean>
+  >({});
+  const [allSessions, setAllSessions] = useState<Session[]>([]);
+
+  //---------------------------------
 
   const [openStudentOptions, setOpenStudentOptions] = useState(false);
   const [openTutorOptions, setOpentTutorOptions] = useState(false);
@@ -246,6 +266,63 @@ const Schedule = () => {
     }
   };
 
+  const fetchAllSessionsFromSchedule = async () => {
+    try {
+      const data = await getAllSessions();
+      if (!data) throw new Error("Unable to retrieve all sessions");
+      setAllSessions(data);
+    } catch (error) {
+      console.error("Failed to fetch all sessions", error);
+      throw error;
+    }
+  };
+
+  const isMeetingAvailable = async (session: Session) => {
+    try {
+      setIsCheckingMeetingAvailability(true);
+      if (Object.keys(meetingAvailabilityMap).length === 0)
+        await fetchAllSessionsFromSchedule();
+
+      const updatedMeetingAvailability: { [key: string]: boolean } = {};
+
+      if (!session.date || !isValid(parseISO(session.date))) {
+        toast.error("Invalid session date selected");
+        return;
+      }
+
+      meetings.forEach((meeting) => {
+        updatedMeetingAvailability[meeting.id] = true;
+      });
+      const requestedSessionStartTime = parseISO(session.date);
+      const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
+
+      meetings.forEach((meeting) => {
+        const hasConflict = allSessions.some(
+          (existingSession) =>
+            session.id !== existingSession.id &&
+            existingSession.meeting?.id === meeting.id &&
+            areIntervalsOverlapping(
+              {
+                start: requestedSessionStartTime,
+                end: requestedSessionEndTime,
+              },
+              {
+                start: parseISO(existingSession.date),
+                end: addHours(parseISO(existingSession.date), 1),
+              }
+            )
+        );
+        updatedMeetingAvailability[meeting.id] = !hasConflict;
+      });
+      setMeetingAvailabilityMap(updatedMeetingAvailability);
+    } catch (error) {
+      toast.error("Unable to find available meeting links");
+      console.error("Unable to find available meeting links", error);
+    } finally {
+      setIsCheckingMeetingAvailability(false);
+    }
+  };
+
   const handleUpdateWeek = async () => {
     try {
       //------Set Loading-------
@@ -291,32 +368,6 @@ const Schedule = () => {
       toast.error(`Failed to add sessions. ${error.message}`);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Check if a meeting is available (not used in any complete/past session)
-  const isMeetingAvailable = (meeting: Meeting) => {
-    try {
-      const now = new Date();
-      return !sessions.some((session) => {
-        // Skip sessions without dates or meeting IDs
-        if (!session?.date || !session?.meeting) return false;
-
-        try {
-          const sessionEndTime = new Date(session.date);
-          sessionEndTime.setHours(sessionEndTime.getHours() + 1.5);
-          return (
-            (session.status === "Complete" || sessionEndTime < now) &&
-            session.meeting.id === meeting.id
-          );
-        } catch (error) {
-          console.error("Error processing session date:", error);
-          return false;
-        }
-      });
-    } catch (error) {
-      console.error("Error checking meeting availability:", error);
-      return true; // Default to available if there's an error
     }
   };
 
@@ -484,7 +535,7 @@ const Schedule = () => {
                 <DialogTitle>Add Session</DialogTitle>
               </DialogHeader>
 
-              <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+              <ScrollArea className="pr-4">
                 {" "}
                 <div className="grid gap-4 py-4">
                   <ProfileSelector
@@ -538,7 +589,13 @@ const Schedule = () => {
                     <div className="col-span-3">
                       {" "}
                       <Select
-                        value={selectedSession?.meeting?.id || ""}
+                        value={newSession?.meeting?.id || ""}
+                        onOpenChange={(open) => {
+                          console.log("Opening");
+                          if (open && newSession) {
+                            isMeetingAvailable(newSession as Session);
+                          }
+                        }}
                         onValueChange={async (value) => {
                           setNewSession({
                             ...newSession,
@@ -546,10 +603,9 @@ const Schedule = () => {
                           });
                         }}
                       >
-                        <SelectTrigger >
+                        <SelectTrigger>
                           <SelectValue>
-                            {selectedSession?.meeting == null ||
-                              "Select a meeting"}
+                            {newSession?.meeting?.name || "Select a meeting"}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -564,7 +620,7 @@ const Schedule = () => {
                               </span>
                               <Circle
                                 className={`w-2 h-2 ml-2 ${
-                                  isMeetingAvailable(meeting)
+                                  meetingAvailabilityMap[meeting.id]
                                     ? "text-green-500"
                                     : "text-red-500"
                                 } fill-current`}
@@ -577,7 +633,19 @@ const Schedule = () => {
                   </div>
 
                   {/* Other form fields */}
-                  <Button onClick={handleAddSession}>Add Session</Button>
+                  <Button
+                    onClick={handleAddSession}
+                    disabled={isCheckingMeetingAvailability}
+                  >
+                    {isCheckingMeetingAvailability ? (
+                      <>
+                        Checking Meeting Availability
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      </>
+                    ) : (
+                      "Add Session"
+                    )}
+                  </Button>
                 </div>
               </ScrollArea>
             </DialogContent>
@@ -823,6 +891,12 @@ const Schedule = () => {
                   <Label>Meeting</Label>
                   <Select
                     value={selectedSession?.meeting?.id || ""}
+                    onOpenChange={(open) => {
+                      console.log("Opening");
+                      if (open && selectedSession) {
+                        isMeetingAvailable(selectedSession as Session);
+                      }
+                    }}
                     onValueChange={async (value) =>
                       setSelectedSession({
                         ...selectedSession,
@@ -832,12 +906,7 @@ const Schedule = () => {
                   >
                     <SelectTrigger>
                       <SelectValue>
-                        {/* {(selectedSession.meetingId &&
-                        meetings.find(
-                          (meeting) => meeting.id === selectedSession.meetingId
-                        )?.name) ||
-                        "Select a meeting"} */}
-                        {selectedSession?.meeting == null || "Select a meeting"}
+                        {selectedSession?.meeting?.name || "Select a meeting"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -855,7 +924,7 @@ const Schedule = () => {
                           </span>
                           <Circle
                             className={`w-2 h-2 ml-2 ${
-                              isMeetingAvailable(meeting)
+                              meetingAvailabilityMap[meeting.id]
                                 ? "text-green-500"
                                 : "text-red-500"
                             } fill-current`}
@@ -879,8 +948,18 @@ const Schedule = () => {
                   ></Textarea>
                 </div>
                 <div className="flex flex-row justify-between">
-                  <Button onClick={() => handleUpdateSession(selectedSession)}>
-                    Update Session
+                  <Button
+                    disabled={isCheckingMeetingAvailability}
+                    onClick={() => handleUpdateSession(selectedSession)}
+                  >
+                    {isCheckingMeetingAvailability ? (
+                      <>
+                        Checking Available Meeting Links
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      </>
+                    ) : (
+                      "Update Session"
+                    )}
                   </Button>
                   <Button
                     variant="destructive"
