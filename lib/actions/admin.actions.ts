@@ -18,6 +18,9 @@ import {
   parseISO,
   isBefore,
   isAfter,
+  areIntervalsOverlapping,
+  addHours,
+  isValid,
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
@@ -639,6 +642,97 @@ export async function getSessionKeys(data?: Session[]) {
   });
 
   return sessionKeys;
+}
+
+/**
+ * Checks if a meeting is available at the requested session time
+ *
+ * @param meetingId - ID of the meeting to check
+ * @param sessionId - ID of the current session (to exclude from conflicts)
+ * @param sessionDate - ISO string date of the requested session
+ * @param existingSessions - Array of all sessions to check for conflicts
+ * @returns boolean - True if the meeting is available
+ */
+export async function isMeetingAvailable(
+  meetingId: string,
+  sessionId: string | undefined,
+  sessionDate: string,
+  existingSessions: Session[]
+): Promise<boolean> {
+  try {
+    // Check if the session date is valid
+    if (!sessionDate || !isValid(parseISO(sessionDate))) {
+      console.error("Invalid session date provided");
+      return false;
+    }
+
+    // Calculate session time range
+    const sessionStartTime = parseISO(sessionDate);
+    const sessionEndTime = addHours(sessionStartTime, 1);
+
+    // Check for conflicts with existing sessions
+    const hasConflict = existingSessions.some(
+      (existingSession) =>
+        // Don't check against the same session we're updating
+        sessionId !== existingSession.id &&
+        // Check if the meeting ID matches
+        existingSession.meeting?.id === meetingId &&
+        // Check for time overlap
+        areIntervalsOverlapping(
+          { start: sessionStartTime, end: sessionEndTime },
+          {
+            start: parseISO(existingSession.date),
+            end: addHours(parseISO(existingSession.date), 1),
+          }
+        )
+    );
+
+    // Return true if no conflicts found
+    return !hasConflict;
+  } catch (error) {
+    console.error("Error checking meeting availability:", error);
+    return false; // Default to unavailable on error
+  }
+}
+
+/**
+ * Checks availability of multiple meetings at once
+ *
+ * @param meetings - Array of meetings to check
+ * @param sessionId - ID of the current session
+ * @param sessionDate - ISO string date of the requested session
+ * @param existingSessions - Array of all sessions to check for conflicts
+ * @returns Record<string, boolean> - Map of meeting IDs to availability
+ */
+export async function checkMeetingsAvailability(
+  meetings: Meeting[],
+  sessionId: string | undefined,
+  sessionDate: string,
+  existingSessions: Session[]
+): Promise<Record<string, boolean>> {
+  try {
+    const meetingAvailability: Record<string, boolean> = {};
+
+    // Initialize all meetings as available
+    meetings.forEach((meeting) => {
+      meetingAvailability[meeting.id] = true;
+    });
+
+    // Check each meeting for conflicts
+    for (const meeting of meetings) {
+      meetingAvailability[meeting.id] = await isMeetingAvailable(
+        meeting.id,
+        sessionId,
+        sessionDate,
+        existingSessions
+      );
+    }
+
+    return meetingAvailability;
+  } catch (error) {
+    console.error("Error checking meetings availability:", error);
+    return {}; // Return empty object on error
+  }
 }
 
 export async function addOneSession(session: Session): Promise<void> {
