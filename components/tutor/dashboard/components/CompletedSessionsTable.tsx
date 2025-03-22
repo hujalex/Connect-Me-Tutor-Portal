@@ -48,61 +48,25 @@ import { format, parseISO, isAfter } from "date-fns";
 interface SessionsTableProps {
   paginatedSessions: Session[];
   filteredSessions: Session[];
-  meetings: Meeting[];
   currentPage: number;
   totalPages: number;
   rowsPerPage: string;
   selectedSession: Session | null;
-  selectedSessionDate: string | null;
-  isDialogOpen: boolean;
-  isSessionExitFormOpen: boolean;
-  isCheckingMeetingAvailability: boolean;
-  meetingAvailability: { [key: string]: boolean };
-  notes: string;
-  nextClassConfirmed: boolean;
   setSelectedSession: (session: Session | null) => void;
-  setSelectedSessionDate: (date: string | null) => void;
-  setIsDialogOpen: (open: boolean) => void;
-  setIsSessionExitFormOpen: (open: boolean) => void;
-  setNotes: (notes: string) => void;
-  setNextClassConfirmed: (confirmed: boolean) => void;
-  handleStatusChange: (session: Session) => void;
-  handleReschedule: (sessionId: string, newDate: string) => void;
-  handleSessionComplete: (session: Session, notes: string) => void;
   handlePageChange: (page: number) => void;
   handleRowsPerPageChange: (value: string) => void;
-  handleInputChange: (e: { target: { name: string; value: string } }) => void;
-  areMeetingsAvailableInCurrentWeek: (session: Session) => void;
 }
 
 const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
   paginatedSessions,
   filteredSessions,
-  meetings,
   currentPage,
   totalPages,
   rowsPerPage,
   selectedSession,
-  selectedSessionDate,
-  isDialogOpen,
-  isSessionExitFormOpen,
-  isCheckingMeetingAvailability,
-  meetingAvailability,
-  notes,
-  nextClassConfirmed,
   setSelectedSession,
-  setSelectedSessionDate,
-  setIsDialogOpen,
-  setIsSessionExitFormOpen,
-  setNotes,
-  setNextClassConfirmed,
-  handleStatusChange,
-  handleReschedule,
-  handleSessionComplete,
   handlePageChange,
   handleRowsPerPageChange,
-  handleInputChange,
-  areMeetingsAvailableInCurrentWeek,
 }) => {
   const [isMeetingNotesOpen, setIsMeetingNotesOpen] = useState(false);
 

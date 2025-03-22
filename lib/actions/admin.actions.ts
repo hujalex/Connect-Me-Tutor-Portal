@@ -587,6 +587,8 @@ export async function getAllSessions(
         tutor: await getProfileWithProfileId(session.tutor_id),
         status: session.status,
         session_exit_form: session.session_exit_form,
+        isQuestionOrConcern: session.isQuestionOrConcern,
+        isFirstSession: session.isFirstSession,
       }))
     );
 
@@ -765,6 +767,8 @@ export async function updateSession(updatedSession: Session) {
     summary,
     meeting,
     session_exit_form,
+    isQuestionOrConcern,
+    isFirstSession,
   } = updatedSession;
 
   console.log(id);
@@ -783,6 +787,8 @@ export async function updateSession(updatedSession: Session) {
       summary: summary,
       meeting_id: meeting?.id,
       session_exit_form: session_exit_form,
+      isQuestionOrConcern,
+      isFirstSession,
     })
     .eq("id", id);
   console.log("UPDATING...");

@@ -259,11 +259,15 @@ const TutorDashboard = () => {
 
   const handleSessionComplete = async (
     updatedSession: Session,
-    notes: string
+    notes: string,
+    isQuestionOrConcern: boolean,
+    isFirstSession: boolean
   ) => {
     try {
       await recordSessionExitForm(updatedSession.id, notes);
       updatedSession.status = "Complete";
+      updatedSession.isQuestionOrConcern = isQuestionOrConcern;
+      updatedSession.isFirstSession = isFirstSession;
       await updateSession(updatedSession);
       setSessions(
         sessions.map((e: Session) =>
@@ -397,33 +401,13 @@ const TutorDashboard = () => {
             <CompletedSessionsTable
               paginatedSessions={paginatedPastSessions}
               filteredSessions={filteredPastSessions}
-              meetings={meetings}
               currentPage={currentPage}
               totalPages={totalPages}
               rowsPerPage={rowsPerPage.toString()}
               selectedSession={selectedSession}
-              selectedSessionDate={selectedSessionDate}
-              isDialogOpen={isDialogOpen}
-              isSessionExitFormOpen={isSessionExitFormOpen}
-              isCheckingMeetingAvailability={isCheckingMeetingAvailability}
-              meetingAvailability={meetingAvailability}
-              notes={notes}
-              nextClassConfirmed={nextClassConfirmed}
               setSelectedSession={setSelectedSession}
-              setSelectedSessionDate={setSelectedSessionDate}
-              setIsDialogOpen={setIsDialogOpen}
-              setIsSessionExitFormOpen={setIsSessionExitFormOpen}
-              setNotes={setNotes}
-              setNextClassConfirmed={setNextClassConfirmed}
-              handleStatusChange={handleStatusChange}
-              handleReschedule={handleReschedule}
-              handleSessionComplete={handleSessionComplete}
               handlePageChange={handlePageChange}
               handleRowsPerPageChange={handleRowsPerPageChange}
-              handleInputChange={handleInputChange}
-              areMeetingsAvailableInCurrentWeek={
-                areMeetingsAvailableInCurrentWeek
-              }
             />
           </div>
 
