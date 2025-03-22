@@ -238,14 +238,10 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   setIsSessionExitFormOpen={setIsSessionExitFormOpen}
                   selectedSession={selectedSession}
                   setSelectedSession={setSelectedSession}
-                  // isQuestionOrConcern={isQuestionOrConcern}
-                  // setIsQuestionOrConcern={setIsQuestionOrConcern}
                   notes={notes}
                   setNotes={setNotes}
                   nextClassConfirmed={nextClassConfirmed}
                   setNextClassConfirmed={setNextClassConfirmed}
-                  // isFirstSession={isFirstSession}
-                  // setIsFirstSession={setIsFirstSession}
                   handleSessionComplete={handleSessionComplete}
                 />
                 {/* <Dialog

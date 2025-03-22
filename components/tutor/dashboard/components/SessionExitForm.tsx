@@ -89,7 +89,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
             }
           />
           <label htmlFor="next-class" className="text-sm font-medium">
-            I have a question or a concern (e.g my student did not show up)
+            I have a question or a concern
           </label>
         </div>
         <Textarea
@@ -109,8 +109,9 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
               setNextClassConfirmed(checked === true)
             }
           />
-          <label htmlFor="next-class" className="text-sm font-medium">
-            My student knows about our next class
+          <label htmlFor="next-class" className="text-sm font-medium flex">
+            <div className="text-red-500">*</div> My student knows about our
+            next class
           </label>
         </div>
         <div className="flex items-center space-x-2">
@@ -124,15 +125,18 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
           </label>
         </div>
         <Button
-          onClick={() =>
-            selectedSession &&
-            handleSessionComplete(
-              selectedSession,
-              notes,
-              isQuestionOrConcern,
-              isFirstSession
-            )
-          }
+          onClick={() => {
+            if (selectedSession) {
+              handleSessionComplete(
+                selectedSession,
+                notes,
+                isQuestionOrConcern,
+                isFirstSession
+              );
+            }
+            console.log(isQuestionOrConcern);
+            console.log(isFirstSession);
+          }}
           disabled={!notes || !nextClassConfirmed}
         >
           Submit

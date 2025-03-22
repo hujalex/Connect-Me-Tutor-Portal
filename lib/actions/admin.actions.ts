@@ -773,6 +773,8 @@ export async function updateSession(updatedSession: Session) {
 
   console.log(id);
   console.log(status);
+  console.log(isQuestionOrConcern);
+  console.log(isFirstSession);
   console.log(meeting);
 
   const { data, error } = await supabase
@@ -782,13 +784,11 @@ export async function updateSession(updatedSession: Session) {
       student_id: student?.id,
       tutor_id: tutor?.id,
       date: date,
-      // meeting_id: meetingId,
-      // meeting: meeting,
       summary: summary,
       meeting_id: meeting?.id,
       session_exit_form: session_exit_form,
-      isQuestionOrConcern,
-      isFirstSession,
+      is_question_or_concern: isQuestionOrConcern,
+      is_first_session: isFirstSession,
     })
     .eq("id", id);
   console.log("UPDATING...");
