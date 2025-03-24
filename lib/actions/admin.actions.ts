@@ -552,7 +552,10 @@ export async function getAllSessions(
       date,
       summary,
       meeting_id,
-      status
+      status,
+      is_question_or_concern,
+      is_first_session,
+      session_exit_form
     `);
 
     if (startDate) {
@@ -587,8 +590,8 @@ export async function getAllSessions(
         tutor: await getProfileWithProfileId(session.tutor_id),
         status: session.status,
         session_exit_form: session.session_exit_form,
-        isQuestionOrConcern: session.isQuestionOrConcern,
-        isFirstSession: session.isFirstSession,
+        isQuestionOrConcern: Boolean(session.is_question_or_concern),
+        isFirstSession: Boolean(session.is_first_session),
       }))
     );
 

@@ -66,6 +66,8 @@ export async function getStudentSessions(
       student: await getProfileWithProfileId(session.student_id),
       tutor: await getProfileWithProfileId(session.tutor_id),
       session_exit_form: session.session_exit_form,
+      isQuestionOrConcern: session.isQuestionOrConcern,
+      isFirstSession: session.isFirstSession,
     }))
   );
 
