@@ -556,7 +556,10 @@ export async function getAllSessions(
       date,
       summary,
       meeting_id,
-      status
+      status,
+      is_question_or_concern,
+      is_first_session,
+      session_exit_form
     `);
 
     if (startDate) {
@@ -591,6 +594,8 @@ export async function getAllSessions(
         tutor: await getProfileWithProfileId(session.tutor_id),
         status: session.status,
         session_exit_form: session.session_exit_form,
+        isQuestionOrConcern: Boolean(session.is_question_or_concern),
+        isFirstSession: Boolean(session.is_first_session),
       }))
     );
 
@@ -1034,10 +1039,14 @@ export async function updateSession(updatedSession: Session) {
     summary,
     meeting,
     session_exit_form,
+    isQuestionOrConcern,
+    isFirstSession,
   } = updatedSession;
 
   console.log(id);
   console.log(status);
+  console.log(isQuestionOrConcern);
+  console.log(isFirstSession);
   console.log(meeting);
 
   const { data, error } = await supabase
@@ -1047,11 +1056,11 @@ export async function updateSession(updatedSession: Session) {
       student_id: student?.id,
       tutor_id: tutor?.id,
       date: date,
-      // meeting_id: meetingId,
-      // meeting: meeting,
       summary: summary,
       meeting_id: meeting?.id,
       session_exit_form: session_exit_form,
+      is_question_or_concern: isQuestionOrConcern,
+      is_first_session: isFirstSession,
     })
     .eq("id", id);
   console.log("UPDATING...");

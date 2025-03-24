@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import { formatSessionDate } from "@/lib/utils";
 import { Session, Meeting } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ import {
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
+import SessionExitForm from "./SessionExitForm";
 
 interface SessionsTableProps {
   paginatedSessions: Session[];
@@ -80,7 +82,12 @@ interface SessionsTableProps {
   setNextClassConfirmed: (confirmed: boolean) => void;
   handleStatusChange: (session: Session) => void;
   handleReschedule: (sessionId: string, newDate: string) => void;
-  handleSessionComplete: (session: Session, notes: string) => void;
+  handleSessionComplete: (
+    session: Session,
+    notes: string,
+    isQuestionOrConcern: boolean,
+    isFirstSession: boolean
+  ) => void;
   handlePageChange: (page: number) => void;
   handleRowsPerPageChange: (value: string) => void;
   handleInputChange: (e: { target: { name: string; value: string } }) => void;
@@ -148,49 +155,49 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
             >
               <TableCell>
                 {/* <Select
-                  value={session?.status}
-                  onValueChange={(
-                    value: "Active" | "Complete" | "Cancelled"
-                  ) => {
-                    const updatedSession: Session = {
-                      ...session,
-                      status: value,
-                    };
-                    handleStatusChange(updatedSession);
-                  }}
+              value={session?.status}
+              onValueChange={(
+                value: "Active" | "Complete" | "Cancelled"
+              ) => {
+                const updatedSession: Session = {
+                  ...session,
+                  status: value,
+                };
+                handleStatusChange(updatedSession);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={session?.status}>
+                  {session.status ? session.status : "Select Status"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent
+                className={
+                  session.status === "Complete" ? "opacity-50" : ""
+                }
+              >
+                <SelectItem
+                  value="Active"
+                  className={
+                    session.status === "Complete"
+                      ? "pointer-events-none"
+                      : ""
+                  }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder={session?.status}>
-                      {session.status ? session.status : "Select Status"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent
-                    className={
-                      session.status === "Complete" ? "opacity-50" : ""
-                    }
-                  >
-                    <SelectItem
-                      value="Active"
-                      className={
-                        session.status === "Complete"
-                          ? "pointer-events-none"
-                          : ""
-                      }
-                    >
-                      Active
-                    </SelectItem>
-                    <SelectItem
-                      value="Cancelled"
-                      className={
-                        session.status === "Complete"
-                          ? "pointer-events-none"
-                          : ""
-                      }
-                    >
-                      Cancelled
-                    </SelectItem>
-                  </SelectContent>
-                </Select> */}
+                  Active
+                </SelectItem>
+                <SelectItem
+                  value="Cancelled"
+                  className={
+                    session.status === "Complete"
+                      ? "pointer-events-none"
+                      : ""
+                  }
+                >
+                  Cancelled
+                </SelectItem>
+              </SelectContent>
+            </Select> */}
                 {session.status}
               </TableCell>
               <TableCell>{formatSessionDate(session.date)}</TableCell>
@@ -225,66 +232,113 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
 
               {/* <TableCell></TableCell> */}
               <TableCell>
-                <Dialog
-                  open={isSessionExitFormOpen}
-                  onOpenChange={setIsSessionExitFormOpen}
-                >
-                  <DialogTrigger asChild>
-                    <HoverCard>
-                      <HoverCardTrigger>
-                        <Button
-                          variant="outline"
-                          disabled={isAfter(parseISO(session.date), Date.now())}
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setIsSessionExitFormOpen(true);
-                          }}
-                        >
-                          SEF
-                        </Button>
-                      </HoverCardTrigger>
-                      <HoverCardContent>
-                        <div className="space-y-1">
-                          Session Exit Form will be available after your session
-                        </div>
-                      </HoverCardContent>
-                    </HoverCard>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Session Exit Form</DialogTitle>
-                    </DialogHeader>
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="In 2-4 sentences, What did you cover during your session?"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="next-class"
-                        checked={nextClassConfirmed}
-                        onCheckedChange={(checked) =>
-                          setNextClassConfirmed(checked === true)
-                        }
-                      />
-                      <label
-                        htmlFor="next-class"
-                        className="text-sm font-medium"
-                      >
-                        Does your student know about your next class?
-                      </label>
-                    </div>
+                <SessionExitForm
+                  currSession={session}
+                  isSessionExitFormOpen={isSessionExitFormOpen}
+                  setIsSessionExitFormOpen={setIsSessionExitFormOpen}
+                  selectedSession={selectedSession}
+                  setSelectedSession={setSelectedSession}
+                  notes={notes}
+                  setNotes={setNotes}
+                  nextClassConfirmed={nextClassConfirmed}
+                  setNextClassConfirmed={setNextClassConfirmed}
+                  handleSessionComplete={handleSessionComplete}
+                />
+                {/* <Dialog
+              open={isSessionExitFormOpen}
+              onOpenChange={setIsSessionExitFormOpen}
+            >
+              <DialogTrigger asChild>
+                <HoverCard>
+                  <HoverCardTrigger>
                     <Button
-                      onClick={() =>
-                        selectedSession &&
-                        handleSessionComplete(selectedSession, notes)
-                      }
-                      disabled={!notes || !nextClassConfirmed}
+                      variant="outline"
+                      disabled={isAfter(parseISO(session.date), Date.now())}
+                      onClick={() => {
+                        setSelectedSession(session);
+                        setIsSessionExitFormOpen(true);
+                      }}
                     >
-                      Mark Session Complete
+                      SEF
                     </Button>
-                  </DialogContent>
-                </Dialog>
+                  </HoverCardTrigger>
+                  <HoverCardContent>
+                    <div className="space-y-1">
+                      Session Exit Form will be available after your session
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Session Exit Form</DialogTitle>
+                </DialogHeader>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="question-or-concern"
+                    checked={isQuestionOrConcern}
+                    onCheckedChange={(checked) =>
+                      setIsQuestionOrConcern(checked === true)
+                    }
+                  />
+                  <label
+                    htmlFor="next-class"
+                    className="text-sm font-medium"
+                  >
+                    I have a question or a concern (e.g my student did not
+                    show up)
+                  </label>
+                </div>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder={
+                    isQuestionOrConcern
+                      ? "What is your question or concern?"
+                      : "In 2-4 sentences, What did you cover during your session?"
+                  }
+                />
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="next-class"
+                    checked={nextClassConfirmed}
+                    onCheckedChange={(checked) =>
+                      setNextClassConfirmed(checked === true)
+                    }
+                  />
+                  <label
+                    htmlFor="next-class"
+                    className="text-sm font-medium"
+                  >
+                    My student knows about our next class
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="first-session"
+                    checked={isFirstSession}
+                    onCheckedChange={(checked) =>
+                      setIsFirstSession(checked === true)
+                    }
+                  />
+                  <label
+                    htmlFor="next-class"
+                    className="text-sm font-medium"
+                  >
+                    This is my first session
+                  </label>
+                </div>
+                <Button
+                  onClick={() =>
+                    selectedSession &&
+                    handleSessionComplete(selectedSession, notes)
+                  }
+                  disabled={!notes || !nextClassConfirmed}
+                >
+                  Submit
+                </Button>
+              </DialogContent>
+            </Dialog> */}
               </TableCell>
               <TableCell className="flex content-center">
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

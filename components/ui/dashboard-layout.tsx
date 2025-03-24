@@ -102,7 +102,7 @@ export default function DashboardLayout({
       icon: <Users className="h-5 w-5" />,
     },
     {
-      title: "My Stats",
+      title: "My Hours",
       href: "/dashboard/my-stats",
       icon: <TrendingUp className="h-5 w-5" />,
     },

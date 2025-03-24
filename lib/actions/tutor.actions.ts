@@ -68,6 +68,8 @@ export async function getTutorSessions(
       tutor: await getProfileWithProfileId(session.tutor_id),
       status: session.status,
       session_exit_form: session.session_exit_form,
+      isQuestionOrConcern: Boolean(session.isQuestionOrConcernO),
+      isFirstSession: Boolean(session.isFirstSession),
     }))
   );
 

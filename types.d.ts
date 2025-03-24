@@ -36,6 +36,8 @@ interface Session {
   meeting?: Meeting | null;
   status: "Active" | "Complete" | "Cancelled";
   session_exit_form: string;
+  isQuestionOrConcern: boolean,
+  isFirstSession: boolean,
 }
 
 interface Meeting {
