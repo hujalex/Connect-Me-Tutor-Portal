@@ -897,6 +897,8 @@ export async function addSessions(
             tutor: await getProfileWithProfileId(session.tutor_id),
             status: session.status,
             session_exit_form: session.session_exit_form || null,
+            isQuestionOrConcern: session.isQuestionOrConcern,
+            isFirstSession: session.isFirstSession,
           }))
         );
 
