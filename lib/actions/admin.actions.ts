@@ -696,6 +696,17 @@ export async function isMeetingAvailable(
 }
 
 /**
+ *Applies a SQL query to check if an individual meeting is available
+ *@param meetingId
+ *@param session
+ */
+
+export async function isSingleMeetingAvailable(
+  meetingId: string,
+  session: Session
+): Promise<void> {}
+
+/**
  * Checks availability of multiple meetings at once
  *
  * @param meetings - Array of meetings to check
@@ -1452,15 +1463,37 @@ export async function createEvent(event: Event) {
   }
 }
 
-export async function removeEvent(eventId: string) {
-  // Create a notification for the admin
-  const { error: eventError } = await supabase
-    .from("Events")
-    .delete()
-    .eq("id", eventId);
+export async function removeEvent(eventId: string): Promise<boolean> {
+  try {
+    // Validate eventId format
+    if (!eventId || typeof eventId !== "string") {
+      console.error("Invalid event ID provided:", eventId);
+      return false;
+    }
 
-  if (eventError) {
-    throw eventError;
+    // Attempt to delete the event
+    const { data, error, count } = await supabase
+      .from("Events")
+      .delete()
+      .eq("id", eventId)
+      .select(); // Add this to get back the deleted record
+
+    if (error) {
+      console.error("Error deleting event:", error);
+      throw error;
+    }
+
+    // Check if any records were actually deleted
+    if (!data || data.length === 0) {
+      console.warn(`No event found with ID: ${eventId}`);
+      return false;
+    }
+
+    console.log(`Successfully deleted event with ID: ${eventId}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to remove event:", error);
+    throw error;
   }
 }
 

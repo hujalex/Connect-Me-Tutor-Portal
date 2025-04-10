@@ -640,12 +640,10 @@ const TutorList = () => {
                     </Label>
                     <div className="relative">
                       <Combobox
-                        list={tutors
-                          // .filter((tutor) => tutor.status === "Inactive")
-                          .map((tutor) => ({
-                            value: tutor.id,
-                            label: `${tutor.firstName} ${tutor.lastName}`,
-                          }))}
+                        list={tutors.map((tutor) => ({
+                          value: tutor.id,
+                          label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
+                        }))}
                         category="tutor"
                         onValueChange={setSelectedTutorId}
                       />
