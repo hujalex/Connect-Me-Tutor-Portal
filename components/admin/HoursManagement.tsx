@@ -1,39 +1,72 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfWeek, endOfMonth, eachWeekOfInterval, parseISO } from 'date-fns';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  format,
+  startOfMonth,
+  endOfWeek,
+  endOfMonth,
+  eachWeekOfInterval,
+  parseISO,
+} from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getAllProfiles, getEvents, getEventsWithTutorMonth, createEvent, removeEvent } from "@/lib/actions/admin.actions";
+import {
+  getAllProfiles,
+  getEvents,
+  getEventsWithTutorMonth,
+  createEvent,
+  removeEvent,
+} from "@/lib/actions/admin.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
-import { Profile, Session, Event } from '@/types';
+import { Profile, Session, Event } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
-
+import { Combobox } from "../ui/combobox";
+import { Combobox2 } from "../ui/combobox2";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [sessionsData, setSessionsData] = useState<{ [key: string]: Session[] }>({});
+  const [sessionsData, setSessionsData] = useState<{
+    [key: string]: Session[];
+  }>({});
   const [eventsData, setEventsData] = useState<{ [key: string]: Event[] }>({});
-  const [allTimeHours, setAllTimeHours] = useState<{ [key: string]: number }>({});
+  const [allTimeHours, setAllTimeHours] = useState<{ [key: string]: number }>(
+    {}
+  );
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isRemoveEventModalOpen, setIsRemoveEventModalOpen] = useState(false);
-  const [selectedTutorForEvent, setSelectedTutorForEvent] = useState<string | null>(null);
+  const [selectedTutorForEvent, setSelectedTutorForEvent] = useState<
+    string | null
+  >(null);
   const [newEvent, setNewEvent] = useState<Partial<Event>>({});
   const [eventsToRemove, setEventsToRemove] = useState<Event[]>([]);
-  const [selectedEventToRemove, setSelectedEventToRemove] = useState<string | null>(null);
-
+  const [selectedEventToRemove, setSelectedEventToRemove] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     fetchTutors();
@@ -57,15 +90,20 @@ const HoursManager = () => {
     }
   };
 
-  const 
-  fetchSessionsAndEvents = async () => {
-    const sessionsPromises = tutors.map(tutor => 
-      getTutorSessions(tutor.id, startOfMonth(selectedDate).toISOString(), endOfMonth(selectedDate).toISOString())
+  const fetchSessionsAndEvents = async () => {
+    const sessionsPromises = tutors.map((tutor) =>
+      getTutorSessions(
+        tutor.id,
+        startOfMonth(selectedDate).toISOString(),
+        endOfMonth(selectedDate).toISOString()
+      )
     );
-    const eventsPromises = tutors.map(tutor => 
-        getEventsWithTutorMonth(tutor?.id, startOfMonth(selectedDate).toISOString())
+    const eventsPromises = tutors.map((tutor) =>
+      getEventsWithTutorMonth(
+        tutor?.id,
+        startOfMonth(selectedDate).toISOString()
+      )
     );
-
 
     try {
       const sessionsResults = await Promise.all(sessionsPromises);
@@ -77,39 +115,42 @@ const HoursManager = () => {
       tutors.forEach((tutor, index) => {
         newSessionsData[tutor.id] = sessionsResults[index];
         if (eventsResults[index]) {
-            newEventsData[tutor.id] = eventsResults[index];
+          newEventsData[tutor.id] = eventsResults[index];
         }
       });
 
       setSessionsData(newSessionsData);
       setEventsData(newEventsData);
 
-      console.log("Fetched")
+      console.log("Fetched");
     } catch (error) {
       console.error("Failed to fetch sessions or events:", error);
     }
   };
 
   const calculateAllTimeHours = async () => {
-    const allTimeHoursPromises = tutors.map(async tutor => {
+    const allTimeHoursPromises = tutors.map(async (tutor) => {
       const allSessions = await getTutorSessions(tutor.id);
       const allEvents = await getEvents(tutor.id);
 
       const sessionHours = allSessions
-        .filter(session => session.status === 'Complete')
-        .reduce((total, session) => total + calculateSessionDuration(session), 0);
-        // .reduce((total, session) => total + 1.0)
+        .filter((session) => session.status === "Complete")
+        .reduce(
+          (total, session) => total + calculateSessionDuration(session),
+          0
+        );
+      // .reduce((total, session) => total + 1.0)
 
+      const eventHours =
+        allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
 
-      const eventHours = allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
-
-      return { tutorId: tutor.id, hours: (sessionHours) + eventHours };
+      return { tutorId: tutor.id, hours: sessionHours + eventHours };
     });
 
     try {
       const results = await Promise.all(allTimeHoursPromises);
       const newAllTimeHours: { [key: string]: number } = {};
-      results.forEach(result => {
+      results.forEach((result) => {
         newAllTimeHours[result.tutorId] = result.hours;
       });
       setAllTimeHours(newAllTimeHours);
@@ -121,36 +162,46 @@ const HoursManager = () => {
   const calculateSessionDuration = (session: Session) => {
     const start = new Date(session.date);
     const end = new Date(session.date);
-    let sessionDuration = 60 // ! Subject to change
+    let sessionDuration = 60; // ! Subject to change
     end.setMinutes(end.getMinutes() + sessionDuration);
     return (end.getTime() - start.getTime()) / (1000 * 60 * 60); // Convert to hours
   };
 
-  const calculateWeeklyHours = (tutorId: string, weekStart: Date, weekEnd: Date) => {
-    return sessionsData[tutorId]
-      ?.filter(session => 
-        session.status === 'Complete' &&
-        new Date(session.date) >= weekStart &&
-        new Date(session.date) < weekEnd
-      )
-      .reduce((total, session) => total + 1, 0) || 0;
+  const calculateWeeklyHours = (
+    tutorId: string,
+    weekStart: Date,
+    weekEnd: Date
+  ) => {
+    return (
+      sessionsData[tutorId]
+        ?.filter(
+          (session) =>
+            session.status === "Complete" &&
+            new Date(session.date) >= weekStart &&
+            new Date(session.date) < weekEnd
+        )
+        .reduce((total, session) => total + 1, 0) || 0
+    );
   };
 
   const calculateExtraHours = (tutorId: string) => {
-    return eventsData[tutorId]?.reduce((total, event) => total + event.hours, 0) || 0;
+    return (
+      eventsData[tutorId]?.reduce((total, event) => total + event.hours, 0) || 0
+    );
   };
 
   const calculateMonthHours = (tutorId: string) => {
-    const sessionHours = sessionsData[tutorId]
-      ?.filter(session => session.status === 'Complete')
-      .reduce((total, session) => total + 1, 0) || 0;
+    const sessionHours =
+      sessionsData[tutorId]
+        ?.filter((session) => session.status === "Complete")
+        .reduce((total, session) => total + 1, 0) || 0;
     const extraHours = calculateExtraHours(tutorId);
     return sessionHours + extraHours;
   };
 
   const weeksInMonth = eachWeekOfInterval({
     start: startOfMonth(selectedDate),
-    end: endOfMonth(selectedDate)
+    end: endOfMonth(selectedDate),
   });
 
   const monthYearOptions = Array.from({ length: 24 }, (_, i) => {
@@ -160,7 +211,12 @@ const HoursManager = () => {
   });
 
   const handleAddEvent = async () => {
-    if (newEvent.tutorId && newEvent.date && newEvent.hours && newEvent.summary) {
+    if (
+      newEvent.tutorId &&
+      newEvent.date &&
+      newEvent.hours &&
+      newEvent.summary
+    ) {
       try {
         await createEvent(newEvent as Event);
         toast.success("Event added successfully.");
@@ -179,8 +235,11 @@ const HoursManager = () => {
   const handleRemoveEvent = async () => {
     if (selectedEventToRemove) {
       try {
-        await removeEvent(selectedEventToRemove);
-        toast.success("Event removed successfully. Refresh to view update.");
+        console.log("Selected Event to Remove", selectedEventToRemove);
+        const res = await removeEvent(selectedEventToRemove);
+        if (res)
+          toast.success("Event removed successfully. Refresh to view update.");
+        else toast.error("Unable to remove event");
         setIsRemoveEventModalOpen(false);
         setSelectedEventToRemove(null);
         fetchSessionsAndEvents();
@@ -200,112 +259,172 @@ const HoursManager = () => {
       </div>
       <div>
         <div className="overflow-x-auto flex-grow bg-white rounded-lg shadow p-6">
-            <div className="flex justify-end items-center">
-                <div className="flex space-x-4">
-                    <Select
-                    onValueChange={(value) => setSelectedDate(new Date(value))}
-                    defaultValue={selectedDate.toISOString()}
+          <div className="flex justify-end items-center">
+            <div className="flex space-x-4">
+              <Select
+                onValueChange={(value) => setSelectedDate(new Date(value))}
+                defaultValue={selectedDate.toISOString()}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthYearOptions.map((date) => (
+                    <SelectItem
+                      key={date.toISOString()}
+                      value={date.toISOString()}
                     >
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select month" />
+                      {format(date, "MMMM yyyy")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Dialog
+                open={isAddEventModalOpen}
+                onOpenChange={setIsAddEventModalOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button onClick={() => setIsAddEventModalOpen(true)}>
+                    Add Event
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Event</DialogTitle>
+                  </DialogHeader>
+                  {/* <Select
+                    onValueChange={(value) =>
+                      setNewEvent({ ...newEvent, tutorId: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Tutor" />
                     </SelectTrigger>
                     <SelectContent>
-                        {monthYearOptions.map((date) => (
-                        <SelectItem key={date.toISOString()} value={date.toISOString()}>
-                            {format(date, 'MMMM yyyy')}
+                      {tutors.map((tutor) => (
+                        <SelectItem key={tutor.id} value={tutor.id}>
+                          {tutor.firstName} {tutor.lastName}
                         </SelectItem>
-                        ))}
+                      ))}
                     </SelectContent>
+                  </Select> */}
+                  <Combobox
+                    list={tutors
+                      // .filter((student) => student.status === "Active")
+                      .map((tutor) => ({
+                        value: tutor.id,
+                        label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
+                      }))}
+                    category="tutor"
+                    onValueChange={(value) =>
+                      setNewEvent({ ...newEvent, tutorId: value })
+                    }
+                  />
+                  <Input
+                    type="date"
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, date: e.target.value })
+                    }
+                    placeholder="Date"
+                  />
+                  <Input
+                    type="number"
+                    onChange={(e) =>
+                      setNewEvent({
+                        ...newEvent,
+                        hours: parseFloat(e.target.value),
+                      })
+                    }
+                    placeholder="Hours"
+                  />
+                  <Input
+                    type="text"
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, summary: e.target.value })
+                    }
+                    placeholder="Summary"
+                  />
+                  <Button onClick={handleAddEvent}>Add Event</Button>
+                </DialogContent>
+              </Dialog>
+              <Dialog
+                open={isRemoveEventModalOpen}
+                onOpenChange={setIsRemoveEventModalOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button onClick={() => setIsRemoveEventModalOpen(true)}>
+                    Remove Event
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Remove Event</DialogTitle>
+                  </DialogHeader>
+                  <Combobox
+                    list={tutors
+                      // .filter((student) => student.status === "Active")
+                      .map((tutor) => ({
+                        value: tutor.id,
+                        label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
+                      }))}
+                    category="tutor"
+                    onValueChange={async (value) => {
+                      try {
+                        // Show loading state
+                        toast.loading("Loading events...");
+                        const events = await getEvents(value);
+                        setEventsToRemove(events || []);
+                        toast.dismiss();
+                      } catch (error) {
+                        console.error("Failed to fetch events:", error);
+                        toast.error("Failed to load events");
+                      }
+                    }}
+                  />
+                  {eventsToRemove && (
+                    <Select
+                      onValueChange={(value) => setSelectedEventToRemove(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Event to Remove" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eventsToRemove.map((event) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            <div className="flex justify-between w-full">
+                              <span>
+                                {format(parseISO(event.date), "yyyy-MM-dd")} -{" "}
+                                {event.summary}
+                              </span>
+                              <span className="font-semibold ml-2">
+                                {event.hours} hrs
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
-                    <Dialog open={isAddEventModalOpen} onOpenChange={setIsAddEventModalOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={() => setIsAddEventModalOpen(true)}>Add Event</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                        <DialogTitle>Add New Event</DialogTitle>
-                        </DialogHeader>
-                        <Select onValueChange={(value) => setNewEvent({ ...newEvent, tutorId: value })}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Tutor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {tutors.map((tutor) => (
-                            <SelectItem key={tutor.id} value={tutor.id}>
-                                {tutor.firstName} {tutor.lastName}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <Input
-                        type="date"
-                        onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                        placeholder="Date"
-                        />
-                        <Input
-                        type="number"
-                        onChange={(e) => setNewEvent({ ...newEvent, hours: parseFloat(e.target.value) })}
-                        placeholder="Hours"
-                        />
-                        <Input
-                        type="text"
-                        onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
-                        placeholder="Summary"
-                        />
-                        <Button onClick={handleAddEvent}>Add Event</Button>
-                    </DialogContent>
-                    </Dialog>
-                    <Dialog open={isRemoveEventModalOpen} onOpenChange={setIsRemoveEventModalOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={() => setIsRemoveEventModalOpen(true)}>Remove Event</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                        <DialogTitle>Remove Event</DialogTitle>
-                        </DialogHeader>
-                        <Select onValueChange={(value) => {
-                        setSelectedTutorForEvent(value);
-                        setEventsToRemove(eventsData[value] || []);
-                        }}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Tutor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {tutors.map((tutor) => (
-                            <SelectItem key={tutor.id} value={tutor.id}>
-                                {tutor.firstName} {tutor.lastName}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        {selectedTutorForEvent && (
-                        <Select onValueChange={(value) => setSelectedEventToRemove(value)}>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Select Event to Remove" />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {eventsToRemove.map((event) => (
-                                <SelectItem key={event.id} value={event.id}>
-                                {format(parseISO(event.date), 'yyyy-MM-dd')} - {event.summary}
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        )}
-                        <Button onClick={handleRemoveEvent}>Remove Event</Button>
-                    </DialogContent>
-                    </Dialog>
-                </div>
+                  )}
+                  <Button onClick={handleRemoveEvent}>Remove Event</Button>
+                </DialogContent>
+              </Dialog>
             </div>
-          
+          </div>
+
           <Table>
-          <TableHeader>
+            <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 z-10 bg-white">Tutor Name</TableHead>
+                <TableHead className="sticky left-0 z-10 bg-white">
+                  Tutor Name
+                </TableHead>
                 {weeksInMonth.map((week, index) => (
                   <TableHead key={week.toISOString()}>
-                    
-                    {format(week, 'MMM d')} - {format(new Date(week.getTime() + 6 * 24 * 60 * 60 * 1000), 'MMM d')}
+                    {format(week, "MMM d")} -{" "}
+                    {format(
+                      new Date(week.getTime() + 6 * 24 * 60 * 60 * 1000),
+                      "MMM d"
+                    )}
                   </TableHead>
                 ))}
                 <TableHead>Added</TableHead>
@@ -316,22 +435,34 @@ const HoursManager = () => {
             <TableBody>
               {tutors.map((tutor) => (
                 <TableRow key={tutor.id}>
-                  <TableCell className="sticky left-0 z-10 bg-white">{tutor.firstName} {tutor.lastName}</TableCell>
+                  <TableCell className="sticky left-0 z-10 bg-white">
+                    {tutor.firstName} {tutor.lastName}
+                  </TableCell>
                   {weeksInMonth.map((week) => (
                     <TableCell key={week.toISOString()}>
-                      {calculateWeeklyHours(tutor.id, week, new Date(week.getTime() + 7 * 24 * 60 * 60 * 1000)).toFixed(2)}
+                      {calculateWeeklyHours(
+                        tutor.id,
+                        week,
+                        new Date(week.getTime() + 7 * 24 * 60 * 60 * 1000)
+                      ).toFixed(2)}
                     </TableCell>
                   ))}
-                  <TableCell>{calculateExtraHours(tutor.id).toFixed(2)}</TableCell>
-                  <TableCell>{calculateMonthHours(tutor.id).toFixed(2)}</TableCell>
-                  <TableCell>{allTimeHours[tutor.id]?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell>
+                    {calculateExtraHours(tutor.id).toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    {calculateMonthHours(tutor.id).toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    {allTimeHours[tutor.id]?.toFixed(2) || "0.00"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       </div>
-      <Toaster/>
+      <Toaster />
     </main>
   );
 };

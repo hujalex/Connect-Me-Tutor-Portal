@@ -79,6 +79,7 @@ export function Combobox({
     } else {
       setValue(defaultValue);
       setSelectedLabel(defaultValue);
+      setSearchTerm("");
       if (onValueChange) {
         onValueChange("");
       }
@@ -101,37 +102,58 @@ export function Combobox({
     }
   };
 
+  const shouldShowList = searchTerm.length > 0;
+
   return (
     // <Select value={value} onValueChange={handleValueChange}>
     <Command>
-      <CommandInput placeholder={`Search ${category}...`} />
-      <CommandList className="h-[200px]">
-        <CommandEmpty>No {category} found.</CommandEmpty>
-        <CommandGroup>
-          {list.map((item) => (
-            <CommandItem
-              key={item.value}
-              value={item.label}
-              onSelect={() => handleSelect(item)}
-            >
-              {item.label}
-              <Check
-                className={cn(
-                  "ml-auto",
-                  selectedLabel === item.label ? "opacity-100" : "opacity-0"
-                )}
-              />
+      <CommandInput
+        placeholder={`Search ${category}...`}
+        value={searchTerm}
+        onValueChange={setSearchTerm}
+      />
+      {shouldShowList && (
+        <>
+          {" "}
+          <CommandList className="h-[200px]">
+            <CommandEmpty>No {category} found.</CommandEmpty>
+            <CommandGroup>
+              {list.map((item) => (
+                <CommandItem
+                  key={item.value}
+                  value={item.label}
+                  onSelect={() => handleSelect(item)}
+                  className={cn(
+                    selectedLabel === item.label
+                      ? "bg-blue-400/10 text-blue-500"
+                      : ""
+                  )}
+                >
+                  {item.label}
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      selectedLabel === item.label ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </>
+      )}
+
+      {selectedLabel && (
+        <>
+          <Separator />
+          <CommandList onClick={() => handleSelect(null)}>
+            <CommandItem>
+              <span className="font-medium py-1">Clear Selection</span>
+              <SquareMinus />
             </CommandItem>
-          ))}
-        </CommandGroup>
-      </CommandList>
-      <Separator />
-      <CommandList onClick={() => handleSelect(null)}>
-        <CommandItem>
-          <span className="font-medium py-1">Clear Selection</span>
-          <SquareMinus />
-        </CommandItem>
-      </CommandList>
+          </CommandList>
+        </>
+      )}
     </Command>
     // </Select>
   );
