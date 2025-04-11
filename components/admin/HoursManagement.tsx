@@ -392,8 +392,15 @@ const HoursManager = () => {
                       <SelectContent>
                         {eventsToRemove.map((event) => (
                           <SelectItem key={event.id} value={event.id}>
-                            {format(parseISO(event.date), "yyyy-MM-dd")} -{" "}
-                            {event.summary} {event.hours}
+                            <div className="flex justify-between w-full">
+                              <span>
+                                {format(parseISO(event.date), "yyyy-MM-dd")} -{" "}
+                                {event.summary}
+                              </span>
+                              <span className="font-semibold ml-2">
+                                {event.hours} hrs
+                              </span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
