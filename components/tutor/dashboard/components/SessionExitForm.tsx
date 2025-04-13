@@ -101,19 +101,23 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
               : "In 2-4 sentences, What did you cover during your session?"
           }
         />
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="next-class"
-            checked={nextClassConfirmed}
-            onCheckedChange={(checked) =>
-              setNextClassConfirmed(checked === true)
-            }
-          />
-          <label htmlFor="next-class" className="text-sm font-medium flex">
-            <div className="text-red-500">*</div> My student knows about our
-            next class
-          </label>
+        <div className={isQuestionOrConcern ? "hidden" : ""}>
+          {" "}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="next-class"
+              checked={nextClassConfirmed}
+              onCheckedChange={(checked) =>
+                setNextClassConfirmed(checked === true)
+              }
+            />
+            <label htmlFor="next-class" className="text-sm font-medium flex">
+              <div className="text-red-500">*</div> My student knows about our
+              next class
+            </label>
+          </div>
         </div>
+
         <div className="flex items-center space-x-2">
           <Checkbox
             id="first-session"
@@ -137,7 +141,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
             console.log(isQuestionOrConcern);
             console.log(isFirstSession);
           }}
-          disabled={!notes || !nextClassConfirmed}
+          disabled={!notes || (!nextClassConfirmed && !isQuestionOrConcern)}
         >
           Submit
         </Button>
