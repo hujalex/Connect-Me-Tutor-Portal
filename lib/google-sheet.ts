@@ -2,7 +2,7 @@ import { google } from "googleapis";
 
 async function authenticate() {
   const auth = new google.auth.GoogleAuth({
-    keyFile: process.env.GOOGLE_APPLICATION_CREDIENTIALS,
+    keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
