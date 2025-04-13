@@ -32,6 +32,7 @@
     "cmdk": "^1.0.4",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "googleapis": "^148.0.0",
     "jsonwebtoken": "^9.0.2",
     "jsrsasign": "^11.1.0",
     "lucide-react": "^0.424.0",

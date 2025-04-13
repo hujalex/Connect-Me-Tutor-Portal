@@ -278,6 +278,35 @@ const TutorDashboard = () => {
       setIsSessionExitFormOpen(false);
       setNotes("");
       setNextClassConfirmed(false);
+
+      //API Call to update operation logs
+
+      if (isQuestionOrConcern) {
+        const response = await fetch(
+          "/api/session-exit-form/questions-concerns",
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify({
+              tutorFirstName: updatedSession.tutor?.firstName,
+              tutorLastName: updatedSession.tutor?.lastName,
+              studentFirstName: updatedSession.student?.firstName,
+              studentLastName: updatedSession.student?.lastName,
+              formContent: notes,
+              tutorEmail: updatedSession.tutor?.email,
+              studentEmail: updatedSession.student?.email,
+            }),
+          }
+        );
+        const data = await response.json();
+
+        if (!data.success) {
+          toast.error("Unable to record question or concern");
+          throw new Error(data.error);
+        }
+      }
     } catch (error) {
       console.error("Failed to record Session Exit Form", error);
       toast.error("Failed to record Session Exit Form");
