@@ -83,8 +83,9 @@ export async function writeSpreadSheet(formData: FormData) {
   const spreadsheetId = process.env.SHEET_ID;
 
   const currRowSize = (await getSheetSize()).numRows;
+  const nextRowIdx = currRowSize + 1;
 
-  const range = `Questions & Concerns!B${currRowSize + 1}:F${currRowSize + 1}`;
+  const range = `Questions & Concerns!B${nextRowIdx}:F${nextRowIdx}`;
   const valueInputOption = "USER_ENTERED";
 
   const values = [
@@ -105,11 +106,42 @@ export async function writeSpreadSheet(formData: FormData) {
       requestBody: { values },
     });
 
+    await sendDiscordNotification(nextRowIdx, formData);
+
     const rows = response.data;
     console.log("Data retrieved", rows);
     return rows;
   } catch (error) {
     console.log("Unable to retrive rows", error);
+    throw error;
+  }
+}
+
+async function sendDiscordNotification(rowIdx: number, formData: FormData) {
+  try {
+    await fetch(
+      "https://script.google.com/macros/s/AKfycbz642YwN0t9gUAKycvrKq5WEJueL_PfDQwug7LK36EYsF6gf9ZVpbBkCc1p88Nf83qD/exec",
+
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rowIdx: rowIdx,
+          tutorFirstName: formData.tutorFirstName || "",
+          tutorLastName: formData.tutorLastName || "",
+          studentFirstName: formData.studentFirstName || "",
+          studentLastName: formData.studentLastName || "",
+          questionOrConcern: formData.formContent || "",
+        }),
+      }
+    )
+      .then((res) => res.text())
+      .then(console.log);
+    console.log("Success");
+  } catch (error) {
+    console.log("Unable to send discord notifcation", error);
     throw error;
   }
 }
