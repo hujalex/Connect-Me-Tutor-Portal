@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { AlarmClockMinus, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDateAdmin } from "@/lib/utils";
 import {
   ChevronDown,
   ChevronsLeft,
@@ -807,11 +807,11 @@ const EnrollmentList = () => {
                   <TableCell className="colspan-[40px]">
                     <AvailabilityFormat
                       availability={enrollment.availability}
-                    />
+                    />{" "}
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
-                  <TableCell>{formatDate(enrollment.startDate)}</TableCell>
-                  <TableCell>{formatDate(enrollment.endDate)}</TableCell>
+                  <TableCell>{formatDateAdmin(enrollment.startDate)}</TableCell>
+                  <TableCell>{formatDateAdmin(enrollment.endDate)}</TableCell>
                   <TableCell>
                     <TableCell>
                       {enrollment.meetingId

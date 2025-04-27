@@ -46,7 +46,7 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
           day: selectedDay,
           startTime: selectedStartTime,
           endTime: selectedEndTime,
-      },
+        },
       ];
       console.log(updatedList);
       setAvailabilityList(updatedList);
@@ -63,7 +63,7 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
 
   return (
     <div className="availability-form">
-      <Label>Manage Availability</Label>
+      <Label>Manage Availability (EST)</Label>
       <div className="grid grid-cols-3 gap-4">
         <div>
           <Label htmlFor="day" className="text-right">
