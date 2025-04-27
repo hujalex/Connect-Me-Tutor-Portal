@@ -67,7 +67,34 @@ export function formatDate(dateString: string): string {
   return date.toLocaleDateString("en-US", options);
 }
 
+export function formatDateAdmin(dateString: string): string {
+  // Create a new Date object
+  const date: Date = new Date(dateString);
+
+  // Define options for formatting
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long", // Can be 'short' or 'numeric' for different formats
+    day: "numeric",
+    // hour: "numeric",
+    // minute: "numeric",
+    // second: "numeric",
+    timeZone: "America/New_York",
+    timeZoneName: "short", // To include time zone information
+  };
+
+  // Format the date using toLocaleDateString
+  return date.toLocaleDateString("en-US", options);
+}
+
 export function getSessionTimespan(timeStr: string): string {
+  const options: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    hour12: true,
+    timeZone: "America/New_York",
+    timeZoneName: "short", // To include time zone information
+  };
+
   // Parse the input string into a Date object
   const originalTime = new Date(timeStr);
 
@@ -81,8 +108,10 @@ export function getSessionTimespan(timeStr: string): string {
   const endTime = new Date(originalTime.getTime() + 60 * 60 * 1000); // Had originally multiplied by 1.5 for endtime
 
   // Format start and end times
-  const startTimeStr = formatTime(originalTime);
-  const endTimeStr = formatTime(endTime);
+  // const startTimeStr = formatTime(originalTime);
+  // const endTimeStr = formatTime(endTime);
+  const startTimeStr = originalTime.toLocaleTimeString("en-US", options);
+  const endTimeStr = endTime.toLocaleTimeString("en-US", options);
 
   return `${startTimeStr} - ${endTimeStr}`;
 }
