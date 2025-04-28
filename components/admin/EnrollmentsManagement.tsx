@@ -810,8 +810,12 @@ const EnrollmentList = () => {
                     />{" "}
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
-                  <TableCell>{formatDateAdmin(enrollment.startDate)}</TableCell>
-                  <TableCell>{formatDateAdmin(enrollment.endDate)}</TableCell>
+                  <TableCell>
+                    {formatDateAdmin(enrollment.startDate, false, true)}
+                  </TableCell>
+                  <TableCell>
+                    {formatDateAdmin(enrollment.endDate, false, true)}
+                  </TableCell>
                   <TableCell>
                     <TableCell>
                       {enrollment.meetingId

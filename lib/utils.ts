@@ -67,18 +67,23 @@ export function formatDate(dateString: string): string {
   return date.toLocaleDateString("en-US", options);
 }
 
-export function formatDateAdmin(dateString: string): string {
+export function formatDateAdmin(
+  dateString: string,
+  includeTime = true,
+  includeDate = true
+): string {
   // Create a new Date object
   const date: Date = new Date(dateString);
 
-  // Define options for formatting
+  // Define options for formattings
+
   const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "long", // Can be 'short' or 'numeric' for different formats
-    day: "numeric",
-    // hour: "numeric",
-    // minute: "numeric",
-    // second: "numeric",
+    year: includeDate ? "numeric" : undefined,
+    month: includeDate ? "long" : undefined, // Can be 'short' or 'numeric' for different formats
+    day: includeDate ? "numeric" : undefined,
+    hour: includeTime ? "numeric" : undefined,
+    minute: includeTime ? "numeric" : undefined,
+    second: includeTime ? "numeric" : undefined,
     timeZone: "America/New_York",
     timeZoneName: "short", // To include time zone information
   };
