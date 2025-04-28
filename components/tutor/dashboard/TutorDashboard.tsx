@@ -4,6 +4,7 @@ import TutorCalendar from "../TutorCalendar";
 import { Input } from "@/components/ui/input";
 import SessionsTable from "./components/ActiveSessionsTable";
 import ActiveSessionsTable from "./components/ActiveSessionsTable";
+import CurrentSessionsTable from "./components/CurrentSessionsTable";
 import CompletedSessionsTable from "./components/CompletedSessionsTable";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
@@ -19,12 +20,13 @@ import {
 } from "@/lib/actions/tutor.actions";
 import { Session, Profile, Meeting } from "@/types";
 import toast from "react-hot-toast";
-import { parseISO, addHours, areIntervalsOverlapping, isValid } from "date-fns";
+import { parseISO, addHours, areIntervalsOverlapping, isValid, startOfWeek, endOfWeek } from "date-fns";
 
 const TutorDashboard = () => {
   const supabase = createClientComponentClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSessions, setCurrentSessions] = useState<Session[]>([]);
   const [pastSessions, setPastSessions] = useState<Session[]>([]);
   const [allSessions, setAllSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
@@ -35,7 +37,7 @@ const TutorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [filterValueActiveSessions, setFilterValueActiveSessions] =
     useState("");
   const [filterValuePastSessions, setFilterValuePastSessions] = useState("");
@@ -87,6 +89,17 @@ const TutorDashboard = () => {
       if (!profileData) throw new Error("No profile found");
 
       setProfile(profileData);
+
+      const currentSessionData = await getTutorSessions(
+        profileData.id,
+        startOfWeek(new Date()).toISOString(),
+        endOfWeek(new Date()).toISOString(),
+        "Active",
+        "date",
+        true
+      )
+
+      setCurrentSessions(currentSessionData);
 
       const activeSessionData = await getTutorSessions(
         profileData.id,
@@ -354,12 +367,58 @@ const TutorDashboard = () => {
 
   return (
     <>
+      <div className = "p-8">
+        <h1 className="text-3xl font-bold mb-6">This Week</h1>
+          <div className="flex space-x-6">
+            <div className="flex-grow bg-white rounded-lg shadow p-6">
+
+
+              
+                <CurrentSessionsTable 
+                    currentSessions={currentSessions}
+                    filteredSessions={filteredSessions}
+                    meetings={meetings}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    rowsPerPage={rowsPerPage.toString()}
+                    selectedSession={selectedSession}
+                    selectedSessionDate={selectedSessionDate}
+                    isDialogOpen={isDialogOpen}
+                    isSessionExitFormOpen={isSessionExitFormOpen}
+                    isCheckingMeetingAvailability={isCheckingMeetingAvailability}
+                    meetingAvailability={meetingAvailability}
+                    notes={notes}
+                    nextClassConfirmed={nextClassConfirmed}
+                    setSelectedSession={setSelectedSession}
+                    setSelectedSessionDate={setSelectedSessionDate}
+                    setIsDialogOpen={setIsDialogOpen}
+                    setIsSessionExitFormOpen={setIsSessionExitFormOpen}
+                    setNotes={setNotes}
+                    setNextClassConfirmed={setNextClassConfirmed}
+                    handleStatusChange={handleStatusChange}
+                    handleReschedule={handleReschedule}
+                    handleSessionComplete={handleSessionComplete}
+                    handlePageChange={handlePageChange}
+                    handleRowsPerPageChange={handleRowsPerPageChange}
+                    handleInputChange={handleInputChange}
+                    areMeetingsAvailableInCurrentWeek={
+                      areMeetingsAvailableInCurrentWeek
+                }
+              />
+            
+          </div>
+        </div>
+      </div>
+
       {" "}
       <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Tutor Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6">Active Sessions</h1>
 
         <div className="flex space-x-6">
           <div className="flex-grow bg-white rounded-lg shadow p-6">
+
+
+          
             <div className="flex justify-between items-center mb-4">
               <div className="flex space-x-2">
                 <Input
@@ -445,6 +504,7 @@ const TutorDashboard = () => {
           </div>
         </div>
       </div>
+
     </>
   );
 };
