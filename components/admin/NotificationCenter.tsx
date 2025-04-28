@@ -21,7 +21,7 @@ import {
   getAllNotifications,
   updateNotification,
 } from "@/lib/actions/admin.actions";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateAdmin } from "@/lib/utils";
 import { Notification } from "@/types";
 import {
   ChevronsLeft,
@@ -182,10 +182,14 @@ const NotificationCenter = () => {
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell>{formatDate(notification.createdAt)}</TableCell>
+                <TableCell>{formatDateAdmin(notification.createdAt)}</TableCell>
                 <TableCell>{notification.summary}</TableCell>
-                <TableCell>{formatDate(notification.previousDate)}</TableCell>
-                <TableCell>{formatDate(notification.suggestedDate)}</TableCell>
+                <TableCell>
+                  {formatDateAdmin(notification.previousDate)}
+                </TableCell>
+                <TableCell>
+                  {formatDateAdmin(notification.suggestedDate)}
+                </TableCell>
                 <TableCell>
                   {notification.tutor?.firstName} {notification.tutor?.lastName}
                 </TableCell>

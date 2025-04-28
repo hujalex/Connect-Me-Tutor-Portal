@@ -40,7 +40,7 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getAllSessions, rescheduleSession } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session, Profile } from "@/types";
-import { formatSessionDate } from "@/lib/utils";
+import { formatSessionDate, formatDateAdmin } from "@/lib/utils";
 
 const AdminDashboard = () => {
   const supabase = createClientComponentClient();
@@ -216,7 +216,9 @@ const AdminDashboard = () => {
                       : ""
                   }
                 >
-                  <TableCell>{formatSessionDate(session.date)}</TableCell>
+                  <TableCell>
+                    {formatDateAdmin(session.date, true, true)}
+                  </TableCell>
                   <TableCell className="font-medium">
                     Tutoring Session with Tutor {session.tutor?.firstName}{" "}
                     {session.tutor?.lastName} and Student{" "}
