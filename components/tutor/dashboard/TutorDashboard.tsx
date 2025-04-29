@@ -20,7 +20,14 @@ import {
 } from "@/lib/actions/tutor.actions";
 import { Session, Profile, Meeting } from "@/types";
 import toast from "react-hot-toast";
-import { parseISO, addHours, areIntervalsOverlapping, isValid, startOfWeek, endOfWeek } from "date-fns";
+import {
+  parseISO,
+  addHours,
+  areIntervalsOverlapping,
+  isValid,
+  startOfWeek,
+  endOfWeek,
+} from "date-fns";
 
 const TutorDashboard = () => {
   const supabase = createClientComponentClient();
@@ -97,7 +104,7 @@ const TutorDashboard = () => {
         undefined,
         "date",
         true
-      )
+      );
 
       setCurrentSessions(currentSessionData);
 
@@ -239,6 +246,11 @@ const TutorDashboard = () => {
       const updatedSession = await rescheduleSession(sessionId, newDate);
 
       if (updatedSession) {
+        setCurrentSessions(
+          currentSessions.map((e: Session) =>
+            e.id === updatedSession.id ? updatedSession : e
+          )
+        );
         setSessions(
           sessions.map((e: Session) =>
             e.id === updatedSession.id ? updatedSession : e
@@ -258,17 +270,16 @@ const TutorDashboard = () => {
   const handleStatusChange = async (updatedSession: Session) => {
     try {
       await updateSession(updatedSession);
+      setCurrentSessions(
+        currentSessions.map((e: Session) =>
+          e.id === updatedSession.id ? updatedSession : e
+        )
+      );
       setSessions(
         sessions.map((e: Session) =>
           e.id === updatedSession.id ? updatedSession : e
         )
       );
-      setCurrentSessions(
-        currentSessions.map((e: Session) =>
-          e.id === updatedSession.id ? updatedSession : e
-        )
-      )
-
       toast.success("Session updated successfully");
     } catch (error) {
       console.error("Failed to update session:", error);
@@ -288,6 +299,11 @@ const TutorDashboard = () => {
       updatedSession.isQuestionOrConcern = isQuestionOrConcern;
       updatedSession.isFirstSession = isFirstSession;
       await updateSession(updatedSession);
+      setCurrentSessions(
+        currentSessions.map((e: Session) =>
+          e.id === updatedSession.id ? updatedSession : e
+        )
+      );
       setSessions(
         sessions.map((e: Session) =>
           e.id === updatedSession.id ? updatedSession : e
@@ -378,58 +394,49 @@ const TutorDashboard = () => {
 
   return (
     <>
-      <div className = "p-8">
+      <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">This Week</h1>
-          <div className="flex space-x-6">
-            <div className="flex-grow bg-white rounded-lg shadow p-6">
-
-
-              
-                <CurrentSessionsTable 
-                    currentSessions={paginatedCurrentSessions}
-                    filteredSessions={filteredSessions}
-                    meetings={meetings}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    rowsPerPage={rowsPerPage.toString()}
-                    selectedSession={selectedSession}
-                    selectedSessionDate={selectedSessionDate}
-                    isDialogOpen={isDialogOpen}
-                    isSessionExitFormOpen={isSessionExitFormOpen}
-                    isCheckingMeetingAvailability={isCheckingMeetingAvailability}
-                    meetingAvailability={meetingAvailability}
-                    notes={notes}
-                    nextClassConfirmed={nextClassConfirmed}
-                    setSelectedSession={setSelectedSession}
-                    setSelectedSessionDate={setSelectedSessionDate}
-                    setIsDialogOpen={setIsDialogOpen}
-                    setIsSessionExitFormOpen={setIsSessionExitFormOpen}
-                    setNotes={setNotes}
-                    setNextClassConfirmed={setNextClassConfirmed}
-                    handleStatusChange={handleStatusChange}
-                    handleReschedule={handleReschedule}
-                    handleSessionComplete={handleSessionComplete}
-                    handlePageChange={handlePageChange}
-                    handleRowsPerPageChange={handleRowsPerPageChange}
-                    handleInputChange={handleInputChange}
-                    areMeetingsAvailableInCurrentWeek={
-                      areMeetingsAvailableInCurrentWeek
-                }
-              />
-            
+        <div className="flex space-x-6">
+          <div className="flex-grow bg-white rounded-lg shadow p-6">
+            <CurrentSessionsTable
+              currentSessions={paginatedCurrentSessions}
+              filteredSessions={filteredSessions}
+              meetings={meetings}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage.toString()}
+              selectedSession={selectedSession}
+              selectedSessionDate={selectedSessionDate}
+              isDialogOpen={isDialogOpen}
+              isSessionExitFormOpen={isSessionExitFormOpen}
+              isCheckingMeetingAvailability={isCheckingMeetingAvailability}
+              meetingAvailability={meetingAvailability}
+              notes={notes}
+              nextClassConfirmed={nextClassConfirmed}
+              setSelectedSession={setSelectedSession}
+              setSelectedSessionDate={setSelectedSessionDate}
+              setIsDialogOpen={setIsDialogOpen}
+              setIsSessionExitFormOpen={setIsSessionExitFormOpen}
+              setNotes={setNotes}
+              setNextClassConfirmed={setNextClassConfirmed}
+              handleStatusChange={handleStatusChange}
+              handleReschedule={handleReschedule}
+              handleSessionComplete={handleSessionComplete}
+              handlePageChange={handlePageChange}
+              handleRowsPerPageChange={handleRowsPerPageChange}
+              handleInputChange={handleInputChange}
+              areMeetingsAvailableInCurrentWeek={
+                areMeetingsAvailableInCurrentWeek
+              }
+            />
           </div>
         </div>
-      </div>
-
-      {" "}
+      </div>{" "}
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">Active Sessions</h1>
 
         <div className="flex space-x-6">
           <div className="flex-grow bg-white rounded-lg shadow p-6">
-
-
-          
             <div className="flex justify-between items-center mb-4">
               <div className="flex space-x-2">
                 <Input
@@ -515,7 +522,6 @@ const TutorDashboard = () => {
           </div>
         </div>
       </div>
-
     </>
   );
 };

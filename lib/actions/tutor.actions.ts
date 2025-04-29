@@ -11,6 +11,14 @@ const supabase = createClientComponentClient({
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
+/** 
+@params 
+profileId - profile id of the user
+startDate - Start Date in ISO String
+endDate - 
+
+*/
+
 export async function getTutorSessions(
   profileId: string,
   startDate?: string,

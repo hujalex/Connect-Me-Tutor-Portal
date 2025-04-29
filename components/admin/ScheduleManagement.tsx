@@ -155,20 +155,6 @@ const Schedule = () => {
     }
   };
 
-  // interface Session {
-  //   id: string;
-  //   createdAt: string;
-  //   environment: "Virtual" | "In-Person";
-  //   student: Profile | null;
-  //   tutor: Profile | null;
-  //   date: string;
-  //   summary: string;
-  //   // meetingId: string;p
-  //   meeting?: Meeting | null;
-  //   status: "Active" | "Complete" | "Cancelled";
-  //   session_exit_form: string;
-  // }
-
   useEffect(() => {
     fetchSessions();
     fetchEnrollments();
