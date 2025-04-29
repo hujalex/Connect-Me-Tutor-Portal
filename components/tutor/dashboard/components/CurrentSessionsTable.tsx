@@ -46,6 +46,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Circle,
+  CircleCheckBig,
+  CircleX,
+  Clock,
   Loader2,
   ChevronsLeft,
   ChevronsRight,
@@ -143,20 +146,30 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
             <TableBody>
                 {currentSessions.map((session, index) => (
                     <TableRow key = {index}
-                                className={
-                                    session.status === "Active"
-                                    ? ""
-                                    : session.status === "Complete"
-                                    ? "bg-green-200 opacity-50"
-                                    : session.status === "Cancelled"
-                                    ? "bg-red-100 opacity-50 "
-                                    : ""
-                                }
+                                
+                                // className={
+                                //     session.status === "Active"
+                                //     ? "bg-blue-200 opacity-20"
+                                //     : session.status === "Complete"
+                                //     ? "bg-green-200 opacity-50"
+                                //     : session.status === "Cancelled"
+                                //     ? "bg-red-100 opacity-50 "
+                                //     : ""
+                                // }
                         >
-                        <TableCell>{session.status}</TableCell>
+                        <TableCell> 
+                            {
+                            session.status === "Active" 
+                            ? <Clock />
+                            : session.status === "Complete"
+                            ?  <CircleCheckBig />
+                            : session.status === "Cancelled"
+                            ? <CircleX />
+                            : ""}
+                        </TableCell>
                         <TableCell>{formatSessionDate(session.date)}</TableCell>
                         <TableCell className = "font-medium">
-                            Tutoring Session with {session.student?.firstName}
+                            Tutoring Session with {session.student?.firstName}{" "}
                             {session.student?.lastName}
                         </TableCell>
                         <TableCell>

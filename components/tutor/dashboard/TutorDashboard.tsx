@@ -94,7 +94,7 @@ const TutorDashboard = () => {
         profileData.id,
         startOfWeek(new Date()).toISOString(),
         endOfWeek(new Date()).toISOString(),
-        "Active",
+        undefined,
         "date",
         true
       )
@@ -263,6 +263,12 @@ const TutorDashboard = () => {
           e.id === updatedSession.id ? updatedSession : e
         )
       );
+      setCurrentSessions(
+        currentSessions.map((e: Session) =>
+          e.id === updatedSession.id ? updatedSession : e
+        )
+      )
+
       toast.success("Session updated successfully");
     } catch (error) {
       console.error("Failed to update session:", error);
@@ -326,6 +332,11 @@ const TutorDashboard = () => {
     }
   };
 
+  const paginatedCurrentSessions = currentSessions.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
   const paginatedSessions = filteredSessions.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
@@ -375,7 +386,7 @@ const TutorDashboard = () => {
 
               
                 <CurrentSessionsTable 
-                    currentSessions={currentSessions}
+                    currentSessions={paginatedCurrentSessions}
                     filteredSessions={filteredSessions}
                     meetings={meetings}
                     currentPage={currentPage}

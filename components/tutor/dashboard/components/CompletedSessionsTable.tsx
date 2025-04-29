@@ -91,51 +91,6 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
                   : session.status === "Cancelled"
                   ? "❌Cancelled"
                   : ""}
-
-                {/* <Select
-                  value={session?.status}
-                  onValueChange={(
-                    value: "Active" | "Complete" | "Cancelled"
-                  ) => {
-                    const updatedSession: Session = {
-                      ...session,
-                      status: value,
-                    };
-                    handleStatusChange(updatedSession);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={session?.status}>
-                      {session.status ? session.status : "Select Status"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent
-                    className={
-                      session.status === "Complete" ? "opacity-50" : ""
-                    }
-                  >
-                    <SelectItem
-                      value="Active"
-                      className={
-                        session.status === "Complete"
-                          ? "pointer-events-none"
-                          : ""
-                      }
-                    >
-                      Active
-                    </SelectItem>
-                    <SelectItem
-                      value="Cancelled"
-                      className={
-                        session.status === "Complete"
-                          ? "pointer-events-none"
-                          : ""
-                      }
-                    >
-                      Cancelled
-                    </SelectItem>
-                  </SelectContent>
-                </Select> */}
               </TableCell>
               <TableCell>{formatSessionDate(session.date)}</TableCell>
               <TableCell className="font-medium">
