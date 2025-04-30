@@ -41,6 +41,8 @@ import {
   ChevronsRight,
   ChevronLeft,
   ChevronRight,
+  CircleCheckBig,
+  CircleX,
   TableCellsMerge,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
@@ -86,56 +88,19 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
           {paginatedSessions.map((session, index) => (
             <TableRow key={index}>
               <TableCell>
-                {session.status === "Complete"
-                  ? "✅Complete "
-                  : session.status === "Cancelled"
-                  ? "❌Cancelled"
-                  : ""}
-
-                {/* <Select
-                  value={session?.status}
-                  onValueChange={(
-                    value: "Active" | "Complete" | "Cancelled"
-                  ) => {
-                    const updatedSession: Session = {
-                      ...session,
-                      status: value,
-                    };
-                    handleStatusChange(updatedSession);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={session?.status}>
-                      {session.status ? session.status : "Select Status"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent
-                    className={
-                      session.status === "Complete" ? "opacity-50" : ""
-                    }
-                  >
-                    <SelectItem
-                      value="Active"
-                      className={
-                        session.status === "Complete"
-                          ? "pointer-events-none"
-                          : ""
-                      }
-                    >
-                      Active
-                    </SelectItem>
-                    <SelectItem
-                      value="Cancelled"
-                      className={
-                        session.status === "Complete"
-                          ? "pointer-events-none"
-                          : ""
-                      }
-                    >
-                      Cancelled
-                    </SelectItem>
-                  </SelectContent>
-                </Select> */}
+                {session.status === "Complete" ? (
+                  <span className="px-3 py-1 inline-flex items-center rounded-full bg-green-100 text-green-800 border border-green-200">
+                    <CircleCheckBig size={14} className="mr-1" />
+                    Complete
+                  </span>
+                ) : session.status === "Cancelled" ? (
+                  <span className="px-3 py-1 inline-flex items-center rounded-full bg-red-100 text-red-800 border border-red-200">
+                    <CircleX size={14} className="mr-1" />
+                    Cancelled
+                  </span>
+                ) : (
+                  ""
+                )}
               </TableCell>
               <TableCell>{formatSessionDate(session.date)}</TableCell>
               <TableCell className="font-medium">

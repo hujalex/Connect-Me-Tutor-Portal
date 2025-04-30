@@ -46,6 +46,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Circle,
+  CircleCheckBig,
+  CircleX,
+  Clock,
   Loader2,
   ChevronsLeft,
   ChevronsRight,
@@ -54,17 +57,15 @@ import {
   Trash,
   CalendarDays,
   UserRoundPlus,
-  Clock,
-  CircleCheckBig,
-  CircleX,
+  CircleCheck,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import SessionExitForm from "./SessionExitForm";
 import RescheduleForm from "./RescheduleDialog";
 
-interface SessionsTableProps {
-  paginatedSessions: Session[];
+interface CurrentSessionTableProps {
+  currentSessions: Session[];
   filteredSessions: Session[];
   meetings: Meeting[];
   currentPage: number;
@@ -98,8 +99,8 @@ interface SessionsTableProps {
   areMeetingsAvailableInCurrentWeek: (session: Session, date: Date) => void;
 }
 
-const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
-  paginatedSessions,
+const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
+  currentSessions,
   filteredSessions,
   meetings,
   currentPage,
@@ -137,19 +138,18 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Title</TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Meeting</TableHead>
-            {/* <TableHead>Reschedule</TableHead> */}
-            {/* <TableHead>Request Substitute</TableHead> */}
             <TableHead>Session Exit Form</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedSessions.map((session, index) => (
+          {currentSessions.map((session, index) => (
             <TableRow
               key={index}
+
               // className={
-              //   session.status === "Active"
-              //     ? ""
+              //     session.status === "Active"
+              //     ? "bg-blue-200 opacity-20"
               //     : session.status === "Complete"
               //     ? "bg-green-200 opacity-50"
               //     : session.status === "Cancelled"
@@ -205,9 +205,6 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   </>
                 )}
               </TableCell>
-              {/* <TableCell></TableCell> */}
-
-              {/* <TableCell></TableCell> */}
               <TableCell>
                 <SessionExitForm
                   currSession={session}
@@ -289,65 +286,8 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
           ))}
         </TableBody>
       </Table>
-
-      <div className="mt-4 flex justify-between items-center">
-        <span>{filteredSessions.length} row(s) total.</span>
-        <div className="flex items-center space-x-2">
-          <span>Rows per page</span>
-          <Select
-            value={rowsPerPage.toString()}
-            onValueChange={handleRowsPerPageChange}
-          >
-            <SelectTrigger className="w-[70px]">
-              <SelectValue placeholder={rowsPerPage.toString()} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-            </SelectContent>
-          </Select>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <div className="flex space-x-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handlePageChange(totalPages)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
 
-export default ActiveSessionsTable;
+export default CurrentSessionsTable;

@@ -4,6 +4,7 @@ import TutorCalendar from "../TutorCalendar";
 import { Input } from "@/components/ui/input";
 import SessionsTable from "./components/ActiveSessionsTable";
 import ActiveSessionsTable from "./components/ActiveSessionsTable";
+import CurrentSessionsTable from "./components/CurrentSessionsTable";
 import CompletedSessionsTable from "./components/CompletedSessionsTable";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
@@ -19,12 +20,23 @@ import {
 } from "@/lib/actions/tutor.actions";
 import { Session, Profile, Meeting } from "@/types";
 import toast from "react-hot-toast";
-import { parseISO, addHours, areIntervalsOverlapping, isValid } from "date-fns";
+import {
+  parseISO,
+  addHours,
+  areIntervalsOverlapping,
+  isValid,
+  startOfWeek,
+  endOfWeek,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
+import { SelectSeparator } from "@radix-ui/react-select";
 
 const TutorDashboard = () => {
   const supabase = createClientComponentClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSessions, setCurrentSessions] = useState<Session[]>([]);
   const [pastSessions, setPastSessions] = useState<Session[]>([]);
   const [allSessions, setAllSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
@@ -35,7 +47,7 @@ const TutorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [filterValueActiveSessions, setFilterValueActiveSessions] =
     useState("");
   const [filterValuePastSessions, setFilterValuePastSessions] = useState("");
@@ -88,6 +100,17 @@ const TutorDashboard = () => {
 
       setProfile(profileData);
 
+      const currentSessionData = await getTutorSessions(
+        profileData.id,
+        startOfWeek(new Date()).toISOString(),
+        endOfWeek(new Date()).toISOString(),
+        undefined,
+        "date",
+        true
+      );
+
+      setCurrentSessions(currentSessionData);
+
       const activeSessionData = await getTutorSessions(
         profileData.id,
         undefined,
@@ -122,7 +145,7 @@ const TutorDashboard = () => {
 
   const fetchAllSessionsFromSchedule = async () => {
     try {
-      const data = await getAllSessions();
+      const data = await getAllSessions(undefined, undefined, "date", false);
       if (!data) throw new Error("Unable to retrieve all sessions");
       setAllSessions(data);
     } catch (error) {
@@ -131,43 +154,132 @@ const TutorDashboard = () => {
     }
   };
 
-  const areMeetingsAvailableInCurrentWeek = async (session: Session) => {
+  const getMeetingAvailabilityLength = () => {
+    return Object.keys(meetingAvailability).length;
+  };
+
+  /**
+   *
+   * @param selectedSessionDate
+   * Seaches for all sessions +/- 12 hours from selectedSessionDate
+   *
+   */
+
+  const fetchDaySessionsFromSchedule = (session: Session) => {
+    if (selectedSessionDate) {
+      try {
+        const startDateSearch = addHours(
+          parseISO(selectedSessionDate),
+          -12
+        ).toISOString();
+
+        const endDateSearch = addHours(
+          parseISO(selectedSessionDate),
+          12
+        ).toISOString();
+        getAllSessions(startDateSearch, endDateSearch)
+          .then((data) => {
+            setAllSessions(data);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch sessions for day");
+          });
+      } catch (error) {
+        console.error("Failed to fetch sessions for day");
+        throw error;
+      }
+    }
+  };
+
+  const fetchDaySessionsFromScheduleAsync = async (requestedDate: Date) => {
+    if (requestedDate) {
+      try {
+        const startDateSearch = addHours(requestedDate, -12).toISOString();
+
+        const endDateSearch = addHours(requestedDate, 12).toISOString();
+        const data = await getAllSessions(startDateSearch, endDateSearch);
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch sessions for day");
+        throw error;
+      }
+    }
+  };
+
+  const areMeetingsAvailableInCurrentWeek = async (
+    session: Session,
+    requestedDate: Date
+  ) => {
     try {
+      console.log("Requested Session", requestedDate);
       setisCheckingMeetingAvailability(true);
-      if (Object.keys(meetingAvailability).length === 0)
-        await fetchAllSessionsFromSchedule();
+
+      // if (getMeetingAvailabilityLength() === 0)
+      //   await fetchAllSessionsFromSchedule();
+
+      const sessionsToSearch = await fetchDaySessionsFromScheduleAsync(
+        requestedDate
+      );
 
       const updatedMeetingAvailability: { [key: string]: boolean } = {};
 
-      if (!selectedSessionDate || !isValid(parseISO(selectedSessionDate))) {
-        toast.error("Invalid session date selected");
-        return;
-      }
+      // if (!selectedSessionDate || !isValid(requestedDate)) {
+      //   toast.error("Invalid session date selected");
+      //   return;
+      // }
 
       meetings.forEach((meeting) => {
         updatedMeetingAvailability[meeting.id] = true;
       });
-      const requestedSessionStartTime = parseISO(selectedSessionDate);
+
+      const requestedSessionStartTime = requestedDate;
       const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
+      console.log("Requested date", selectedSessionDate);
 
       meetings.forEach((meeting) => {
-        const hasConflict = allSessions.some(
-          (existingSession) =>
-            session.id !== existingSession.id &&
-            existingSession.meeting?.id === meeting.id &&
-            areIntervalsOverlapping(
-              {
-                start: requestedSessionStartTime,
-                end: requestedSessionEndTime,
-              },
-              {
-                start: parseISO(existingSession.date),
-                end: addHours(parseISO(existingSession.date), 1),
-              }
-            )
-        );
+        const hasConflict = sessionsToSearch
+          ? sessionsToSearch.some((existingSession) => {
+              // if (
+              //   existingSession.date &&
+              //   parseISO(existingSession.date) >= startOfDay(new Date()) &&
+              //   parseISO(existingSession.date) < endOfDay(new Date())
+              // ) {
+              //   console.log(
+              //     "Checking session:",
+              //     existingSession.id,
+              //     existingSession.date
+              //   );
+              // }
+
+              console.log(
+                "Checking session:",
+                existingSession.id,
+                existingSession.date
+              );
+
+              return (
+                session.id !== existingSession.id &&
+                existingSession.meeting?.id === meeting.id &&
+                areIntervalsOverlapping(
+                  {
+                    start: requestedSessionStartTime,
+                    end: requestedSessionEndTime,
+                  },
+                  {
+                    start: existingSession.date
+                      ? parseISO(existingSession.date)
+                      : new Date(),
+                    end: existingSession.date
+                      ? addHours(parseISO(existingSession.date), 1)
+                      : new Date(),
+                  }
+                )
+              );
+            })
+          : false;
         updatedMeetingAvailability[meeting.id] = !hasConflict;
       });
+      console.log("Updated Meeting Availability", updatedMeetingAvailability);
       setMeetingAvailability(updatedMeetingAvailability);
     } catch (error) {
       toast.error("Unable to find available meeting links");
@@ -226,6 +338,11 @@ const TutorDashboard = () => {
       const updatedSession = await rescheduleSession(sessionId, newDate);
 
       if (updatedSession) {
+        setCurrentSessions(
+          currentSessions.map((e: Session) =>
+            e.id === updatedSession.id ? updatedSession : e
+          )
+        );
         setSessions(
           sessions.map((e: Session) =>
             e.id === updatedSession.id ? updatedSession : e
@@ -245,6 +362,11 @@ const TutorDashboard = () => {
   const handleStatusChange = async (updatedSession: Session) => {
     try {
       await updateSession(updatedSession);
+      setCurrentSessions(
+        currentSessions.map((e: Session) =>
+          e.id === updatedSession.id ? updatedSession : e
+        )
+      );
       setSessions(
         sessions.map((e: Session) =>
           e.id === updatedSession.id ? updatedSession : e
@@ -269,6 +391,11 @@ const TutorDashboard = () => {
       updatedSession.isQuestionOrConcern = isQuestionOrConcern;
       updatedSession.isFirstSession = isFirstSession;
       await updateSession(updatedSession);
+      setCurrentSessions(
+        currentSessions.map((e: Session) =>
+          e.id === updatedSession.id ? updatedSession : e
+        )
+      );
       setSessions(
         sessions.map((e: Session) =>
           e.id === updatedSession.id ? updatedSession : e
@@ -354,9 +481,46 @@ const TutorDashboard = () => {
 
   return (
     <>
-      {" "}
       <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Tutor Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6">This Week</h1>
+        <div className="flex space-x-6">
+          <div className="flex-grow bg-white rounded-lg shadow p-6">
+            <CurrentSessionsTable
+              currentSessions={currentSessions}
+              filteredSessions={filteredSessions}
+              meetings={meetings}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage.toString()}
+              selectedSession={selectedSession}
+              selectedSessionDate={selectedSessionDate}
+              isDialogOpen={isDialogOpen}
+              isSessionExitFormOpen={isSessionExitFormOpen}
+              isCheckingMeetingAvailability={isCheckingMeetingAvailability}
+              meetingAvailability={meetingAvailability}
+              notes={notes}
+              nextClassConfirmed={nextClassConfirmed}
+              setSelectedSession={setSelectedSession}
+              setSelectedSessionDate={setSelectedSessionDate}
+              setIsDialogOpen={setIsDialogOpen}
+              setIsSessionExitFormOpen={setIsSessionExitFormOpen}
+              setNotes={setNotes}
+              setNextClassConfirmed={setNextClassConfirmed}
+              handleStatusChange={handleStatusChange}
+              handleReschedule={handleReschedule}
+              handleSessionComplete={handleSessionComplete}
+              handlePageChange={handlePageChange}
+              handleRowsPerPageChange={handleRowsPerPageChange}
+              handleInputChange={handleInputChange}
+              areMeetingsAvailableInCurrentWeek={
+                areMeetingsAvailableInCurrentWeek
+              }
+            />
+          </div>
+        </div>
+      </div>{" "}
+      <div className="p-8">
+        <h1 className="text-3xl font-bold mb-6">Active Sessions</h1>
 
         <div className="flex space-x-6">
           <div className="flex-grow bg-white rounded-lg shadow p-6">
