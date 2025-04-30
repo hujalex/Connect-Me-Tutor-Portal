@@ -64,19 +64,40 @@ import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import SessionExitForm from "./SessionExitForm";
 
 interface RescheduleProps {
-    isDialogOpen : boolean,
-    selectedSession : Session,
-    isCheckingMeetingAvailability : boolean,
-    setIsDialogOpen : (open: boolean) => void,
-    setSelectedSession : (session: Session) => void,
-    setSelectedSessionDate : (date : Date) => void,
-
-
+  session: Session;
+  isDialogOpen: boolean;
+  selectedSession: Session | null;
+  selectedSessionDate: string | null;
+  isCheckingMeetingAvailability: boolean;
+  meetings: Meeting[];
+  meetingAvailability: { [key: string]: boolean };
+  setIsDialogOpen: (open: boolean) => void;
+  setSelectedSession: (session: Session) => void;
+  setSelectedSessionDate: (date: string) => void;
+  areMeetingsAvailableInCurrentWeek: (session: Session, date: Date) => void;
+  handleInputChange: (e: { target: { name: string; value: string } }) => void;
+  handleReschedule: (sessionId: string, newDate: string) => void;
 }
 
 const RescheduleForm: React.FC<RescheduleProps> = ({
-    
+  session,
+  isDialogOpen,
+  selectedSession,
+  selectedSessionDate,
+  isCheckingMeetingAvailability,
+  meetings,
+  meetingAvailability,
+  setIsDialogOpen,
+  setSelectedSession,
+  setSelectedSessionDate,
+  areMeetingsAvailableInCurrentWeek,
+  handleInputChange,
+  handleReschedule,
 }) => {
+  const updatedSelectedDate = (isostring: string) => {
+    setSelectedSessionDate(isostring);
+  };
+
   return (
     <>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -110,10 +131,13 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
                   ? format(parseISO(selectedSession.date), "yyyy-MM-dd'T'HH:mm")
                   : ""
               }
-              onChange={(e) => {
+              onChange={async (e) => {
                 if (selectedSession) {
-                  setSelectedSessionDate(
-                    new Date(e.target.value).toISOString()
+                  const rescheduledDate = new Date(e.target.value);
+                  setSelectedSessionDate(rescheduledDate.toISOString());
+                  await areMeetingsAvailableInCurrentWeek(
+                    selectedSession,
+                    rescheduledDate
                   );
                 }
               }}
@@ -124,11 +148,6 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
               <Select
                 name="meeting.id"
                 value={selectedSession?.meeting?.id}
-                onOpenChange={(open) => {
-                  if (open && selectedSession) {
-                    areMeetingsAvailableInCurrentWeek(selectedSession);
-                  }
-                }}
                 onValueChange={(value) =>
                   handleInputChange({
                     target: { name: "meeting.id", value },

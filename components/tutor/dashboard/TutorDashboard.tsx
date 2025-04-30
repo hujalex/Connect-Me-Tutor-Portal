@@ -27,7 +27,10 @@ import {
   isValid,
   startOfWeek,
   endOfWeek,
+  startOfDay,
+  endOfDay,
 } from "date-fns";
+import { SelectSeparator } from "@radix-ui/react-select";
 
 const TutorDashboard = () => {
   const supabase = createClientComponentClient();
@@ -142,7 +145,7 @@ const TutorDashboard = () => {
 
   const fetchAllSessionsFromSchedule = async () => {
     try {
-      const data = await getAllSessions();
+      const data = await getAllSessions(undefined, undefined, "date", false);
       if (!data) throw new Error("Unable to retrieve all sessions");
       setAllSessions(data);
     } catch (error) {
@@ -151,43 +154,132 @@ const TutorDashboard = () => {
     }
   };
 
-  const areMeetingsAvailableInCurrentWeek = async (session: Session) => {
+  const getMeetingAvailabilityLength = () => {
+    return Object.keys(meetingAvailability).length;
+  };
+
+  /**
+   *
+   * @param selectedSessionDate
+   * Seaches for all sessions +/- 12 hours from selectedSessionDate
+   *
+   */
+
+  const fetchDaySessionsFromSchedule = (session: Session) => {
+    if (selectedSessionDate) {
+      try {
+        const startDateSearch = addHours(
+          parseISO(selectedSessionDate),
+          -12
+        ).toISOString();
+
+        const endDateSearch = addHours(
+          parseISO(selectedSessionDate),
+          12
+        ).toISOString();
+        getAllSessions(startDateSearch, endDateSearch)
+          .then((data) => {
+            setAllSessions(data);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch sessions for day");
+          });
+      } catch (error) {
+        console.error("Failed to fetch sessions for day");
+        throw error;
+      }
+    }
+  };
+
+  const fetchDaySessionsFromScheduleAsync = async (requestedDate: Date) => {
+    if (requestedDate) {
+      try {
+        const startDateSearch = addHours(requestedDate, -12).toISOString();
+
+        const endDateSearch = addHours(requestedDate, 12).toISOString();
+        const data = await getAllSessions(startDateSearch, endDateSearch);
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch sessions for day");
+        throw error;
+      }
+    }
+  };
+
+  const areMeetingsAvailableInCurrentWeek = async (
+    session: Session,
+    requestedDate: Date
+  ) => {
     try {
+      console.log("Requested Session", requestedDate);
       setisCheckingMeetingAvailability(true);
-      if (Object.keys(meetingAvailability).length === 0)
-        await fetchAllSessionsFromSchedule();
+
+      // if (getMeetingAvailabilityLength() === 0)
+      //   await fetchAllSessionsFromSchedule();
+
+      const sessionsToSearch = await fetchDaySessionsFromScheduleAsync(
+        requestedDate
+      );
 
       const updatedMeetingAvailability: { [key: string]: boolean } = {};
 
-      if (!selectedSessionDate || !isValid(parseISO(selectedSessionDate))) {
-        toast.error("Invalid session date selected");
-        return;
-      }
+      // if (!selectedSessionDate || !isValid(requestedDate)) {
+      //   toast.error("Invalid session date selected");
+      //   return;
+      // }
 
       meetings.forEach((meeting) => {
         updatedMeetingAvailability[meeting.id] = true;
       });
-      const requestedSessionStartTime = parseISO(selectedSessionDate);
+
+      const requestedSessionStartTime = requestedDate;
       const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
+      console.log("Requested date", selectedSessionDate);
 
       meetings.forEach((meeting) => {
-        const hasConflict = allSessions.some(
-          (existingSession) =>
-            session.id !== existingSession.id &&
-            existingSession.meeting?.id === meeting.id &&
-            areIntervalsOverlapping(
-              {
-                start: requestedSessionStartTime,
-                end: requestedSessionEndTime,
-              },
-              {
-                start: parseISO(existingSession.date),
-                end: addHours(parseISO(existingSession.date), 1),
-              }
-            )
-        );
+        const hasConflict = sessionsToSearch
+          ? sessionsToSearch.some((existingSession) => {
+              // if (
+              //   existingSession.date &&
+              //   parseISO(existingSession.date) >= startOfDay(new Date()) &&
+              //   parseISO(existingSession.date) < endOfDay(new Date())
+              // ) {
+              //   console.log(
+              //     "Checking session:",
+              //     existingSession.id,
+              //     existingSession.date
+              //   );
+              // }
+
+              console.log(
+                "Checking session:",
+                existingSession.id,
+                existingSession.date
+              );
+
+              return (
+                session.id !== existingSession.id &&
+                existingSession.meeting?.id === meeting.id &&
+                areIntervalsOverlapping(
+                  {
+                    start: requestedSessionStartTime,
+                    end: requestedSessionEndTime,
+                  },
+                  {
+                    start: existingSession.date
+                      ? parseISO(existingSession.date)
+                      : new Date(),
+                    end: existingSession.date
+                      ? addHours(parseISO(existingSession.date), 1)
+                      : new Date(),
+                  }
+                )
+              );
+            })
+          : false;
         updatedMeetingAvailability[meeting.id] = !hasConflict;
       });
+      console.log("Updated Meeting Availability", updatedMeetingAvailability);
       setMeetingAvailability(updatedMeetingAvailability);
     } catch (error) {
       toast.error("Unable to find available meeting links");
@@ -348,11 +440,6 @@ const TutorDashboard = () => {
     }
   };
 
-  const paginatedCurrentSessions = currentSessions.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
-
   const paginatedSessions = filteredSessions.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
@@ -399,7 +486,7 @@ const TutorDashboard = () => {
         <div className="flex space-x-6">
           <div className="flex-grow bg-white rounded-lg shadow p-6">
             <CurrentSessionsTable
-              currentSessions={paginatedCurrentSessions}
+              currentSessions={currentSessions}
               filteredSessions={filteredSessions}
               meetings={meetings}
               currentPage={currentPage}

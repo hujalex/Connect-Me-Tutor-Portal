@@ -62,6 +62,7 @@ import {
 import { format, parseISO, isAfter } from "date-fns";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import SessionExitForm from "./SessionExitForm";
+import RescheduleForm from "./RescheduleDialog";
 
 interface CurrentSessionTableProps {
   currentSessions: Session[];
@@ -95,7 +96,7 @@ interface CurrentSessionTableProps {
   handlePageChange: (page: number) => void;
   handleRowsPerPageChange: (value: string) => void;
   handleInputChange: (e: { target: { name: string; value: string } }) => void;
-  areMeetingsAvailableInCurrentWeek: (session: Session) => void;
+  areMeetingsAvailableInCurrentWeek: (session: Session, date: Date) => void;
 }
 
 const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
@@ -219,134 +220,23 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
                 />
               </TableCell>
               <TableCell className="flex content-center">
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedSession(session);
-                        setIsDialogOpen(true);
-                        setSelectedSessionDate(session.date);
-                      }}
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        Reschedule Session with{" "}
-                        {selectedSession?.student?.firstName}{" "}
-                        {selectedSession?.student?.lastName} on{" "}
-                        {formatSessionDate(selectedSession?.date || "")}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4 space-y-6">
-                      <Input
-                        type="datetime-local"
-                        disabled={isCheckingMeetingAvailability}
-                        defaultValue={
-                          selectedSession?.date
-                            ? format(
-                                parseISO(selectedSession.date),
-                                "yyyy-MM-dd'T'HH:mm"
-                              )
-                            : ""
-                        }
-                        onChange={(e) => {
-                          if (selectedSession) {
-                            setSelectedSessionDate(
-                              new Date(e.target.value).toISOString()
-                            );
-                          }
-                        }}
-                      />
-
-                      <div>
-                        <Label>Meeting Link</Label>
-                        <Select
-                          name="meeting.id"
-                          value={selectedSession?.meeting?.id}
-                          onOpenChange={(open) => {
-                            if (open && selectedSession) {
-                              areMeetingsAvailableInCurrentWeek(
-                                selectedSession
-                              );
-                            }
-                          }}
-                          onValueChange={(value) =>
-                            handleInputChange({
-                              target: { name: "meeting.id", value },
-                            } as any)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a meeting link">
-                              {selectedSession?.meeting?.id
-                                ? meetingAvailability[
-                                    selectedSession.meeting.id
-                                  ]
-                                  ? meetings.find(
-                                      (meeting) =>
-                                        meeting.id ===
-                                        selectedSession?.meeting?.id
-                                    )?.name
-                                  : "Please select an available link"
-                                : "Select a meeting"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {meetings.map((meeting) => (
-                              <SelectItem
-                                key={meeting.id}
-                                value={meeting.id}
-                                disabled={!meetingAvailability[meeting.id]}
-                                className={`flex items-center justify-between`}
-                              >
-                                <span>
-                                  {meeting.name} - {meeting.id}
-                                </span>
-                                <Circle
-                                  className={`w-2 h-2 ml-2 ${
-                                    meetingAvailability[meeting.id]
-                                      ? "text-green-500"
-                                      : "text-red-500"
-                                  } fill-current`}
-                                />
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <Button
-                        disabled={
-                          isCheckingMeetingAvailability ||
-                          !selectedSession?.meeting?.id ||
-                          !meetingAvailability[selectedSession.meeting.id]
-                        }
-                        onClick={() =>
-                          selectedSession &&
-                          selectedSessionDate &&
-                          handleReschedule(
-                            selectedSession?.id,
-                            selectedSessionDate
-                          )
-                        }
-                      >
-                        {isCheckingMeetingAvailability ? (
-                          <>
-                            Checking Meeting Link Availability{"   "}
-                            <Loader2 className="mx-2 h-4 w-4 animate-spin" />
-                          </>
-                        ) : (
-                          "Send Reschedule Request"
-                        )}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <RescheduleForm
+                  session={session}
+                  isDialogOpen={isDialogOpen}
+                  selectedSession={selectedSession}
+                  selectedSessionDate={selectedSessionDate}
+                  isCheckingMeetingAvailability={isCheckingMeetingAvailability}
+                  meetings={meetings}
+                  meetingAvailability={meetingAvailability}
+                  setIsDialogOpen={setIsDialogOpen}
+                  setSelectedSession={setSelectedSession}
+                  setSelectedSessionDate={setSelectedSessionDate}
+                  areMeetingsAvailableInCurrentWeek={
+                    areMeetingsAvailableInCurrentWeek
+                  }
+                  handleInputChange={handleInputChange}
+                  handleReschedule={handleReschedule}
+                />
                 <Button
                   variant="ghost"
                   size="icon"
