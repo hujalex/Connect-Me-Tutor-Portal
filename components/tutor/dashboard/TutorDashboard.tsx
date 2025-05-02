@@ -129,7 +129,7 @@ const TutorDashboard = () => {
         undefined,
         ["Complete", "Cancelled"],
         "date",
-        true
+        false
       );
       setPastSessions(pastSessionData);
       setFilteredPastSessions(pastSessionData);
@@ -569,9 +569,9 @@ const TutorDashboard = () => {
             />
           </div>
 
-          <div className="w-80">
+          {/* <div className="w-80">
             <TutorCalendar sessions={sessions} />
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="p-8">
@@ -604,9 +604,9 @@ const TutorDashboard = () => {
             />
           </div>
 
-          <div className="w-80">
+          {/* <div className="w-80">
             {/* <TutorCalendar sessions={sessions} /> */}
-          </div>
+          {/* </div>  */}
         </div>
       </div>
     </>
