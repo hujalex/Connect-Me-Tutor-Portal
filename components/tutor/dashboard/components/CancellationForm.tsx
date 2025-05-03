@@ -20,6 +20,7 @@ import { Radio } from "lucide-react";
 interface CancellationFormProps {
   session: Session;
   handleStatusChange: (session: Session) => void;
+  onClose: any;
 }
 
 type cancellationReasonType =
@@ -31,6 +32,7 @@ type cancellationReasonType =
 const CancellationForm: React.FC<CancellationFormProps> = ({
   session,
   handleStatusChange,
+  onClose,
 }) => {
   const [otherReason, setOtherReason] = useState<string>("");
   const [cancellationReason, setCancellationReason] =
@@ -81,7 +83,7 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
       <AlertDialogFooter>
         <AlertDialogCancel>No</AlertDialogCancel>
         <AlertDialogAction
-          onClick={() => {
+          onClick={(e) => {
             const updatedSession: Session = {
               ...session,
               status: (isCancellationStudentAbsent
@@ -90,6 +92,7 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
               session_exit_form: isCancellationOther ? otherReason : "",
             };
             handleStatusChange(updatedSession);
+            onClose();
           }}
         >
           Yes

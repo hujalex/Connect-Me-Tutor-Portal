@@ -222,6 +222,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   nextClassConfirmed={nextClassConfirmed}
                   setNextClassConfirmed={setNextClassConfirmed}
                   handleSessionComplete={handleSessionComplete}
+                  handleStatusChange={handleStatusChange}
                 />
               </TableCell>
               <TableCell className="flex content-center">
@@ -261,6 +262,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   <CancellationForm
                     session={session}
                     handleStatusChange={handleStatusChange}
+                    onClose={() => {}}
                   />
                 </AlertDialog>
               </TableCell>

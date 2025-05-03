@@ -14,9 +14,17 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  AlertDialog,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash } from "lucide-react";
 import { isAfter, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import CancellationForm from "./CancellationForm";
 
 interface SessionExitFormProps {
   currSession: Session;
@@ -34,6 +42,7 @@ interface SessionExitFormProps {
     isQuestionOrConcern: boolean,
     isFirstSession: boolean
   ) => void;
+  handleStatusChange: (session: Session) => void;
 }
 
 const SessionExitForm: React.FC<SessionExitFormProps> = ({
@@ -47,7 +56,9 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
   nextClassConfirmed,
   setNextClassConfirmed,
   handleSessionComplete,
+  handleStatusChange,
 }) => {
+  const [isCancellation, setisCancellation] = useState(false);
   const [isFirstSession, setIsFirstSession] = useState(false);
   const [isQuestionOrConcern, setIsQuestionOrConcern] = useState(false);
   return (
@@ -65,6 +76,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
                 setSelectedSession(currSession);
                 setIsSessionExitFormOpen(true);
               }}
+              className=""
             >
               SEF
             </Button>
@@ -78,8 +90,43 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Session Exit Form</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            Session Exit Form
+            <AlertDialog>
+              <AlertDialogTrigger>
+                <Button
+                  variant="outline"
+                  // onClick={(e) => {
+                  //   setIsSessionExitFormOpen(false);
+                  // }}
+                >
+                  {" "}
+                  I would like to cancel instead
+                </Button>
+              </AlertDialogTrigger>
+              {selectedSession ? (
+                <CancellationForm
+                  session={selectedSession}
+                  handleStatusChange={handleStatusChange}
+                  onClose={() => setIsSessionExitFormOpen(false)}
+                />
+              ) : (
+                ""
+              )}
+            </AlertDialog>
+          </DialogTitle>
         </DialogHeader>
+        {/* <div className="flex items-center space-x-2">
+          <Checkbox
+            id="cancellation"
+            checked={isCancellation}
+            onCheckedChange={(checked) => setisCancellation(checked === true)}
+          />
+          <label htmlFor="cancellation" className="text-sm font-medium">
+            I would like to cancel instead
+          </label>
+        </div> */}
+
         <div className="flex items-center space-x-2">
           <Checkbox
             id="question-or-concern"
@@ -118,7 +165,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <Checkbox
             id="first-session"
             checked={isFirstSession}
@@ -127,7 +174,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
           <label htmlFor="next-class" className="text-sm font-medium">
             This is my first session
           </label>
-        </div>
+        </div> */}
         <Button
           onClick={() => {
             if (selectedSession) {
