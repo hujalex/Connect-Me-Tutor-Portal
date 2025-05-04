@@ -63,6 +63,7 @@ import { format, parseISO, isAfter } from "date-fns";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import SessionExitForm from "./SessionExitForm";
 import RescheduleForm from "./RescheduleDialog";
+import CancellationForm from "./CancellationForm";
 
 interface CurrentSessionTableProps {
   currentSessions: Session[];
@@ -217,6 +218,7 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
                   nextClassConfirmed={nextClassConfirmed}
                   setNextClassConfirmed={setNextClassConfirmed}
                   handleSessionComplete={handleSessionComplete}
+                  handleStatusChange={handleStatusChange}
                 />
               </TableCell>
               <TableCell className="flex content-center">
@@ -250,36 +252,14 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
                 <AlertDialog>
                   <AlertDialogTrigger>
                     <Button variant="ghost" size="icon">
-                      <Trash className="h-4 w-4" />
+                      <Trash className="h-4 w-4" color="#ef4444" />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    {" "}
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel Session</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Your Session will be canceled. This action cannot be
-                        reversed
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>No</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => {
-                          const updatedSession: Session = {
-                            ...session,
-                            status: "Cancelled" as
-                              | "Active"
-                              | "Complete"
-                              | "Cancelled",
-                          };
-                          handleStatusChange(updatedSession);
-                        }}
-                      >
-                        Yes
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
+                  <CancellationForm
+                    session={session}
+                    handleStatusChange={handleStatusChange}
+                    onClose={() => {}}
+                  />
                 </AlertDialog>
               </TableCell>
             </TableRow>

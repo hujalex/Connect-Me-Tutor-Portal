@@ -111,7 +111,7 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
               setSelectedSessionDate(session.date);
             }}
           >
-            <CalendarDays className="h-4 w-4" />
+            <CalendarDays color="#3b82f6" className="h-4 w-4" />
           </Button>
         </DialogTrigger>
         <DialogContent>
