@@ -59,7 +59,7 @@ import {
   UserRoundPlus,
   CircleCheck,
 } from "lucide-react";
-import { format, parseISO, isAfter } from "date-fns";
+import { format, parseISO, isAfter, addHours, addWeeks } from "date-fns";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import SessionExitForm from "./SessionExitForm";
 
@@ -141,6 +141,16 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
                   );
                 }
               }}
+              onBlur={async (e) => {
+                if (selectedSession) {
+                  const rescheduledDate = new Date(e.target.value);
+                  await areMeetingsAvailableInCurrentWeek(
+                    selectedSession,
+                    rescheduledDate
+                  );
+                }
+              }}
+              // max={addWeeks(new Date(), 2)}
             />
 
             <div>
