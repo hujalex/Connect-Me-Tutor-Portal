@@ -75,13 +75,14 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
           </span>
         </RadioGroup>
         <Textarea
+          placeholder="Write here..."
           value={otherReason}
           onChange={(e) => setOtherReason(e.target.value)}
           className={isCancellationOther ? "" : "hidden"}
         ></Textarea>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel>No</AlertDialogCancel>
+        <AlertDialogCancel>Back</AlertDialogCancel>
         <AlertDialogAction
           onClick={(e) => {
             const updatedSession: Session = {
@@ -95,7 +96,7 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
             onClose();
           }}
         >
-          Yes
+          Submit
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
