@@ -92,8 +92,6 @@ export function formatDateAdmin(
   return date.toLocaleDateString("en-US", options);
 }
 
-export function getDayEST()
-
 export function getSessionTimespan(timeStr: string): string {
   const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",

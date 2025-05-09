@@ -840,6 +840,14 @@ export async function addOneSession(session: Session): Promise<void> {
   }
 }
 
+/**
+ * Add sessions for enrollments within the specified week range
+ * @param weekStartString - ISO string of week start in Eastern Time
+ * @param weekEndString - ISO string of week end in Eastern Time
+ * @param enrollments - List of enrollments to create sessions for
+ * @param sessions - Existing sessions to avoid duplicates
+ * @returns Newly created sessions
+ */
 export async function addSessions(
   weekStartString: string,
   weekEndString: string,
@@ -856,12 +864,7 @@ export async function addSessions(
       "America/New_York"
     );
 
-    // const weekStart: Date = parseISO(weekStartString);
-    // const weekEnd: Date = parseISO(weekEndString);
-
-    // const weekStartEST: Date = toZonedTime(weekStart, "America/New_York");
-    // const weekEndEST: Date = toZonedTime(weekEnd, "America/New_York");
-
+    //Set created to avoid duplicates
     const scheduledSessions: Set<string> = await getSessionKeys(sessions);
     // Prepare bulk insert data
     const sessionsToCreate: any[] = [];
@@ -878,8 +881,6 @@ export async function addSessions(
 
       // Process each availability slot
       let { day, startTime, endTime } = availability[0];
-
-      // day = "Saturday";
 
       // Skip invalid time formats
       if (
@@ -931,13 +932,6 @@ export async function addSessions(
           // * SetHours and SetMinutes are dependent on local timezone
           console.log("-----------------");
           console.log("Hours: ", startHour, "Minutes: ", startMinute);
-          // const sessionDate = new Date(currentDate);
-          // const sessionStartTime = setMinutes(
-          //   setHours(sessionDate, startHour),
-          //   startMinute
-          // );
-
-          // const currentDateEST = fromZonedTime(currentDate, "America/New_York");
 
           const dateString = `${format(currentDate, "yyyy-MM-dd")}T${startTime}:00`;
           const sessionStartTime = fromZonedTime(
@@ -945,33 +939,19 @@ export async function addSessions(
             "America/New_York"
           ); // Automatically handles DST
 
-          const sessionDateEST = toZonedTime(dateString, "America/New_York");
-          const sessionStartTimeEST = toZonedTime(
-            sessionStartTime,
-            "America/New_York"
-          );
-
-          console.log("ISO of week start", weekStartString);
-          console.log("date object of week start", weekStart);
-          console.log("Date object of week end,", weekEnd);
-          // console.log("Date Object EST of week Start", weekStartEST);
-          // console.log("Date object EST of Week End", weekEndEST);
-          console.log("Date object of day of session", currentDate);
-          console.log(
-            "Date object of day of session + hours",
-            sessionStartTime
-          );
-          console.log("EST, ", sessionStartTimeEST);
-          console.log(`ISOstring UTC, ${sessionStartTime.toISOString()}`);
-          console.log(`ISOstring EST, ${sessionStartTimeEST.toISOString()}`);
-          console.log(
-            `${format(sessionStartTime, "yyyy-MM-dd'T'HH:mm:ss.SSS")}`
-          );
-          console.log("-----------------");
-
-          // const sessionStartTimeUTC = zonedTimeToUtc(
-          //   sessionStartTimeEST,
+          // const sessionDateEST = toZonedTime(dateString, "America/New_York");
+          // const sessionStartTimeEST = toZonedTime(
+          //   sessionStartTime,
           //   "America/New_York"
+          // );
+
+          // logSessionInfo(
+          //   weekStartString,
+          //   weekStart,
+          //   weekEnd,
+          //   currentDate,
+          //   sessionStartTime,
+          //   sessionStartTimeEST
           // );
 
           // Skip if outside the week range (redundant but safer)
@@ -1054,6 +1034,28 @@ export async function addSessions(
     console.error("Error creating sessions:", error);
     throw error;
   }
+}
+
+async function logSessionInfo(
+  weekStartString: string,
+  weekStart: Date,
+  weekEnd: Date,
+  currentDate: Date,
+  sessionStartTime: Date,
+  sessionStartTimeEST: Date
+) {
+  console.log("ISO of week start", weekStartString);
+  console.log("date object of week start", weekStart);
+  console.log("Date object of week end,", weekEnd);
+  // console.log("Date Object EST of week Start", weekStartEST);
+  // console.log("Date object EST of Week End", weekEndEST);
+  console.log("Date object of day of session", currentDate);
+  console.log("Date object of day of session + hours", sessionStartTime);
+  console.log("EST, ", sessionStartTimeEST);
+  console.log(`ISOstring UTC, ${sessionStartTime.toISOString()}`);
+  console.log(`ISOstring EST, ${sessionStartTimeEST.toISOString()}`);
+  console.log(`${format(sessionStartTime, "yyyy-MM-dd'T'HH:mm:ss.SSS")}`);
+  console.log("-----------------");
 }
 
 // export async function addSessions(
