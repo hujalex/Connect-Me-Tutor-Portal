@@ -12,6 +12,7 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -363,8 +364,10 @@ const Schedule = () => {
       if (!session?.date) return false;
       try {
         return (
-          format(parseISO(session.date), "yyyy-MM-dd") ===
-          format(day, "yyyy-MM-dd")
+          format(
+            toZonedTime(parseISO(session.date), "America/New_York"),
+            "yyyy-MM-dd"
+          ) === format(day, "yyyy-MM-dd")
         );
       } catch (error) {
         console.error("Error filtering session:", error);
@@ -666,8 +669,8 @@ const Schedule = () => {
                         session.status === "Complete"
                           ? "bg-green-500/10 border-2"
                           : session.status === "Cancelled"
-                          ? "bg-red-500/10 border-2"
-                          : "bg-white"
+                            ? "bg-red-500/10 border-2"
+                            : "bg-white"
                       }`}
                     >
                       <CardContent className="p-3">
@@ -682,7 +685,7 @@ const Schedule = () => {
                           {session.summary}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {getSessionTimespan(session.date)}
+                          {getSessionTimespan(session.date)} EDT
                         </p>
                         <div
                           className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${
@@ -791,9 +794,8 @@ const Schedule = () => {
                     value={selectedSession.tutor?.id}
                     onValueChange={async (value) => {
                       console.log(value);
-                      const selectedTutor = await getProfileWithProfileId(
-                        value
-                      );
+                      const selectedTutor =
+                        await getProfileWithProfileId(value);
                       if (selectedTutor) {
                         setSelectedSession({
                           ...selectedSession,
@@ -827,9 +829,8 @@ const Schedule = () => {
                     value={selectedSession.student?.id}
                     onValueChange={async (value) => {
                       console.log(value);
-                      const selectedStudent = await getProfileWithProfileId(
-                        value
-                      );
+                      const selectedStudent =
+                        await getProfileWithProfileId(value);
                       if (selectedStudent) {
                         setSelectedSession({
                           ...selectedSession,
