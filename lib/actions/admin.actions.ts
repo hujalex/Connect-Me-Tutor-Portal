@@ -24,8 +24,11 @@ import {
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import ResetPassword from "@/app/(public)/set-password/page";
 import { getStudentSessions } from "./student.actions";
+import { date } from "zod";
+import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -844,16 +847,24 @@ export async function addSessions(
   sessions: Session[]
 ): Promise<Session[]> {
   try {
-    const weekStart = parseISO(weekStartString);
-    const weekEnd = parseISO(weekEndString);
+    const weekStart: Date = fromZonedTime(
+      parseISO(weekStartString),
+      "America/New_York"
+    );
+    const weekEnd: Date = fromZonedTime(
+      parseISO(weekEndString),
+      "America/New_York"
+    );
+
+    // const weekStart: Date = parseISO(weekStartString);
+    // const weekEnd: Date = parseISO(weekEndString);
+
+    // const weekStartEST: Date = toZonedTime(weekStart, "America/New_York");
+    // const weekEndEST: Date = toZonedTime(weekEnd, "America/New_York");
+
     const scheduledSessions: Set<string> = await getSessionKeys(sessions);
-    // const scheduledSessions2: Set<string> = await getSessionKeys();
-
-    // scheduledSessions2.forEach(scheduledSessions.add, scheduledSessions);
-
     // Prepare bulk insert data
     const sessionsToCreate: any[] = [];
-    const sessionsToReturn: Session[] = [];
 
     // Process all enrollments
     for (const enrollment of enrollments) {
@@ -866,7 +877,9 @@ export async function addSessions(
       }
 
       // Process each availability slot
-      const { day, startTime, endTime } = availability[0];
+      let { day, startTime, endTime } = availability[0];
+
+      // day = "Saturday";
 
       // Skip invalid time formats
       if (
@@ -889,7 +902,13 @@ export async function addSessions(
         // Skip days that don't match
         if (currentDay !== dayLower) {
           currentDate = addDays(currentDate, 1);
+          console.log("Skip");
           continue;
+        }
+
+        //Add Seven Days if CurrentDate is last week (Acts as a Modulus to ensure updating current week only)
+        if (currentDate < parseISO(weekStartString)) {
+          currentDate = addDays(currentDate, 7);
         }
 
         try {
@@ -909,14 +928,57 @@ export async function addSessions(
           }
 
           // Create session date with correct time
-          const sessionDate = new Date(currentDate);
-          const sessionStartTime = setMinutes(
-            setHours(sessionDate, startHour),
-            startMinute
+          // * SetHours and SetMinutes are dependent on local timezone
+          console.log("-----------------");
+          console.log("Hours: ", startHour, "Minutes: ", startMinute);
+          // const sessionDate = new Date(currentDate);
+          // const sessionStartTime = setMinutes(
+          //   setHours(sessionDate, startHour),
+          //   startMinute
+          // );
+
+          // const currentDateEST = fromZonedTime(currentDate, "America/New_York");
+
+          const dateString = `${format(currentDate, "yyyy-MM-dd")}T${startTime}:00`;
+          const sessionStartTime = fromZonedTime(
+            dateString,
+            "America/New_York"
+          ); // Automatically handles DST
+
+          const sessionDateEST = toZonedTime(dateString, "America/New_York");
+          const sessionStartTimeEST = toZonedTime(
+            sessionStartTime,
+            "America/New_York"
           );
 
+          console.log("ISO of week start", weekStartString);
+          console.log("date object of week start", weekStart);
+          console.log("Date object of week end,", weekEnd);
+          // console.log("Date Object EST of week Start", weekStartEST);
+          // console.log("Date object EST of Week End", weekEndEST);
+          console.log("Date object of day of session", currentDate);
+          console.log(
+            "Date object of day of session + hours",
+            sessionStartTime
+          );
+          console.log("EST, ", sessionStartTimeEST);
+          console.log(`ISOstring UTC, ${sessionStartTime.toISOString()}`);
+          console.log(`ISOstring EST, ${sessionStartTimeEST.toISOString()}`);
+          console.log(
+            `${format(sessionStartTime, "yyyy-MM-dd'T'HH:mm:ss.SSS")}`
+          );
+          console.log("-----------------");
+
+          // const sessionStartTimeUTC = zonedTimeToUtc(
+          //   sessionStartTimeEST,
+          //   "America/New_York"
+          // );
+
           // Skip if outside the week range (redundant but safer)
-          if (sessionStartTime < weekStart || sessionStartTime > weekEnd) {
+          if (
+            sessionStartTime < weekStart ||
+            addHours(sessionStartTime, 1) > weekEnd
+          ) {
             currentDate = addDays(currentDate, 1);
             continue;
           }
@@ -926,6 +988,8 @@ export async function addSessions(
             sessionStartTime,
             "yyyy-MM-dd-HH:mm"
           )}`;
+
+          console.log(sessionKey);
 
           if (!scheduledSessions.has(sessionKey)) {
             // Add to batch insert
@@ -1656,3 +1720,6 @@ export async function createPassword(): Promise<string> {
 
   return password;
 }
+// function zonedTimeToUtc(arg0: any, arg1: string) {
+//   throw new Error("Function not implemented.");
+// }

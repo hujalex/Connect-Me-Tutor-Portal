@@ -92,12 +92,14 @@ export function formatDateAdmin(
   return date.toLocaleDateString("en-US", options);
 }
 
+export function getDayEST()
+
 export function getSessionTimespan(timeStr: string): string {
   const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",
     hour12: true,
     timeZone: "America/New_York",
-    timeZoneName: "short", // To include time zone information
+    // timeZoneName: "short", // To include time zone information
   };
 
   // Parse the input string into a Date object
