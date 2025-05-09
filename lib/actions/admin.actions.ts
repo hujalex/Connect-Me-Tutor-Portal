@@ -912,6 +912,11 @@ export async function addSessions(
           currentDate = addDays(currentDate, 7);
         }
 
+        //Remove Seven Days if CurrentDate is next week (Acts as a Modulus to ensure updating current week only)
+        if (currentDate > parseISO(weekEndString)) {
+          currentDate = addDays(currentDate, -7);
+        }
+
         try {
           // Parse times correctly
           const [startHour, startMinute] = startTime.split(":").map(Number);
@@ -955,13 +960,13 @@ export async function addSessions(
           // );
 
           // Skip if outside the week range (redundant but safer)
-          if (
-            sessionStartTime < weekStart ||
-            addHours(sessionStartTime, 1) > weekEnd
-          ) {
-            currentDate = addDays(currentDate, 1);
-            continue;
-          }
+          // if (
+          //   sessionStartTime < weekStart ||
+          //   addHours(sessionStartTime, 1) > weekEnd
+          // ) {
+          //   currentDate = addDays(currentDate, 1);
+          //   continue;
+          // }
 
           // Check for duplicate session
           const sessionKey = `${student.id}-${tutor.id}-${format(
