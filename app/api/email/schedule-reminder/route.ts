@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Client } from "@upstash/qstash";
 import { addMinutes } from "date-fns";
+import { Result } from "postcss";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,39 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const sessionTime: Date = data.sessionTime;
 
-    const scheduledTime = addMinutes(sessionTime, 1);
+    const scheduledTime = addMinutes(sessionTime, 2);
 
-    await qstash.publishJSON({
-      url: `/api/email/send-email`,
+    if (process.env.NODE_ENV === "development") {
+      // Make direct call to your email API
+      const emailResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_LOCAL_URL || "http://localhost:3000"}/api/email/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: "ahuwindsor@gmail.com",
+            subject: "Reminder (Direct - Development)",
+            body: "Your tutoring session starts soon! (Sent directly in development)",
+          }),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        throw new Error(
+          `Failed to send email directly: ${emailResponse.statusText}`
+        );
+      }
+
+      return NextResponse.json({
+        status: 200,
+        message: "Email sent directly (development mode)",
+      });
+    }
+
+    const result = await qstash.publishJSON({
+      url: `${process.env.NEXT_PUBLIC_LOCAL_URL || "https://connectmego.app"}/api/email/send-email`,
       notBefore: Math.floor(scheduledTime.getTime() / 1000),
       body: {
         to: "ahuwindsor@gmail.com",
@@ -27,7 +57,19 @@ export async function POST(request: NextRequest) {
         body: "Your tutoring session starts soon!",
       },
     });
-  } catch (error) {}
+    console.log(`${process.env.NEXT_PUBLIC_LOCAL_URL}`);
+    return NextResponse.json({
+      status: 200,
+      message: "Email reminder scheduled successfully",
+      messageId: result.messageId,
+    });
+  } catch (error) {
+    console.error("Error scheduling reminder", error);
+    return NextResponse.json({
+      status: 500,
+      message: "Unable to reschedule email",
+    });
+  }
 }
 
 // export async function POST(request: NextRequest, response: NextResponse) {

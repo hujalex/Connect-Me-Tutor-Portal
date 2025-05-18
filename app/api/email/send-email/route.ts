@@ -17,9 +17,10 @@ export async function POST(request: NextRequest) {
       text: body,
     });
 
+    console.log("Successfully sent email");
     return NextResponse.json({
       status: 200,
-      message: "Email sent succesfully",
+      message: "Email sent successfully",
     });
   } catch (error) {
     console.error("Error sending email:", error);
