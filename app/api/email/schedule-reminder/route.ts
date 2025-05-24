@@ -59,13 +59,18 @@ export async function POST(request: NextRequest) {
 
     const result = await qstash.publishJSON({
       url: `${"https://connectmego.app"}/api/email/send-email`,
-      // notBefore: Math.floor(scheduledTime.getTime() / 1000),
+      notBefore: Math.floor(scheduledTime.getTime() / 1000),
       body: {
         to: "ahuwindsor@gmail.com",
         subject: "Reminder",
         body: "Your tutoring session starts soon!",
       },
     });
+
+    if (result && result.messageId) {
+      console.log("Qstash publish successful", result);
+    }
+
     // console.log(`${process.env.NEXT_PUBLIC_API_URL}`);
     return NextResponse.json({
       status: 200,
