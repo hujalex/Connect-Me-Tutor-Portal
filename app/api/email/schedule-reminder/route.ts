@@ -15,49 +15,58 @@ const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const sessionTime: Date = data.sessionTime;
+
+    console.log("Data", data);
+
+    const sessionTime: Date = data.now;
+
+    console.log("Scheduled date", sessionTime);
 
     const scheduledTime = addMinutes(sessionTime, 2);
 
-    if (process.env.NODE_ENV === "development") {
-      // Make direct call to your email API
-      const emailResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_LOCAL_URL || "http://localhost:3000"}/api/email/send-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            to: "ahuwindsor@gmail.com",
-            subject: "Reminder (Direct - Development)",
-            body: "Your tutoring session starts soon! (Sent directly in development)",
-          }),
-        }
-      );
+    console.log("Scheduled date", scheduledTime);
 
-      if (!emailResponse.ok) {
-        throw new Error(
-          `Failed to send email directly: ${emailResponse.statusText}`
-        );
-      }
+    // if (process.env.NODE_ENV === "development") {
+    //   // Make direct call to your email API
+    //   const emailResponse = await fetch(
+    //     `${process.env.NEXT_PUBLIC_LOCAL_URL || "http://localhost:3000"}/api/email/send-email`,
+    //     {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       body: JSON.stringify({
+    //         to: "ahuwindsor@gmail.com",
+    //         subject: "Reminder (Direct - Development)",
+    //         body: "Your tutoring session starts soon! (Sent directly in development)",
+    //       }),
+    //     }
+    //   );
 
-      return NextResponse.json({
-        status: 200,
-        message: "Email sent directly (development mode)",
-      });
-    }
+    //   if (!emailResponse.ok) {
+    //     throw new Error(
+    //       `Failed to send email directly: ${emailResponse.statusText}`
+    //     );
+    //   }
+
+    //   console.log("Email sent (development mode)");
+
+    //   return NextResponse.json({
+    //     status: 200,
+    //     message: "Email sent directly (development mode)",
+    //   });
+    // }
 
     const result = await qstash.publishJSON({
-      url: `${process.env.NEXT_PUBLIC_LOCAL_URL || "https://connectmego.app"}/api/email/send-email`,
-      notBefore: Math.floor(scheduledTime.getTime() / 1000),
+      url: `${"https://connectmego.app"}/api/email/send-email`,
+      // notBefore: Math.floor(scheduledTime.getTime() / 1000),
       body: {
         to: "ahuwindsor@gmail.com",
         subject: "Reminder",
         body: "Your tutoring session starts soon!",
       },
     });
-    console.log(`${process.env.NEXT_PUBLIC_LOCAL_URL}`);
+    // console.log(`${process.env.NEXT_PUBLIC_API_URL}`);
     return NextResponse.json({
       status: 200,
       message: "Email reminder scheduled successfully",
