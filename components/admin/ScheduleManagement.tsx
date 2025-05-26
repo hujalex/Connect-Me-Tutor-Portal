@@ -406,8 +406,10 @@ const Schedule = () => {
       }
       fetchSessions();
       toast.success("Added Session");
-    } catch (error) {
-      toast.error("Unable to add session");
+    } catch (error: any) {
+      toast.error(
+        error?.code === "23505" ? "Duplicate Session" : "Unable to add session"
+      );
       console.log("Unable to add session", error);
     }
   };
@@ -666,8 +668,8 @@ const Schedule = () => {
                         session.status === "Complete"
                           ? "bg-green-500/10 border-2"
                           : session.status === "Cancelled"
-                          ? "bg-red-500/10 border-2"
-                          : "bg-white"
+                            ? "bg-red-500/10 border-2"
+                            : "bg-white"
                       }`}
                     >
                       <CardContent className="p-3">
@@ -791,9 +793,8 @@ const Schedule = () => {
                     value={selectedSession.tutor?.id}
                     onValueChange={async (value) => {
                       console.log(value);
-                      const selectedTutor = await getProfileWithProfileId(
-                        value
-                      );
+                      const selectedTutor =
+                        await getProfileWithProfileId(value);
                       if (selectedTutor) {
                         setSelectedSession({
                           ...selectedSession,
@@ -827,9 +828,8 @@ const Schedule = () => {
                     value={selectedSession.student?.id}
                     onValueChange={async (value) => {
                       console.log(value);
-                      const selectedStudent = await getProfileWithProfileId(
-                        value
-                      );
+                      const selectedStudent =
+                        await getProfileWithProfileId(value);
                       if (selectedStudent) {
                         setSelectedSession({
                           ...selectedSession,

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
 
 const EmailManager = () => {
-  const sendEmail = async () => {
+  const scheduleEmail = async () => {
     try {
       const now = new Date();
 
@@ -37,7 +37,7 @@ const EmailManager = () => {
 
       <main className="p-8">
         <h1 className="text-3xl font-bold mb-6">Email Manager</h1>
-        <Button onClick={() => sendEmail()}>Send Email</Button>
+        <Button onClick={() => scheduleEmail()}>Send Email</Button>
       </main>
     </>
   );

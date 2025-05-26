@@ -26,6 +26,7 @@ import {
 } from "date-fns"; // Only use date-fns
 import ResetPassword from "@/app/(public)/set-password/page";
 import { getStudentSessions } from "./student.actions";
+import toast from "react-hot-toast";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -819,7 +820,10 @@ export async function checkMeetingsAvailability(
   }
 }
 
-export async function addOneSession(session: Session): Promise<void> {
+export async function addOneSession(
+  session: Session,
+  scheduleEmail: boolean = true
+): Promise<void> {
   try {
     const newSession = {
       date: session.date,
@@ -830,7 +834,39 @@ export async function addOneSession(session: Session): Promise<void> {
       meeting_id: session.meeting?.id,
     };
 
-    const { data, error } = await supabase.from("Sessions").insert(newSession);
+    const { data, error } = await supabase
+      .from("Sessions")
+      .insert(newSession)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      toast.error("No Data");
+    }
+
+    if (data && scheduleEmail) {
+      const addedSession: Session = {
+        id: data.id,
+        createdAt: data.created_at,
+        environment: data.environment,
+        date: data.date,
+        summary: data.summary,
+        meeting: await getMeeting(data.meeting_id),
+        student: await getProfileWithProfileId(data.student_id),
+        tutor: await getProfileWithProfileId(data.tutor_id),
+        status: data.status,
+        session_exit_form: data.session_exit_form || null,
+        isQuestionOrConcern: data.isQuestionOrConcern,
+        isFirstSession: data.isFirstSession,
+      };
+
+      sendScheduledEmailsBeforeSessions([addedSession]);
+      toast.success("Scheduled email");
+    }
   } catch (error) {
     console.error("Unable to add one session", error);
     throw error;
@@ -841,7 +877,8 @@ export async function addSessions(
   weekStartString: string,
   weekEndString: string,
   enrollments: Enrollment[],
-  sessions: Session[]
+  sessions: Session[],
+  scheduleEmails: boolean = true
 ): Promise<Session[]> {
   try {
     const weekStart = parseISO(weekStartString);
@@ -981,6 +1018,10 @@ export async function addSessions(
           }))
         );
 
+        if (scheduleEmails) {
+          await sendScheduledEmailsBeforeSessions(sessions);
+        }
+
         return sessions;
       }
     }
@@ -988,6 +1029,31 @@ export async function addSessions(
     return [];
   } catch (error) {
     console.error("Error creating sessions:", error);
+    throw error;
+  }
+}
+
+export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
+  try {
+    sessions.forEach(async (session) => {
+      const response = await fetch("/api/email/schedule-reminder", {
+        method: "POST",
+        body: JSON.stringify({ session }),
+        headers: {
+          "Content-Type": "applications/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to schedule emails");
+      }
+    });
+
+    toast.success("Session Emails Scheduled");
+  } catch (error) {
+    console.error("Error scheduling session emails", error);
     throw error;
   }
 }
