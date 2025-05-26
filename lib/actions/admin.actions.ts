@@ -1036,13 +1036,16 @@ export async function addSessions(
 export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
   try {
     sessions.forEach(async (session) => {
-      const response = await fetch("/api/email/schedule-reminder", {
-        method: "POST",
-        body: JSON.stringify({ session }),
-        headers: {
-          "Content-Type": "applications/json",
-        },
-      });
+      const response = await fetch(
+        "/api/email/before-sessions/schedule-reminder",
+        {
+          method: "POST",
+          body: JSON.stringify({ session }),
+          headers: {
+            "Content-Type": "applications/json",
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -1058,124 +1061,27 @@ export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
   }
 }
 
-// export async function addSessions(
-//   weekStartString: string,
-//   weekEndString: string,
-//   enrollments: Enrollment[],
-//   sessionsFetched: Session[]
-// ) {
-//   const weekStart = parseISO(weekStartString);
-//   const weekEnd = parseISO(weekEndString);
-//   const sessions: Session[] = [];
+export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
+  try {
+    const response = await fetch("/api/email/before-sessions/delete-reminder", {
+      method: "POST",
+      body: JSON.stringify({ sessionId }),
+      headers: {
+        "Content-Type": "applications/json",
+      },
+    });
 
-//   const scheduledSessions: Set<string> = await getSessionKeys(sessionsFetched);
+    if (!response.ok) {
+      throw new Error("Unable to delete scheduled email");
+    }
 
-//   for (const enrollment of enrollments) {
-//     const { student, tutor, availability } = enrollment;
+    toast.success("Deleted Scheduled Email");
+  } catch (error) {
+    console.error("Unable to delete message");
+    throw error;
+  }
+}
 
-//     if (!student || !tutor) continue;
-
-//     for (const avail of availability) {
-//       const { day, startTime, endTime } = avail;
-
-//       if (!startTime || startTime.includes("-")) {
-//         console.error(`Invalid time format for availability: ${startTime}`);
-//         console.log("Errored Enrollment", enrollment);
-//         continue;
-//       }
-
-//       const [availStart, availEnd] = [startTime, endTime];
-
-//       if (!availStart || !availEnd) {
-//         console.error(
-//           `Invalid start or end time: start=${availStart}, end=${availEnd}`
-//         );
-//         continue;
-//       }
-
-//       let sessionDate = new Date(weekStart);
-//       while (sessionDate <= weekEnd) {
-//         if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
-//           const availStartTime = parse(
-//             availStart.toLowerCase(),
-//             "HH:mm",
-//             sessionDate
-//           );
-//           const availEndTime = parse(
-//             availEnd.toLowerCase(),
-//             "HH:mm",
-//             sessionDate
-//           );
-
-//           if (
-//             isNaN(availStartTime.getTime()) ||
-//             isNaN(availEndTime.getTime())
-//           ) {
-//             console.error(
-//               `Invalid parsed time: start=${availStart}, end=${availEnd}`
-//             );
-//             break;
-//           }
-
-//           const sessionStartTime = setMinutes(
-//             setHours(sessionDate, availStartTime.getHours()),
-//             availStartTime.getMinutes()
-//           );
-//           const sessionEndTime = setMinutes(
-//             setHours(sessionDate, availEndTime.getHours()),
-//             availEndTime.getMinutes()
-//           );
-
-//           if (
-//             isBefore(sessionStartTime, weekStart) ||
-//             isAfter(sessionEndTime, weekEnd)
-//           ) {
-//             sessionDate = addDays(sessionDate, 1);
-//             continue;
-//           }
-
-//           // Check for duplicates
-//           const sessionKey = `${student.id}-${tutor.id}-${format(
-//             sessionStartTime,
-//             "yyyy-MM-dd-HH:mm"
-//           )}`;
-//           if (scheduledSessions.has(sessionKey)) {
-//             console.warn(`Duplicate session detected: ${sessionKey}`);
-//             sessionDate = addDays(sessionDate, 1);
-//             continue;
-//           }
-
-//           console.log(enrollment);
-
-//           const { data: session, error } = await supabase
-//             .from("Sessions")
-//             .insert({
-//               date: sessionStartTime.toISOString(),
-//               student_id: student.id,
-//               tutor_id: tutor.id,
-//               status: "Active",
-//               summary: enrollment.summary,
-//               meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
-//             })
-//             .single();
-
-//           if (error) {
-//             console.error("Error creating session:", error);
-//             continue;
-//           }
-
-//           sessions.push(session);
-//           scheduledSessions.add(sessionKey);
-//         }
-//         sessionDate = addDays(sessionDate, 1);
-//       }
-//     }
-//   }
-
-//   return sessions;
-// }
-
-// Function to update a session
 export async function updateSession(updatedSession: Session) {
   const {
     id,
@@ -1225,17 +1131,28 @@ export async function updateSession(updatedSession: Session) {
   }
 }
 
-export async function removeSession(sessionId: string) {
-  // Create a notification for the admin
-  const { error: eventError } = await supabase
-    .from("Sessions")
-    .delete()
-    .eq("id", sessionId);
+export async function removeSession(
+  sessionId: string,
+  updateEmail: boolean = true
+) {
+  try {
+    const { error: eventError } = await supabase
+      .from("Sessions")
+      .delete()
+      .eq("id", sessionId);
 
-  console.log(sessionId);
+    console.log(sessionId);
 
-  if (eventError) {
-    throw eventError;
+    if (eventError) {
+      throw eventError;
+    }
+
+    if (updateEmail) {
+      await deleteScheduledEmailBeforeSessions(sessionId);
+    }
+  } catch (error) {
+    // Create a notification for the admin
+    throw error;
   }
 }
 

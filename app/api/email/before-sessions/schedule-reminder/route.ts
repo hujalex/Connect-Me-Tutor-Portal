@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // const sessionDate = parseISO(session.date);
     const sessionDate = new Date();
 
-    const scheduledTime = addMinutes(sessionDate, 0);
+    const scheduledTime = addMinutes(sessionDate, 2);
 
     console.log("Scheduled date", scheduledTime);
 
