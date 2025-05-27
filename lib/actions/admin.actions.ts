@@ -1082,52 +1082,91 @@ export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
   }
 }
 
-export async function updateSession(updatedSession: Session) {
-  const {
-    id,
-    status,
-    tutor,
-    student,
-    date,
-    summary,
-    meeting,
-    session_exit_form,
-    isQuestionOrConcern,
-    isFirstSession,
-  } = updatedSession;
-
-  console.log(id);
-  console.log(status);
-  console.log(isQuestionOrConcern);
-  console.log(isFirstSession);
-  console.log(meeting);
-
-  const { data, error } = await supabase
-    .from("Sessions")
-    .update({
-      status: status,
-      student_id: student?.id,
-      tutor_id: tutor?.id,
-      date: date,
-      summary: summary,
-      meeting_id: meeting?.id,
-      session_exit_form: session_exit_form,
-      is_question_or_concern: isQuestionOrConcern,
-      is_first_session: isFirstSession,
-    })
-    .eq("id", id);
-  console.log("UPDATING...");
-
-  if (error) {
-    console.error("Error updating session:", error);
-    return null;
+export async function updateScheduledEmailBeforeSessions(session: Session) {
+  try {
+    await deleteScheduledEmailBeforeSessions(session.id);
+    await sendScheduledEmailsBeforeSessions([session]);
+    toast.success("Successfully updated scheduled reminder");
+  } catch (error) {
+    console.error("Unable to update scheduled message");
+    throw error;
   }
+}
 
-  if (data) {
-    console.log(data[0]);
-    return data[0];
-  } else {
-    console.error("NO DATA");
+export async function updateSession(
+  updatedSession: Session,
+  updateEmail: boolean = true
+) {
+  try {
+    const {
+      id,
+      status,
+      tutor,
+      student,
+      date,
+      summary,
+      meeting,
+      session_exit_form,
+      isQuestionOrConcern,
+      isFirstSession,
+    } = updatedSession;
+
+    console.log(id);
+    console.log(status);
+    console.log(isQuestionOrConcern);
+    console.log(isFirstSession);
+    console.log(meeting);
+
+    const { data, error } = await supabase
+      .from("Sessions")
+      .update({
+        status: status,
+        student_id: student?.id,
+        tutor_id: tutor?.id,
+        date: date,
+        summary: summary,
+        meeting_id: meeting?.id,
+        session_exit_form: session_exit_form,
+        is_question_or_concern: isQuestionOrConcern,
+        is_first_session: isFirstSession,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+    console.log("UPDATING...");
+
+    if (error) {
+      console.error("Error updating session:", error);
+      return null;
+    }
+
+    if (data) {
+      console.log(data);
+      return data;
+    } else {
+      console.error("NO DATA");
+    }
+
+    if (updateEmail && data) {
+      const newSession: Session = {
+        id: data.id,
+        createdAt: data.created_at,
+        environment: data.environment,
+        date: data.date,
+        summary: data.summary,
+        meeting: await getMeeting(data.meeting_id),
+        student: await getProfileWithProfileId(data.student_id),
+        tutor: await getProfileWithProfileId(data.tutor_id),
+        status: data.status,
+        session_exit_form: data.session_exit_form || null,
+        isQuestionOrConcern: data.isQuestionOrConcern,
+        isFirstSession: data.isFirstSession,
+      };
+
+      await updateScheduledEmailBeforeSessions(newSession);
+    }
+  } catch (error) {
+    console.error("Unable to update session");
   }
 }
 

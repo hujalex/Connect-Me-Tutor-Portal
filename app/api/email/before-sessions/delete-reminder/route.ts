@@ -10,6 +10,7 @@ import { Result } from "postcss";
 import { formatSessionDate } from "@/lib/utils";
 import { schedulePreSessionEmail } from "@/lib/email-scheduler";
 import { getProfileWithProfileId } from "@/lib/actions/user.actions";
+import { deleteMsg } from "@/lib/actions/qstash.actions";
 
 export const dynamic = "force-dynamic";
 
@@ -73,12 +74,14 @@ export async function POST(request: NextRequest) {
 
     console.log(emailData);
 
-    try {
-      await qstash.messages.delete(emailData.message_id);
-      console.log("Successfully deleted message from QStash");
-    } catch (qstashError: any) {
-      console.warn("Failed to delete message from QStash");
-    }
+    // try {
+    //   await qstash.messages.delete(emailData.message_id);
+    //   console.log("Successfully deleted message from QStash");
+    // } catch (qstashError: any) {
+    //   console.warn("Failed to delete message from QStash");
+    // }
+
+    await deleteMsg(emailData.message_id);
 
     const { error: deleteDbError } = await supabase
       .from("Emails")
