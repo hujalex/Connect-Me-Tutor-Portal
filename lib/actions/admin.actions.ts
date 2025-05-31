@@ -35,6 +35,16 @@ const supabase = createClientComponentClient({
 });
 
 /* PROFILES */
+
+/**
+ * Fetches all profiles based on a given role, with optional ordering.
+ *
+ * @param role - The role of the profiles to fetch ("Student", "Tutor", or "Admin")
+ * @param orderBy - Optional. The field to order the profiles by.
+ * @param ascending - Optional. Boolean indicating if the order should be ascending (true) or descending (false)
+ * @returns A promise that resolves to an array of Profile objects or null if an error occurs or no profiles are found.
+ */
+
 export async function getAllProfiles(
   role: "Student" | "Tutor" | "Admin",
   orderBy?: string | null,
@@ -119,6 +129,14 @@ export async function getAllProfiles(
   }
 }
 
+/**
+ * Adds a new student profile to the database.
+ * This involes creating an authenticated user first, then their profile.
+ *
+ * @param studentData - Partial data for the new studnet profile. Email is required
+ * @returns A promise that resolves to the new created Profile object.
+ * @throws Will throw an error if email is missing, user already exists, or database insertion fails.
+ */
 export const addStudent = async (
   studentData: Partial<Profile>
 ): Promise<Profile> => {
@@ -221,6 +239,14 @@ export const addStudent = async (
   }
 };
 
+/**
+ * Adds a new tutor profile to the database.
+ * This involves creating an authenticated user first, then their profile.
+ *
+ * @param tutorData - Partial data for the new tutor profile. Email is required.
+ * @returns A promise that resolves to the newly created Profile object.
+ * @throws Will throw an error if email is missing, user already exists, or database insertion fails.
+ */
 export const addTutor = async (
   tutorData: Partial<Profile>
 ): Promise<Profile> => {
@@ -312,6 +338,13 @@ export const addTutor = async (
   }
 };
 
+/**
+ * Deletes a user by making a POST request to the delete-user API endpoint.
+ *
+ * @param profileId - The ID of the profile associated with the user to be deleted.
+ * @returns A promise that resolves to the JSON response from the API.
+ * @throws Will throw an error if the API request fails or returns an error.
+ */
 export async function deleteUser(profileId: string) {
   try {
     const response = await fetch("/api/admin/delete-user", {
@@ -334,6 +367,12 @@ export async function deleteUser(profileId: string) {
   }
 }
 
+/**
+ * Fetches a user profile from the database by its ID.
+ *
+ * @param profileId - The ID of the profile to fetch.
+ * @returns A promise that resolves to the Profile object or null if not found or an error occurs.
+ */
 export async function getUserFromId(profileId: string) {
   try {
     const { data: profile, error } = await supabase
@@ -401,7 +440,13 @@ export async function getUserFromId(profileId: string) {
   }
 }
 
-//---updateUser
+/**
+ * Updates an existing user's profile information in the database.
+ *
+ * @param profile - The Profile object containing the updated information. The ID field is used to identify the user.
+ * @returns A promise that resolves to the updated profile data from Supabase.
+ * @throws Will throw an error if the update operation fails.
+ */
 export async function editUser(profile: Profile) {
   console.log(profile);
   const {
@@ -452,6 +497,13 @@ export async function editUser(profile: Profile) {
   }
 }
 
+/**
+ * Deactivates a user by setting their profile status to "Inactive".
+ *
+ * @param profileId - The ID of the profile to deactivate.
+ * @returns A promise that resolves to the updated profile data.
+ * @throws Will throw an error if the update fails.
+ */
 export async function deactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
@@ -468,6 +520,13 @@ export async function deactivateUser(profileId: string) {
   }
 }
 
+/**
+ * Reactivates a user by setting their profile status to "Active".
+ *
+ * @param profileId - The ID of the profile to reactivate.
+ * @returns A promise that resolves to the updated profile data.
+ * @throws Will throw an error if the update fails.
+ */
 export async function reactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
@@ -485,7 +544,14 @@ export async function reactivateUser(profileId: string) {
   }
 }
 
-/* USERS */
+/**
+ * Creates a new user in the Supabase authentication system.
+ *
+ * @param email - The email address for the new user.
+ * @param password - The password for the new user.
+ * @returns A promise that resolves to the new user's ID, or null if creation fails.
+ * @throws Will throw an error if Supabase auth.signUp fails.
+ */
 export const createUser = async (
   email: string,
   password: string
@@ -514,6 +580,13 @@ export const createUser = async (
   }
 };
 
+/**
+ * Resends an email confirmation link to the specified email address.
+ *
+ * @param email - The email address to resend the confirmation to.
+ * @returns A promise that resolves if the request is successful.
+ * @throws Will throw an error if the resend operation fails.
+ */
 export const resendEmailConfirmation = async (email: string) => {
   try {
     const { error } = await supabase.auth.resend({
@@ -530,7 +603,14 @@ export const resendEmailConfirmation = async (email: string) => {
   }
 };
 
-/* SESSIONS */
+/**
+ * Creates a new session record in the database.
+ *
+ * @param sessionData - An object containing the data for the new session.
+ *                      Expected to match the structure of the "Sessions" table.
+ * @returns A promise that resolves to the newly created session data.
+ * @throws Will throw an error if the database insertion fails.
+ */
 export async function createSession(sessionData: any) {
   const { data, error } = await supabase
     .from("Sessions")
@@ -541,6 +621,15 @@ export async function createSession(sessionData: any) {
   return data;
 }
 
+/**
+ * Fetches all sessions, optionally filtered by a date range and ordered.
+ *
+ * @param startDate - Optional. ISO string for the start date of the filter range.
+ * @param endDate - Optional. ISO string for the end date of the filter range.
+ * @param orderBy - Optional. The field to order the sessions by.
+ * @param ascending - Optional. Boolean indicating if the order should be ascending.
+ * @returns A promise that resolves to an array of Session objects. Returns an empty array on error.
+ */
 export async function getAllSessions(
   startDate?: string,
   endDate?: string,
@@ -609,74 +698,14 @@ export async function getAllSessions(
   }
 }
 
-// export function getAllSessions(
-//   startDate?: string,
-//   endDate?: string,
-//   orderBy?: string,
-//   ascending?: boolean
-// ) {
-//   try {
-//     let query = supabase.from("Sessions").select(`
-//       id,
-//       created_at,
-//       environment,
-//       student_id,
-//       tutor_id,
-//       date,
-//       summary,
-//       meeting_id,
-//       status,
-//       is_question_or_concern,
-//       is_first_session,
-//       session_exit_form
-//     `);
-
-//     if (startDate) {
-//       query = query.gte("date", startDate);
-//     }
-//     if (endDate) {
-//       query = query.lte("date", endDate);
-//     }
-
-//     if (orderBy && ascending !== undefined) {
-//       query = query.order(orderBy, { ascending });
-//     }
-
-//     const { data, error } = await query;
-
-//     if (error) {
-//       console.error("Error fetching student sessions:", error.message);
-//       throw error;
-//     }
-
-//     // Map the result to the Session interface
-//     const sessions: Session[] = await Promise.all(
-//       data.map(async (session: any) => ({
-//         id: session.id,
-//         createdAt: session.created_at,
-//         environment: session.environment,
-//         date: session.date,
-//         summary: session.summary,
-//         // meetingId: session.meeting_id,
-//         meeting: await getMeeting(session.meeting_id),
-//         student: await getProfileWithProfileId(session.student_id),
-//         tutor: await getProfileWithProfileId(session.tutor_id),
-//         status: session.status,
-//         session_exit_form: session.session_exit_form,
-//         isQuestionOrConcern: Boolean(session.is_question_or_concern),
-//         isFirstSession: Boolean(session.is_first_session),
-//       }))
-//     );
-
-//     console.log(sessions);
-
-//     return sessions;
-//   } catch (error) {
-//     console.error("Error fetching sessions");
-//     return [];
-//   }
-// }
-
+/**
+ * Reschedules an existing session by updating its date.
+ *
+ * @param sessionId - The ID of the session to reschedule.
+ * @param newDate - The new ISO string date for the session.
+ * @returns A promise that resolves to the updated session data.
+ * @throws Will throw an error if the update operation fails.
+ */
 export async function rescheduleSession(sessionId: string, newDate: string) {
   const { data, error } = await supabase
     .from("Sessions")
@@ -688,6 +717,15 @@ export async function rescheduleSession(sessionId: string, newDate: string) {
   return data;
 }
 
+/**
+ * Generates a set of unique string keys for sessions.
+ * Each key is typically formed from student ID, tutor ID, and formatted session date.
+ * If no session data is provided, it attempts to fetch all sessions.
+ *
+ * @param data - Optional. An array of Session objects to generate keys from.
+ * @returns A promise that resolves to a Set of unique session keys (strings).
+ * @throws Will throw an error if fetching sessions fails (when data is not provided).
+ */
 export async function getSessionKeys(data?: Session[]) {
   const sessionKeys: Set<string> = new Set();
 
@@ -719,13 +757,13 @@ export async function getSessionKeys(data?: Session[]) {
 }
 
 /**
- * Checks if a meeting is available at the requested session time
+ * Checks if a meeting is available at the requested session time by comparing against existing sessions.
  *
- * @param meetingId - ID of the meeting to check
- * @param sessionId - ID of the current session (to exclude from conflicts)
- * @param sessionDate - ISO string date of the requested session
- * @param existingSessions - Array of all sessions to check for conflicts
- * @returns boolean - True if the meeting is available
+ * @param meetingId - ID of the meeting to check.
+ * @param sessionId - ID of the current session (to exclude from conflicts if updating). Undefined if creating a new session.
+ * @param sessionDate - ISO string date of the requested session.
+ * @param existingSessions - Array of all sessions to check for conflicts.
+ * @returns A promise that resolves to boolean - True if the meeting is available, false otherwise or on error.
  */
 export async function isMeetingAvailable(
   meetingId: string,
@@ -770,11 +808,13 @@ export async function isMeetingAvailable(
 }
 
 /**
- *Applies a SQL query to check if an individual meeting is available
- *@param meetingId
- *@param session
+ * (Placeholder) Applies a SQL query to check if an individual meeting is available.
+ * This function is currently not implemented.
+ *
+ * @param meetingId - The ID of the meeting.
+ * @param session - The session context for which availability is checked.
+ * @returns A promise that resolves to void.
  */
-
 export async function isSingleMeetingAvailable(
   meetingId: string,
   session: Session
@@ -820,6 +860,14 @@ export async function checkMeetingsAvailability(
   }
 }
 
+/**
+ * Adds a single new session to the database and optionally schedules a reminder email for it.
+ *
+ * @param session - The Session object to be added. Student ID, Tutor ID, and Date are crucial.
+ * @param scheduleEmail - Optional. Boolean indicating whether to schedule a reminder email. Defaults to true.
+ * @returns A promise that resolves when the operation is complete.
+ * @throws Will throw an error if database insertion or email scheduling fails.
+ */
 export async function addOneSession(
   session: Session,
   scheduleEmail: boolean = true
@@ -873,6 +921,18 @@ export async function addOneSession(
   }
 }
 
+/**
+ * Adds multiple sessions based on enrollments and availability within a specified week.
+ * It avoids creating duplicate sessions and can optionally schedule reminder emails.
+ *
+ * @param weekStartString - ISO string for the start of the week.
+ * @param weekEndString - ISO string for the end of the week.
+ * @param enrollments - An array of Enrollment objects to generate sessions from.
+ * @param sessions - An array of existing Session objects, used for duplicate checking.
+ * @param scheduleEmails - Optional. Boolean indicating whether to schedule reminder emails. Defaults to true.
+ * @returns A promise that resolves to an array of the newly created Session objects.
+ * @throws Will throw an error if database insertion or email scheduling fails.
+ */
 export async function addSessions(
   weekStartString: string,
   weekEndString: string,
@@ -1033,6 +1093,13 @@ export async function addSessions(
   }
 }
 
+/**
+ * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.
+ *
+ * @param sessions - An array of Session objects for which to schedule emails.
+ * @returns A promise that resolves when all scheduling requests have been attempted.
+ * @throws Will throw an error if any API request fails and is not caught internally.
+ */
 export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
   try {
     sessions.forEach(async (session) => {
@@ -1061,6 +1128,13 @@ export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
   }
 }
 
+/**
+ * Sends a request to an API endpoint to delete a scheduled reminder email for a specific session.
+ *
+ * @param sessionId - The ID of the session whose scheduled email is to be deleted.
+ * @returns A promise that resolves when the deletion request has been attempted.
+ * @throws Will throw an error if the API request fails.
+ */
 export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
   try {
     const response = await fetch("/api/email/before-sessions/delete-reminder", {
@@ -1082,6 +1156,13 @@ export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
   }
 }
 
+/**
+ * Updates a scheduled reminder email for a session by deleting the old one and scheduling a new one.
+ *
+ * @param session - The Session object with updated details.
+ * @returns A promise that resolves when the update process is complete.
+ * @throws Will throw an error if deletion or scheduling fails.
+ */
 export async function updateScheduledEmailBeforeSessions(session: Session) {
   try {
     await deleteScheduledEmailBeforeSessions(session.id);
@@ -1093,6 +1174,14 @@ export async function updateScheduledEmailBeforeSessions(session: Session) {
   }
 }
 
+/**
+ * Updates an existing session's details in the database.
+ * Optionally, it can also update the associated scheduled reminder email.
+ *
+ * @param updatedSession - The Session object containing the new data. Must include an ID.
+ * @param updateEmail - Optional. Boolean indicating whether to update the scheduled email. Defaults to true.
+ * @returns A promise that resolves to the updated session data from Supabase, or null if an error occurs or no data is returned.
+ */
 export async function updateSession(
   updatedSession: Session,
   updateEmail: boolean = true
@@ -1170,6 +1259,15 @@ export async function updateSession(
   }
 }
 
+/**
+ * Deletes a session from the database.
+ * Optionally, it can also delete any associated scheduled reminder email.
+ *
+ * @param sessionId - The ID of the session to remove.
+ * @param updateEmail - Optional. Boolean indicating whether to delete the scheduled email. Defaults to true.
+ * @returns A promise that resolves when the operation is complete.
+ * @throws Will throw an error if the database deletion or email deletion fails.
+ */
 export async function removeSession(
   sessionId: string,
   updateEmail: boolean = true
@@ -1195,7 +1293,11 @@ export async function removeSession(
   }
 }
 
-/* MEETINGS */
+/**
+ * Fetches all meeting records from the database.
+ *
+ * @returns A promise that resolves to an array of Meeting objects, or null if an error occurs or no meetings are found.
+ */
 export async function getMeetings(): Promise<Meeting[] | null> {
   try {
     // Fetch meeting details from Supabase
@@ -1240,6 +1342,15 @@ export async function getMeetings(): Promise<Meeting[] | null> {
   }
 }
 
+/**
+ * Creates an Enrollment object from various input data and then adds it to the database.
+ * This seems to be a helper for migrating or transforming data before enrollment.
+ *
+ * @param entry - An object containing summary, startDate, endDate, availability, and meetingId.
+ * @param studentData - Data representing the student for the enrollment.
+ * @param tutorData - Data representing the tutor for the enrollment.
+ * @returns A promise that resolves to the result of the `addEnrollment` function call (likely the created Enrollment).
+ */
 export const createEnrollment = async (
   entry: any,
   studentData: any,
@@ -1260,7 +1371,11 @@ export const createEnrollment = async (
   return await addEnrollment(migratedPairing);
 };
 
-/* ENROLLMENTS */
+/**
+ * Fetches all enrollment records from the database, populating student and tutor details.
+ *
+ * @returns A promise that resolves to an array of Enrollment objects, or null if an error occurs or no enrollments are found.
+ */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
     // Fetch meeting details from Supabase
@@ -1310,6 +1425,12 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   }
 }
 
+/**
+ * Fetches a single meeting record from the database by its ID.
+ *
+ * @param id - The ID of the meeting to fetch.
+ * @returns A promise that resolves to a Meeting object, or null if not found or an error occurs.
+ */
 export async function getMeeting(id: string): Promise<Meeting | null> {
   try {
     // Fetch meeting details from Supabase
@@ -1355,6 +1476,13 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
   }
 }
 
+/**
+ * Updates an existing enrollment record in the database.
+ *
+ * @param enrollment - The Enrollment object containing the updated data. Must include an ID.
+ * @returns A promise that resolves to the updated enrollment data from Supabase.
+ * @throws Will throw an error if the update operation fails.
+ */
 export const updateEnrollment = async (enrollment: Enrollment) => {
   const { data, error } = await supabase
     .from("Enrollments")
@@ -1379,12 +1507,26 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
   return data;
 };
 
+/**
+ * Validates if a given string is a valid UUID (version 4).
+ *
+ * @param uuid - The string to validate.
+ * @returns True if the string is a valid UUID, false otherwise.
+ */
 const isValidUUID = (uuid: string): boolean => {
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
 
+/**
+ * Adds a new enrollment record to the database.
+ *
+ * @param enrollment - The enrollment data to add, excluding 'id' and 'createdAt' which are auto-generated.
+ *                     Requires student, and validates meetingId if provided.
+ * @returns A promise that resolves to the newly created and fully populated Enrollment object.
+ * @throws Will throw an error if student is missing, meetingId is invalid, or database insertion fails.
+ */
 export const addEnrollment = async (
   enrollment: Omit<Enrollment, "id" | "createdAt">
 ) => {
@@ -1429,6 +1571,13 @@ export const addEnrollment = async (
   };
 };
 
+/**
+ * Deletes an enrollment record from the database by its ID.
+ *
+ * @param enrollmentId - The ID of the enrollment to remove.
+ * @returns A promise that resolves to the data returned by the Supabase delete operation (often null or an empty array on success).
+ * @throws Will throw an error if the deletion fails.
+ */
 export const removeEnrollment = async (enrollmentId: string) => {
   const { data, error } = await supabase
     .from("Enrollments")
@@ -1443,7 +1592,12 @@ export const removeEnrollment = async (enrollmentId: string) => {
   return data;
 };
 
-/* EVENTS */
+/**
+ * Fetches all events associated with a specific tutor ID.
+ *
+ * @param tutorId - The ID of the tutor whose events are to be fetched.
+ * @returns A promise that resolves to an array of Event objects. Returns an empty array on error or if no events are found.
+ */
 export async function getEvents(tutorId: string): Promise<Event[]> {
   try {
     // Fetch meeting details from Supabase
@@ -1492,6 +1646,14 @@ export async function getEvents(tutorId: string): Promise<Event[]> {
   }
 }
 
+/**
+ * Fetches events for a specific tutor that fall within a selected month.
+ *
+ * @param tutorId - The ID of the tutor.
+ * @param selectedMonth - An ISO string representing any date within the desired month (e.g., "YYYY-MM-01").
+ *                        The function calculates the start and end of this month for filtering.
+ * @returns A promise that resolves to an array of Event objects, or null if an error occurs or no events are found.
+ */
 export async function getEventsWithTutorMonth(
   tutorId: string,
   selectedMonth: string
@@ -1550,6 +1712,13 @@ export async function getEventsWithTutorMonth(
   }
 }
 
+/**
+ * Creates a new event record in the database.
+ *
+ * @param event - The Event object containing data for the new event.
+ * @returns A promise that resolves when the event creation is attempted.
+ * @throws Will throw an error if the database insertion fails.
+ */
 export async function createEvent(event: Event) {
   // Create a notification for the admin
   const { error: eventError } = await supabase.from("Events").insert({
@@ -1564,6 +1733,13 @@ export async function createEvent(event: Event) {
   }
 }
 
+/**
+ * Deletes an event record from the database by its ID.
+ *
+ * @param eventId - The ID of the event to remove.
+ * @returns A promise that resolves to true if deletion was successful (at least one row affected), false otherwise.
+ * @throws Will throw an error if the database operation itself fails.
+ */
 export async function removeEvent(eventId: string): Promise<boolean> {
   try {
     // Validate eventId format
@@ -1599,6 +1775,12 @@ export async function removeEvent(eventId: string): Promise<boolean> {
 }
 
 /* NOTIFICATIONS */
+
+/**
+ * Fetches all notification records from the database, populating student and tutor details.
+ *
+ * @returns A promise that resolves to an array of Notification objects, or null if an error occurs or no notifications are found.
+ */
 export async function getAllNotifications(): Promise<Notification[] | null> {
   try {
     // Fetch meeting details from Supabase
@@ -1648,6 +1830,14 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
   }
 }
 
+/**
+ * Updates the status of a specific notification.
+ *
+ * @param notificationId - The ID of the notification to update.
+ * @param status - The new status for the notification ("Active" or "Resolved").
+ * @returns A promise that resolves to the data returned by the supabase update operation.
+ * @throws Will throw an error if the update fails
+ */
 export const updateNotification = async (
   notificationId: string,
   status: "Active" | "Resolved"
@@ -1669,6 +1859,11 @@ export const updateNotification = async (
   }
 };
 
+/**
+ * Generates a random 10-digit password string.
+ *
+ * @returns A promise that resolves to a string representing the 10-digit password
+ */
 export async function createPassword(): Promise<string> {
   let password = "";
 
