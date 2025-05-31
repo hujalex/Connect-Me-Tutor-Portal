@@ -24,9 +24,15 @@ import {
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import ResetPassword from "@/app/(public)/set-password/page";
 import { getStudentSessions } from "./student.actions";
+
 import toast from "react-hot-toast";
+
+import { date } from "zod";
+import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
+
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -932,6 +938,13 @@ export async function addOneSession(
  * @param scheduleEmails - Optional. Boolean indicating whether to schedule reminder emails. Defaults to true.
  * @returns A promise that resolves to an array of the newly created Session objects.
  * @throws Will throw an error if database insertion or email scheduling fails.
+
+ * Add sessions for enrollments within the specified week range
+ * @param weekStartString - ISO string of week start in Eastern Time
+ * @param weekEndString - ISO string of week end in Eastern Time
+ * @param enrollments - List of enrollments to create sessions for
+ * @param sessions - Existing sessions to avoid duplicates
+ * @returns Newly created sessions
  */
 export async function addSessions(
   weekStartString: string,
@@ -941,16 +954,19 @@ export async function addSessions(
   scheduleEmails: boolean = true
 ): Promise<Session[]> {
   try {
-    const weekStart = parseISO(weekStartString);
-    const weekEnd = parseISO(weekEndString);
+    const weekStart: Date = fromZonedTime(
+      parseISO(weekStartString),
+      "America/New_York"
+    );
+    const weekEnd: Date = fromZonedTime(
+      parseISO(weekEndString),
+      "America/New_York"
+    );
+
+    //Set created to avoid duplicates
     const scheduledSessions: Set<string> = await getSessionKeys(sessions);
-    // const scheduledSessions2: Set<string> = await getSessionKeys();
-
-    // scheduledSessions2.forEach(scheduledSessions.add, scheduledSessions);
-
     // Prepare bulk insert data
     const sessionsToCreate: any[] = [];
-    const sessionsToReturn: Session[] = [];
 
     // Process all enrollments
     for (const enrollment of enrollments) {
@@ -963,7 +979,7 @@ export async function addSessions(
       }
 
       // Process each availability slot
-      const { day, startTime, endTime } = availability[0];
+      let { day, startTime, endTime } = availability[0];
 
       // Skip invalid time formats
       if (
@@ -986,7 +1002,18 @@ export async function addSessions(
         // Skip days that don't match
         if (currentDay !== dayLower) {
           currentDate = addDays(currentDate, 1);
+          console.log("Skip");
           continue;
+        }
+
+        //Add Seven Days if CurrentDate is last week (Acts as a Modulus to ensure updating current week only)
+        if (currentDate < parseISO(weekStartString)) {
+          currentDate = addDays(currentDate, 7);
+        }
+
+        //Remove Seven Days if CurrentDate is next week (Acts as a Modulus to ensure updating current week only)
+        if (currentDate > parseISO(weekEndString)) {
+          currentDate = addDays(currentDate, -7);
         }
 
         try {
@@ -1006,23 +1033,47 @@ export async function addSessions(
           }
 
           // Create session date with correct time
-          const sessionDate = new Date(currentDate);
-          const sessionStartTime = setMinutes(
-            setHours(sessionDate, startHour),
-            startMinute
-          );
+          // * SetHours and SetMinutes are dependent on local timezone
+          console.log("-----------------");
+          console.log("Hours: ", startHour, "Minutes: ", startMinute);
+
+          const dateString = `${format(currentDate, "yyyy-MM-dd")}T${startTime}:00`;
+          const sessionStartTime = fromZonedTime(
+            dateString,
+            "America/New_York"
+          ); // Automatically handles DST
+
+          // const sessionDateEST = toZonedTime(dateString, "America/New_York");
+          // const sessionStartTimeEST = toZonedTime(
+          //   sessionStartTime,
+          //   "America/New_York"
+          // );
+
+          // logSessionInfo(
+          //   weekStartString,
+          //   weekStart,
+          //   weekEnd,
+          //   currentDate,
+          //   sessionStartTime,
+          //   sessionStartTimeEST
+          // );
 
           // Skip if outside the week range (redundant but safer)
-          if (sessionStartTime < weekStart || sessionStartTime > weekEnd) {
-            currentDate = addDays(currentDate, 1);
-            continue;
-          }
+          // if (
+          //   sessionStartTime < weekStart ||
+          //   addHours(sessionStartTime, 1) > weekEnd
+          // ) {
+          //   currentDate = addDays(currentDate, 1);
+          //   continue;
+          // }
 
           // Check for duplicate session
           const sessionKey = `${student.id}-${tutor.id}-${format(
             sessionStartTime,
             "yyyy-MM-dd-HH:mm"
           )}`;
+
+          console.log(sessionKey);
 
           if (!scheduledSessions.has(sessionKey)) {
             // Add to batch insert
@@ -1093,6 +1144,7 @@ export async function addSessions(
   }
 }
 
+
 /**
  * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.
  *
@@ -1113,6 +1165,167 @@ export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
           },
         }
       );
+=======
+async function logSessionInfo(
+  weekStartString: string,
+  weekStart: Date,
+  weekEnd: Date,
+  currentDate: Date,
+  sessionStartTime: Date,
+  sessionStartTimeEST: Date
+) {
+  console.log("ISO of week start", weekStartString);
+  console.log("date object of week start", weekStart);
+  console.log("Date object of week end,", weekEnd);
+  // console.log("Date Object EST of week Start", weekStartEST);
+  // console.log("Date object EST of Week End", weekEndEST);
+  console.log("Date object of day of session", currentDate);
+  console.log("Date object of day of session + hours", sessionStartTime);
+  console.log("EST, ", sessionStartTimeEST);
+  console.log(`ISOstring UTC, ${sessionStartTime.toISOString()}`);
+  console.log(`ISOstring EST, ${sessionStartTimeEST.toISOString()}`);
+  console.log(`${format(sessionStartTime, "yyyy-MM-dd'T'HH:mm:ss.SSS")}`);
+  console.log("-----------------");
+}
+
+// export async function addSessions(
+//   weekStartString: string,
+//   weekEndString: string,
+//   enrollments: Enrollment[],
+//   sessionsFetched: Session[]
+// ) {
+//   const weekStart = parseISO(weekStartString);
+//   const weekEnd = parseISO(weekEndString);
+//   const sessions: Session[] = [];
+
+//   const scheduledSessions: Set<string> = await getSessionKeys(sessionsFetched);
+
+//   for (const enrollment of enrollments) {
+//     const { student, tutor, availability } = enrollment;
+
+//     if (!student || !tutor) continue;
+
+//     for (const avail of availability) {
+//       const { day, startTime, endTime } = avail;
+
+//       if (!startTime || startTime.includes("-")) {
+//         console.error(`Invalid time format for availability: ${startTime}`);
+//         console.log("Errored Enrollment", enrollment);
+//         continue;
+//       }
+
+//       const [availStart, availEnd] = [startTime, endTime];
+
+//       if (!availStart || !availEnd) {
+//         console.error(
+//           `Invalid start or end time: start=${availStart}, end=${availEnd}`
+//         );
+//         continue;
+//       }
+
+//       let sessionDate = new Date(weekStart);
+//       while (sessionDate <= weekEnd) {
+//         if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
+//           const availStartTime = parse(
+//             availStart.toLowerCase(),
+//             "HH:mm",
+//             sessionDate
+//           );
+//           const availEndTime = parse(
+//             availEnd.toLowerCase(),
+//             "HH:mm",
+//             sessionDate
+//           );
+
+//           if (
+//             isNaN(availStartTime.getTime()) ||
+//             isNaN(availEndTime.getTime())
+//           ) {
+//             console.error(
+//               `Invalid parsed time: start=${availStart}, end=${availEnd}`
+//             );
+//             break;
+//           }
+
+//           const sessionStartTime = setMinutes(
+//             setHours(sessionDate, availStartTime.getHours()),
+//             availStartTime.getMinutes()
+//           );
+//           const sessionEndTime = setMinutes(
+//             setHours(sessionDate, availEndTime.getHours()),
+//             availEndTime.getMinutes()
+//           );
+
+//           if (
+//             isBefore(sessionStartTime, weekStart) ||
+//             isAfter(sessionEndTime, weekEnd)
+//           ) {
+//             sessionDate = addDays(sessionDate, 1);
+//             continue;
+//           }
+
+//           // Check for duplicates
+//           const sessionKey = `${student.id}-${tutor.id}-${format(
+//             sessionStartTime,
+//             "yyyy-MM-dd-HH:mm"
+//           )}`;
+//           if (scheduledSessions.has(sessionKey)) {
+//             console.warn(`Duplicate session detected: ${sessionKey}`);
+//             sessionDate = addDays(sessionDate, 1);
+//             continue;
+//           }
+
+//           console.log(enrollment);
+
+//           const { data: session, error } = await supabase
+//             .from("Sessions")
+//             .insert({
+//               date: sessionStartTime.toISOString(),
+//               student_id: student.id,
+//               tutor_id: tutor.id,
+//               status: "Active",
+//               summary: enrollment.summary,
+//               meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
+//             })
+//             .single();
+
+//           if (error) {
+//             console.error("Error creating session:", error);
+//             continue;
+//           }
+
+//           sessions.push(session);
+//           scheduledSessions.add(sessionKey);
+//         }
+//         sessionDate = addDays(sessionDate, 1);
+//       }
+//     }
+//   }
+
+//   return sessions;
+// }
+
+// Function to update a session
+export async function updateSession(updatedSession: Session) {
+  const {
+    id,
+    status,
+    tutor,
+    student,
+    date,
+    summary,
+    meeting,
+    session_exit_form,
+    isQuestionOrConcern,
+    isFirstSession,
+  } = updatedSession;
+
+  console.log(id);
+  console.log(status);
+  console.log(isQuestionOrConcern);
+  console.log(isFirstSession);
+  console.log(meeting);
+
 
       const data = await response.json();
 
@@ -1873,3 +2086,6 @@ export async function createPassword(): Promise<string> {
 
   return password;
 }
+// function zonedTimeToUtc(arg0: any, arg1: string) {
+//   throw new Error("Function not implemented.");
+// }
