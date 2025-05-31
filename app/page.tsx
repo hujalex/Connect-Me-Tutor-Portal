@@ -1,6 +1,7 @@
 import LoginForm from "@/components/auth/LoginForm";
 import Logo from "@/components/ui/logo";
 import type { Metadata } from "next";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Log in | ConnectMe",
@@ -33,6 +34,7 @@ export default function LoginPage() {
               Enter your email and password to continue.
             </p>
           </div>
+          
           <LoginForm />
         </div>
       </section>
