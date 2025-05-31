@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   redirectTo.pathname = next;
   console.log(redirectTo);
 
+  //
+
   if (token_hash && type) {
     const supabase = await createRouteHandlerClient({ cookies });
 
