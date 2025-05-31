@@ -61,9 +61,9 @@ import {
   addEnrollment,
   removeEnrollment,
   updateEnrollment,
-  getAllProfiles,
-  getMeetings,
-} from "@/lib/actions/admin.actions";
+} from "@/lib/actions/enrollment.actions";
+import { getAllMeetings } from "@/lib/actions/meeting.actions";
+import { getAllProfiles } from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Enrollment, Profile, Event, Meeting, Availability } from "@/types";
 import toast from "react-hot-toast";
@@ -155,10 +155,13 @@ const EnrollmentList = () => {
   }, [filterValue, enrollments]);
 
   const studentsMap = useMemo(() => {
-    return students.reduce((map, student) => {
-      map[student.id] = student;
-      return map;
-    }, {} as Record<string, Profile>);
+    return students.reduce(
+      (map, student) => {
+        map[student.id] = student;
+        return map;
+      },
+      {} as Record<string, Profile>
+    );
   }, [students]);
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
@@ -302,7 +305,7 @@ const EnrollmentList = () => {
 
   const fetchMeetings = async () => {
     try {
-      const fetchedMeetings = await getMeetings();
+      const fetchedMeetings = await getAllMeetings();
       if (fetchedMeetings) {
         setMeetings(fetchedMeetings);
       }

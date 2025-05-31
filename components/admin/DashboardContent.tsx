@@ -37,7 +37,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getProfile } from "@/lib/actions/user.actions";
-import { getAllSessions, rescheduleSession } from "@/lib/actions/admin.actions";
+import {
+  getAllSessions,
+  rescheduleSession,
+} from "@/lib/actions/session.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session, Profile } from "@/types";
 import { formatSessionDate, formatDateAdmin } from "@/lib/utils";
@@ -210,10 +213,10 @@ const AdminDashboard = () => {
                     session.status === "Active"
                       ? ""
                       : session.status === "Complete"
-                      ? "bg-green-200 opacity-25 pointer-events-none"
-                      : session.status === "Cancelled"
-                      ? "bg-red-100 opacity-25 pointer-events-none"
-                      : ""
+                        ? "bg-green-200 opacity-25 pointer-events-none"
+                        : session.status === "Cancelled"
+                          ? "bg-red-100 opacity-25 pointer-events-none"
+                          : ""
                   }
                 >
                   <TableCell>

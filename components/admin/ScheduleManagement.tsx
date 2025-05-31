@@ -44,20 +44,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Circle, Loader2, ChevronDown, Check } from "lucide-react";
+import { getAllEnrollments } from "@/lib/actions/enrollment.actions";
+import { getAllMeetings, getMeeting } from "@/lib/actions/meeting.actions";
+
 import {
   getAllSessions,
   rescheduleSession,
-  getAllEnrollments,
+  addOneSession,
   addSessions,
   updateSession,
-  getMeetings,
-  getAllProfiles,
   removeSession,
-  getMeeting,
-  addOneSession,
-  checkMeetingsAvailability,
-  // isMeetingAvailable,
-} from "@/lib/actions/admin.actions";
+} from "@/lib/actions/session.actions";
+import { getAllProfiles } from "@/lib/actions/user.actions";
 // Add these imports at the top of the file
 import { addHours, areIntervalsOverlapping } from "date-fns";
 
@@ -206,7 +204,7 @@ const Schedule = () => {
 
   const fetchMeetings = async () => {
     try {
-      const fetchedMeetings = await getMeetings();
+      const fetchedMeetings = await getAllMeetings();
       if (fetchedMeetings) {
         setMeetings(fetchedMeetings);
       }

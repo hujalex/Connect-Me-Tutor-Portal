@@ -1,20 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Session } from "@/types";
-import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { Client } from "@upstash/qstash";
-import { addMinutes, parseISO } from "date-fns";
-import { Result } from "postcss";
-import { formatSessionDate } from "@/lib/utils";
-import { schedulePreSessionEmail } from "@/lib/email-scheduler";
-import { getProfileWithProfileId } from "@/lib/actions/user.actions";
-import { deleteMsg } from "@/lib/actions/qstash.actions";
+import { deleteMsg } from "@/lib/actions/email.actions";
 
 export const dynamic = "force-dynamic";
-
-const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,13 +61,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(emailData);
-
-    // try {
-    //   await qstash.messages.delete(emailData.message_id);
-    //   console.log("Successfully deleted message from QStash");
-    // } catch (qstashError: any) {
-    //   console.warn("Failed to delete message from QStash");
-    // }
 
     await deleteMsg(emailData.message_id);
 

@@ -2,15 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Session } from "@/types";
 import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { Client } from "@upstash/qstash";
 import { addMinutes, parseISO } from "date-fns";
-import { Result } from "postcss";
-import { formatSessionDate } from "@/lib/utils";
-import { schedulePreSessionEmail } from "@/lib/email-scheduler";
-import { getProfileWithProfileId } from "@/lib/actions/user.actions";
-import { scheduleEmail } from "@/lib/actions/qstash.actions";
+import { scheduleEmail } from "@/lib/actions/email.actions";
 
 export const dynamic = "force-dynamic";
 

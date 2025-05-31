@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { getProfile, updateProfile } from "@/lib/actions/user.actions";
+import { getProfile } from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import toast, { Toaster } from "react-hot-toast";
