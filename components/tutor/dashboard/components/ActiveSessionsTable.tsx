@@ -57,6 +57,7 @@ import {
   Clock,
   CircleCheckBig,
   CircleX,
+  Copy,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
@@ -191,14 +192,17 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                 {session.environment !== "In-Person" && (
                   <>
                     {session?.meeting?.meetingId ? (
-                      <button
-                        onClick={() =>
-                          (window.location.href = `/meeting/${session?.meeting?.id}`)
-                        }
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                      >
-                        View
-                      </button>
+                      <span>
+                        <button
+                          onClick={() =>
+                            (window.location.href = `/meeting/${session?.meeting?.id}`)
+                          }
+                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                        >
+                          View
+                        </button>
+                        <Copy />
+                      </span>
                     ) : (
                       <button className="text-black px-3 py-1 border border-gray-200 rounded">
                         N/A

@@ -12,6 +12,7 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -361,8 +362,10 @@ const Schedule = () => {
       if (!session?.date) return false;
       try {
         return (
-          format(parseISO(session.date), "yyyy-MM-dd") ===
-          format(day, "yyyy-MM-dd")
+          format(
+            toZonedTime(parseISO(session.date), "America/New_York"),
+            "yyyy-MM-dd"
+          ) === format(day, "yyyy-MM-dd")
         );
       } catch (error) {
         console.error("Error filtering session:", error);
@@ -682,7 +685,7 @@ const Schedule = () => {
                           {session.summary}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {getSessionTimespan(session.date)}
+                          {getSessionTimespan(session.date)} EDT
                         </p>
                         <div
                           className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${

@@ -28,6 +28,7 @@ import {
   endOfDay,
 } from "date-fns";
 import { SelectSeparator } from "@radix-ui/react-select";
+import { Description } from "@radix-ui/react-dialog";
 
 const TutorDashboard = () => {
   const supabase = createClientComponentClient();
