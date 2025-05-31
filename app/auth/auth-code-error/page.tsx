@@ -132,7 +132,7 @@ export default function AuthError() {
                           />
                         </FormControl>
                         <FormDescription className="text-xs">
-                          We'll send a password reset link to this email.
+                          We will send a password reset link to this email.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
