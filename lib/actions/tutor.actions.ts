@@ -3,22 +3,24 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile, Session } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
-import { getMeeting } from "./admin.actions";
-import { Stats } from "fs";
+import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
-/** 
-@params 
-profileId - profile id of the user
-startDate - Start Date in ISO String
-endDate - 
-
-*/
-
+/**
+ * Fetches sessions for a given tutor.
+ * @param {string} profileId - The ID of the tutor's profile.
+ * @param {string} [startDate] - Optional start date to filter sessions.
+ * @param {string} [endDate] - Optional end date to filter sessions.
+ * @param {string | string[]} [status] - Optional status or array of statuses to filter sessions.
+ * @param {string} [orderby] - Optional field to order the sessions by.
+ * @param {boolean} [ascending] - Optional boolean to determine if the order is ascending.
+ * @returns {Promise<Session[]>} A promise that resolves to an array of session objects.
+ * @throws Will throw an error if fetching sessions fails.
+ */
 export async function getTutorSessions(
   profileId: string,
   startDate?: string,
@@ -62,7 +64,6 @@ export async function getTutorSessions(
     throw error;
   }
 
-  // Map the result to the Session interface
   const sessions: Session[] = await Promise.all(
     data.map(async (session: any) => ({
       id: session.id,
@@ -70,7 +71,6 @@ export async function getTutorSessions(
       environment: session.environment,
       date: session.date,
       summary: session.summary,
-      // meetingId: session.meeting_id,
       meeting: await getMeeting(session.meeting_id),
       student: await getProfileWithProfileId(session.student_id),
       tutor: await getProfileWithProfileId(session.tutor_id),
@@ -86,6 +86,11 @@ export async function getTutorSessions(
   return sessions;
 }
 
+/**
+ * Fetches all students assigned to a specific tutor.
+ * @param {string} tutorId - The ID of the tutor.
+ * @returns {Promise<Profile[] | null>} A promise that resolves to an array of student profiles or null if an error occurs.
+ */
 export async function getTutorStudents(tutorId: string) {
   try {
     const { data: enrollments, error: enrollmentError } = await supabase
@@ -145,6 +150,14 @@ export async function getTutorStudents(tutorId: string) {
   }
 }
 
+/**
+ * Reschedules a session and creates a notification.
+ * @param {string} sessionId - The ID of the session to reschedule.
+ * @param {any} newDate - The new date for the session.
+ * @param {string} [tutorid] - The ID of the tutor (optional, but good practice to include if available).
+ * @returns {Promise<any>} A promise that resolves with the updated session data.
+ * @throws Will throw an error if rescheduling fails or notification creation fails.
+ */
 export async function rescheduleSession(
   sessionId: string,
   newDate: any,
@@ -184,6 +197,12 @@ export async function rescheduleSession(
   }
 }
 
+/**
+ * Cancels a session by updating its status to "CANCELLED".
+ * @param {string} sessionId - The ID of the session to cancel.
+ * @returns {Promise<any>} A promise that resolves with the updated session data.
+ * @throws Will throw an error if updating the session fails.
+ */
 export async function cancelSession(sessionId: string) {
   const { data, error } = await supabase
     .from("Sessions")
@@ -195,6 +214,13 @@ export async function cancelSession(sessionId: string) {
   return data;
 }
 
+/**
+ * Adds notes to a specific session.
+ * @param {string} sessionId - The ID of the session to add notes to.
+ * @param {string} notes - The notes to add.
+ * @returns {Promise<any>} A promise that resolves with the updated session data.
+ * @throws Will throw an error if updating the session fails.
+ */
 export async function addSessionNotes(sessionId: string, notes: string) {
   const { data, error } = await supabase
     .from("Sessions")
@@ -206,6 +232,12 @@ export async function addSessionNotes(sessionId: string, notes: string) {
   return data;
 }
 
+/**
+ * Fetches the availability for a given tutor.
+ * @param {string} tutorId - The ID of the tutor.
+ * @returns {Promise<any[]>} A promise that resolves to an array of availability objects.
+ * @throws Will throw an error if fetching availability fails.
+ */
 export async function getTutorAvailability(tutorId: string) {
   const { data, error } = await supabase
     .from("tutor_availability")
@@ -216,6 +248,13 @@ export async function getTutorAvailability(tutorId: string) {
   return data;
 }
 
+/**
+ * Updates or inserts the availability for a given tutor.
+ * @param {string} tutorId - The ID of the tutor.
+ * @param {any} availabilityData - The availability data to update or insert.
+ * @returns {Promise<any>} A promise that resolves with the updated or inserted availability data.
+ * @throws Will throw an error if the upsert operation fails.
+ */
 export async function updateTutorAvailability(
   tutorId: string,
   availabilityData: any
@@ -229,6 +268,11 @@ export async function updateTutorAvailability(
   return data;
 }
 
+/**
+ * Fetches all tutor resources.
+ * @returns {Promise<any[]>} A promise that resolves to an array of tutor resource objects.
+ * @throws Will throw an error if fetching resources fails.
+ */
 export async function getTutorResources() {
   const { data, error } = await supabase.from("tutor_resources").select("*");
 
@@ -236,6 +280,13 @@ export async function getTutorResources() {
   return data;
 }
 
+/**
+ * Logs the attendance status for a session.
+ * @param {string} sessionId - The ID of the session.
+ * @param {boolean} attended - Boolean indicating whether the session was attended.
+ * @returns {Promise<any>} A promise that resolves with the updated session data.
+ * @throws Will throw an error if updating the session fails.
+ */
 export async function logSessionAttendance(
   sessionId: string,
   attended: boolean
@@ -250,6 +301,13 @@ export async function logSessionAttendance(
   return data;
 }
 
+/**
+ * Records notes from a session exit form.
+ * @param {string} sessionId - The ID of the session.
+ * @param {string} notes - The notes from the exit form.
+ * @returns {Promise<void>} A promise that resolves when the notes are recorded.
+ * @throws Will throw an error if updating the session fails.
+ */
 export async function recordSessionExitForm(sessionId: string, notes: string) {
   const { data, error } = await supabase
     .from("Sessions")

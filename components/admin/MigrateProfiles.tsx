@@ -39,19 +39,22 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { FileLoader } from "@/components/ui/fileloader";
+import { addTutor, addStudent } from "@/lib/actions/admin.actions";
 import {
-  getAllProfiles,
-  addTutor,
-  deactivateUser,
-  reactivateUser,
   getEvents,
   getEventsWithTutorMonth,
-  addStudent,
+} from "@/lib/actions/event.actions";
+import {
   addEnrollment,
   createEnrollment,
   getAllEnrollments,
-} from "@/lib/actions/admin.actions";
-import { getProfileByEmail } from "@/lib/actions/user.actions";
+} from "@/lib/actions/enrollment.actions";
+import {
+  getProfileByEmail,
+  getAllProfiles,
+  deactivateUser,
+  reactivateUser,
+} from "@/lib/actions/user.actions";
 import {
   MEETING_CONFIG,
   getIdFromMeetingName,
@@ -711,12 +714,12 @@ export default function MigrateDataPage() {
                 {showErrorEntries
                   ? "Entries with errors"
                   : showStudents
-                  ? "Select the Students you want to migrate to the portal."
-                  : showTutors
-                  ? "Select the Tutors you want to migrate to the portal."
-                  : showPairings
-                  ? "Select the pairings you want to migrate to the portal"
-                  : ""}
+                    ? "Select the Students you want to migrate to the portal."
+                    : showTutors
+                      ? "Select the Tutors you want to migrate to the portal."
+                      : showPairings
+                        ? "Select the pairings you want to migrate to the portal"
+                        : ""}
               </DialogDescription>
             </DialogHeader>
 

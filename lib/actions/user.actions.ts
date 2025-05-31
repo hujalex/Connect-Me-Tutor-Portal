@@ -6,6 +6,98 @@ const supabase = createClientComponentClient({
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
+/**
+ * Fetches all profiles based on a given role, with optional ordering.
+ *
+ * @param role - The role of the profiles to fetch ("Student", "Tutor", or "Admin")
+ * @param orderBy - Optional. The field to order the profiles by.
+ * @param ascending - Optional. Boolean indicating if the order should be ascending (true) or descending (false)
+ * @returns A promise that resolves to an array of Profile objects or null if an error occurs or no profiles are found.
+ */
+export async function getAllProfiles(
+  role: "Student" | "Tutor" | "Admin",
+  orderBy?: string | null,
+  ascending?: boolean | null
+): Promise<Profile[] | null> {
+  try {
+    const profileFields = `
+      id,
+      created_at,
+      role,
+      user_id,
+      age,
+      grade,
+      first_name,
+      last_name,
+      date_of_birth,
+      start_date,
+      availability,
+      email,
+      parent_name,
+      parent_phone,
+      parent_email,
+      tutor_ids,
+      timezone,
+      subjects_of_interest,
+      status,
+      student_number
+    `;
+
+    // Build query
+    let query = supabase
+      .from("Profiles")
+      .select(profileFields)
+      .eq("role", role);
+
+    // Add ordering if provided
+    if (orderBy && ascending !== null) {
+      query = query.order(orderBy, { ascending });
+    }
+
+    // Execute query
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching profiles:", error.message);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No profiles found");
+      return null;
+    }
+
+    // Map database fields to camelCase Profile model
+    const userProfiles: Profile[] = data.map((profile) => ({
+      id: profile.id,
+      createdAt: profile.created_at,
+      role: profile.role,
+      userId: profile.user_id,
+      age: profile.age,
+      grade: profile.grade,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      dateOfBirth: profile.date_of_birth,
+      startDate: profile.start_date,
+      availability: profile.availability,
+      email: profile.email,
+      parentName: profile.parent_name,
+      parentPhone: profile.parent_phone,
+      parentEmail: profile.parent_email,
+      tutorIds: profile.tutor_ids,
+      timeZone: profile.timezone,
+      subjectsOfInterest: profile.subjects_of_interest,
+      status: profile.status,
+      studentNumber: profile.student_number,
+    }));
+
+    return userProfiles;
+  } catch (error) {
+    console.error("Unexpected error in getProfile:", error);
+    return null;
+  }
+}
+
 export const getUser = async () => {
   const {
     data: { user },
@@ -218,6 +310,12 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
   }
 };
 
+/**
+ * Fetches a user profile from the database by its ID.
+ *
+ * @param profileId - The ID of the profile to fetch.
+ * @returns A promise that resolves to the Profile object or null if not found or an error occurs.
+ */
 export async function getProfileWithProfileId(
   profileId: string
 ): Promise<Profile | null> {
@@ -304,46 +402,171 @@ export async function getUserInfo() {
   return user;
 }
 
-export async function updateProfile(userId: string, profileData: any) {
+/**
+ * Creates a new user in the Supabase authentication system.
+ *
+ * @param email - The email address for the new user.
+ * @param password - The password for the new user.
+ * @returns A promise that resolves to the new user's ID, or null if creation fails.
+ * @throws Will throw an error if Supabase auth.signUp fails.
+ */
+export const createUser = async (
+  email: string,
+  password: string
+): Promise<string | null> => {
+  try {
+    // Call signUp to create a new user
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}`,
+      },
+    });
+
+    if (error) {
+      throw new Error(`Error creating user: ${error.message}`);
+    }
+
+    console.log("User created successfully:", data);
+
+    // Return the user ID
+    return data?.user?.id || null; // Use optional chaining to safely access id
+  } catch (error) {
+    console.error("Error creating user:", error);
+    return null; // Return null if there was an error
+  }
+};
+
+/**
+ * Deletes a user by making a POST request to the delete-user API endpoint.
+ *
+ * @param profileId - The ID of the profile associated with the user to be deleted.
+ * @returns A promise that resolves to the JSON response from the API.
+ * @throws Will throw an error if the API request fails or returns an error.
+ */
+export async function deleteUser(profileId: string) {
+  try {
+    const response = await fetch("/api/admin/delete-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ profileId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to delete user");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw error;
+  }
+}
+
+/**
+ * Updates an existing user's profile information in the database.
+ *
+ * @param profile - The Profile object containing the updated information. The ID field is used to identify the user.
+ * @returns A promise that resolves to the updated profile data from Supabase.
+ * @throws Will throw an error if the update operation fails.
+ */
+export async function editUser(profile: Profile) {
+  console.log(profile);
+  const {
+    id,
+    role,
+    firstName,
+    lastName,
+    age,
+    grade,
+    gender,
+    email,
+    dateOfBirth,
+    startDate,
+    parentName,
+    parentPhone,
+    parentEmail,
+    timeZone,
+    subjectsOfInterest,
+    studentNumber,
+  } = profile;
   try {
     const { data, error } = await supabase
       .from("Profiles")
-      .update(profileData)
-      .eq("user_id", userId)
+      .update({
+        role: role,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        age: age,
+        grade: grade,
+        gender: gender,
+        email: email,
+        date_of_birth: dateOfBirth,
+        start_date: startDate,
+        parent_name: parentName,
+        parent_email: parentEmail,
+        parent_phone: parentPhone,
+        timezone: timeZone,
+        student_number: studentNumber,
+        subjects_of_interest: subjectsOfInterest,
+      })
+      .eq("id", id)
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error updating user", error);
+    throw new Error("Unable to edit User");
+  }
+}
+
+/**
+ * Deactivates a user by setting their profile status to "Inactive".
+ *
+ * @param profileId - The ID of the profile to deactivate.
+ * @returns A promise that resolves to the updated profile data.
+ * @throws Will throw an error if the update fails.
+ */
+export async function deactivateUser(profileId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("Profiles")
+      .update({ status: "Inactive" })
+      .eq("id", profileId)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error deactivating user:", error);
+    throw error;
+  }
+}
+
+/**
+ * Reactivates a user by setting their profile status to "Active".
+ *
+ * @param profileId - The ID of the profile to reactivate.
+ * @returns A promise that resolves to the updated profile data.
+ * @throws Will throw an error if the update fails.
+ */
+export async function reactivateUser(profileId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("Profiles")
+      .update({ status: "Active" })
+      .eq("id", profileId)
+      .select("*")
       .single();
 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error("Error updating profile:", error);
-    throw error;
-  }
-}
-
-export async function createUser(userData: any) {
-  try {
-    const { data, error } = await supabase.auth.admin.createUser({
-      email: userData.email,
-      password: userData.password,
-      email_confirm: true,
-    });
-
-    if (error) throw error;
-
-    // If you need to store additional user data, you can do it here
-    const { data: profileData, error: profileError } = await supabase
-      .from("Profiles")
-      .insert({
-        user_id: data.user.id,
-        ...userData,
-      })
-      .single();
-
-    if (profileError) throw profileError;
-
-    return { user: data.user, profile: profileData };
-  } catch (error) {
-    console.error("Error creating user:", error);
+    console.error("Error reactivating user:", error);
     throw error;
   }
 }

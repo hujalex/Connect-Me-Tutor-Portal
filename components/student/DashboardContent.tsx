@@ -39,7 +39,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getProfile } from "@/lib/actions/user.actions";
-import { updateSession } from "@/lib/actions/admin.actions";
+import { updateSession } from "@/lib/actions/session.actions";
 import {
   getStudentSessions,
   rescheduleSession,
@@ -213,10 +213,10 @@ const StudentDashboard = () => {
                     session.status === "Active"
                       ? ""
                       : session.status === "Complete"
-                      ? "bg-green-200 opacity-25"
-                      : session.status === "Cancelled"
-                      ? "bg-red-100 opacity-25"
-                      : ""
+                        ? "bg-green-200 opacity-25"
+                        : session.status === "Cancelled"
+                          ? "bg-red-100 opacity-25"
+                          : ""
                   }
                 >
                   <TableCell>{formatSessionDate(session.date)}</TableCell>

@@ -1,8 +1,7 @@
-// lib/student.actions.ts
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Profile, Session, Meeting } from "@/types";
-import { getProfileWithProfileId } from "./user.actions";
-import { string } from "zod";
+
+import { Session, Meeting } from "@/types";
+import { parseISO, areIntervalsOverlapping, addHours, isValid } from "date-fns"; // Only use date-fns
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -33,6 +32,12 @@ export function getIdFromMeetingName(meetingName: MeetingName): string {
   return meeting.id;
 }
 
+/**
+ * Fetches a single meeting record from the database by its ID.
+ *
+ * @param id - The ID of the meeting to fetch.
+ * @returns A promise that resolves to a Meeting object, or null if not found or an error occurs.
+ */
 export async function getMeeting(meetingId: string): Promise<Meeting | null> {
   try {
     // Fetch meeting details from Supabase
@@ -79,3 +84,116 @@ export async function getMeeting(meetingId: string): Promise<Meeting | null> {
     return null;
   }
 }
+
+/**
+ * Checks if a meeting is available at the requested session time by comparing against existing sessions.
+ *
+ * @param meetingId - ID of the meeting to check.
+ * @param sessionId - ID of the current session (to exclude from conflicts if updating). Undefined if creating a new session.
+ * @param sessionDate - ISO string date of the requested session.
+ * @param existingSessions - Array of all sessions to check for conflicts.
+ * @returns A promise that resolves to boolean - True if the meeting is available, false otherwise or on error.
+ */
+export async function isMeetingAvailable(
+  meetingId: string,
+  sessionId: string | undefined,
+  sessionDate: string,
+  existingSessions: Session[]
+): Promise<boolean> {
+  try {
+    // Check if the session date is valid
+    if (!sessionDate || !isValid(parseISO(sessionDate))) {
+      console.error("Invalid session date provided");
+      return false;
+    }
+
+    // Calculate session time range
+    const sessionStartTime = parseISO(sessionDate);
+    const sessionEndTime = addHours(sessionStartTime, 1);
+
+    // Check for conflicts with existing sessions
+    const hasConflict = existingSessions.some(
+      (existingSession) =>
+        // Don't check against the same session we're updating
+        sessionId !== existingSession.id &&
+        // Check if the meeting ID matches
+        existingSession.meeting?.id === meetingId &&
+        // Check for time overlap
+        areIntervalsOverlapping(
+          { start: sessionStartTime, end: sessionEndTime },
+          {
+            start: parseISO(existingSession.date),
+            end: addHours(parseISO(existingSession.date), 1),
+          }
+        )
+    );
+
+    // Return true if no conflicts found
+    return !hasConflict;
+  } catch (error) {
+    console.error("Error checking meeting availability:", error);
+    return false; // Default to unavailable on error
+  }
+}
+
+/**
+ * Fetches all meeting records from the database.
+ *
+ * @returns A promise that resolves to an array of Meeting objects, or null if an error occurs or no meetings are found.
+ */
+export async function getAllMeetings(): Promise<Meeting[] | null> {
+  try {
+    // Fetch meeting details from Supabase
+    const { data, error } = await supabase.from("Meetings").select(`
+        id,
+        link,
+        meeting_id,
+        password,
+        created_at,
+        name
+      `);
+
+    // Check for errors and log them
+    if (error) {
+      console.error("Error fetching event details:", error.message);
+      return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
+    }
+
+    // Check if data exists
+    if (!data) {
+      console.log("No events found:");
+      return null; // Valid return
+    }
+
+    // Mapping the fetched data to the Notification object
+    const meetings: Meeting[] = await Promise.all(
+      data.map(async (meeting: any) => ({
+        id: meeting.id,
+        name: meeting.name,
+        meetingId: meeting.meeting_id,
+        password: meeting.password,
+        link: meeting.link,
+        createdAt: meeting.created_at,
+        // name: meeting.name,
+      }))
+    );
+
+    return meetings; // Return the array of notifications
+  } catch (error) {
+    console.error("Unexpected error in getMeeting:", error);
+    return null; // Valid return
+  }
+}
+
+/**
+ * (Placeholder) Applies a SQL query to check if an individual meeting is available.
+ * This function is currently not implemented.
+ *
+ * @param meetingId - The ID of the meeting.
+ * @param session - The session context for which availability is checked.
+ * @returns A promise that resolves to void.
+ */
+export async function isSingleMeetingAvailable(
+  meetingId: string,
+  session: Session
+): Promise<void> {}

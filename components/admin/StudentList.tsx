@@ -42,17 +42,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getProfile } from "@/lib/actions/user.actions";
 import {
-  getAllProfiles,
+  getProfile,
+  getProfileWithProfileId,
+} from "@/lib/actions/user.actions";
+import {
   addStudent,
-  deactivateUser,
-  reactivateUser,
-  deleteUser,
-  editUser,
-  getUserFromId,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
+import {
+  getAllProfiles,
+  deleteUser,
+  editUser,
+  deactivateUser,
+  reactivateUser,
+} from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import {
@@ -220,7 +224,7 @@ const StudentList = () =>
     };
 
     const handleGradeChangeForEdit = (value: string) => {
-      setSelectedStudent((prev) => ({ ...prev, grade: value } as Profile));
+      setSelectedStudent((prev) => ({ ...prev, grade: value }) as Profile);
     };
 
     const handleTimeZone = (value: string) => {
@@ -297,7 +301,7 @@ const StudentList = () =>
         .split(",")
         .map((subject) => subject.trim());
       setSelectedStudent(
-        (prev) => ({ ...prev, subjectsOfInterest: subjects } as Profile)
+        (prev) => ({ ...prev, subjectsOfInterest: subjects }) as Profile
       );
     };
 
@@ -396,7 +400,7 @@ const StudentList = () =>
     const handleGetSelectedStudent = async (profileId: string | null) => {
       if (profileId) {
         try {
-          const data = await getUserFromId(profileId);
+          const data = await getProfileWithProfileId(profileId);
           setSelectedStudent(data);
           // setIsReactivateModalOpen(false);
         } catch (error) {
