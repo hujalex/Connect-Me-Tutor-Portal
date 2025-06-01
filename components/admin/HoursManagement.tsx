@@ -67,6 +67,8 @@ const HoursManager = () => {
   const [selectedEventToRemove, setSelectedEventToRemove] = useState<
     string | null
   >(null);
+  const [filterValue, setFilterValue] = useState<string>("");
+  const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
 
   useEffect(() => {
     fetchTutors();
@@ -78,6 +80,25 @@ const HoursManager = () => {
       calculateAllTimeHours();
     }
   }, [tutors, selectedDate]);
+
+  useEffect(() => {
+    const filtered = tutors.filter((tutor) => {
+      const searchTerm = filterValue.toLowerCase().trim();
+
+      if (!searchTerm) return true;
+
+      const tutorFirstName = tutor.firstName.toLowerCase();
+      const tutorLastName = tutor.lastName.toLowerCase();
+      const fullName = `${tutorFirstName} ${tutorLastName};`;
+
+      return (
+        tutorFirstName.includes(searchTerm) ||
+        tutorLastName.includes(searchTerm) ||
+        fullName.includes(searchTerm)
+      );
+    });
+    setFilteredTutors(filtered);
+  }, [filterValue, tutors]);
 
   const fetchTutors = async () => {
     try {
@@ -293,22 +314,7 @@ const HoursManager = () => {
                   <DialogHeader>
                     <DialogTitle>Add New Event</DialogTitle>
                   </DialogHeader>
-                  {/* <Select
-                    onValueChange={(value) =>
-                      setNewEvent({ ...newEvent, tutorId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Tutor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tutors.map((tutor) => (
-                        <SelectItem key={tutor.id} value={tutor.id}>
-                          {tutor.firstName} {tutor.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select> */}
+
                   <Combobox
                     list={tutors
                       // .filter((student) => student.status === "Active")
