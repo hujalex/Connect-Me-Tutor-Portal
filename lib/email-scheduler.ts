@@ -46,8 +46,6 @@ export const schedulePreSessionEmail = async (
   const job = schedule.scheduleJob(notificationTime, async function () {
     await sendSessionReminderEmail(session, user);
   });
-
-  return job;
 };
 
 async function sendSessionReminderEmail(session: Session, user: Profile) {
@@ -57,7 +55,6 @@ async function sendSessionReminderEmail(session: Session, user: Profile) {
     const sessionDetails = {
       date: formatDate(sessionDate),
       time: formatTime(sessionDate),
-      student: session.student,
     };
 
     const response = await fetch("/api/email/send-session-reminder", {
