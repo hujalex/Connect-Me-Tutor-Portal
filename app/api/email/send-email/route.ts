@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const { to, subject, body } = await request.json();
 
     await resend.emails.send({
-      from: "ConnectMe@connectmego.app",
+      from: "reminder@connectmego.app",
       to: to,
       subject: subject,
       text: body,

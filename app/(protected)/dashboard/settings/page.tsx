@@ -1,5 +1,8 @@
-import SettingsPage from "@/components/settings/SettingsPage";
+import ProfilePage from '@/components/settings/ProfilePage'
+
 
 export default function Display() {
-  return <SettingsPage />;
+    return (
+        <ProfilePage/>
+    )
 }

@@ -212,15 +212,3 @@ export function formatMilitaryToStandardTime(militaryTime: string) {
 
   return `${hours}:${minutes.toString().padStart(2, "0")}${period}`;
 }
-
-/**
- * Validates if a given string is a valid UUID (version 4).
- *
- * @param uuid - The string to validate.
- * @returns True if the string is a valid UUID, false otherwise.
- */
-export const isValidUUID = (uuid: string): boolean => {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
-};

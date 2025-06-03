@@ -8,8 +8,11 @@ import CurrentSessionsTable from "./components/CurrentSessionsTable";
 import CompletedSessionsTable from "./components/CompletedSessionsTable";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
-import { getAllMeetings } from "@/lib/actions/meeting.actions";
-import { getAllSessions, updateSession } from "@/lib/actions/session.actions";
+import {
+  updateSession,
+  getMeetings,
+  getAllSessions,
+} from "@/lib/actions/admin.actions";
 import {
   getTutorSessions,
   rescheduleSession,
@@ -70,7 +73,7 @@ const TutorDashboard = () => {
 
   const fetchMeetings = async () => {
     try {
-      const fetchedMeetings = await getAllMeetings();
+      const fetchedMeetings = await getMeetings();
       if (fetchedMeetings) {
         setMeetings(fetchedMeetings);
       }

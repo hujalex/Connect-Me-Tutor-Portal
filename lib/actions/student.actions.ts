@@ -2,24 +2,13 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile, Session } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
-import { getMeeting } from "./meeting.actions";
+import { getMeeting } from "./admin.actions";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
-/**
- * Fetches sessions for a given student.
- * @param {string} profileId - The ID of the student's profile.
- * @param {string} [startDate] - Optional start date to filter sessions.
- * @param {string} [endDate] - Optional end date to filter sessions.
- * @param {string | string[]} [status] - Optional status or array of statuses to filter sessions.
- * @param {string} [orderby] - Optional field to order the sessions by.
- * @param {boolean} [ascending] - Optional boolean to determine if the order is ascending.
- * @returns {Promise<Session[]>} A promise that resolves to an array of session objects.
- * @throws Will throw an error if fetching sessions fails.
- */
 export async function getStudentSessions(
   profileId: string,
   startDate?: string,
@@ -85,14 +74,6 @@ export async function getStudentSessions(
   return sessions;
 }
 
-/**
- * Creates a reschedule request notification for a session.
- * @param {string} sessionId - The ID of the session to reschedule.
- * @param {string} newDate - The proposed new date for the session.
- * @param {string} studentId - The ID of the student requesting the reschedule.
- * @returns {Promise<void>} A promise that resolves when the notification is created.
- * @throws Will throw an error if creating the reschedule request fails.
- */
 export async function rescheduleSession(
   sessionId: string,
   newDate: string,
@@ -138,13 +119,6 @@ export async function rescheduleSession(
   }
 }
 
-/**
- * Enrolls a student in an available session.
- * @param {string} studentId - The ID of the student to enroll.
- * @param {string} sessionId - The ID of the session to enroll in.
- * @returns {Promise<any>} A promise that resolves with the updated session data.
- * @throws Will throw an error if enrolling in the session fails.
- */
 export async function enrollInSession(studentId: string, sessionId: string) {
   try {
     const { data, error } = await supabase
@@ -162,12 +136,6 @@ export async function enrollInSession(studentId: string, sessionId: string) {
   }
 }
 
-/**
- * Cancels a student's enrollment in a session.
- * @param {string} sessionId - The ID of the session to cancel enrollment from.
- * @returns {Promise<any>} A promise that resolves with the updated session data.
- * @throws Will throw an error if cancelling the enrollment fails.
- */
 export async function cancelEnrollment(sessionId: string) {
   try {
     const { data, error } = await supabase
@@ -184,12 +152,6 @@ export async function cancelEnrollment(sessionId: string) {
   }
 }
 
-/**
- * Fetches the assigned tutor for a given student.
- * @param {string} studentId - The ID of the student.
- * @returns {Promise<any>} A promise that resolves with the student-tutor assignment data, including tutor details.
- * @throws Will throw an error if fetching the student's tutor fails.
- */
 export async function getStudentTutor(studentId: string) {
   try {
     const { data, error } = await supabase
@@ -211,14 +173,6 @@ export async function getStudentTutor(studentId: string) {
   }
 }
 
-/**
- * Submits feedback for a session.
- * @param {string} sessionId - The ID of the session for which feedback is being submitted.
- * @param {string} feedback - The feedback text.
- * @param {number} rating - The rating given for the session.
- * @returns {Promise<any>} A promise that resolves with the created feedback data.
- * @throws Will throw an error if submitting feedback fails.
- */
 export async function submitFeedback(
   sessionId: string,
   feedback: string,
@@ -242,12 +196,6 @@ export async function submitFeedback(
   }
 }
 
-/**
- * Fetches the progress records for a given student.
- * @param {string} studentId - The ID of the student.
- * @returns {Promise<any[]>} A promise that resolves to an array of student progress records.
- * @throws Will throw an error if fetching student progress fails.
- */
 export async function getStudentProgress(studentId: string) {
   try {
     const { data, error } = await supabase
