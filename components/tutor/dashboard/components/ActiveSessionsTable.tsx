@@ -201,6 +201,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                         >
                           View
                         </button>
+                        <Copy />
                       </span>
                     ) : (
                       <button className="text-black px-3 py-1 border border-gray-200 rounded">
