@@ -2,8 +2,6 @@
 import { Enrollment, Profile } from "@/types";
 import axios from "axios";
 
-//!-----------------------DEPRECATED NO LONGER IN USE------------------------------
-
 //-------------Indexing based on Data from imported CSV FILE-----------
 export const CSV_COLUMNS = {
   "Tutor Name": 1,

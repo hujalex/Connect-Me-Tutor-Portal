@@ -13,7 +13,7 @@ export const metadata = {
 };
 
 export default async function Layout({ children }:{children:React.ReactNode}) {
-  const supabase = createClientComponentClient();
+    const supabase = createClientComponentClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const userId = user ? user.id : ''

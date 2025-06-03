@@ -20,7 +20,7 @@ import { getProfile } from "@/lib/actions/user.actions";
 import {
   getAllNotifications,
   updateNotification,
-} from "@/lib/actions/notification.actions";
+} from "@/lib/actions/admin.actions";
 import { formatDate, formatDateAdmin } from "@/lib/utils";
 import { Notification } from "@/types";
 import {

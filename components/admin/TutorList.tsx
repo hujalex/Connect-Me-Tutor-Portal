@@ -48,22 +48,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  getProfile,
-  getProfileWithProfileId,
-} from "@/lib/actions/user.actions";
-import { addTutor, resendEmailConfirmation } from "@/lib/actions/admin.actions";
-import {
-  getEvents,
-  getEventsWithTutorMonth,
-} from "@/lib/actions/event.actions";
+import { getProfile } from "@/lib/actions/user.actions";
 import {
   getAllProfiles,
-  deleteUser,
-  editUser,
+  addTutor,
   deactivateUser,
   reactivateUser,
-} from "@/lib/actions/user.actions";
+  getEvents,
+  getEventsWithTutorMonth,
+  deleteUser,
+  getUserFromId,
+  editUser,
+  resendEmailConfirmation,
+} from "@/lib/actions/admin.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile, Session, Event } from "@/types";
@@ -349,7 +346,7 @@ const TutorList = () => {
   const handleGetSelectedTutor = async (profileId: string | null) => {
     if (profileId) {
       try {
-        const data = await getProfileWithProfileId(profileId);
+        const data = await getUserFromId(profileId);
         setSelectedTutor(data);
         // setIsReactivateModalOpen(false);
       } catch (error) {

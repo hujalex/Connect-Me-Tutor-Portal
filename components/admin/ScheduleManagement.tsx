@@ -45,18 +45,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Circle, Loader2, ChevronDown, Check } from "lucide-react";
-import { getAllEnrollments } from "@/lib/actions/enrollment.actions";
-import { getAllMeetings, getMeeting } from "@/lib/actions/meeting.actions";
-
 import {
   getAllSessions,
   rescheduleSession,
-  addOneSession,
+  getAllEnrollments,
   addSessions,
   updateSession,
+  getMeetings,
+  getAllProfiles,
   removeSession,
-} from "@/lib/actions/session.actions";
-import { getAllProfiles } from "@/lib/actions/user.actions";
+  getMeeting,
+  addOneSession,
+  checkMeetingsAvailability,
+  // isMeetingAvailable,
+} from "@/lib/actions/admin.actions";
 // Add these imports at the top of the file
 import { addHours, areIntervalsOverlapping } from "date-fns";
 
@@ -205,7 +207,7 @@ const Schedule = () => {
 
   const fetchMeetings = async () => {
     try {
-      const fetchedMeetings = await getAllMeetings();
+      const fetchedMeetings = await getMeetings();
       if (fetchedMeetings) {
         setMeetings(fetchedMeetings);
       }
@@ -407,10 +409,8 @@ const Schedule = () => {
       }
       fetchSessions();
       toast.success("Added Session");
-    } catch (error: any) {
-      toast.error(
-        error?.code === "23505" ? "Duplicate Session" : "Unable to add session"
-      );
+    } catch (error) {
+      toast.error("Unable to add session");
       console.log("Unable to add session", error);
     }
   };
