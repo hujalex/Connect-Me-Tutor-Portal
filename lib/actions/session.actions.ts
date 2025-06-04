@@ -298,6 +298,7 @@ export async function addSessions(
 
           // Create session date with correct time
           const sessionDate = new Date(currentDate);
+
           const sessionStartTime = setMinutes(
             setHours(sessionDate, startHour),
             startMinute
