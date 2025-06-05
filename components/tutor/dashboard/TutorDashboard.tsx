@@ -58,13 +58,9 @@ const TutorDashboard = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSessionExitFormOpen, setIsSessionExitFormOpen] = useState(false);
-  const [isCheckingMeetingAvailability, setisCheckingMeetingAvailability] =
-    useState(false);
+
   const [notes, setNotes] = useState<string>("");
   const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
-  const [meetingAvailability, setMeetingAvailability] = useState<{
-    [key: string]: boolean;
-  }>({});
 
   useEffect(() => {
     getUserData();
@@ -155,17 +151,6 @@ const TutorDashboard = () => {
     }
   };
 
-  const getMeetingAvailabilityLength = () => {
-    return Object.keys(meetingAvailability).length;
-  };
-
-  /**
-   *
-   * @param selectedSessionDate
-   * Seaches for all sessions +/- 12 hours from selectedSessionDate
-   *
-   */
-
   const fetchDaySessionsFromSchedule = (session: Session) => {
     if (selectedSessionDate) {
       try {
@@ -189,103 +174,6 @@ const TutorDashboard = () => {
         console.error("Failed to fetch sessions for day");
         throw error;
       }
-    }
-  };
-
-  const fetchDaySessionsFromScheduleAsync = async (requestedDate: Date) => {
-    if (requestedDate) {
-      try {
-        const startDateSearch = addHours(requestedDate, -12).toISOString();
-
-        const endDateSearch = addHours(requestedDate, 12).toISOString();
-        const data = await getAllSessions(startDateSearch, endDateSearch);
-        return data;
-      } catch (error) {
-        console.error("Failed to fetch sessions for day");
-        throw error;
-      }
-    }
-  };
-
-  const areMeetingsAvailableInCurrentWeek = async (
-    session: Session,
-    requestedDate: Date
-  ) => {
-    try {
-      console.log("Requested Session", requestedDate);
-      setisCheckingMeetingAvailability(true);
-
-      // if (getMeetingAvailabilityLength() === 0)
-      //   await fetchAllSessionsFromSchedule();
-
-      const sessionsToSearch =
-        await fetchDaySessionsFromScheduleAsync(requestedDate);
-
-      const updatedMeetingAvailability: { [key: string]: boolean } = {};
-
-      // if (!selectedSessionDate || !isValid(requestedDate)) {
-      //   toast.error("Invalid session date selected");
-      //   return;
-      // }
-
-      meetings.forEach((meeting) => {
-        updatedMeetingAvailability[meeting.id] = true;
-      });
-
-      const requestedSessionStartTime = requestedDate;
-      const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
-      console.log("Requested date", selectedSessionDate);
-
-      meetings.forEach((meeting) => {
-        const hasConflict = sessionsToSearch
-          ? sessionsToSearch.some((existingSession) => {
-              // if (
-              //   existingSession.date &&
-              //   parseISO(existingSession.date) >= startOfDay(new Date()) &&
-              //   parseISO(existingSession.date) < endOfDay(new Date())
-              // ) {
-              //   console.log(
-              //     "Checking session:",
-              //     existingSession.id,
-              //     existingSession.date
-              //   );
-              // }
-
-              console.log(
-                "Checking session:",
-                existingSession.id,
-                existingSession.date
-              );
-
-              return (
-                session.id !== existingSession.id &&
-                existingSession.meeting?.id === meeting.id &&
-                areIntervalsOverlapping(
-                  {
-                    start: requestedSessionStartTime,
-                    end: requestedSessionEndTime,
-                  },
-                  {
-                    start: existingSession.date
-                      ? parseISO(existingSession.date)
-                      : new Date(),
-                    end: existingSession.date
-                      ? addHours(parseISO(existingSession.date), 1)
-                      : new Date(),
-                  }
-                )
-              );
-            })
-          : false;
-        updatedMeetingAvailability[meeting.id] = !hasConflict;
-      });
-      console.log("Updated Meeting Availability", updatedMeetingAvailability);
-      setMeetingAvailability(updatedMeetingAvailability);
-    } catch (error) {
-      toast.error("Unable to find available meeting links");
-      console.error("Unable to find available meeting links", error);
-    } finally {
-      setisCheckingMeetingAvailability(false);
     }
   };
 
@@ -328,14 +216,22 @@ const TutorDashboard = () => {
     setCurrentPage(1);
   };
 
-  const handleReschedule = async (sessionId: string, newDate: string) => {
+  const handleReschedule = async (
+    sessionId: string,
+    newDate: string,
+    meetingId: string
+  ) => {
     try {
       if (!profile || !profile.id) {
         console.error("No profile found cannot reschedule");
         return;
       }
 
-      const updatedSession = await rescheduleSession(sessionId, newDate);
+      const updatedSession = await rescheduleSession(
+        sessionId,
+        newDate,
+        meetingId
+      );
 
       if (updatedSession) {
         setCurrentSessions(
@@ -496,8 +392,6 @@ const TutorDashboard = () => {
               selectedSessionDate={selectedSessionDate}
               isDialogOpen={isDialogOpen}
               isSessionExitFormOpen={isSessionExitFormOpen}
-              isCheckingMeetingAvailability={isCheckingMeetingAvailability}
-              meetingAvailability={meetingAvailability}
               notes={notes}
               nextClassConfirmed={nextClassConfirmed}
               setSelectedSession={setSelectedSession}
@@ -512,9 +406,6 @@ const TutorDashboard = () => {
               handlePageChange={handlePageChange}
               handleRowsPerPageChange={handleRowsPerPageChange}
               handleInputChange={handleInputChange}
-              areMeetingsAvailableInCurrentWeek={
-                areMeetingsAvailableInCurrentWeek
-              }
             />
           </div>
         </div>
@@ -547,8 +438,6 @@ const TutorDashboard = () => {
               selectedSessionDate={selectedSessionDate}
               isDialogOpen={isDialogOpen}
               isSessionExitFormOpen={isSessionExitFormOpen}
-              isCheckingMeetingAvailability={isCheckingMeetingAvailability}
-              meetingAvailability={meetingAvailability}
               notes={notes}
               nextClassConfirmed={nextClassConfirmed}
               setSelectedSession={setSelectedSession}
@@ -563,9 +452,6 @@ const TutorDashboard = () => {
               handlePageChange={handlePageChange}
               handleRowsPerPageChange={handleRowsPerPageChange}
               handleInputChange={handleInputChange}
-              areMeetingsAvailableInCurrentWeek={
-                areMeetingsAvailableInCurrentWeek
-              }
             />
           </div>
 

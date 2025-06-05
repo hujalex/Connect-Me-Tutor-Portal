@@ -77,8 +77,6 @@ interface SessionsTableProps {
   selectedSessionDate: string | null;
   isDialogOpen: boolean;
   isSessionExitFormOpen: boolean;
-  isCheckingMeetingAvailability: boolean;
-  meetingAvailability: { [key: string]: boolean };
   notes: string;
   nextClassConfirmed: boolean;
   setSelectedSession: (session: Session | null) => void;
@@ -88,7 +86,11 @@ interface SessionsTableProps {
   setNotes: (notes: string) => void;
   setNextClassConfirmed: (confirmed: boolean) => void;
   handleStatusChange: (session: Session) => void;
-  handleReschedule: (sessionId: string, newDate: string) => void;
+  handleReschedule: (
+    sessionId: string,
+    newDate: string,
+    meetingId: string
+  ) => void;
   handleSessionComplete: (
     session: Session,
     notes: string,
@@ -98,7 +100,6 @@ interface SessionsTableProps {
   handlePageChange: (page: number) => void;
   handleRowsPerPageChange: (value: string) => void;
   handleInputChange: (e: { target: { name: string; value: string } }) => void;
-  areMeetingsAvailableInCurrentWeek: (session: Session, date: Date) => void;
 }
 
 const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
@@ -112,8 +113,6 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
   selectedSessionDate,
   isDialogOpen,
   isSessionExitFormOpen,
-  isCheckingMeetingAvailability,
-  meetingAvailability,
   notes,
   nextClassConfirmed,
   setSelectedSession,
@@ -128,7 +127,6 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
   handlePageChange,
   handleRowsPerPageChange,
   handleInputChange,
-  areMeetingsAvailableInCurrentWeek,
 }) => {
   return (
     <>
@@ -234,15 +232,10 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   isDialogOpen={isDialogOpen}
                   selectedSession={selectedSession}
                   selectedSessionDate={selectedSessionDate}
-                  isCheckingMeetingAvailability={isCheckingMeetingAvailability}
                   meetings={meetings}
-                  meetingAvailability={meetingAvailability}
                   setIsDialogOpen={setIsDialogOpen}
                   setSelectedSession={setSelectedSession}
                   setSelectedSessionDate={setSelectedSessionDate}
-                  areMeetingsAvailableInCurrentWeek={
-                    areMeetingsAvailableInCurrentWeek
-                  }
                   handleInputChange={handleInputChange}
                   handleReschedule={handleReschedule}
                 />
