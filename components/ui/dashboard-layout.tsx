@@ -35,6 +35,7 @@ import {
   UserIcon,
   BookOpenText,
   CircleUserRound,
+  Mail,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -148,6 +149,11 @@ export default function DashboardLayout({
       title: "All Students",
       href: "/dashboard/all-students",
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "Email Manager",
+      href: "/dashboard/email-manager",
+      icon: <Mail className="h-5 w-5" />,
     },
     {
       title: "Migrate Profiles",
