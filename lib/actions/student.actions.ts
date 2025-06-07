@@ -56,6 +56,7 @@ export async function getStudentSessions(
   const sessions: Session[] = await Promise.all(
     data.map(async (session: any) => ({
       id: session.id,
+      enrollmentId: session.enrollment_id,
       createdAt: session.created_at,
       environment: session.environment,
       date: session.date,
