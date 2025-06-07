@@ -552,6 +552,7 @@ export async function getAllSessions(
   try {
     let query = supabase.from("Sessions").select(`
       id,
+      enrollment_id,
       created_at,
       environment,
       student_id,
@@ -587,6 +588,7 @@ export async function getAllSessions(
     const sessions: Session[] = await Promise.all(
       data.map(async (session: any) => ({
         id: session.id,
+        enrollmentId: session.enrollment_id,
         createdAt: session.created_at,
         environment: session.environment,
         date: session.date,
@@ -871,7 +873,8 @@ export async function addSessions(
 
     // Process all enrollments
     for (const enrollment of enrollments) {
-      const { student, tutor, availability, meetingId, summary } = enrollment;
+      const { id, student, tutor, availability, meetingId, summary } =
+        enrollment;
 
       // Skip invalid enrollments
       if (!student?.id || !tutor?.id || !availability?.length) {
@@ -944,30 +947,6 @@ export async function addSessions(
             "America/New_York"
           ); // Automatically handles DST
 
-          // const sessionDateEST = toZonedTime(dateString, "America/New_York");
-          // const sessionStartTimeEST = toZonedTime(
-          //   sessionStartTime,
-          //   "America/New_York"
-          // );
-
-          // logSessionInfo(
-          //   weekStartString,
-          //   weekStart,
-          //   weekEnd,
-          //   currentDate,
-          //   sessionStartTime,
-          //   sessionStartTimeEST
-          // );
-
-          // Skip if outside the week range (redundant but safer)
-          // if (
-          //   sessionStartTime < weekStart ||
-          //   addHours(sessionStartTime, 1) > weekEnd
-          // ) {
-          //   currentDate = addDays(currentDate, 1);
-          //   continue;
-          // }
-
           // Check for duplicate session
           const sessionKey = `${student.id}-${tutor.id}-${format(
             sessionStartTime,
@@ -979,6 +958,7 @@ export async function addSessions(
           if (!scheduledSessions.has(sessionKey)) {
             // Add to batch insert
             sessionsToCreate.push({
+              enrollment_id: id,
               date: sessionStartTime.toISOString(),
               student_id: student.id,
               tutor_id: tutor.id,
@@ -1016,6 +996,7 @@ export async function addSessions(
         const sessions = await Promise.all(
           data.map(async (session: any) => ({
             id: session.id,
+            enrollmentId: session.enrollment_id,
             createdAt: session.created_at,
             environment: session.environment,
             date: session.date,
@@ -1479,17 +1460,27 @@ export const addEnrollment = async (
 };
 
 export const removeEnrollment = async (enrollmentId: string) => {
-  const { data, error } = await supabase
-    .from("Enrollments")
-    .delete()
-    .eq("id", enrollmentId);
+  const now: string = new Date().toISOString();
 
-  if (error) {
-    console.error("Error removing enrollment:", error);
-    throw error;
+  const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
+    await supabase.from("Enrollments").delete().eq("id", enrollmentId);
+
+  if (deleteEnrollmentError) {
+    console.error("Error removing enrollment:", deleteEnrollmentError);
+    throw deleteEnrollmentError;
   }
 
-  return data;
+  const { data: deleteSessionsData, error: deleteSessionsError } =
+    await supabase
+      .from("Sessions")
+      .delete()
+      .eq("enrollment_id", enrollmentId)
+      .gt("date", now);
+
+  if (deleteSessionsError) {
+    console.error("Error Deleting related sessions", deleteSessionsError);
+    throw deleteSessionsError;
+  }
 };
 
 /* EVENTS */

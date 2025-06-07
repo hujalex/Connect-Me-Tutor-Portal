@@ -26,6 +26,7 @@ interface Profile {
 
 interface Session {
   id: string;
+  enrollmentId: string;
   createdAt: string;
   environment: "Virtual" | "In-Person";
   student: Profile | null;
@@ -36,8 +37,8 @@ interface Session {
   meeting?: Meeting | null;
   status: "Active" | "Complete" | "Cancelled";
   session_exit_form: string;
-  isQuestionOrConcern: boolean,
-  isFirstSession: boolean,
+  isQuestionOrConcern: boolean;
+  isFirstSession: boolean;
 }
 
 interface Meeting {
