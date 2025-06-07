@@ -1386,27 +1386,46 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
 }
 
 export const updateEnrollment = async (enrollment: Enrollment) => {
-  const { data, error } = await supabase
-    .from("Enrollments")
+  const now = new Date().toISOString();
+
+  const { data: updateEnrollmentData, error: updateEnrollmentError } =
+    await supabase
+      .from("Enrollments")
+      .update({
+        student_id: enrollment.student?.id,
+        tutor_id: enrollment.tutor?.id,
+        summary: enrollment.summary,
+        start_date: enrollment.startDate,
+        end_date: enrollment.endDate,
+        availability: enrollment.availability,
+        meetingId: enrollment.meetingId,
+      })
+      .eq("id", enrollment.id)
+      .select("*") // Ensure it selects all columns
+      .single(); // Ensure only one object is returned
+
+  if (updateEnrollmentError) {
+    console.error("Error updating enrollment: ", updateEnrollmentError);
+    throw updateEnrollmentError;
+  }
+
+  // update related sessions
+  const { data: updateSessionData, error: updateSessionError } = await supabase
+    .from("sessions")
     .update({
       student_id: enrollment.student?.id,
       tutor_id: enrollment.tutor?.id,
-      summary: enrollment.summary,
-      start_date: enrollment.startDate,
-      end_date: enrollment.endDate,
-      availability: enrollment.availability,
-      meetingId: enrollment.meetingId,
+      meeting_id: enrollment.meetingId,
     })
-    .eq("id", enrollment.id)
-    .select("*") // Ensure it selects all columns
-    .single(); // Ensure only one object is returned
+    .eq("enrollment_id", enrollment.id)
+    .gt("date", now);
 
-  if (error) {
-    console.error("Error updating enrollment:", error);
-    throw error;
+  if (updateSessionError) {
+    console.error("Error updating sessions: ", updateSessionError);
+    throw updateSessionError;
   }
 
-  return data;
+  return updateEnrollmentData;
 };
 
 const isValidUUID = (uuid: string): boolean => {
