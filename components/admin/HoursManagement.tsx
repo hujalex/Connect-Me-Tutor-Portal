@@ -67,6 +67,8 @@ const HoursManager = () => {
   const [selectedEventToRemove, setSelectedEventToRemove] = useState<
     string | null
   >(null);
+  const [filterValue, setFilterValue] = useState<string>("");
+  const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
 
   useEffect(() => {
     fetchTutors();
@@ -79,11 +81,34 @@ const HoursManager = () => {
     }
   }, [tutors, selectedDate]);
 
+  useEffect(() => {
+    const filtered = tutors.filter((tutor) => {
+      const searchTerm = filterValue.toLowerCase().trim();
+
+      if (!searchTerm) return true;
+
+      const tutorFirstName = tutor.firstName?.toLowerCase() || "";
+      const tutorLastName = tutor.lastName?.toLowerCase() || "";
+      const tutorEmail = tutor.email?.toLowerCase() || "";
+
+      return (
+        tutorFirstName.includes(searchTerm) ||
+        tutorLastName.includes(searchTerm) ||
+        tutorEmail.includes(searchTerm) ||
+        (tutorFirstName + " " + tutorLastName).includes(searchTerm)
+      );
+    });
+    setFilteredTutors(filtered);
+
+    //TODO Finish
+  }, [filterValue, tutors]);
+
   const fetchTutors = async () => {
     try {
       const fetchedTutors = await getAllProfiles("Tutor");
       if (fetchedTutors) {
         setTutors(fetchedTutors);
+        setFilteredTutors(fetchedTutors);
       }
     } catch (error) {
       console.error("Failed to fetch tutors:", error);
@@ -259,156 +284,151 @@ const HoursManager = () => {
       </div>
       <div>
         <div className="overflow-x-auto flex-grow bg-white rounded-lg shadow p-6">
-          <div className="flex justify-end items-center">
+          <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-4">
-              <Select
-                onValueChange={(value) => setSelectedDate(new Date(value))}
-                defaultValue={selectedDate.toISOString()}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthYearOptions.map((date) => (
-                    <SelectItem
-                      key={date.toISOString()}
-                      value={date.toISOString()}
-                    >
-                      {format(date, "MMMM yyyy")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                type="text"
+                placeholder="Filter Tutors"
+                className="w64"
+                value={filterValue}
+                onChange={(e) => setFilterValue(e.target.value)}
+              />
+              <div className="flex space-x-4">
+                <Select
+                  onValueChange={(value) => setSelectedDate(new Date(value))}
+                  defaultValue={selectedDate.toISOString()}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthYearOptions.map((date) => (
+                      <SelectItem
+                        key={date.toISOString()}
+                        value={date.toISOString()}
+                      >
+                        {format(date, "MMMM yyyy")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Dialog
-                open={isAddEventModalOpen}
-                onOpenChange={setIsAddEventModalOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button onClick={() => setIsAddEventModalOpen(true)}>
-                    Add Event
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Event</DialogTitle>
-                  </DialogHeader>
-                  {/* <Select
-                    onValueChange={(value) =>
-                      setNewEvent({ ...newEvent, tutorId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Tutor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tutors.map((tutor) => (
-                        <SelectItem key={tutor.id} value={tutor.id}>
-                          {tutor.firstName} {tutor.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select> */}
-                  <Combobox
-                    list={tutors
-                      // .filter((student) => student.status === "Active")
-                      .map((tutor) => ({
-                        value: tutor.id,
-                        label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
-                      }))}
-                    category="tutor"
-                    onValueChange={(value) =>
-                      setNewEvent({ ...newEvent, tutorId: value })
-                    }
-                  />
-                  <Input
-                    type="date"
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, date: e.target.value })
-                    }
-                    placeholder="Date"
-                  />
-                  <Input
-                    type="number"
-                    onChange={(e) =>
-                      setNewEvent({
-                        ...newEvent,
-                        hours: parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="Hours"
-                  />
-                  <Input
-                    type="text"
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, summary: e.target.value })
-                    }
-                    placeholder="Summary"
-                  />
-                  <Button onClick={handleAddEvent}>Add Event</Button>
-                </DialogContent>
-              </Dialog>
-              <Dialog
-                open={isRemoveEventModalOpen}
-                onOpenChange={setIsRemoveEventModalOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button onClick={() => setIsRemoveEventModalOpen(true)}>
-                    Remove Event
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Remove Event</DialogTitle>
-                  </DialogHeader>
-                  <Combobox
-                    list={tutors
-                      // .filter((student) => student.status === "Active")
-                      .map((tutor) => ({
-                        value: tutor.id,
-                        label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
-                      }))}
-                    category="tutor"
-                    onValueChange={async (value) => {
-                      try {
-                        // Show loading state
-                        toast.loading("Loading events...");
-                        const events = await getEvents(value);
-                        setEventsToRemove(events || []);
-                        toast.dismiss();
-                      } catch (error) {
-                        console.error("Failed to fetch events:", error);
-                        toast.error("Failed to load events");
+                <Dialog
+                  open={isAddEventModalOpen}
+                  onOpenChange={setIsAddEventModalOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsAddEventModalOpen(true)}>
+                      Add Event
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Event</DialogTitle>
+                    </DialogHeader>
+                    <Combobox
+                      list={tutors
+                        // .filter((student) => student.status === "Active")
+                        .map((tutor) => ({
+                          value: tutor.id,
+                          label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
+                        }))}
+                      category="tutor"
+                      onValueChange={(value) =>
+                        setNewEvent({ ...newEvent, tutorId: value })
                       }
-                    }}
-                  />
-                  {eventsToRemove && (
-                    <Select
-                      onValueChange={(value) => setSelectedEventToRemove(value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Event to Remove" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventsToRemove.map((event) => (
-                          <SelectItem key={event.id} value={event.id}>
-                            <div className="flex justify-between w-full">
-                              <span>
-                                {format(parseISO(event.date), "yyyy-MM-dd")} -{" "}
-                                {event.summary}
-                              </span>
-                              <span className="font-semibold ml-2">
-                                {event.hours} hrs
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  <Button onClick={handleRemoveEvent}>Remove Event</Button>
-                </DialogContent>
-              </Dialog>
+                    />
+                    <Input
+                      type="date"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, date: e.target.value })
+                      }
+                      placeholder="Date"
+                    />
+                    <Input
+                      type="number"
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          hours: parseFloat(e.target.value),
+                        })
+                      }
+                      placeholder="Hours"
+                    />
+                    <Input
+                      type="text"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, summary: e.target.value })
+                      }
+                      placeholder="Summary"
+                    />
+                    <Button onClick={handleAddEvent}>Add Event</Button>
+                  </DialogContent>
+                </Dialog>
+                <Dialog
+                  open={isRemoveEventModalOpen}
+                  onOpenChange={setIsRemoveEventModalOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsRemoveEventModalOpen(true)}>
+                      Remove Event
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Remove Event</DialogTitle>
+                    </DialogHeader>
+                    <Combobox
+                      list={tutors
+                        // .filter((student) => student.status === "Active")
+                        .map((tutor) => ({
+                          value: tutor.id,
+                          label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
+                        }))}
+                      category="tutor"
+                      onValueChange={async (value) => {
+                        try {
+                          // Show loading state
+                          toast.loading("Loading events...");
+                          const events = await getEvents(value);
+                          setEventsToRemove(events || []);
+                          toast.dismiss();
+                        } catch (error) {
+                          console.error("Failed to fetch events:", error);
+                          toast.error("Failed to load events");
+                        }
+                      }}
+                    />
+                    {eventsToRemove && (
+                      <Select
+                        onValueChange={(value) =>
+                          setSelectedEventToRemove(value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Event to Remove" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {eventsToRemove.map((event) => (
+                            <SelectItem key={event.id} value={event.id}>
+                              <div className="flex justify-between w-full">
+                                <span>
+                                  {format(parseISO(event.date), "yyyy-MM-dd")} -{" "}
+                                  {event.summary}
+                                </span>
+                                <span className="font-semibold ml-2">
+                                  {event.hours} hrs
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <Button onClick={handleRemoveEvent}>Remove Event</Button>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </div>
 
@@ -433,7 +453,7 @@ const HoursManager = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tutors.map((tutor) => (
+              {filteredTutors.map((tutor) => (
                 <TableRow key={tutor.id}>
                   <TableCell className="sticky left-0 z-10 bg-white">
                     {tutor.firstName} {tutor.lastName}
