@@ -204,20 +204,7 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
 
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSelectedSession(session);
-              setIsDialogOpen(true);
-              setSelectedSessionDate(session.date);
-            }}
-          >
-            <CalendarDays color="#3b82f6" className="h-4 w-4" />
-          </Button>
-        </DialogTrigger>
+      
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -322,7 +309,6 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
     </>
   );
 };
