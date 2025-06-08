@@ -220,33 +220,71 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
                 />
               </TableCell>
               <TableCell className="flex content-center">
-                <RescheduleForm
-                  session={session}
-                  isDialogOpen={isDialogOpen}
-                  selectedSession={selectedSession}
-                  selectedSessionDate={selectedSessionDate}
-                  meetings={meetings}
-                  setIsDialogOpen={setIsDialogOpen}
-                  setSelectedSession={setSelectedSession}
-                  setSelectedSessionDate={setSelectedSessionDate}
-                  handleInputChange={handleInputChange}
-                  handleReschedule={handleReschedule}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    (window.location.href =
-                      "https://forms.gle/AC4an7K6NSNumDwKA")
-                  }
-                >
-                  <UserRoundPlus className="h-4 w-4" />
-                </Button>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <HoverCard>
+                      <HoverCardTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsDialogOpen(true);
+                            setSelectedSessionDate(session.date);
+                          }}
+                        >
+                          <CalendarDays color="#3b82f6" className="h-4 w-4" />
+                        </Button>
+                      </HoverCardTrigger>
+                      <HoverCardContent>
+                        <center>Reschedule Session</center>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </DialogTrigger>
+                  <RescheduleForm
+                    session={session}
+                    isDialogOpen={isDialogOpen}
+                    selectedSession={selectedSession}
+                    selectedSessionDate={selectedSessionDate}
+                    meetings={meetings}
+                    setIsDialogOpen={setIsDialogOpen}
+                    setSelectedSession={setSelectedSession}
+                    setSelectedSessionDate={setSelectedSessionDate}
+                    handleInputChange={handleInputChange}
+                    handleReschedule={handleReschedule}
+                  />
+                </Dialog>
+
+                <HoverCard>
+                  <HoverCardTrigger>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        (window.location.href =
+                          "https://forms.gle/AC4an7K6NSNumDwKA")
+                      }
+                    >
+                      <UserRoundPlus className="h-4 w-4" />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent>
+                    <center>Request a Substitute</center>
+                  </HoverCardContent>
+                </HoverCard>
+
                 <AlertDialog>
                   <AlertDialogTrigger>
-                    <Button variant="ghost" size="icon">
-                      <Trash className="h-4 w-4" color="#ef4444" />
-                    </Button>
+                    <HoverCard>
+                      <HoverCardTrigger>
+                        <Button variant="ghost" size="icon">
+                          <Trash className="h-4 w-4" color="#ef4444" />
+                        </Button>
+                      </HoverCardTrigger>
+                      <HoverCardContent>
+                        <center>Cancel Session</center>
+                      </HoverCardContent>
+                    </HoverCard>
                   </AlertDialogTrigger>
                   <CancellationForm
                     session={session}

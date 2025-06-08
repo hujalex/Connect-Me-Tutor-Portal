@@ -227,18 +227,41 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                 />
               </TableCell>
               <TableCell className="flex content-center">
-                <RescheduleForm
-                  session={session}
-                  isDialogOpen={isDialogOpen}
-                  selectedSession={selectedSession}
-                  selectedSessionDate={selectedSessionDate}
-                  meetings={meetings}
-                  setIsDialogOpen={setIsDialogOpen}
-                  setSelectedSession={setSelectedSession}
-                  setSelectedSessionDate={setSelectedSessionDate}
-                  handleInputChange={handleInputChange}
-                  handleReschedule={handleReschedule}
-                />
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <HoverCard>
+                      <HoverCardTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setIsDialogOpen(true);
+                            setSelectedSessionDate(session.date);
+                          }}
+                        >
+                          <CalendarDays color="#3b82f6" className="h-4 w-4" />
+                        </Button>
+                      </HoverCardTrigger>
+                      <HoverCardContent>
+                        <center>Reschedule Session</center>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </DialogTrigger>
+                  <RescheduleForm
+                    session={session}
+                    isDialogOpen={isDialogOpen}
+                    selectedSession={selectedSession}
+                    selectedSessionDate={selectedSessionDate}
+                    meetings={meetings}
+                    setIsDialogOpen={setIsDialogOpen}
+                    setSelectedSession={setSelectedSession}
+                    setSelectedSessionDate={setSelectedSessionDate}
+                    handleInputChange={handleInputChange}
+                    handleReschedule={handleReschedule}
+                  />
+                </Dialog>
+
                 <Button
                   variant="ghost"
                   size="icon"
