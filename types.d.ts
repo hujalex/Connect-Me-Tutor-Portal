@@ -26,7 +26,7 @@ interface Profile {
 
 interface Session {
   id: string;
-  enrollmentId: string;
+  enrollmentId: string | null;
   createdAt: string;
   environment: "Virtual" | "In-Person";
   student: Profile | null;
