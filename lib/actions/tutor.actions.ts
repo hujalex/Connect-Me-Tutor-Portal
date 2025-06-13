@@ -218,7 +218,7 @@ export async function getTutorAvailability(tutorId: string) {
   if (error) throw error;
   return data;
 }
-
+//
 export async function updateTutorAvailability(
   tutorId: string,
   availabilityData: any
