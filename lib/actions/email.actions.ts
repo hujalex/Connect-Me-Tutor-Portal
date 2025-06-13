@@ -1,6 +1,9 @@
 import { Session } from "@/types";
 import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
+import { Profile } from "@/types";
+import { getProfileWithProfileId } from "./user.actions";
+import { createClient } from "../supabase/server";
 const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 
 /**
@@ -13,6 +16,14 @@ const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
   try {
     sessions.forEach(async (session) => {
+      //Check Settings
+      if (session.tutor) {
+        const profile: Profile = await getProfileWithProfileId(
+          session.tutor?.id
+        );
+
+        const { data, error } = await supabase;
+      }
       const response = await fetch(
         "/api/email/before-sessions/schedule-reminder",
         {

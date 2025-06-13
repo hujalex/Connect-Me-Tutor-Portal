@@ -348,6 +348,7 @@ export default function MigrateDataPage() {
         id: "",
         createdAt: "",
         userId: "",
+        settingsId: "",
       };
 
       const migratedStudent: Profile = {
@@ -372,6 +373,7 @@ export default function MigrateDataPage() {
         id: "",
         createdAt: "",
         userId: "",
+        settingsId: "",
       };
 
       const migratedPairing: Enrollment = {
@@ -711,12 +713,12 @@ export default function MigrateDataPage() {
                 {showErrorEntries
                   ? "Entries with errors"
                   : showStudents
-                  ? "Select the Students you want to migrate to the portal."
-                  : showTutors
-                  ? "Select the Tutors you want to migrate to the portal."
-                  : showPairings
-                  ? "Select the pairings you want to migrate to the portal"
-                  : ""}
+                    ? "Select the Students you want to migrate to the portal."
+                    : showTutors
+                      ? "Select the Tutors you want to migrate to the portal."
+                      : showPairings
+                        ? "Select the pairings you want to migrate to the portal"
+                        : ""}
               </DialogDescription>
             </DialogHeader>
 

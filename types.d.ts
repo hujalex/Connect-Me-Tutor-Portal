@@ -22,6 +22,7 @@ interface Profile {
   status: "Active" | "Inactive" | "Deleted";
   tutorIds: string[];
   studentNumber: string | null;
+  settingsId: string;
 }
 
 interface Session {

@@ -293,22 +293,6 @@ const HoursManager = () => {
                   <DialogHeader>
                     <DialogTitle>Add New Event</DialogTitle>
                   </DialogHeader>
-                  {/* <Select
-                    onValueChange={(value) =>
-                      setNewEvent({ ...newEvent, tutorId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Tutor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tutors.map((tutor) => (
-                        <SelectItem key={tutor.id} value={tutor.id}>
-                          {tutor.firstName} {tutor.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select> */}
                   <Combobox
                     list={tutors
                       // .filter((student) => student.status === "Active")

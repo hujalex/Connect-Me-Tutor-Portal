@@ -70,7 +70,8 @@ export async function getAllProfiles(
       timezone,
       subjects_of_interest,
       status,
-      student_number
+      student_number,
+      settings_id
     `;
 
     // Build query
@@ -119,6 +120,7 @@ export async function getAllProfiles(
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
+      settingsId: profile.settings_id,
     }));
 
     return userProfiles;
@@ -223,6 +225,7 @@ export const addStudent = async (
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
+      settingsId: createdProfile.settings_id,
     };
   } catch (error) {
     console.error("Error adding student:", error);
@@ -314,6 +317,7 @@ export const addTutor = async (
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.student_number,
+      settingsId: createdProfile.settings_id,
     };
   } catch (error) {
     console.error("Error adding student:", error);
@@ -1564,13 +1568,13 @@ export const addEnrollment = async (
 export const removeEnrollment = async (enrollmentId: string) => {
   const now: string = new Date().toISOString();
 
-  // const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
-  //   await supabase.from("Enrollments").delete().eq("id", enrollmentId);
+  const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
+    await supabase.from("Enrollments").delete().eq("id", enrollmentId);
 
-  // if (deleteEnrollmentError) {
-  //   console.error("Error removing enrollment:", deleteEnrollmentError);
-  //   throw deleteEnrollmentError;
-  // }
+  if (deleteEnrollmentError) {
+    console.error("Error removing enrollment:", deleteEnrollmentError);
+    throw deleteEnrollmentError;
+  }
 
   const { data: deleteSessionsData, error: deleteSessionsError } =
     await supabase
