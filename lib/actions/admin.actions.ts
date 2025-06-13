@@ -1489,13 +1489,13 @@ export const addEnrollment = async (
 export const removeEnrollment = async (enrollmentId: string) => {
   const now: string = new Date().toISOString();
 
-  // const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
-  //   await supabase.from("Enrollments").delete().eq("id", enrollmentId);
+  const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
+    await supabase.from("Enrollments").delete().eq("id", enrollmentId);
 
-  // if (deleteEnrollmentError) {
-  //   console.error("Error removing enrollment:", deleteEnrollmentError);
-  //   throw deleteEnrollmentError;
-  // }
+  if (deleteEnrollmentError) {
+    console.error("Error removing enrollment:", deleteEnrollmentError);
+    throw deleteEnrollmentError;
+  }
 
   const { data: deleteSessionsData, error: deleteSessionsError } =
     await supabase
