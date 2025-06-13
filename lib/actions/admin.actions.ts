@@ -1492,7 +1492,7 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
     // update related sessions
     if (enrollment.student && enrollment.tutor) {
       const { data: updateSessionData, error: updateSessionError } =
-        await supabase
+        await supabaseapi
           .from("Sessions")
           .update({
             student_id: enrollment.student?.id,

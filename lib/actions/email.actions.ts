@@ -3,8 +3,21 @@ import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
 import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
-import { createClient } from "../supabase/server";
+import { createClient } from "@supabase/supabase-js";
+
+if (
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+) {
+  throw new Error("Missing Supabase environment variables");
+}
+
 const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 /**
  * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.
@@ -13,38 +26,87 @@ const qstash = new Client({ token: process.env.QSTASH_TOKEN });
  * @returns A promise that resolves when all scheduling requests have been attempted.
  * @throws Will throw an error if any API request fails and is not caught internally.
  */
-export async function sendScheduledEmailsBeforeSessions(sessions: Session[]) {
+export async function sendScheduledEmailsBeforeSessions(
+  sessions: Session[]
+): Promise<void> {
   try {
-    sessions.forEach(async (session) => {
-      //Check Settings
-      if (session.tutor) {
-        const profile: Profile = await getProfileWithProfileId(
-          session.tutor?.id
-        );
-
-        const { data, error } = await supabase;
-      }
-      const response = await fetch(
-        "/api/email/before-sessions/schedule-reminder",
-        {
-          method: "POST",
-          body: JSON.stringify({ session }),
-          headers: {
-            "Content-Type": "applications/json",
-          },
+    // Use Promise.all for parallel execution or for...of for sequential
+    await Promise.all(
+      sessions.map(async (session) => {
+        // Check if session has a tutor
+        if (!session.tutor) {
+          console.warn(`Session ${session.id} has no tutor assigned`);
+          return;
         }
-      );
 
-      const data = await response.json();
+        try {
+          const profile: Profile | null = await getProfileWithProfileId(
+            session.tutor.id
+          );
 
-      if (!response.ok) {
-        throw new Error(data.message || "Unable to schedule emails");
-      }
-    });
+          if (!profile) {
+            console.warn(`Profile not found for tutor ${session.tutor.id}`);
+            return;
+          }
+
+          const { data: notifications_enabled, error } = await supabase
+            .from("User_Notification_Settings")
+            .select("email_tutoring_session_notifications_enabled")
+            .eq("id", profile.settingsId)
+            .single();
+
+          if (error) {
+            console.error(
+              `Error fetching notification settings for profile ${profile.settingsId}:`,
+              error
+            );
+            return;
+          }
+
+          if (
+            !notifications_enabled?.email_tutoring_session_notifications_enabled
+          ) {
+            console.log(`Notifications disabled for tutor ${session.tutor.id}`);
+            return;
+          }
+
+          const response = await fetch(
+            "/api/email/before-sessions/schedule-reminder",
+            {
+              method: "POST",
+              body: JSON.stringify({ session }),
+              headers: {
+                "Content-Type": "application/json", // Fixed typo
+              },
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response
+              .json()
+              .catch(() => ({ message: "Unknown error" }));
+            throw new Error(
+              errorData.message ||
+                `HTTP ${response.status}: Unable to schedule email`
+            );
+          }
+
+          const data = await response.json();
+          console.log(`Successfully scheduled email for session ${session.id}`);
+        } catch (sessionError) {
+          console.error(
+            `Error processing session ${session.id}:`,
+            sessionError
+          );
+          // Continue processing other sessions instead of failing entirely
+        }
+      })
+    );
 
     toast.success("Session Emails Scheduled");
   } catch (error) {
     console.error("Error scheduling session emails", error);
+    toast.error("Failed to schedule some session emails");
     throw error;
   }
 }
