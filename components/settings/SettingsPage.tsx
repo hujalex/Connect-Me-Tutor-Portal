@@ -10,6 +10,7 @@ import { getProfile, updateProfile } from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import toast, { Toaster } from "react-hot-toast";
+import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 
 export default function SettingsPage() {
   const supabase = createClientComponentClient();
@@ -24,11 +25,15 @@ export default function SettingsPage() {
     useState(false);
   const [webinarTextNotifications, setWebinarTextNotifications] =
     useState(false);
+  const [settingsId, setSettingsId] = useState("")
 
   useEffect(() => {
     fetchUser();
+  }, []);
+
+  useEffect(() => {
     fetchNotificationSettings();
-  }, [supabase]);
+  }, [profile]);
 
   const fetchUser = async () => {
     try {
@@ -54,23 +59,24 @@ export default function SettingsPage() {
       if (profile) {
         console.log(profile.id);
         const { data, error } = await supabase
-          .from("Profiles")
-          .select(
-            `
-              id, 
-              User_Notification_Settings (
-                email_tutoring_session_notifications_enabled, 
-                text_tutoring_session_notifications_enabled, 
-                email_webinar_notifications_enabled, 
-                text_webinar_notifications_enabled
-              )
-            `
-          )
-          .eq("id", profile.id)
+          .from("User_Notification_Settings")
+          .select("*")
+          .eq("id", profile.settingsId)
           .single();
         if (error) throw error;
 
         console.log("Notification Settings", data);
+
+        setSessionEmailNotifications(
+          data.email_tutoring_session_notifications_enabled
+        );
+        setSessionTextNotifications(
+          data.text_tutoring_session_notifications_enabled
+        );
+        setWebinarEmailNotifications(data.email_webinar_notifications_enabled);
+        setWebinarTextNotifications(data.text_webinar_notifications_enabled);
+        setSessionReminders(true);
+        setWebinarReminders(false);
       }
     } catch (error) {
       console.error("Unable to fetch notification settings", error);
@@ -100,6 +106,11 @@ export default function SettingsPage() {
       });
       // Handle notification settings save logic here
       // You could show a success toast here
+
+      const { data, error } = await supabase.from("User_Notification_Settings").update().eq(id, '')
+
+
+      toast.success("Successfully saved settings");
       await fetchNotificationSettings();
       toast.success("Saved Notification Settings");
     } catch (error) {

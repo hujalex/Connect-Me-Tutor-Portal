@@ -3,21 +3,14 @@ import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
 import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
-import { createClient } from "@supabase/supabase-js";
-
-if (
-  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-) {
-  throw new Error("Missing Supabase environment variables");
-}
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const qstash = new Client({ token: process.env.QSTASH_TOKEN });
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+
+const supabase = createClientComponentClient({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+});
 
 /**
  * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.

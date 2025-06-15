@@ -23,15 +23,8 @@ export async function POST(request: NextRequest) {
     );
 
     const data = await request.json();
-
-    console.log("Data", data);
-
     const session: Session = data.session;
-
-    console.log("Scheduled session", session);
-
     const tutor: Profile | null = session.tutor;
-
     const student: Profile | null = session.student;
 
     //* Uncomment in production
