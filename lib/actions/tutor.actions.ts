@@ -136,6 +136,7 @@ export async function getTutorStudents(tutorId: string) {
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
+      settingsId: profile.settings_id,
     }));
 
     console.log("Mapped profile data:", userProfiles);

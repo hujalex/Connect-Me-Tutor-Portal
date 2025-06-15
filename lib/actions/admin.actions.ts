@@ -10,6 +10,11 @@ import {
   Enrollment,
   Meeting,
 } from "@/types";
+import {
+  deleteScheduledEmailBeforeSessions,
+  sendScheduledEmailsBeforeSessions,
+  updateScheduledEmailBeforeSessions,
+} from "./email.actions";
 import { getProfileWithProfileId, getProfileByEmail } from "./user.actions";
 import {
   addDays,
@@ -29,6 +34,8 @@ import ResetPassword from "@/app/(public)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
+import toast from "react-hot-toast";
+import { DatabaseIcon } from "lucide-react";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -63,7 +70,8 @@ export async function getAllProfiles(
       timezone,
       subjects_of_interest,
       status,
-      student_number
+      student_number,
+      settings_id
     `;
 
     // Build query
@@ -112,6 +120,7 @@ export async function getAllProfiles(
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
+      settingsId: profile.settings_id,
     }));
 
     return userProfiles;
@@ -216,6 +225,7 @@ export const addStudent = async (
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
+      settingsId: createdProfile.settings_id,
     };
   } catch (error) {
     console.error("Error adding student:", error);
@@ -307,6 +317,7 @@ export const addTutor = async (
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.student_number,
+      settingsId: createdProfile.settings_id,
     };
   } catch (error) {
     console.error("Error adding student:", error);
@@ -341,8 +352,7 @@ export async function getUserFromId(profileId: string) {
     const { data: profile, error } = await supabase
       .from("Profiles")
       .select(
-        `
-          id,
+        ` id,
           created_at,
           role,
           user_id,
@@ -362,7 +372,8 @@ export async function getUserFromId(profileId: string) {
           timezone,
           subjects_of_interest,
           status,
-          student_number
+          student_number,
+          settings_id
         `
       )
       .eq("id", profileId)
@@ -395,6 +406,7 @@ export async function getUserFromId(profileId: string) {
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
+      settingsId: profile.settings_id,
     };
     return userProfile;
   } catch (error) {
@@ -824,10 +836,14 @@ export async function checkMeetingsAvailability(
   }
 }
 
-export async function addOneSession(session: Session): Promise<void> {
+export async function addOneSession(
+  session: Session,
+  scheduleEmail: boolean = true
+): Promise<void> {
   try {
     const newSession = {
       date: session.date,
+      enrollment_id: null, //omdependent of enrollment date
       student_id: session.student?.id,
       tutor_id: session.tutor?.id,
       status: "Active",
@@ -835,7 +851,35 @@ export async function addOneSession(session: Session): Promise<void> {
       meeting_id: session.meeting?.id,
     };
 
-    const { data, error } = await supabase.from("Sessions").insert(newSession);
+    const { data, error } = await supabase
+      .from("Sessions")
+      .insert(newSession)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (!data) toast.error("No Data");
+
+    if (data && scheduleEmail) {
+      const addedSession: Session = {
+        id: data.id,
+        enrollmentId: data.enrollment_id,
+        createdAt: data.created_at,
+        environment: data.environment,
+        date: data.date,
+        summary: data.summary,
+        meeting: await getMeeting(data.meeting_id),
+        student: await getProfileWithProfileId(data.student_id),
+        tutor: await getProfileWithProfileId(data.tutor_id),
+        status: data.status,
+        session_exit_form: data.session_exit_form || null,
+        isQuestionOrConcern: data.isQuestionOrConcern,
+        isFirstSession: data.isFirstSession,
+      };
+
+      sendScheduledEmailsBeforeSessions([addedSession]);
+    }
   } catch (error) {
     console.error("Unable to add one session", error);
     throw error;
@@ -1162,56 +1206,87 @@ async function logSessionInfo(
 // }
 
 // Function to update a session
-export async function updateSession(updatedSession: Session) {
-  const {
-    id,
-    status,
-    tutor,
-    student,
-    date,
-    summary,
-    meeting,
-    session_exit_form,
-    isQuestionOrConcern,
-    isFirstSession,
-  } = updatedSession;
+export async function updateSession(
+  updatedSession: Session,
+  updateEmail: boolean = true
+) {
+  try {
+    const {
+      id,
+      status,
+      tutor,
+      student,
+      date,
+      summary,
+      meeting,
+      session_exit_form,
+      isQuestionOrConcern,
+      isFirstSession,
+    } = updatedSession;
 
-  console.log(id);
-  console.log(status);
-  console.log(isQuestionOrConcern);
-  console.log(isFirstSession);
-  console.log(meeting);
+    console.log(id);
+    console.log(status);
+    console.log(isQuestionOrConcern);
+    console.log(isFirstSession);
+    console.log(meeting);
 
-  const { data, error } = await supabase
-    .from("Sessions")
-    .update({
-      status: status,
-      student_id: student?.id,
-      tutor_id: tutor?.id,
-      date: date,
-      summary: summary,
-      meeting_id: meeting?.id,
-      session_exit_form: session_exit_form,
-      is_question_or_concern: isQuestionOrConcern,
-      is_first_session: isFirstSession,
-    })
-    .eq("id", id);
-  console.log("UPDATING...");
+    const { data, error } = await supabase
+      .from("Sessions")
+      .update({
+        status: status,
+        student_id: student?.id,
+        tutor_id: tutor?.id,
+        date: date,
+        summary: summary,
+        meeting_id: meeting?.id,
+        session_exit_form: session_exit_form,
+        is_question_or_concern: isQuestionOrConcern,
+        is_first_session: isFirstSession,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+    console.log("UPDATING...");
 
-  if (error) {
-    console.error("Error updating session:", error);
-    return null;
-  }
+    if (error) {
+      console.error("Error updating session:", error);
+      return null;
+    }
 
-  if (data) {
-    console.log(data[0]);
-    return data[0];
-  } else {
-    console.error("NO DATA");
+    if (data) {
+      console.log(data[0]);
+      return data[0];
+    } else {
+      console.error("NO DATA");
+    }
+    if (updateEmail && data) {
+      const newSession: Session = {
+        id: data.id,
+        enrollmentId: data.enrollment_id,
+        createdAt: data.created_at,
+        environment: data.environment,
+        date: data.date,
+        summary: data.summary,
+        meeting: await getMeeting(data.meeting_id),
+        student: await getProfileWithProfileId(data.student_id),
+        tutor: await getProfileWithProfileId(data.tutor_id),
+        status: data.status,
+        session_exit_form: data.session_exit_form || null,
+        isQuestionOrConcern: data.isQuestionOrConcern,
+        isFirstSession: data.isFirstSession,
+      };
+      await updateScheduledEmailBeforeSessions(newSession);
+    }
+  } catch (error) {
+    console.error("Unable to update session");
+    throw error;
   }
 }
 
-export async function removeSession(sessionId: string) {
+export async function removeSession(
+  sessionId: string,
+  updateEmail: boolean = true
+) {
   // Create a notification for the admin
   const { error: eventError } = await supabase
     .from("Sessions")
@@ -1222,6 +1297,10 @@ export async function removeSession(sessionId: string) {
 
   if (eventError) {
     throw eventError;
+  }
+
+  if (updateEmail) {
+    await deleteScheduledEmailBeforeSessions(sessionId);
   }
 }
 

@@ -220,7 +220,7 @@ const StudentList = () =>
     };
 
     const handleGradeChangeForEdit = (value: string) => {
-      setSelectedStudent((prev) => ({ ...prev, grade: value } as Profile));
+      setSelectedStudent((prev) => ({ ...prev, grade: value }) as Profile);
     };
 
     const handleTimeZone = (value: string) => {
@@ -297,7 +297,7 @@ const StudentList = () =>
         .split(",")
         .map((subject) => subject.trim());
       setSelectedStudent(
-        (prev) => ({ ...prev, subjectsOfInterest: subjects } as Profile)
+        (prev) => ({ ...prev, subjectsOfInterest: subjects }) as Profile
       );
     };
 
@@ -397,7 +397,7 @@ const StudentList = () =>
       if (profileId) {
         try {
           const data = await getUserFromId(profileId);
-          setSelectedStudent(data);
+          setSelectedStudent(data as Profile);
           // setIsReactivateModalOpen(false);
         } catch (error) {
           console.error("Failed to identify tutor");

@@ -45,7 +45,8 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
         timezone,
         subjects_of_interest,
         status,
-        student_number
+        student_number,
+        settings_id
       `
       )
       .eq("user_id", userId)
@@ -82,6 +83,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       subjectsOfInterest: data.subjects_of_interest,
       status: data.status,
       studentNumber: data.student_number,
+      settingsId: data.settings_id,
     };
 
     console.log("Mapped profile data:", userProfile);
@@ -168,7 +170,8 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
         timezone,
         subjects_of_interest,
         status,
-        student_number
+        student_number,
+        settings_id
       `
       )
       .eq("user_id", userId)
@@ -208,6 +211,7 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
       subjectsOfInterest: data.subjects_of_interest,
       status: data.status,
       studentNumber: data.student_number,
+      settingsId: data.settings_id,
     };
 
     console.log("Mapped profile data:", userProfile);
@@ -243,7 +247,8 @@ export async function getProfileWithProfileId(
         timezone,
         subjects_of_interest,
         status,
-        student_number
+        student_number,
+        settings_id
       `
       )
       .eq("id", profileId)
@@ -283,6 +288,7 @@ export async function getProfileWithProfileId(
       subjectsOfInterest: data.subjects_of_interest,
       status: data.status,
       studentNumber: data.student_number,
+      settingsId: data.settings_id,
     };
 
     console.log("Mapped profile data:", userProfile);

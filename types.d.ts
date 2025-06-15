@@ -22,11 +22,12 @@ interface Profile {
   status: "Active" | "Inactive" | "Deleted";
   tutorIds: string[];
   studentNumber: string | null;
+  settingsId: string;
 }
 
 interface Session {
   id: string;
-  enrollmentId: string;
+  enrollmentId: string | null;
   createdAt: string;
   environment: "Virtual" | "In-Person";
   student: Profile | null;

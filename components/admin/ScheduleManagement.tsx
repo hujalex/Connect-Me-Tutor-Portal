@@ -125,6 +125,7 @@ const Schedule = () => {
       status: "Active",
       tutorIds: [],
       studentNumber: null,
+      settingsId: "",
     },
     tutor: {
       id: "",
@@ -141,6 +142,7 @@ const Schedule = () => {
       status: "Active",
       tutorIds: [],
       studentNumber: null,
+      settingsId: "",
     },
     date: new Date().toISOString(),
     summary: "",
