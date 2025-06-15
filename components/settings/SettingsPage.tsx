@@ -25,7 +25,7 @@ export default function SettingsPage() {
     useState(false);
   const [webinarTextNotifications, setWebinarTextNotifications] =
     useState(false);
-  const [settingsId, setSettingsId] = useState("")
+  const [settingsId, setSettingsId] = useState("");
 
   useEffect(() => {
     fetchUser();
@@ -70,13 +70,18 @@ export default function SettingsPage() {
         setSessionEmailNotifications(
           data.email_tutoring_session_notifications_enabled
         );
-        setSessionTextNotifications(
-          data.text_tutoring_session_notifications_enabled
-        );
+        setSessionTextNotifications(false);
         setWebinarEmailNotifications(data.email_webinar_notifications_enabled);
         setWebinarTextNotifications(data.text_webinar_notifications_enabled);
-        setSessionReminders(true);
+
+        setSessionReminders(
+          data.email_tutoring_session_notifications_enabled ||
+            data.text_tutoring_session_notifications_enabled
+        );
+
         setWebinarReminders(false);
+
+        setSettingsId(profile.settingsId);
       }
     } catch (error) {
       console.error("Unable to fetch notification settings", error);
@@ -107,10 +112,19 @@ export default function SettingsPage() {
       // Handle notification settings save logic here
       // You could show a success toast here
 
-      const { data, error } = await supabase.from("User_Notification_Settings").update().eq(id, '')
+      const { data, error } = await supabase
+        .from("User_Notification_Settings")
+        .update({
+          email_tutoring_session_notifications_enabled:
+            sessionEmailNotifications,
+          text_tutoring_session_notifications_enabled: sessionTextNotifications,
+          email_webinar_notifications_enabled: webinarEmailNotifications,
+          text_webinar_notifications_enabled: webinarTextNotifications,
+        })
+        .eq("id", settingsId);
 
+      if (error) throw error;
 
-      toast.success("Successfully saved settings");
       await fetchNotificationSettings();
       toast.success("Saved Notification Settings");
     } catch (error) {
@@ -148,9 +162,15 @@ export default function SettingsPage() {
                 {sessionReminders && (
                   <div className="mt-4 ml-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="session-email" className="text-base">
-                        Email notifications
-                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="session-email" className="text-base">
+                          Email notifications
+                        </Label>
+                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full border border-green-200">
+                          Beginning June 29th
+                        </span>
+                      </div>
+
                       <Switch
                         id="session-email"
                         checked={sessionEmailNotifications}

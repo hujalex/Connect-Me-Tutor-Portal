@@ -878,7 +878,6 @@ export async function addOneSession(
       };
 
       sendScheduledEmailsBeforeSessions([addedSession]);
-      toast.success("Scheduled Email");
     }
   } catch (error) {
     console.error("Unable to add one session", error);
@@ -1492,7 +1491,7 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
     // update related sessions
     if (enrollment.student && enrollment.tutor) {
       const { data: updateSessionData, error: updateSessionError } =
-        await supabaseapi
+        await supabase
           .from("Sessions")
           .update({
             student_id: enrollment.student?.id,

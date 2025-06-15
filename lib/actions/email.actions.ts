@@ -33,35 +33,35 @@ export async function sendScheduledEmailsBeforeSessions(
         }
 
         try {
-          const profile: Profile | null = await getProfileWithProfileId(
-            session.tutor.id
-          );
+          // const profile: Profile | null = await getProfileWithProfileId(
+          //   session.tutor.id
+          // );
 
-          if (!profile) {
-            console.warn(`Profile not found for tutor ${session.tutor.id}`);
-            return;
-          }
+          // if (!profile) {
+          //   console.warn(`Profile not found for tutor ${session.tutor.id}`);
+          //   return;
+          // }
 
-          const { data: notifications_enabled, error } = await supabase
-            .from("User_Notification_Settings")
-            .select("email_tutoring_session_notifications_enabled")
-            .eq("id", profile.settingsId)
-            .single();
+          // const { data: notifications_enabled, error } = await supabase
+          //   .from("User_Notification_Settings")
+          //   .select("email_tutoring_session_notifications_enabled")
+          //   .eq("id", profile.settingsId)
+          //   .single();
 
-          if (error) {
-            console.error(
-              `Error fetching notification settings for profile ${profile.settingsId}:`,
-              error
-            );
-            return;
-          }
+          // if (error) {
+          //   console.error(
+          //     `Error fetching notification settings for profile ${profile.settingsId}:`,
+          //     error
+          //   );
+          //   return;
+          // }
 
-          if (
-            !notifications_enabled?.email_tutoring_session_notifications_enabled
-          ) {
-            console.log(`Notifications disabled for tutor ${session.tutor.id}`);
-            return;
-          }
+          // if (
+          //   !notifications_enabled?.email_tutoring_session_notifications_enabled
+          // ) {
+          //   console.log(`Notifications disabled for tutor ${session.tutor.id}`);
+          //   return;
+          // }
 
           const response = await fetch(
             "/api/email/before-sessions/schedule-reminder",
@@ -95,8 +95,6 @@ export async function sendScheduledEmailsBeforeSessions(
         }
       })
     );
-
-    toast.success("Session Emails Scheduled");
   } catch (error) {
     console.error("Error scheduling session emails", error);
     toast.error("Failed to schedule some session emails");
@@ -146,7 +144,7 @@ export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
     toast.success("Deleted Scheduled Email");
   } catch (error) {
     console.error("Unable to delete message");
-    throw error;
+    // throw error;
   }
 }
 
