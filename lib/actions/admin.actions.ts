@@ -352,8 +352,7 @@ export async function getUserFromId(profileId: string) {
     const { data: profile, error } = await supabase
       .from("Profiles")
       .select(
-        `
-          id,
+        ` id,
           created_at,
           role,
           user_id,
@@ -373,7 +372,8 @@ export async function getUserFromId(profileId: string) {
           timezone,
           subjects_of_interest,
           status,
-          student_number
+          student_number,
+          settings_id
         `
       )
       .eq("id", profileId)
@@ -406,6 +406,7 @@ export async function getUserFromId(profileId: string) {
       subjectsOfInterest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
+      settingsId: profile.settings_id,
     };
     return userProfile;
   } catch (error) {
