@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
             message: "No scheduled email found",
           },
           {
-            status: 404,
+            status: 200,
           }
         );
       }
