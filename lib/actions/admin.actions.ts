@@ -36,6 +36,7 @@ import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
 import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
+import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -910,6 +911,8 @@ export async function addSessions(
       "America/New_York"
     );
 
+    const now: Date = new Date();
+
     //Set created to avoid duplicates
     const scheduledSessions: Set<string> = await getSessionKeys(sessions);
     // Prepare bulk insert data
@@ -917,8 +920,33 @@ export async function addSessions(
 
     // Process all enrollments
     for (const enrollment of enrollments) {
-      const { id, student, tutor, availability, meetingId, summary } =
-        enrollment;
+      const {
+        id,
+        student,
+        tutor,
+        availability,
+        meetingId,
+        summary,
+        startDate,
+        endDate,
+      } = enrollment;
+
+      const startDate_asDate = new Date(startDate); //UTC
+      const endDate_asDate = new Date(endDate); //UTC
+
+      //Check for start time and end time
+      if (now < startDate_asDate) {
+        continue;
+      }
+
+      if (now > endDate_asDate) {
+        continue;
+      }
+
+      //Check if paused over the summer
+      if (enrollment.summerPaused) {
+        continue;
+      }
 
       // Skip invalid enrollments
       if (!student?.id || !tutor?.id || !availability?.length) {
@@ -1364,6 +1392,7 @@ export const createEnrollment = async (
     endDate: entry.endDate,
     availability: entry.availability,
     meetingId: entry.meetingId,
+    summerPaused: entry.summerPaused,
   };
 
   return await addEnrollment(migratedPairing);
@@ -1382,7 +1411,8 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         start_date,
         end_date,
         availability,
-        meetingId
+        meetingId,
+        summer_paused
       `);
 
     // Check for errors and log them
@@ -1409,6 +1439,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         endDate: enrollment.end_date,
         availability: enrollment.availability,
         meetingId: enrollment.meetingId,
+        summerPaused: enrollment.summer_paused,
       }))
     );
 
@@ -1416,6 +1447,26 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);
     return null;
+  }
+}
+
+export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
+  try {
+    const { data, error } = await supabase
+      .from("Enrollments")
+      .update({ summer_paused: enrollment.summerPaused })
+      .eq("id", enrollment.id)
+      .select()
+      .single();
+    console.log("Updated summer");
+    console.log(data);
+
+    if (error) throw error;
+
+    return enrollment;
+  } catch (error) {
+    console.error("Unable to pause/unpause enrollment over summer");
+    throw error;
   }
 }
 
