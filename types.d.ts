@@ -84,6 +84,7 @@ interface Enrollment {
   endDate: string;
   availability: { day: string; startTime: string; endTime: string }[]; // Ensure startTime and endTime have AM/PM format
   meetingId: string;
+  summerPaused: boolean;
 }
 
 // Define the type for availability
