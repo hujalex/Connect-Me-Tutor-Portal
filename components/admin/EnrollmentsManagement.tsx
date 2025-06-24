@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { AlarmClockMinus, Search } from "lucide-react";
+import { AlarmClockMinus, Search, Timer, TimerOff } from "lucide-react";
 import { cn, formatDateAdmin } from "@/lib/utils";
 import {
   ChevronDown,
@@ -63,6 +63,7 @@ import {
   updateEnrollment,
   getAllProfiles,
   getMeetings,
+  pauseEnrollmentOverSummer,
 } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Enrollment, Profile, Event, Meeting, Availability } from "@/types";
@@ -71,6 +72,7 @@ import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
+import { set } from "date-fns";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
@@ -112,6 +114,7 @@ const EnrollmentList = () => {
     endDate: "",
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
+    summerPaused: false,
   });
   const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
   const [meetingAvailability, setMeetingAvailability] = useState<{
@@ -155,10 +158,13 @@ const EnrollmentList = () => {
   }, [filterValue, enrollments]);
 
   const studentsMap = useMemo(() => {
-    return students.reduce((map, student) => {
-      map[student.id] = student;
-      return map;
-    }, {} as Record<string, Profile>);
+    return students.reduce(
+      (map, student) => {
+        map[student.id] = student;
+        return map;
+      },
+      {} as Record<string, Profile>
+    );
   }, [students]);
 
   const normalizeText = (text: string) => text.toLowerCase().trim();
@@ -416,7 +422,10 @@ const EnrollmentList = () => {
     try {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
-        setEnrollments([addedEnrollment, ...enrollments]);
+        setEnrollments([
+          { ...addedEnrollment, summerPaused: false },
+          ...enrollments,
+        ]);
         setIsAddModalOpen(false);
         resetNewEnrollment();
         setSelectedTutorId("");
@@ -478,7 +487,27 @@ const EnrollmentList = () => {
       endDate: "",
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
+      summerPaused: false,
     });
+  };
+
+  const handlePausePairingOverSummer = async (
+    updatedEnrollment: Enrollment
+  ) => {
+    try {
+      setEnrollments((prev) =>
+        prev.map((enrollment) =>
+          enrollment.id === updatedEnrollment.id
+            ? updatedEnrollment
+            : enrollment
+        )
+      );
+
+      await pauseEnrollmentOverSummer(updatedEnrollment);
+      toast.success("Enrollment summer plan changed");
+    } catch (error) {
+      console.error("Unable to pause pairing over summer", error);
+    }
   };
 
   return (
@@ -789,6 +818,7 @@ const EnrollmentList = () => {
                   "End Date",
                   "Meeting Link",
                   "Actions",
+                  "Summer",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
@@ -847,6 +877,31 @@ const EnrollmentList = () => {
                       }}
                     >
                       <Trash className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const updatedEnrollment = {
+                          ...enrollment,
+                          summerPaused: !enrollment.summerPaused,
+                        };
+                        handlePausePairingOverSummer(updatedEnrollment);
+                      }}
+                    >
+                      {enrollment.summerPaused ? (
+                        <span className="px-3 py-1 inline-flex items-center rounded-full bg-red-100 text-red-800 border border-red-200">
+                          <TimerOff size={14} className="mr-1" />
+                          Paused
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 inline-flex items-center rounded-full bg-green-100 text-green-800 border border-green-200">
+                          <Timer size={14} className="mr-1" />
+                          Ongoing
+                        </span>
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>
