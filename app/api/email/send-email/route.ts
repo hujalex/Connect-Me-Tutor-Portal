@@ -36,11 +36,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
-    if (!notification_settings) throw new Error("No Notificaion Settings");
+    if (!notification_settings) throw new Error("No Notification Settings");
 
     if (notification_settings.email_tutoring_session_notifications_enabled) {
       await resend.emails.send({
-        from: "reminder@connectmego.app",
+        from: "ConnectMe@connectmego.app",
         to: to,
         subject: subject,
         text: body,
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
         message: "Email sent successfully",
       });
     }
+    console.log("Email Setting turned off");
     return NextResponse.json({
       status: 200,
       message: "Email setting turned off",

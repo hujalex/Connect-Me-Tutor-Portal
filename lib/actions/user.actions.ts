@@ -96,7 +96,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 export const getProfileByEmail = async (email: string) => {
   const { data, error } = await supabase
     .from("Profiles")
-    .select()
+    .select("*")
     .eq("email", email)
     .single();
   if (error) throw new Error(`Profile fetch failed: ${error.message}`);

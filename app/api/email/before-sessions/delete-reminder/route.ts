@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { deleteMsg } from "@/lib/actions/email.actions";
+import { deleteMsg } from "@/lib/actions/email.server.actions";
 
 export const dynamic = "force-dynamic";
 
