@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const result = await scheduleEmail({
       notBefore: Math.floor(scheduledTime.getTime() / 1000),
-      to: tutor?.email,
+      to: tutor.email,
       subject: "Upcoming Connect Me Session",
       body: message,
     });

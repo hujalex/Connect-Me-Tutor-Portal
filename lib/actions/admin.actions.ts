@@ -1065,7 +1065,7 @@ export async function addSessions(
 
       if (data) {
         // Transform returned data to Session objects
-        const sessions = await Promise.all(
+        const sessions: Session[] = await Promise.all(
           data.map(async (session: any) => ({
             id: session.id,
             enrollmentId: session.enrollment_id,
@@ -1082,6 +1082,11 @@ export async function addSessions(
             isFirstSession: session.isFirstSession,
           }))
         );
+
+        console.log("Sent");
+        //Schedule emails
+        await sendScheduledEmailsBeforeSessions(sessions);
+        console.log("Sent After");
 
         return sessions;
       }
