@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     if (notification_settings.email_tutoring_session_notifications_enabled) {
       await resend.emails.send({
-        from: "ConnectMe@connectmego.app",
+        from: "Connect Me Free Tutoring & Mentoring <reminder@connectmego.app>",
         to: to,
         subject: subject,
         text: body,

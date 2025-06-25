@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Session } from "@/types";
 import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
-import { addMinutes, parseISO } from "date-fns";
+import { addMinutes, subMinutes, parseISO } from "date-fns";
 import { scheduleEmail } from "@/lib/actions/email.server.actions";
 
 export const dynamic = "force-dynamic";
@@ -27,11 +27,15 @@ export async function POST(request: NextRequest) {
     const tutor: Profile | null = session.tutor;
     const student: Profile | null = session.student;
 
-    //* Uncomment in production
-    // const sessionDate = parseISO(session.date);
-    const sessionDate = new Date();
+    if (!tutor || !student) {
+      throw new Error("No identified tutor or student");
+    }
 
-    const scheduledTime = addMinutes(sessionDate, 0);
+    //* Uncomment in production
+    const sessionDate = parseISO(session.date);
+    // const sessionDate = new Date();
+
+    const scheduledTime = subMinutes(sessionDate, 15);
 
     console.log("Scheduled date", scheduledTime);
 
@@ -42,12 +46,12 @@ export async function POST(request: NextRequest) {
       ? `${student.firstName} ${student.lastName}`
       : "your student";
 
-    const message = `Hi${tutorName} your tutoring session with ${studentName} starts soon!`;
+    const message = `Hi${tutorName}, your tutoring session with ${studentName} starts soon in 15 minutes!`;
     console.log("Message", message);
 
     const result = await scheduleEmail({
       notBefore: Math.floor(scheduledTime.getTime() / 1000),
-      to: "ahu@connectmego.org",
+      to: tutor?.email,
       subject: "Upcoming Connect Me Session",
       body: message,
     });
