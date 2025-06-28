@@ -681,7 +681,9 @@ const StudentList = () =>
                 </Dialog>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="destructive">Delete Student</Button>
+                    <Button disabled={true} variant="destructive">
+                      Delete Student
+                    </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>

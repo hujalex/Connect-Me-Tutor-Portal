@@ -33,36 +33,6 @@ export async function sendScheduledEmailsBeforeSessions(
         }
 
         try {
-          // const profile: Profile | null = await getProfileWithProfileId(
-          //   session.tutor.id
-          // );
-
-          // if (!profile) {
-          //   console.warn(`Profile not found for tutor ${session.tutor.id}`);
-          //   return;
-          // }
-
-          // const { data: notifications_enabled, error } = await supabase
-          //   .from("User_Notification_Settings")
-          //   .select("email_tutoring_session_notifications_enabled")
-          //   .eq("id", profile.settingsId)
-          //   .single();
-
-          // if (error) {
-          //   console.error(
-          //     `Error fetching notification settings for profile ${profile.settingsId}:`,
-          //     error
-          //   );
-          //   return;
-          // }
-
-          // if (
-          //   !notifications_enabled?.email_tutoring_session_notifications_enabled
-          // ) {
-          //   console.log(`Notifications disabled for tutor ${session.tutor.id}`);
-          //   return;
-          // }
-
           const response = await fetch(
             "/api/email/before-sessions/schedule-reminder",
             {
