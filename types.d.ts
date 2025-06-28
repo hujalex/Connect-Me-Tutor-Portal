@@ -40,6 +40,7 @@ interface Session {
   session_exit_form: string;
   isQuestionOrConcern: boolean;
   isFirstSession: boolean;
+  duration: number;
 }
 
 interface Meeting {
@@ -85,6 +86,7 @@ interface Enrollment {
   availability: { day: string; startTime: string; endTime: string }[]; // Ensure startTime and endTime have AM/PM format
   meetingId: string;
   summerPaused: boolean;
+  duration: number;
 }
 
 // Define the type for availability
