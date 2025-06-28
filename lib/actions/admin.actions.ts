@@ -1083,11 +1083,8 @@ export async function addSessions(
           }))
         );
 
-        console.log("Sent");
         //Schedule emails
         await sendScheduledEmailsBeforeSessions(sessions);
-        console.log("Sent After");
-
         return sessions;
       }
     }
