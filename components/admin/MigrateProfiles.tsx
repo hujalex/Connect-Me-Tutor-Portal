@@ -398,7 +398,8 @@ export default function MigrateDataPage() {
         ),
         id: "",
         createdAt: "",
-        summerPaused: false
+        summerPaused: false,
+        duration: 1,
       };
 
       if (!tutorEmails.has(migratedTutor.email)) {
