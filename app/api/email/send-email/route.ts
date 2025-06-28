@@ -26,7 +26,29 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const { to, subject, body } = await request.json();
+    const { to, subject, body, sessionId } = await request.json();
+
+    const { data: session, error: sessionError } = await supabase
+      .from("Sessions")
+      .select("*")
+      .eq("id", sessionId)
+      .single();
+
+    if (sessionError || !session) {
+      console.log("Session not found or deleted");
+      return NextResponse.json({
+        status: 404,
+        message: "Session no longer exists",
+      });
+    }
+
+    if (session.status === "Cancelled") {
+      console.log("Session is cancelled");
+      return NextResponse.json({
+        status: 400,
+        message: "Session no longer active",
+      });
+    }
 
     const recipient: Profile = await getProfileByEmail(to);
     const { data: notification_settings, error } = await supabase

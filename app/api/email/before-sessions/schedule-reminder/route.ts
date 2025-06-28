@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       to: tutor.email,
       subject: "Upcoming Connect Me Session",
       body: message,
+      sessionId: session.id,
     });
 
     if (result && result.messageId) {

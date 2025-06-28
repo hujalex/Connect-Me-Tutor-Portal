@@ -22,11 +22,13 @@ export async function scheduleEmail({
   to,
   subject,
   body,
+  sessionId,
 }: {
   notBefore: number;
   to: string;
   subject: string;
   body: string;
+  sessionId: string;
 }) {
   try {
     const result = await qstash.publishJSON({
@@ -37,6 +39,7 @@ export async function scheduleEmail({
         to: to,
         subject: subject,
         body: body,
+        sessionId: sessionId,
       },
     });
 
