@@ -3,14 +3,6 @@ import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
 import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-
-const qstash = new Client({ token: process.env.QSTASH_TOKEN });
-
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
 
 /**
  * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.
@@ -103,7 +95,7 @@ export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
       method: "POST",
       body: JSON.stringify({ sessionId }),
       headers: {
-        "Content-Type": "applications/json",
+        "Content-Type": "application/json",
       },
     });
 
