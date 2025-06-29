@@ -16,11 +16,15 @@ export async function GET(request: NextRequest) {
     const weekLater = addDays(now, 7);
 
     const sessionsNextWeek: Session[] = await getSessions(
-      now.toString(),
-      weekLater.toString()
+      now.toISOString(),
+      weekLater.toISOString()
     );
 
+    console.log("Fetch Sessions");
+
     await sendScheduledEmailsBeforeSessions(sessionsNextWeek);
+
+    console.log("Sessions Fetched");
 
     return NextResponse.json({
       status: 200,
