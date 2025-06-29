@@ -14,7 +14,7 @@ import {
   deleteScheduledEmailBeforeSessions,
   sendScheduledEmailsBeforeSessions,
   updateScheduledEmailBeforeSessions,
-} from "./email.actions";
+} from "./email.server.actions";
 import { getProfileWithProfileId, getProfileByEmail } from "./user.actions";
 import {
   addDays,
@@ -1089,7 +1089,6 @@ export async function addSessions(
         );
 
         //Schedule emails
-        await sendScheduledEmailsBeforeSessions(sessions);
         return sessions;
       }
     }
