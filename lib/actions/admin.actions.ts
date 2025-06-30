@@ -1420,7 +1420,8 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         end_date,
         availability,
         meetingId,
-        summer_paused
+        summer_paused,
+        duration
       `);
 
     // Check for errors and log them

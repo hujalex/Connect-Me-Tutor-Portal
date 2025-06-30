@@ -5,9 +5,9 @@ import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./profile.server.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const qstash = new Client({ token: process.env.QSTASH_TOKEN });
-
 export async function fetchScheduledMessages() {
+  const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+
   const messages = await qstash.schedules.list();
   console.log(messages);
   return messages;
