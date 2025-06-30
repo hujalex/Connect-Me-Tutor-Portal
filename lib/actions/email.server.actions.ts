@@ -5,9 +5,9 @@ import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./profile.server.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const qstash = new Client({ token: process.env.QSTASH_TOKEN });
-
 export async function fetchScheduledMessages() {
+  const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+
   const messages = await qstash.schedules.list();
   console.log(messages);
   return messages;
@@ -119,6 +119,7 @@ export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
 }
 
 export async function deleteMsg(messageId: string) {
+  const qstash = new Client({ token: process.env.QSTASH_TOKEN });
   try {
     await qstash.messages.delete(messageId);
     console.log("Successfully deleted message from QStash");
@@ -141,6 +142,7 @@ export async function scheduleEmail({
   sessionId: string;
 }) {
   try {
+    const qstash = new Client({ token: process.env.QSTASH_TOKEN });
     const result = await qstash.publishJSON({
       url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/send-email`,
       //   url: `${"http://localhost:3000"}/api/email/send-email`,
