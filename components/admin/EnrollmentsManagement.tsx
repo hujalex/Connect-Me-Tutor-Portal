@@ -115,6 +115,7 @@ const EnrollmentList = () => {
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
     summerPaused: false,
+    duration: 1,
   });
   const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
   const [meetingAvailability, setMeetingAvailability] = useState<{
@@ -423,7 +424,7 @@ const EnrollmentList = () => {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
-          { ...addedEnrollment, summerPaused: false },
+          { ...addedEnrollment, summerPaused: false, duration: 1 },
           ...enrollments,
         ]);
         setIsAddModalOpen(false);
@@ -488,6 +489,7 @@ const EnrollmentList = () => {
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
       summerPaused: false,
+      duration: 1,
     });
   };
 

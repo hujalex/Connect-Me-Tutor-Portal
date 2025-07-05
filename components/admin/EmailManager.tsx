@@ -2,19 +2,23 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
+import { Client } from "@upstash/qstash";
+import { fetchScheduledMessages } from "@/lib/actions/email.server.actions";
 
 const EmailManager = () => {
   const sendEmail = async () => {
     try {
       const now = new Date();
 
-      const response = await fetch("/api/email/schedule-reminder", {
-        method: "POST",
-        body: JSON.stringify({ now }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "/api/email/before-sessions/schedule-reminders-weekly",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -31,6 +35,17 @@ const EmailManager = () => {
     }
   };
 
+  const listScheduledMessages = async () => {
+    try {
+      const response = await fetch("/api/qstash/schedules");
+      const data = await response.json();
+      console.log(data.messages);
+    } catch (error) {
+      console.error("Error listing messages:", error);
+      toast.error("Failed to fetch schedules");
+    }
+  };
+
   return (
     <>
       <Toaster />
@@ -38,6 +53,7 @@ const EmailManager = () => {
       <main className="p-8">
         <h1 className="text-3xl font-bold mb-6">Email Manager</h1>
         <Button onClick={() => sendEmail()}>Send Email</Button>
+        <Button onClick={() => listScheduledMessages()}>Show schedules</Button>
       </main>
     </>
   );

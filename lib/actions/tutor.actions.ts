@@ -79,6 +79,7 @@ export async function getTutorSessions(
       session_exit_form: session.session_exit_form,
       isQuestionOrConcern: Boolean(session.isQuestionOrConcernO),
       isFirstSession: Boolean(session.isFirstSession),
+      duration: session.duration,
     }))
   );
 

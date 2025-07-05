@@ -133,6 +133,7 @@ const StudentList = () => {
                 <TableHead>Subjects</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Parent Phone</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

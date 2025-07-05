@@ -26,7 +26,29 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const { to, subject, body } = await request.json();
+    const { to, subject, body, sessionId } = await request.json();
+
+    const { data: session, error: sessionError } = await supabase
+      .from("Sessions")
+      .select("*")
+      .eq("id", sessionId)
+      .single();
+
+    if (sessionError || !session) {
+      console.log("Session not found or deleted");
+      return NextResponse.json({
+        status: 404,
+        message: "Session no longer exists",
+      });
+    }
+
+    if (session.status === "Cancelled") {
+      console.log("Session is cancelled");
+      return NextResponse.json({
+        status: 400,
+        message: "Session no longer active",
+      });
+    }
 
     const recipient: Profile = await getProfileByEmail(to);
     const { data: notification_settings, error } = await supabase
@@ -36,11 +58,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
-    if (!notification_settings) throw new Error("No Notificaion Settings");
+    if (!notification_settings) throw new Error("No Notification Settings");
 
     if (notification_settings.email_tutoring_session_notifications_enabled) {
       await resend.emails.send({
-        from: "reminder@connectmego.app",
+        from: "Connect Me Free Tutoring & Mentoring <reminder@connectmego.app>",
         to: to,
         subject: subject,
         text: body,
@@ -51,6 +73,7 @@ export async function POST(request: NextRequest) {
         message: "Email sent successfully",
       });
     }
+    console.log("Email Setting turned off");
     return NextResponse.json({
       status: 200,
       message: "Email setting turned off",

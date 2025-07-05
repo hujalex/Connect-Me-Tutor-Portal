@@ -96,13 +96,35 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 export const getProfileByEmail = async (email: string) => {
   const { data, error } = await supabase
     .from("Profiles")
-    .select()
+    .select("*")
     .eq("email", email)
     .single();
   if (error) throw new Error(`Profile fetch failed: ${error.message}`);
   if (!data) throw new Error(`No Profile found for email ${email}`);
 
-  return data;
+  const userProfile: Profile = {
+    id: data.id,
+    createdAt: data.created_at,
+    role: data.role,
+    userId: data.user_id,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    dateOfBirth: data.date_of_birth,
+    startDate: data.start_date,
+    availability: data.availability,
+    email: data.email,
+    parentName: data.parent_name,
+    parentPhone: data.parent_phone,
+    tutorIds: data.tutor_ids,
+    parentEmail: data.parent_email,
+    timeZone: data.timezone,
+    subjectsOfInterest: data.subjects_of_interest,
+    status: data.status,
+    studentNumber: data.student_number,
+    settingsId: data.settings_id,
+  };
+
+  return userProfile;
 };
 
 export const getProfileRole = async (

@@ -14,7 +14,7 @@ import {
   deleteScheduledEmailBeforeSessions,
   sendScheduledEmailsBeforeSessions,
   updateScheduledEmailBeforeSessions,
-} from "./email.actions";
+} from "./email.server.actions";
 import { getProfileWithProfileId, getProfileByEmail } from "./user.actions";
 import {
   addDays,
@@ -614,6 +614,7 @@ export async function getAllSessions(
         session_exit_form: session.session_exit_form,
         isQuestionOrConcern: Boolean(session.is_question_or_concern),
         isFirstSession: Boolean(session.is_first_session),
+        duration: session.duration,
       }))
     );
 
@@ -877,6 +878,7 @@ export async function addOneSession(
         session_exit_form: data.session_exit_form || null,
         isQuestionOrConcern: data.isQuestionOrConcern,
         isFirstSession: data.isFirstSession,
+        duration: 1, //default //! might fix
       };
 
       sendScheduledEmailsBeforeSessions([addedSession]);
@@ -929,6 +931,7 @@ export async function addSessions(
         summary,
         startDate,
         endDate,
+        duration,
       } = enrollment;
 
       const startDate_asDate = new Date(startDate); //UTC
@@ -1037,6 +1040,7 @@ export async function addSessions(
               status: "Active",
               summary: summary || "",
               meeting_id: meetingId || null,
+              duration: duration,
             });
 
             // Track this session to avoid duplicates
@@ -1065,7 +1069,7 @@ export async function addSessions(
 
       if (data) {
         // Transform returned data to Session objects
-        const sessions = await Promise.all(
+        const sessions: Session[] = await Promise.all(
           data.map(async (session: any) => ({
             id: session.id,
             enrollmentId: session.enrollment_id,
@@ -1080,9 +1084,11 @@ export async function addSessions(
             session_exit_form: session.session_exit_form || null,
             isQuestionOrConcern: session.isQuestionOrConcern,
             isFirstSession: session.isFirstSession,
+            duration: session.duration,
           }))
         );
 
+        //Schedule emails
         return sessions;
       }
     }
@@ -1302,6 +1308,7 @@ export async function updateSession(
         session_exit_form: data.session_exit_form || null,
         isQuestionOrConcern: data.isQuestionOrConcern,
         isFirstSession: data.isFirstSession,
+        duration: data.duration,
       };
       await updateScheduledEmailBeforeSessions(newSession);
     }
@@ -1393,6 +1400,7 @@ export const createEnrollment = async (
     availability: entry.availability,
     meetingId: entry.meetingId,
     summerPaused: entry.summerPaused,
+    duration: entry.duration,
   };
 
   return await addEnrollment(migratedPairing);
@@ -1412,7 +1420,8 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         end_date,
         availability,
         meetingId,
-        summer_paused
+        summer_paused,
+        duration
       `);
 
     // Check for errors and log them
@@ -1440,6 +1449,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         availability: enrollment.availability,
         meetingId: enrollment.meetingId,
         summerPaused: enrollment.summer_paused,
+        duration: enrollment.duration,
       }))
     );
 
@@ -1592,6 +1602,7 @@ export const addEnrollment = async (
       end_date: enrollment.endDate,
       availability: enrollment.availability,
       meetingId: enrollment.meetingId,
+      duration: 1, //default
     })
     .select(`*`)
     .single();

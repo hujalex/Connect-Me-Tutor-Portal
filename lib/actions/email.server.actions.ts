@@ -1,8 +1,17 @@
 import { Session } from "@/types";
-import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
+import { createClient } from "@supabase/supabase-js";
 import { Profile } from "@/types";
-import { getProfileWithProfileId } from "./user.actions";
+import { getProfileWithProfileId } from "./profile.server.actions";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
+export async function fetchScheduledMessages() {
+  const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+
+  const messages = await qstash.schedules.list();
+  console.log(messages);
+  return messages;
+}
 
 /**
  * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.
@@ -26,7 +35,7 @@ export async function sendScheduledEmailsBeforeSessions(
 
         try {
           const response = await fetch(
-            "/api/email/before-sessions/schedule-reminder",
+            `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/before-sessions/schedule-reminder`,
             {
               method: "POST",
               body: JSON.stringify({ session }),
@@ -59,7 +68,6 @@ export async function sendScheduledEmailsBeforeSessions(
     );
   } catch (error) {
     console.error("Error scheduling session emails", error);
-    toast.error("Failed to schedule some session emails");
     throw error;
   }
 }
@@ -75,7 +83,6 @@ export async function updateScheduledEmailBeforeSessions(session: Session) {
   try {
     await deleteScheduledEmailBeforeSessions(session.id);
     await sendScheduledEmailsBeforeSessions([session]);
-    toast.success("Successfully updated scheduled reminder");
   } catch (error) {
     console.error("Unable to update scheduled message");
     throw error;
@@ -91,21 +98,69 @@ export async function updateScheduledEmailBeforeSessions(session: Session) {
  */
 export async function deleteScheduledEmailBeforeSessions(sessionId: string) {
   try {
-    const response = await fetch("/api/email/before-sessions/delete-reminder", {
-      method: "POST",
-      body: JSON.stringify({ sessionId }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/before-sessions/delete-reminder`,
+      {
+        method: "POST",
+        body: JSON.stringify({ sessionId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Unable to delete scheduled email");
     }
-
-    toast.success("Deleted Scheduled Email");
   } catch (error) {
     console.error("Unable to delete message");
     // throw error;
+  }
+}
+
+export async function deleteMsg(messageId: string) {
+  const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+  try {
+    await qstash.messages.delete(messageId);
+    console.log("Successfully deleted message from QStash");
+  } catch (qstashError: any) {
+    console.warn("Failed to delete message from QStash");
+  }
+}
+
+export async function scheduleEmail({
+  notBefore,
+  to,
+  subject,
+  body,
+  sessionId,
+}: {
+  notBefore: number;
+  to: string;
+  subject: string;
+  body: string;
+  sessionId: string;
+}) {
+  try {
+    const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+    const result = await qstash.publishJSON({
+      url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/send-email`,
+      //   url: `${"http://localhost:3000"}/api/email/send-email`,
+      notBefore: notBefore,
+      body: {
+        to: to,
+        subject: subject,
+        body: body,
+        sessionId: sessionId,
+      },
+    });
+
+    if (result && result.messageId) {
+      console.log("Successfully scheduled message");
+    }
+    return result;
+  } catch (error) {
+    console.error("Unable to schedule email");
+    throw error;
   }
 }

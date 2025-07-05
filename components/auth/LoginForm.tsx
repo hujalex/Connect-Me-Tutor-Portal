@@ -81,7 +81,7 @@ export default function LoginForm() {
 
       if (data.user) {
         toast.success("Logged in successfully");
-        showForms();
+        // showForms();
         router.push("/dashboard");
         router.refresh();
       } else {
