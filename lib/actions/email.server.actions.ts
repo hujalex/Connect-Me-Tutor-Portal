@@ -34,6 +34,7 @@ export async function sendScheduledEmailsBeforeSessions(
         }
 
         try {
+          console.log(process.env.NEXT_PUBLIC_SITE_URL);
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/before-sessions/schedule-reminder`,
             {
