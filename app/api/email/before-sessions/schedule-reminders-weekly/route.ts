@@ -10,6 +10,8 @@ import {
 import { getSessions } from "@/lib/actions/session.server.actions";
 import { addDays } from "date-fns";
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function GET(request: NextRequest) {
   try {
     const now = new Date();
@@ -20,11 +22,23 @@ export async function GET(request: NextRequest) {
       weekLater.toISOString()
     );
 
-    console.log("Fetch Sessions");
+    // There is a burst rate of 120
 
-    await sendScheduledEmailsBeforeSessions(sessionsNextWeek);
+    const batchSize = 50;
+    const delayBetweenBatches = 1000;
 
-    console.log("Sessions Fetched");
+    for (let i = 0; i < sessionsNextWeek.length; i += batchSize) {
+      const batch = sessionsNextWeek.slice(i, i + batchSize);
+      console.log(
+        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(sessionsNextWeek.length / batchSize)}`
+      );
+
+      await sendScheduledEmailsBeforeSessions(batch);
+
+      if (i + batchSize < sessionsNextWeek.length) {
+        await delay(delayBetweenBatches);
+      }
+    }
 
     return NextResponse.json({
       status: 200,
