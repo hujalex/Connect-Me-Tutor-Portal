@@ -575,24 +575,20 @@ const EnrollmentList = () => {
                                   {students.map((student) => (
                                     <CommandItem
                                       key={student.id}
-                                      value={`${student.firstName} ${student.lastName}`}
-                                      onSelect={(currentValue: string) => {
-                                        const selectedStudent = students.find(
-                                          (t) =>
-                                            `${t.firstName} ${t.lastName}` ===
-                                            currentValue
-                                        );
-                                        if (selectedStudent) {
-                                          setSelectedStudentId(
-                                            selectedStudent.id
-                                          );
-                                          handleInputChange({
-                                            target: {
-                                              name: "student.id",
-                                              value: selectedStudent.id,
-                                            },
-                                          });
-                                        }
+                                      value={student.id}
+                                      keywords={[
+                                        student.firstName,
+                                        student.lastName,
+                                        student.email,
+                                      ]}
+                                      onSelect={() => {
+                                        setSelectedStudentId(student.id);
+                                        handleInputChange({
+                                          target: {
+                                            name: "student.id",
+                                            value: student.id,
+                                          },
+                                        });
                                         setOpenStudentOptions(false);
                                       }}
                                     >
@@ -662,22 +658,20 @@ const EnrollmentList = () => {
                                   {tutors.map((tutor) => (
                                     <CommandItem
                                       key={tutor.id}
-                                      value={`${tutor.firstName} ${tutor.lastName}`}
-                                      onSelect={(currentValue: string) => {
-                                        const selectedTutor = tutors.find(
-                                          (t) =>
-                                            `${t.firstName} ${t.lastName}` ===
-                                            currentValue
-                                        );
-                                        if (selectedTutor) {
-                                          setSelectedTutorId(selectedTutor.id);
-                                          handleInputChange({
-                                            target: {
-                                              name: "tutor.id",
-                                              value: selectedTutor.id,
-                                            },
-                                          });
-                                        }
+                                      value={tutor.id}
+                                      keywords={[
+                                        tutor.firstName,
+                                        tutor.lastName,
+                                        tutor.email,
+                                      ]}
+                                      onSelect={() => {
+                                        setSelectedTutorId(tutor.id);
+                                        handleInputChange({
+                                          target: {
+                                            name: "tutor.id",
+                                            value: tutor.id,
+                                          },
+                                        });
                                         setOpentTutorOptions(false);
                                       }}
                                     >
@@ -985,26 +979,6 @@ const EnrollmentList = () => {
                   <Label htmlFor="studentId" className="text-right">
                     Student
                   </Label>
-                  {/* <Select
-                  name="studentId"
-                  value={selectedEnrollment.student?.id}
-                  onValueChange={(value) =>
-                    handleInputChange({
-                      target: { name: "studentId", value },
-                    } as any)
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a student" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.firstName} {student.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select> */}
 
                   <Popover
                     open={openStudentOptions}
@@ -1051,22 +1025,20 @@ const EnrollmentList = () => {
                             {students.map((student) => (
                               <CommandItem
                                 key={student.id}
-                                value={`${student.firstName} ${student.lastName}`}
-                                onSelect={(currentValue: string) => {
-                                  const selectedStudent = students.find(
-                                    (t) =>
-                                      `${t.firstName} ${t.lastName}` ===
-                                      currentValue
-                                  );
-                                  if (selectedStudent) {
-                                    setSelectedStudentId(selectedStudent.id);
-                                    handleInputChange({
-                                      target: {
-                                        name: "student.id",
-                                        value: selectedStudent.id,
-                                      },
-                                    });
-                                  }
+                                value={student.id}
+                                keywords={[
+                                  student.firstName,
+                                  student.lastName,
+                                  student.email,
+                                ]}
+                                onSelect={() => {
+                                  setSelectedStudentId(student.id);
+                                  handleInputChange({
+                                    target: {
+                                      name: "student.id",
+                                      value: student.id,
+                                    },
+                                  });
                                   setOpenStudentOptions(false);
                                 }}
                               >
@@ -1091,26 +1063,6 @@ const EnrollmentList = () => {
                   <Label htmlFor="tutorId" className="text-right">
                     Tutor
                   </Label>
-                  {/* <Select
-                  name="tutorId"
-                  value={selectedEnrollment.tutor?.id}
-                  onValueChange={(value) =>
-                    handleInputChange({
-                      target: { name: "tutorId", value },
-                    } as any)
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a tutor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tutors.map((tutor) => (
-                      <SelectItem key={tutor.id} value={tutor.id}>
-                        {tutor.firstName} {tutor.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select> */}
 
                   <Popover
                     open={openTutorOptions}
@@ -1157,22 +1109,20 @@ const EnrollmentList = () => {
                             {tutors.map((tutor) => (
                               <CommandItem
                                 key={tutor.id}
-                                value={`${tutor.firstName} ${tutor.lastName}`}
-                                onSelect={(currentValue: string) => {
-                                  const selectedTutor = tutors.find(
-                                    (t) =>
-                                      `${t.firstName} ${t.lastName}` ===
-                                      currentValue
-                                  );
-                                  if (selectedTutor) {
-                                    setSelectedTutorId(selectedTutor.id);
-                                    handleInputChange({
-                                      target: {
-                                        name: "tutor.id",
-                                        value: selectedTutor.id,
-                                      },
-                                    });
-                                  }
+                                value={tutor.id}
+                                keywords={[
+                                  tutor.firstName,
+                                  tutor.lastName,
+                                  tutor.email,
+                                ]}
+                                onSelect={() => {
+                                  setSelectedTutorId(tutor.id);
+                                  handleInputChange({
+                                    target: {
+                                      name: "tutor.id",
+                                      value: tutor.id,
+                                    },
+                                  });
                                   setOpentTutorOptions(false);
                                 }}
                               >
