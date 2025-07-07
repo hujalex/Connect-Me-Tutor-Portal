@@ -62,10 +62,7 @@ import {
 // Add these imports at the top of the file
 import { addHours, areIntervalsOverlapping } from "date-fns";
 
-// Add these state variables to your component
-// const [meetingAvailability, setMeetingAvailability] = useState<
-//   Record<string, boolean>
-// >({});
+import { fetchDaySessionsFromSchedule } from "@/lib/actions/session.actions";
 import { getProfileWithProfileId } from "@/lib/actions/user.actions";
 import { toast, Toaster } from "react-hot-toast";
 import { Session, Enrollment, Meeting, Profile } from "@/types";
@@ -266,11 +263,14 @@ const Schedule = () => {
     }
   };
 
-  const isMeetingAvailable = async (session: Session) => {
+  const isMeetingAvailable = async (session: Session, requestedDate: Date) => {
     try {
       setIsCheckingMeetingAvailability(true);
-      if (Object.keys(meetingAvailabilityMap).length === 0)
-        await fetchAllSessionsFromSchedule();
+      // if (Object.keys(meetingAvailabilityMap).length === 0)
+      //   await fetchAllSessionsFromSchedule();
+
+      const sessionsToSearch: Session[] | undefined =
+        await fetchDaySessionsFromSchedule(requestedDate);
 
       const updatedMeetingAvailability: { [key: string]: boolean } = {};
 
@@ -282,25 +282,40 @@ const Schedule = () => {
       meetings.forEach((meeting) => {
         updatedMeetingAvailability[meeting.id] = true;
       });
-      const requestedSessionStartTime = parseISO(session.date);
+
+      // const requestedSessionStartTime = parseISO(session.date);\
+      const requestedSessionStartTime = requestedDate;
       const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
 
       meetings.forEach((meeting) => {
-        const hasConflict = allSessions.some(
-          (existingSession) =>
-            session.id !== existingSession.id &&
-            existingSession.meeting?.id === meeting.id &&
-            areIntervalsOverlapping(
-              {
-                start: requestedSessionStartTime,
-                end: requestedSessionEndTime,
-              },
-              {
-                start: parseISO(existingSession.date),
-                end: addHours(parseISO(existingSession.date), 1),
-              }
-            )
-        );
+        const hasConflict = sessionsToSearch
+          ? sessionsToSearch.some((existingSession) => {
+              console.log(
+                "Checking session:",
+                existingSession.id,
+                existingSession.date
+              );
+
+              return (
+                session.id !== existingSession.id &&
+                existingSession.meeting?.id === meeting.id &&
+                areIntervalsOverlapping(
+                  {
+                    start: requestedSessionStartTime,
+                    end: requestedSessionEndTime,
+                  },
+                  {
+                    start: existingSession.date
+                      ? parseISO(existingSession.date)
+                      : new Date(),
+                    end: existingSession.date
+                      ? addHours(parseISO(existingSession.date), 1)
+                      : new Date(),
+                  }
+                )
+              );
+            })
+          : false;
         updatedMeetingAvailability[meeting.id] = !hasConflict;
       });
       setMeetingAvailabilityMap(updatedMeetingAvailability);
@@ -562,12 +577,17 @@ const Schedule = () => {
                       id="startDate"
                       name="startDate"
                       type="datetime-local"
-                      value={formatDateForInput(newSession.date)}
-                      onChange={(e) => {
+                      defaultValue={formatDateForInput(newSession.date)}
+                      onBlur={async (e) => {
+                        const scheduledDate = new Date(e.target.value);
                         setNewSession({
                           ...newSession,
-                          date: new Date(e.target.value).toISOString(),
+                          date: scheduledDate.toISOString(),
                         });
+                        await isMeetingAvailable(
+                          newSession as Session,
+                          scheduledDate
+                        );
                       }}
                       disabled={isCheckingMeetingAvailability}
                       className="col-span-3"
@@ -584,7 +604,6 @@ const Schedule = () => {
                         onOpenChange={(open) => {
                           console.log("Opening");
                           if (open && newSession) {
-                            isMeetingAvailable(newSession as Session);
                           }
                         }}
                         onValueChange={async (value) => {
@@ -606,9 +625,7 @@ const Schedule = () => {
                               value={meeting.id}
                               className="flex items-center justify-between"
                             >
-                              <span>
-                                {meeting.name} | {meeting.meetingId}
-                              </span>
+                              <span>{meeting.name}</span>
                               <Circle
                                 className={`w-2 h-2 ml-2 ${
                                   meetingAvailabilityMap[meeting.id]
@@ -868,12 +885,17 @@ const Schedule = () => {
                       parseISO(selectedSession.date),
                       "yyyy-MM-dd'T'HH:mm"
                     )}
-                    onChange={(e) =>
+                    onBlur={(e) => {
+                      const scheduledDate = new Date(e.target.value);
                       setSelectedSession({
                         ...selectedSession,
-                        date: new Date(e.target.value).toISOString(),
-                      })
-                    }
+                        date: scheduledDate.toISOString(),
+                      });
+                      isMeetingAvailable(
+                        selectedSession as Session,
+                        scheduledDate
+                      );
+                    }}
                   />
                 </div>
                 <div>
@@ -883,7 +905,6 @@ const Schedule = () => {
                     onOpenChange={(open) => {
                       console.log("Opening");
                       if (open && selectedSession) {
-                        isMeetingAvailable(selectedSession as Session);
                       }
                     }}
                     onValueChange={async (value) =>
@@ -908,9 +929,7 @@ const Schedule = () => {
                           {/* <span>
                           {meeting.name} - {meeting.id}
                         </span> */}
-                          <span>
-                            {meeting.name} | {meeting.meetingId}
-                          </span>
+                          <span>{meeting.name}</span>
                           <Circle
                             className={`w-2 h-2 ml-2 ${
                               meetingAvailabilityMap[meeting.id]

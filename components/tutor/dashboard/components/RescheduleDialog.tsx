@@ -10,6 +10,7 @@ import {
   getMeetings,
   getAllSessions,
 } from "@/lib/actions/admin.actions";
+import { fetchDaySessionsFromSchedule } from "@/lib/actions/session.actions";
 import { toast } from "react-hot-toast";
 
 import {
@@ -98,26 +99,6 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
   }>({});
 
   /**
-   * Fetches all sessions within a 24-hour window around the requested date
-   * @param requestedDate - The date to search around for existing sessions
-   * @returns Promise resolving to array of sessions or undefined
-   */
-  const fetchDaySessionsFromSchedule = async (requestedDate: Date) => {
-    if (requestedDate) {
-      try {
-        const startDateSearch = addHours(requestedDate, -12).toISOString();
-
-        const endDateSearch = addHours(requestedDate, 12).toISOString();
-        const data = await getAllSessions(startDateSearch, endDateSearch);
-        return data;
-      } catch (error) {
-        console.error("Failed to fetch sessions for day");
-        throw error;
-      }
-    }
-  };
-
-  /**
    * Gets the number of meetings that have been checked for availability
    * @returns Number of meetings in the availability object
    */
@@ -132,12 +113,11 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
    * @param session - The session being rescheduled
    * @param requestedDate - The new requested date/time for the session
    */
-  const areMeetingsAvailableInCurrentWeek = async (
+  const areMeetingsAvailable = async (
     session: Session,
     requestedDate: Date
   ) => {
     try {
-      console.log("Requested Session", requestedDate);
       setisCheckingMeetingAvailability(true);
 
       const sessionsToSearch =
@@ -204,111 +184,107 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
 
   return (
     <>
-      
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Reschedule Session with {selectedSession?.student?.firstName}{" "}
-              {selectedSession?.student?.lastName}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-6">
-            <Input
-              type="datetime-local"
-              disabled={isCheckingMeetingAvailability}
-              defaultValue={
-                selectedSession?.date
-                  ? format(parseISO(selectedSession.date), "yyyy-MM-dd'T'HH:mm")
-                  : ""
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Reschedule Session with {selectedSession?.student?.firstName}{" "}
+            {selectedSession?.student?.lastName}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-4 space-y-6">
+          <Input
+            type="datetime-local"
+            disabled={isCheckingMeetingAvailability}
+            defaultValue={
+              selectedSession?.date
+                ? format(parseISO(selectedSession.date), "yyyy-MM-dd'T'HH:mm")
+                : ""
+            }
+            onBlur={async (e) => {
+              if (selectedSession) {
+                const rescheduledDate = new Date(e.target.value);
+                setSelectedSessionDate(rescheduledDate.toISOString());
+                await areMeetingsAvailable(selectedSession, rescheduledDate);
               }
-              onBlur={async (e) => {
-                if (selectedSession) {
-                  const rescheduledDate = new Date(e.target.value);
-                  setSelectedSessionDate(rescheduledDate.toISOString());
-                  await areMeetingsAvailableInCurrentWeek(
-                    selectedSession,
-                    rescheduledDate
-                  );
-                }
-              }}
-              // max={addWeeks(new Date(), 2)}
-            />
+            }}
+            // max={addWeeks(new Date(), 2)}
+          />
 
-            <div>
-              <Label>Meeting Link</Label>
-              <Select
-                name="meeting.id"
-                value={selectedSession?.meeting?.id}
-                onValueChange={(value) =>
-                  handleInputChange({
-                    target: { name: "meeting.id", value },
-                  } as any)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a meeting link">
-                    {selectedSession?.meeting?.id
-                      ? meetingAvailability[selectedSession.meeting.id]
-                        ? meetings.find(
-                            (meeting) =>
-                              meeting.id === selectedSession?.meeting?.id
-                          )?.name
-                        : "Please select an available link"
-                      : "Select a meeting"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {meetings.map((meeting) => (
-                    <SelectItem
-                      key={meeting.id}
-                      value={meeting.id}
-                      disabled={!meetingAvailability[meeting.id]}
-                      className={`flex items-center justify-between`}
-                    >
-                      <span>
-                        {meeting.name} - {meeting.id}
-                      </span>
-                      <Circle
-                        className={`w-2 h-2 ml-2 ${
-                          meetingAvailability[meeting.id]
-                            ? "text-green-500"
-                            : "text-red-500"
-                        } fill-current`}
-                      />
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button
-              disabled={
-                isCheckingMeetingAvailability ||
-                !selectedSession?.meeting?.id ||
-                !meetingAvailability[selectedSession.meeting.id]
-              }
-              onClick={() =>
-                selectedSession &&
-                selectedSessionDate &&
-                selectedSession.meeting?.id &&
-                handleReschedule(
-                  selectedSession?.id,
-                  selectedSessionDate,
-                  selectedSession.meeting?.id
-                )
+          <div>
+            <Label>Meeting Link</Label>
+            <Select
+              name="meeting.id"
+              value={selectedSession?.meeting?.id}
+              onValueChange={(value) =>
+                handleInputChange({
+                  target: { name: "meeting.id", value },
+                } as any)
               }
             >
-              {isCheckingMeetingAvailability ? (
-                <>
-                  Checking Meeting Link Availability{"   "}
-                  <Loader2 className="mx-2 h-4 w-4 animate-spin" />
-                </>
-              ) : (
-                "Send Reschedule Request"
-              )}
-            </Button>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a meeting link">
+                  {selectedSession?.meeting?.id
+                    ? meetingAvailability[selectedSession.meeting.id]
+                      ? meetings.find(
+                          (meeting) =>
+                            meeting.id === selectedSession?.meeting?.id
+                        )?.name
+                      : "Please select an available link"
+                    : "Select a meeting"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {meetings.map((meeting) => (
+                  <SelectItem
+                    key={meeting.id}
+                    value={meeting.id}
+                    disabled={!meetingAvailability[meeting.id]}
+                    className={`flex items-center justify-between`}
+                  >
+                    <span>
+                      {meeting.name} - {meeting.id}
+                    </span>
+                    <Circle
+                      className={`w-2 h-2 ml-2 ${
+                        meetingAvailability[meeting.id]
+                          ? "text-green-500"
+                          : "text-red-500"
+                      } fill-current`}
+                    />
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </DialogContent>
+
+          <Button
+            disabled={
+              isCheckingMeetingAvailability ||
+              !selectedSession?.meeting?.id ||
+              !meetingAvailability[selectedSession.meeting.id]
+            }
+            onClick={() =>
+              selectedSession &&
+              selectedSessionDate &&
+              selectedSession.meeting?.id &&
+              handleReschedule(
+                selectedSession?.id,
+                selectedSessionDate,
+                selectedSession.meeting?.id
+              )
+            }
+          >
+            {isCheckingMeetingAvailability ? (
+              <>
+                Checking Meeting Link Availability{"   "}
+                <Loader2 className="mx-2 h-4 w-4 animate-spin" />
+              </>
+            ) : (
+              "Send Reschedule Request"
+            )}
+          </Button>
+        </div>
+      </DialogContent>
     </>
   );
 };
