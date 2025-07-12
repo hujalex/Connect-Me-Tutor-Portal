@@ -41,6 +41,7 @@ import { getAllSessions, rescheduleSession } from "@/lib/actions/admin.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session, Profile } from "@/types";
 import { formatSessionDate, formatDateAdmin } from "@/lib/utils";
+import { time } from "console";
 
 const AdminDashboard = () => {
   const supabase = createClientComponentClient();
@@ -59,20 +60,31 @@ const AdminDashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Set Timezone to EST
-  useEffect(() => {
-    // Override the Intl.DateTimeFormat().resolvedOptions().timeZone
-    const originalResolvedOptions =
-      Intl.DateTimeFormat.prototype.resolvedOptions;
-    Intl.DateTimeFormat.prototype.resolvedOptions = function () {
-      const options = originalResolvedOptions.call(this);
-      return { ...options, timeZone: "America/New_York" };
-    };
+  // useEffect(() => {
+  //   // Override the Intl.DateTimeFormat().resolvedOptions().timeZone
+  //   const originalResolvedOptions =
+  //     Intl.DateTimeFormat.prototype.resolvedOptions;
+  //   Intl.DateTimeFormat.prototype.resolvedOptions = function () {
+  //     const options = originalResolvedOptions.call(this);
+  //     return { ...options, timeZone: "America/New_York" };
+  //   };
 
-    // Override Date.prototype.getTimezoneOffset
-    Date.prototype.getTimezoneOffset = function () {
-      return 300; // EST is UTC-5, so 300 minutes offset (240 for EDT)
-    };
-  }, []);
+  //   // Override Date.prototype.getTimezoneOffset
+  //   Date.prototype.getTimezoneOffset = function () {
+  //     const nyFormatter = new Intl.DateTimeFormat("en-US", {
+  //       timeZone: "America/New_York",
+  //       timeZoneName: "short",
+  //     });
+
+  //     const timeZoneName = nyFormatter
+  //       .formatToParts(this)
+  //       .find((part) => part.type === "timeZoneName")?.value;
+
+  //     return timeZoneName === "EDT" ? 240 : 300; // EST is UTC-5, so 300 minutes offset (240 for EDT)
+  //   };
+
+  //   console.log(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  // }, []);
 
   useEffect(() => {
     const getUserData = async () => {

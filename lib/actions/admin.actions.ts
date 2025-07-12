@@ -913,7 +913,7 @@ export async function addSessions(
       "America/New_York"
     );
 
-    const now: String = new Date().toISOString();
+    const now: string = new Date().toISOString();
 
     //Set created to avoid duplicates
     const scheduledSessions: Set<string> = await getSessionKeys(sessions);
@@ -1023,11 +1023,11 @@ export async function addSessions(
           ); // Automatically handles DST
 
           if (sessionStartTime < startDate_asDate) {
-            continue;
+            throw new Error("Session occurs before start date");
           }
 
           if (sessionStartTime > endDate_asDate) {
-            continue;
+            throw new Error("Session occurs after start date");
           }
 
           // Check for duplicate session
