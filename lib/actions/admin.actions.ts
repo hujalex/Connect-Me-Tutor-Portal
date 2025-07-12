@@ -913,7 +913,7 @@ export async function addSessions(
       "America/New_York"
     );
 
-    const now: Date = new Date();
+    const now: string = new Date().toISOString();
 
     //Set created to avoid duplicates
     const scheduledSessions: Set<string> = await getSessionKeys(sessions);
@@ -938,13 +938,13 @@ export async function addSessions(
       const endDate_asDate = new Date(endDate); //UTC
 
       //Check for start time and end time
-      if (now < startDate_asDate) {
-        continue;
-      }
+      // if (now < startDate_asDate) {
+      //   continue;
+      // }
 
-      if (now > endDate_asDate) {
-        continue;
-      }
+      // if (now > endDate_asDate) {
+      //   continue;
+      // }
 
       //Check if paused over the summer
       if (enrollment.summerPaused) {
@@ -1021,6 +1021,14 @@ export async function addSessions(
             dateString,
             "America/New_York"
           ); // Automatically handles DST
+
+          if (sessionStartTime < startDate_asDate) {
+            throw new Error("Session occurs before start date");
+          }
+
+          if (sessionStartTime > endDate_asDate) {
+            throw new Error("Session occurs after start date");
+          }
 
           // Check for duplicate session
           const sessionKey = `${student.id}-${tutor.id}-${format(
