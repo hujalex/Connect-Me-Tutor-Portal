@@ -58,6 +58,22 @@ const AdminDashboard = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Set Timezone to EST
+  useEffect(() => {
+    // Override the Intl.DateTimeFormat().resolvedOptions().timeZone
+    const originalResolvedOptions =
+      Intl.DateTimeFormat.prototype.resolvedOptions;
+    Intl.DateTimeFormat.prototype.resolvedOptions = function () {
+      const options = originalResolvedOptions.call(this);
+      return { ...options, timeZone: "America/New_York" };
+    };
+
+    // Override Date.prototype.getTimezoneOffset
+    Date.prototype.getTimezoneOffset = function () {
+      return 300; // EST is UTC-5, so 300 minutes offset (240 for EDT)
+    };
+  }, []);
+
   useEffect(() => {
     const getUserData = async () => {
       try {
@@ -210,10 +226,10 @@ const AdminDashboard = () => {
                     session.status === "Active"
                       ? ""
                       : session.status === "Complete"
-                      ? "bg-green-200 opacity-25 pointer-events-none"
-                      : session.status === "Cancelled"
-                      ? "bg-red-100 opacity-25 pointer-events-none"
-                      : ""
+                        ? "bg-green-200 opacity-25 pointer-events-none"
+                        : session.status === "Cancelled"
+                          ? "bg-red-100 opacity-25 pointer-events-none"
+                          : ""
                   }
                 >
                   <TableCell>
