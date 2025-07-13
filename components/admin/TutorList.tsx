@@ -76,6 +76,10 @@ import { Textarea } from "@/components/ui/textarea";
 import toast, { Toaster } from "react-hot-toast";
 import { Combobox } from "@/components/ui/combobox";
 
+import AddTutorForm from "./components/AddTutorForm";
+import DeleteTutorForm from "./components/DeleteTutorForm";
+import EditTutorForm from "./components/EditTutorForm";
+
 const TutorList = () => {
   const supabase = createClientComponentClient();
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -91,7 +95,7 @@ const TutorList = () => {
     role: "Tutor",
     firstName: "",
     lastName: "",
-    dateOfBirth: "",
+    // dateOfBirth: "",
     startDate: "",
     availability: [],
     email: "",
@@ -106,7 +110,6 @@ const TutorList = () => {
   const [selectedTutor, setSelectedTutor] = useState<Profile | null>(null);
 
   //---Modals
-  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
   const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -277,7 +280,7 @@ const TutorList = () => {
           role: "Tutor",
           firstName: "",
           lastName: "",
-          dateOfBirth: "",
+          // dateOfBirth: "",
           startDate: "",
           availability: [],
           email: "",
@@ -318,7 +321,6 @@ const TutorList = () => {
       try {
         await deleteUser(selectedTutorId);
         toast.success("Tutor deleted successfully");
-        setIsDeactivateModalOpen(false);
         setSelectedTutorId(null);
         getTutorData();
       } catch (error) {
@@ -333,7 +335,6 @@ const TutorList = () => {
         const data = await deactivateUser(selectedTutorId); // Call deactivateUser function with studentId
         if (data) {
           toast.success("Tutor deactivated successfully");
-          setIsDeactivateModalOpen(false);
           setSelectedTutorId(null);
           getTutorData();
         }
@@ -483,293 +484,36 @@ const TutorList = () => {
                 onChange={(e) => setFilterValue(e.target.value)}
               />
               {/*Add Student*/}
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button>Add Tutor</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Add New Tutor</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="firstName" className="text-right">
-                        First Name
-                      </Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        value={newTutor.firstName}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="lastName" className="text-right">
-                        Last Name
-                      </Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={newTutor.lastName}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="email" className="text-right">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={newTutor.email}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="dateOfBirth" className="text-right">
-                        Date of Birth
-                      </Label>
-                      <Input
-                        id="dateOfBirth"
-                        name="dateOfBirth"
-                        type="date"
-                        value={newTutor.dateOfBirth}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="startDate" className="text-right">
-                        Start Date
-                      </Label>
-                      <Input
-                        id="startDate"
-                        name="startDate"
-                        type="date"
-                        value={newTutor.startDate}
-                        onChange={handleInputChange}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="timeZone" className="text-right">
-                        Time Zone
-                      </Label>
-                      <div className="col-span-3">
-                        <Select
-                          name="timeZone"
-                          value={newTutor.timeZone}
-                          onValueChange={handleTimeZone}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {/* Add time zone options here */}
-                            <SelectItem value="EST">EST</SelectItem>
-                            <SelectItem value="CST">CST</SelectItem>
-                            <SelectItem value="MT">MT</SelectItem>
-                            <SelectItem value="PST">PST</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {/* Add more fields for availability if needed */}
-                  </div>
-                  <Button onClick={handleAddTutor} disabled={addingTutor}>
-                    {addingTutor ? "Adding Tutor..." : "Add Tutor"}
-                  </Button>
-                </DialogContent>
-              </Dialog>
+              <AddTutorForm
+                newTutor={newTutor}
+                addingTutor={addingTutor}
+                handleInputChange={handleInputChange}
+                handleAddTutor={handleAddTutor}
+                handleTimeZone={handleTimeZone}
+              />
               {/*Delete Student*/}
-              <Dialog
-                open={isDeactivateModalOpen}
-                onOpenChange={setIsDeactivateModalOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="destructive">Delete Tutor</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Select a Tutor to Delete</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <Label htmlFor="tutorSelect" className="text-right">
-                      Tutor
-                    </Label>
-                    <div className="relative">
-                      <Combobox
-                        list={tutors
-                          .filter((tutor) => tutor.status === "Active")
-                          .map((tutor) => ({
-                            value: tutor.id,
-                            label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
-                          }))}
-                        category="tutor"
-                        onValueChange={setSelectedTutorId}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleDeleteTutor}
-                    disabled={!selectedTutorId}
-                  >
-                    Confirm Deletion
-                  </Button>
-                </DialogContent>
-              </Dialog>
+              <DeleteTutorForm
+                tutors={tutors}
+                selectedTutorId={selectedTutorId}
+                setSelectedTutorId={setSelectedTutorId}
+                handleDeleteTutor={handleDeleteTutor}
+              />
+
               {/*Reactivate Student*/}
-              <Dialog
-                open={isReactivateModalOpen}
-                onOpenChange={setIsReactivateModalOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-500">Edit Tutor</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Select a Tutor to Edit</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <Label htmlFor="tutorSelect" className="text-right">
-                      Tutor
-                    </Label>
-                    <div className="relative">
-                      <Combobox
-                        list={tutors.map((tutor) => ({
-                          value: tutor.id,
-                          label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
-                        }))}
-                        category="tutor"
-                        onValueChange={setSelectedTutorId}
-                      />
-                    </div>
-                  </div>
-                  {/*Edit Page*/}
-                  <Dialog
-                    open={isEditModalOpen}
-                    onOpenChange={setIsEditModalOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        disabled={!selectedTutorId}
-                        onClick={() => handleGetSelectedTutor(selectedTutorId)}
-                      >
-                        Select Tutor to edit
-                      </Button>
-                    </DialogTrigger>
-
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Edit Tutor</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="firstName" className="text-right">
-                            First Name
-                          </Label>
-                          <Input
-                            id="firstName"
-                            name="firstName"
-                            value={selectedTutor?.firstName}
-                            onChange={handleInputChangeForEdit}
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="lastName" className="text-right">
-                            Last Name
-                          </Label>
-                          <Input
-                            id="lastName"
-                            name="lastName"
-                            value={selectedTutor?.lastName}
-                            onChange={handleInputChangeForEdit}
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="email" className="text-right">
-                            Email
-                          </Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            disabled={true}
-                            value={selectedTutor?.email}
-                            onChange={handleInputChangeForEdit}
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="dateOfBirth" className="text-right">
-                            Date of Birth
-                          </Label>
-                          <Input
-                            id="dateOfBirth"
-                            name="dateOfBirth"
-                            type="date"
-                            value={selectedTutor?.dateOfBirth}
-                            onChange={handleInputChangeForEdit}
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="startDate" className="text-right">
-                            Start Date
-                          </Label>
-                          <Input
-                            id="startDate"
-                            name="startDate"
-                            type="date"
-                            value={selectedTutor?.startDate}
-                            onChange={handleInputChangeForEdit}
-                            className="col-span-3"
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="timeZone" className="text-right">
-                            Time Zone
-                          </Label>
-                          <div className="col-span-3">
-                            <Select
-                              name="timeZone"
-                              value={selectedTutor?.timeZone}
-                              onValueChange={handleTimeZoneForEdit}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a timezone" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="EST">EST</SelectItem>
-                                <SelectItem value="CST">CST</SelectItem>
-                                <SelectItem value="MT">MT</SelectItem>
-                                <SelectItem value="PST">PST</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {/* Add more fields for availability if needed */}
-                        </div>
-                      </div>
-                      <Button onClick={handleEditTutor}>
-                        Finish editing tutor
-                      </Button>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* <Button
-                    onClick={handleReactivateTutor}
-                    disabled={!selectedTutorId}
-                  >
-                    Confirm Reactivation
-                  </Button> */}
-                </DialogContent>
-              </Dialog>
+              <EditTutorForm
+                isReactivateModalOpen={isReactivateModalOpen}
+                setIsReactivateModalOpen={setIsReactivateModalOpen}
+                isEditModalOpen={isEditModalOpen}
+                setIsEditModalOpen={setIsEditModalOpen}
+                tutors={tutors}
+                selectedTutor={selectedTutor}
+                selectedTutorId={selectedTutorId}
+                setSelectedTutorId={setSelectedTutorId}
+                handleEditTutor={handleEditTutor}
+                handleGetSelectedTutor={handleGetSelectedTutor}
+                handleInputChangeForEdit={handleInputChangeForEdit}
+                handleTimeZoneForEdit={handleTimeZoneForEdit}
+              />
               {/*Edit Page*/}
             </div>
           </div>

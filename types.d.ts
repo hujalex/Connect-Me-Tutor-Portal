@@ -10,7 +10,7 @@ interface Profile {
   age?: string;
   grade?: string;
   gender?: string;
-  dateOfBirth?: string; // Format: YYYY-MM-DD
+  dateOfBirth?: string | null; // Format: YYYY-MM-DD
   startDate: string; // Format: YYYY-MM-DD, start date of the user's involvement
   availability: { day: string; startTime: string; endTime: string }[]; // Example: [{ day: "Monday", time: "3PM-6PM" }]
   email: string;

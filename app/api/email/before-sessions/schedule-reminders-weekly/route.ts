@@ -10,36 +10,31 @@ import {
 import { getSessions } from "@/lib/actions/session.server.actions";
 import { addDays } from "date-fns";
 
+export const dynamic = "force-dynamic"; // prevent prerendering from calling the api and scheduling sessions
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function GET(request: NextRequest) {
   try {
     const now = new Date();
     const weekLater = addDays(now, 7);
-
     const sessionsNextWeek: Session[] = await getSessions(
       now.toISOString(),
       weekLater.toISOString()
     );
-
     // There is a burst rate of 120
-
     const batchSize = 50;
     const delayBetweenBatches = 1000;
-
     for (let i = 0; i < sessionsNextWeek.length; i += batchSize) {
       const batch = sessionsNextWeek.slice(i, i + batchSize);
       console.log(
         `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(sessionsNextWeek.length / batchSize)}`
       );
-
       await sendScheduledEmailsBeforeSessions(batch);
-
       if (i + batchSize < sessionsNextWeek.length) {
         await delay(delayBetweenBatches);
       }
     }
-
     return NextResponse.json({
       status: 200,
       message: "weekly email notifications scheduled successfully",

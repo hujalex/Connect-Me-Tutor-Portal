@@ -155,11 +155,11 @@ export default function DashboardLayout({
       href: "/dashboard/email-manager",
       icon: <Mail className="h-5 w-5" />,
     },
-    {
-      title: "Migrate Profiles",
-      href: "/dashboard/migrate",
-      icon: <CirclePlus className="h-5 w-5" />,
-    },
+    // {
+    //   title: "Migrate Profiles",
+    //   href: "/dashboard/migrate",
+    //   icon: <CirclePlus className="h-5 w-5" />,
+    // },
   ];
 
   useEffect(() => {
