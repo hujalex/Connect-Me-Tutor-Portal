@@ -46,7 +46,11 @@ import { Profile, Session, Event } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import { Combobox } from "../ui/combobox";
 import { Combobox2 } from "../ui/combobox2";
-import { getAllHours, getAllHoursBatch } from "@/lib/actions/hours.actions";
+import {
+  getAllEventHoursBatchWithType,
+  getAllHours,
+  getAllHoursBatch,
+} from "@/lib/actions/hours.actions";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -58,6 +62,14 @@ const HoursManager = () => {
   const [allTimeHours, setAllTimeHours] = useState<{ [key: string]: number }>(
     {}
   );
+  const [eventHoursOther, setEventHoursOther] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [eventHours, setEventHours] = useState<{
+    [key: string]: { [key: string]: number };
+  }>({});
+
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isRemoveEventModalOpen, setIsRemoveEventModalOpen] = useState(false);
   const [selectedTutorForEvent, setSelectedTutorForEvent] = useState<
@@ -79,9 +91,16 @@ const HoursManager = () => {
   useEffect(() => {
     if (tutors.length > 0) {
       // fetchSessionsAndEvents();
-      calculateAllTimeHoursBatch();
+      fetchHours();
     }
   }, [tutors, selectedDate]);
+
+  const fetchHours = async () => {
+    await Promise.all([
+      calculateAllTimeHoursBatch(),
+      calculateEventHoursOther(),
+    ]);
+  };
 
   useEffect(() => {
     const filtered = tutors.filter((tutor) => {
@@ -194,6 +213,16 @@ const HoursManager = () => {
       setAllTimeHours(data);
     } catch (error) {
       toast.error("Unable to set all time hours");
+    }
+  };
+
+  const calculateEventHoursOther = async () => {
+    try {
+      const data: { [key: string]: number } =
+        await getAllEventHoursBatchWithType("Other");
+      setEventHoursOther(data);
+    } catch (error) {
+      toast.error("Unable to get event hours");
     }
   };
 
@@ -492,7 +521,7 @@ const HoursManager = () => {
                     )}
                   </TableHead>
                 ))}
-                <TableHead>Added</TableHead>
+                <TableHead>Other</TableHead>
                 <TableHead>This Month</TableHead>
                 <TableHead>All Time</TableHead>
               </TableRow>
@@ -513,7 +542,9 @@ const HoursManager = () => {
                     </TableCell>
                   ))}
                   <TableCell>
-                    {calculateExtraHours(tutor.id).toFixed(2)}
+                    {/* {calculateExtraHours(tutor.id).toFixed(2)}
+                     */}
+                    {eventHoursOther[tutor.id]?.toFixed(2) || "0.00"}
                   </TableCell>
                   <TableCell>
                     {calculateMonthHours(tutor.id).toFixed(2)}

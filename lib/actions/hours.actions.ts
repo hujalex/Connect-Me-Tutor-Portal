@@ -227,10 +227,7 @@ export const getAllHoursRange = async (
 export const getAllHoursBatch = async () => {
   try {
     const { data: hoursJson, error: rpcError } = await supabase.rpc(
-      "get_all_hours_batch",
-      {
-        tutor_ids: null,
-      }
+      "get_all_hours_batch"
     );
 
     if (rpcError) throw rpcError;
@@ -241,3 +238,65 @@ export const getAllHoursBatch = async () => {
     throw error;
   }
 };
+
+export const getHoursBatch = async (profiles: Profile[]) => {};
+
+export const getAllEventHoursBatchWithType = async (type: string) => {
+  try {
+    //set tutor_ids to null to fetch all
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_all_event_hours_batch_with_type",
+      { event_type: type }
+    );
+
+    if (error) throw error;
+
+    return hoursJson;
+  } catch (error) {
+    console.error("Error getting event hours:", error);
+    throw error;
+  }
+};
+
+/**
+ * 
+ * BEGIN
+    RETURN (
+        SELECT jsonb_object_agg(
+            at.tutor_id::text,
+            COALESCE(st.session_hours, 0) + COALESCE(et.event_hours, 0)
+        )
+        FROM (
+            SELECT DISTINCT tutor_id FROM (
+                SELECT tutor_id FROM "Sessions" 
+                WHERE status = 'Complete' 
+                AND (tutor_ids IS NULL OR tutor_id::text IN (
+                    SELECT jsonb_array_elements_text(tutor_ids)
+                ))
+                UNION
+                SELECT tutor_id FROM "Events"
+                WHERE (tutor_ids IS NULL OR tutor_id::text IN (
+                    SELECT jsonb_array_elements_text(tutor_ids)
+                ))
+            ) t
+        ) at
+        LEFT JOIN (
+            SELECT tutor_id, COALESCE(SUM(duration), 0) as session_hours
+            FROM "Sessions"
+            WHERE status = 'Complete'
+            AND (tutor_ids IS NULL OR tutor_id::text IN (
+                SELECT jsonb_array_elements_text(tutor_ids)
+            ))
+            GROUP BY tutor_id
+        ) st ON at.tutor_id = st.tutor_id
+        LEFT JOIN (
+            SELECT tutor_id, COALESCE(SUM(hours), 0) as event_hours
+            FROM "Events"
+            WHERE (tutor_ids IS NULL OR tutor_id::text IN (
+                SELECT jsonb_array_elements_text(tutor_ids)
+            ))
+            GROUP BY tutor_id
+        ) et ON at.tutor_id = et.tutor_id
+    );
+END;
+ */
