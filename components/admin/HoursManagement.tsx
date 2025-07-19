@@ -46,6 +46,7 @@ import { Profile, Session, Event } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import { Combobox } from "../ui/combobox";
 import { Combobox2 } from "../ui/combobox2";
+import { getAllHours, getAllHoursBatch } from "@/lib/actions/hours.actions";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -77,8 +78,8 @@ const HoursManager = () => {
 
   useEffect(() => {
     if (tutors.length > 0) {
-      fetchSessionsAndEvents();
-      calculateAllTimeHours();
+      // fetchSessionsAndEvents();
+      calculateAllTimeHoursBatch();
     }
   }, [tutors, selectedDate]);
 
@@ -156,21 +157,23 @@ const HoursManager = () => {
 
   const calculateAllTimeHours = async () => {
     const allTimeHoursPromises = tutors.map(async (tutor) => {
-      const allSessions = await getTutorSessions(tutor.id);
-      const allEvents = await getEvents(tutor.id);
+      // const allSessions = await getTutorSessions(tutor.id);
+      // const allEvents = await getEvents(tutor.id);
 
-      const sessionHours = allSessions
-        .filter((session) => session.status === "Complete")
-        .reduce(
-          (total, session) => total + calculateSessionDuration(session),
-          0
-        );
-      // .reduce((total, session) => total + 1.0)
+      // const sessionHours = allSessions
+      //   .filter((session) => session.status === "Complete")
+      //   .reduce(
+      //     (total, session) => total + calculateSessionDuration(session),
+      //     0
+      //   );
+      // // .reduce((total, session) => total + 1.0)
 
-      const eventHours =
-        allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
+      // const eventHours =
+      //   allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
 
-      return { tutorId: tutor.id, hours: sessionHours + eventHours };
+      const totalHours = await getAllHours(tutor.id);
+
+      return { tutorId: tutor.id, hours: totalHours };
     });
 
     try {
@@ -182,6 +185,15 @@ const HoursManager = () => {
       setAllTimeHours(newAllTimeHours);
     } catch (error) {
       console.error("Failed to calculate all-time hours:", error);
+    }
+  };
+
+  const calculateAllTimeHoursBatch = async () => {
+    try {
+      const data: { [key: string]: number } = await getAllHoursBatch();
+      setAllTimeHours(data);
+    } catch (error) {
+      toast.error("Unable to set all time hours");
     }
   };
 
@@ -354,7 +366,19 @@ const HoursManager = () => {
                         <SelectItem value="Tutor Referral">
                           Tutor Referral
                         </SelectItem>
-                        <SelectItem value="Sub-Hotline">Sub-Hotline</SelectItem>
+                        <SelectItem value="Sub Hotline">SubHotline</SelectItem>
+                        <SelectItem value="Tutor Referral">
+                          Tutor Referral
+                        </SelectItem>
+                        <SelectItem value="Additional Tutoring Hours">
+                          Additional Tutoring Hours
+                        </SelectItem>
+                        <SelectItem value="School Tutoring">
+                          School Tutoring
+                        </SelectItem>
+                        <SelectItem value="Biweekly Meeting">
+                          Biweekly Meeting
+                        </SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>

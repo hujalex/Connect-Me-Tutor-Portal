@@ -70,8 +70,6 @@ export const getAllSessionHoursWithStudent = async (
       { input_tutor_id: tutorId, input_student_id: studentId }
     );
 
-    toast.success(data);
-
     if (error) throw error;
 
     return data || 0;
@@ -98,7 +96,6 @@ export const getSessionHoursRange = async (
     });
 
     if (error) throw error;
-    toast.success(data);
 
     return data || 0;
   } catch (error) {
@@ -148,7 +145,6 @@ export const getAllEventHours = async (userId: string) => {
     });
 
     if (error) throw error;
-    toast.success("Get all event hours", data);
 
     return data || 0;
   } catch (error) {
@@ -225,5 +221,23 @@ export const getAllHoursRange = async (
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
+  }
+};
+
+export const getAllHoursBatch = async () => {
+  try {
+    const { data: hoursJson, error: rpcError } = await supabase.rpc(
+      "get_all_hours_batch",
+      {
+        tutor_ids: null,
+      }
+    );
+
+    if (rpcError) throw rpcError;
+
+    return hoursJson;
+  } catch (error) {
+    console.error("Error getting tutor hours:", error);
+    throw error;
   }
 };
