@@ -69,6 +69,7 @@ const HoursManager = () => {
   >(null);
   const [filterValue, setFilterValue] = useState<string>("");
   const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
+  const [eventType, setEventType] = useState("");
 
   useEffect(() => {
     fetchTutors();
@@ -240,7 +241,8 @@ const HoursManager = () => {
       newEvent.tutorId &&
       newEvent.date &&
       newEvent.hours &&
-      newEvent.summary
+      newEvent.summary &&
+      newEvent.type
     ) {
       try {
         await createEvent(newEvent as Event);
@@ -338,6 +340,24 @@ const HoursManager = () => {
                         setNewEvent({ ...newEvent, tutorId: value })
                       }
                     />
+                    <Select
+                      value={eventType}
+                      onValueChange={(value) => {
+                        setEventType(value);
+                        setNewEvent({ ...newEvent, type: value });
+                      }}
+                    >
+                      <SelectTrigger className="">
+                        <SelectValue placeholder={"Select Type"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Tutor Referral">
+                          Tutor Referral
+                        </SelectItem>
+                        <SelectItem value="Sub-Hotline">Sub-Hotline</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input
                       type="date"
                       onChange={(e) =>
@@ -355,6 +375,7 @@ const HoursManager = () => {
                       }
                       placeholder="Hours"
                     />
+
                     <Input
                       type="text"
                       onChange={(e) =>

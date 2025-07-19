@@ -1698,6 +1698,7 @@ export async function getEvents(tutorId: string): Promise<Event[]> {
         tutorId: event.tutor_id,
         date: event.date,
         hours: event.hours,
+        type: event.type,
       }))
     );
 
@@ -1757,6 +1758,7 @@ export async function getEventsWithTutorMonth(
       tutorId: event.tutor_id,
       date: event.date,
       hours: event.hours,
+      type: event.type,
     }));
 
     return events; // Return the array of events
@@ -1773,6 +1775,7 @@ export async function createEvent(event: Event) {
     summary: event.summary,
     tutor_id: event.tutorId,
     hours: event.hours,
+    type: event.type,
   });
 
   if (eventError) {

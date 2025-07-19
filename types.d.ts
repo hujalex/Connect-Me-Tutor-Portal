@@ -72,6 +72,7 @@ interface Event {
   tutorId: string;
   id: string;
   hours: number;
+  type: string;
 }
 
 // Type for Student s
