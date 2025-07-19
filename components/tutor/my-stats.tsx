@@ -55,23 +55,12 @@ const Stats = () => {
 
         const current = new Date();
         const weekBefore = subDays(current, 7);
-        const specificStudentId = "2f1ebfd0-a604-4748-82bb-d7977d1f275a";
+        // const specificStudentId = "2f1ebfd0-a604-4748-82bb-d7977d1f275a";
 
         // Parallelize all independent API calls
-        const [
-          allCompletedSessions,
-          allEvents,
-          sessionhoursRange,
-          sessionHoursWithStudent,
-        ] = await Promise.all([
+        const [allCompletedSessions, allEvents] = await Promise.all([
           getTutorSessions(profileData.id, undefined, undefined, "Complete"),
           getEvents(profileData.id),
-          getEventHoursRange(
-            profileData.id,
-            weekBefore.toISOString(),
-            current.toISOString()
-          ),
-          getAllSessionHoursWithStudent(profileData.id, specificStudentId),
         ]);
 
         // Process session hours map more efficiently
@@ -93,8 +82,6 @@ const Stats = () => {
         // Update all state at once
         setSessionHours(sessionMap);
         setTotalHours(allCompletedSessions.length + eventTutoringHours);
-        setHoursInRange(sessionhoursRange);
-        setTotalHoursWithStudent(sessionHoursWithStudent);
         setAllSessions(allCompletedSessions);
         setAllEvents(allEvents);
       } catch (error) {

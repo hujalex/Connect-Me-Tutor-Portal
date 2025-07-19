@@ -64,23 +64,30 @@ export async function getTutorSessions(
 
   // Map the result to the Session interface
   const sessions: Session[] = await Promise.all(
-    data.map(async (session: any) => ({
-      id: session.id,
-      enrollmentId: session.enrollment_id,
-      createdAt: session.created_at,
-      environment: session.environment,
-      date: session.date,
-      summary: session.summary,
-      // meetingId: session.meeting_id,
-      meeting: await getMeeting(session.meeting_id),
-      student: await getProfileWithProfileId(session.student_id),
-      tutor: await getProfileWithProfileId(session.tutor_id),
-      status: session.status,
-      session_exit_form: session.session_exit_form,
-      isQuestionOrConcern: Boolean(session.isQuestionOrConcernO),
-      isFirstSession: Boolean(session.isFirstSession),
-      duration: session.duration,
-    }))
+    data.map(async (session: any) => {
+      const [meeting, student, tutor] = await Promise.all([
+        getMeeting(session.meeting_id),
+        getProfileWithProfileId(session.student_id),
+        getProfileWithProfileId(session.tutor_id),
+      ]);
+
+      return {
+        id: session.id,
+        enrollmentId: session.enrollment_id,
+        createdAt: session.created_at,
+        environment: session.environment,
+        date: session.date,
+        summary: session.summary,
+        meeting: meeting,
+        student: student,
+        tutor: tutor,
+        status: session.status,
+        session_exit_form: session.session_exit_form,
+        isQuestionOrConcern: Boolean(session.isQuestionOrConcernO),
+        isFirstSession: Boolean(session.isFirstSession),
+        duration: session.duration,
+      };
+    })
   );
 
   console.log("Tutor's sessions", sessions);
