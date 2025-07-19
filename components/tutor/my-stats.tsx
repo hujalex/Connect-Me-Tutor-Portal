@@ -15,6 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Session, Event } from "@/types";
+import { addDays, subDays } from "date-fns";
+import {
+  getAllEventHours,
+  getAllSessionHoursWithStudent,
+  getEventHoursRange,
+  getSessionHoursRange,
+  getSessionHoursRangeWithStudent,
+} from "@/lib/actions/hours.actions";
 
 const Stats = () => {
   const supabase = createClientComponentClient();
@@ -25,6 +33,10 @@ const Stats = () => {
   const [sessionHours, setSessionHours] = useState<Map<string, number>>(
     new Map()
   );
+
+  //testing
+  const [HoursInRange, setHoursInRange] = useState<number>(0);
+  const [totalHoursWithStudent, setTotalHoursWithStudent] = useState<number>(0);
 
   useEffect(() => {
     //Fetches total tutoring hours where each session and event counts as one hour each
@@ -41,34 +53,48 @@ const Stats = () => {
         const profileData = await getProfile(user.id);
         if (!profileData) throw new Error("No profile found");
 
-        const allCompletedSessions = await getTutorSessions(
-          profileData.id,
-          undefined,
-          undefined,
-          "Complete"
-        );
+        const current = new Date();
+        const weekBefore = subDays(current, 7);
+        const specificStudentId = "2f1ebfd0-a604-4748-82bb-d7977d1f275a";
 
-        let sessionMap = new Map<string, number>();
-        allCompletedSessions.forEach((session) => {
+        // Parallelize all independent API calls
+        const [
+          allCompletedSessions,
+          allEvents,
+          sessionhoursRange,
+          sessionHoursWithStudent,
+        ] = await Promise.all([
+          getTutorSessions(profileData.id, undefined, undefined, "Complete"),
+          getEvents(profileData.id),
+          getEventHoursRange(
+            profileData.id,
+            weekBefore.toISOString(),
+            current.toISOString()
+          ),
+          getAllSessionHoursWithStudent(profileData.id, specificStudentId),
+        ]);
+
+        // Process session hours map more efficiently
+        const sessionMap = allCompletedSessions.reduce((map, session) => {
           const studentName = `${session.student?.firstName || ""} ${
             session.student?.lastName || ""
           }`.trim();
-          if (!studentName) return; // Skip sessions with no student name
 
-          const currentHours = sessionMap.get(studentName) || 0;
-          sessionMap.set(studentName, currentHours + 1);
-        });
+          if (studentName) {
+            map.set(studentName, (map.get(studentName) || 0) + 1);
+          }
+          return map;
+        }, new Map<string, number>());
 
+        // Calculate event tutoring hours more efficiently
+        const eventTutoringHours =
+          allEvents?.reduce((total, event) => total + event.hours, 0) || 0;
+
+        // Update all state at once
         setSessionHours(sessionMap);
-
-        const allEvents = await getEvents(profileData.id);
-
-        let eventTutoringHours = 0;
-        allEvents?.forEach((event) => {
-          eventTutoringHours += event.hours;
-        });
-
         setTotalHours(allCompletedSessions.length + eventTutoringHours);
+        setHoursInRange(sessionhoursRange);
+        setTotalHoursWithStudent(sessionHoursWithStudent);
         setAllSessions(allCompletedSessions);
         setAllEvents(allEvents);
       } catch (error) {
@@ -133,6 +159,10 @@ const Stats = () => {
                   <TableCell>{totalHours}</TableCell>
                 </TableRow>
               </TableFooter>
+            </Table>
+            <Table>
+              <TableCell>{totalHoursWithStudent}</TableCell>
+              <TableCell>{HoursInRange}</TableCell>
             </Table>
           </div>
         </div>

@@ -59,6 +59,7 @@ export const getAllSessionHours = async (userId: string) => {
     );
   }
 };
+
 export const getAllSessionHoursWithStudent = async (
   tutorId: string,
   studentId: string
@@ -86,25 +87,25 @@ export const getAllSessionHoursWithStudent = async (
 
 export const getSessionHoursRange = async (
   userId: string,
-  startTime: string,
-  endTime: string
+  start: string,
+  end: string
 ) => {
   try {
-    const { data, error } = await supabase
-      .from("Sessions")
-      .select("duration.sum()")
-      .eq("tutor_id", userId)
-      .eq("status", "Completed")
-      .gte("date", startTime)
-      .lte("date", endTime);
+    const { data, error } = await supabase.rpc("get_session_hours_range", {
+      input_tutor_id: userId,
+      input_start_date: start,
+      input_end_date: end,
+    });
 
     if (error) throw error;
+    toast.success(data);
 
-    return data?.[0]?.sum || 0;
+    return data || 0;
   } catch (error) {
     console.error("Error getting session hours range:", error);
+    toast.error("Error getting session hours range");
     throw new Error(
-      `Failed to get session hours range for user ${userId} between ${startTime} and ${endTime}: ${
+      `Failed to get session hours range for user ${userId} between ${start} and ${end}: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
@@ -118,18 +119,18 @@ export const getSessionHoursRangeWithStudent = async (
   endTime: string
 ) => {
   try {
-    const { data, error } = await supabase
-      .from("Sessions")
-      .select("duration.sum()")
-      .eq("tutor_id", tutorId)
-      .eq("student_id", studentId)
-      .eq("status", "Completed")
-      .gte("date", startTime)
-      .lte("date", endTime);
+    const { data, error } = await supabase.rpc(
+      "get_session_hours_range_with_student",
+      {
+        input_tutor_id: tutorId,
+        input_student_id: studentId,
+        input_start_date: startTime,
+        input_end_date: endTime,
+      }
+    );
 
     if (error) throw error;
-
-    return data?.[0]?.sum || 0;
+    return data || 0;
   } catch (error) {
     console.error("Error getting session hours range with student:", error);
     throw new Error(
@@ -142,14 +143,14 @@ export const getSessionHoursRangeWithStudent = async (
 
 export const getAllEventHours = async (userId: string) => {
   try {
-    const { data, error } = await supabase
-      .from("Events")
-      .select("hours.sum()")
-      .eq("tutor_id", userId);
+    const { data, error } = await supabase.rpc("get_all_event_hours", {
+      input_user_id: userId,
+    });
 
     if (error) throw error;
+    toast.success("Get all event hours", data);
 
-    return data?.[0]?.sum || 0;
+    return data || 0;
   } catch (error) {
     console.error("Error getting all event hours:", error);
     throw new Error(
@@ -162,24 +163,23 @@ export const getAllEventHours = async (userId: string) => {
 
 export const getEventHoursRange = async (
   userId: string,
-  startTime: string,
-  endTime: string
+  start: string,
+  end: string
 ) => {
   try {
-    const { data, error } = await supabase
-      .from("Events")
-      .select("hours.sum()")
-      .eq("tutor_id", userId)
-      .gte("date", startTime)
-      .lte("date", endTime);
+    const { data, error } = await supabase.rpc("get_event_hours_range", {
+      input_user_id: userId,
+      input_start_date: start,
+      input_end_date: end,
+    });
 
     if (error) throw error;
 
-    return data?.[0]?.sum || 0;
+    return data || 0;
   } catch (error) {
     console.error("Error getting event hours range:", error);
     throw new Error(
-      `Failed to get event hours range for user ${userId} between ${startTime} and ${endTime}: ${
+      `Failed to get event hours range for user ${userId} between ${start} and ${end}: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
