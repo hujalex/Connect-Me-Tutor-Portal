@@ -258,6 +258,65 @@ export const getAllEventHoursBatchWithType = async (type: string) => {
   }
 };
 
+export const getAllEventHoursBatch = async () => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_all_event_hours_batch"
+    );
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error getting event hours:", error);
+    throw error;
+  }
+};
+
+export const getSessionHoursRangeBatch = async (start: string, end: string) => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_session_hours_range_batch",
+      { start_date: start, end_date: end }
+    );
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error Session Range hours:", error);
+    throw error;
+  }
+};
+
+export const getEventHoursRangeBatch = async (start: string, end: string) => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_event_hours_range_batch",
+      {
+        start_date: start,
+        end_date: end,
+      }
+    );
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error fetching batch Event Range hours:", error);
+    throw error;
+  }
+};
+
+export const getHoursRangeBatch = async (start: string, end: string) => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_hours_range_batch",
+      { start_date: start, end_date: end }
+    );
+
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error fetching batch Range hours:", error);
+    throw error;
+  }
+};
+
 /**
  * 
  * BEGIN
