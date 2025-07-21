@@ -7,6 +7,7 @@ import {
   endOfMonth,
   eachWeekOfInterval,
   parseISO,
+  startOfWeek,
   addDays,
 } from "date-fns";
 import {
@@ -289,9 +290,15 @@ const HoursManager = () => {
 
   const calculateMonthHours = async () => {
     try {
+      const firstDay = startOfWeek(startOfMonth(selectedDate));
+      const lastDay = endOfWeek(endOfMonth(selectedDate));
+
+      console.log(firstDay);
+      console.log(lastDay);
+
       const data: { [key: string]: number } = await getHoursRangeBatch(
-        startOfMonth(selectedDate).toISOString(),
-        endOfMonth(selectedDate).toISOString()
+        firstDay.toISOString(),
+        lastDay.toISOString()
       );
       setMonthlyHours(data);
     } catch (error) {
@@ -583,7 +590,6 @@ const HoursManager = () => {
                     {tutor.firstName} {tutor.lastName}
                   </TableCell>
                   {weeksInMonth.map((week) => {
-                    console.log(week);
                     const hours = weeklySessionHours[tutor.id]
                       ? weeklySessionHours[tutor.id][
                           week.getTime().toString()
