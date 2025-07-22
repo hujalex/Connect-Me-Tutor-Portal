@@ -453,10 +453,7 @@ const HoursManager = () => {
                         <SelectItem value="Tutor Referral">
                           Tutor Referral
                         </SelectItem>
-                        <SelectItem value="Sub Hotline">SubHotline</SelectItem>
-                        <SelectItem value="Tutor Referral">
-                          Tutor Referral
-                        </SelectItem>
+                        <SelectItem value="Sub Hotline">Sub Hotline</SelectItem>
                         <SelectItem value="Additional Tutoring Hours">
                           Additional Tutoring Hours
                         </SelectItem>
