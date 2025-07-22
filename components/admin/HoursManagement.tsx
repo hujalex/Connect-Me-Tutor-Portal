@@ -393,7 +393,10 @@ const HoursManager = () => {
               />
               <div className="flex space-x-4">
                 <Select
-                  onValueChange={(value) => setSelectedDate(new Date(value))}
+                  onValueChange={(value) => {
+                    setSelectedDate(new Date(value));
+                    fetchHours();
+                  }}
                   defaultValue={selectedDate.toISOString()}
                 >
                   <SelectTrigger className="w-[180px]">
@@ -557,6 +560,7 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
+                <Button>Download Report</Button>
               </div>
             </div>
           </div>
