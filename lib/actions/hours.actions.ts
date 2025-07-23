@@ -295,7 +295,10 @@ export const getEventHoursRangeBatch = async (start: string, end: string) => {
       }
     );
 
+    console.log("Event hours batch", hoursJson);
+
     if (error) throw error;
+    return hoursJson;
   } catch (error) {
     console.error("Error fetching batch Event Range hours:", error);
     throw error;
@@ -317,6 +320,18 @@ export const getHoursRangeBatch = async (start: string, end: string) => {
   }
 };
 
+export const getAllSessionHoursBatch = async () => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_all_session_hours_batch"
+    );
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error fetching batch session hours");
+    throw error;
+  }
+};
 /**
  * 
  * BEGIN

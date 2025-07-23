@@ -53,6 +53,8 @@ import {
   getAllEventHoursBatchWithType,
   getAllHours,
   getAllHoursBatch,
+  getAllSessionHoursBatch,
+  getEventHoursRangeBatch,
   getHoursRangeBatch,
   getSessionHoursRange,
   getSessionHoursRangeBatch,
@@ -69,6 +71,10 @@ const HoursManager = () => {
   const [allTimeHours, setAllTimeHours] = useState<{ [key: string]: number }>(
     {}
   );
+  const [allTimeSessionHours, setAllTimeSessionHours] = useState<{
+    [key: string]: number;
+  }>({});
+
   const [eventHoursOther, setEventHoursOther] = useState<{
     [key: string]: number;
   }>({});
@@ -98,6 +104,7 @@ const HoursManager = () => {
   const [filterValue, setFilterValue] = useState<string>("");
   const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
   const [eventType, setEventType] = useState("");
+  const [allTimeView, setAllTimeView] = useState(false);
 
   useEffect(() => {
     fetchTutors();
@@ -116,6 +123,14 @@ const HoursManager = () => {
       calculateEventHours(),
       calculateWeeklyHoursForMonth(),
       calculateMonthHours(),
+    ]);
+  };
+
+  const fetchAllTimeHours = async () => {
+    await Promise.all([
+      calculateAllTimeHoursBatch(),
+      calculateAllTimeEventHours(),
+      calculateAllTimeSessionHours(),
     ]);
   };
 
@@ -243,9 +258,18 @@ const HoursManager = () => {
 
   const calculateEventHours = async () => {
     try {
+      const firstDay = startOfWeek(startOfMonth(selectedDate));
+      const lastDay = endOfWeek(endOfMonth(selectedDate));
+
       const data: { [key: string]: { [key: string]: number } } =
-        await getAllEventHoursBatch();
+        await getEventHoursRangeBatch(
+          firstDay.toISOString(),
+          lastDay.toISOString()
+        );
       setEventHoursData(data);
+      toast.success("Fetched event hours");
+      console.log(data);
+      console.log(eventHoursData);
     } catch (error) {
       toast.error("Unable to get event hours");
     }
@@ -303,6 +327,25 @@ const HoursManager = () => {
       setMonthlyHours(data);
     } catch (error) {
       toast.error("Error fetching monthly hours");
+    }
+  };
+
+  const calculateAllTimeEventHours = async () => {
+    try {
+      const data: { [key: string]: { [key: string]: number } } =
+        await getAllEventHoursBatch();
+      setEventHoursData(data);
+    } catch (error) {
+      toast.error("Error fetching All Time Event Hours");
+    }
+  };
+
+  const calculateAllTimeSessionHours = async () => {
+    try {
+      const data: { [key: string]: number } = await getAllSessionHoursBatch();
+      setAllTimeSessionHours(data);
+    } catch (error) {
+      toast.error("Error fetching All Time Session Hours");
     }
   };
 
@@ -394,15 +437,25 @@ const HoursManager = () => {
               <div className="flex space-x-4">
                 <Select
                   onValueChange={(value) => {
-                    setSelectedDate(new Date(value));
-                    fetchHours();
+                    if (value === "All Time") {
+                      setAllTimeView(true);
+                      fetchAllTimeHours();
+                    } else {
+                      setAllTimeView(false);
+                      setSelectedDate(new Date(value));
+                      fetchHours();
+                    }
                   }}
                   defaultValue={selectedDate.toISOString()}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select month" />
                   </SelectTrigger>
+
                   <SelectContent>
+                    <SelectItem key="All Time" value={"All Time"}>
+                      All Time
+                    </SelectItem>
                     {monthYearOptions.map((date) => (
                       <SelectItem
                         key={date.toISOString()}
@@ -568,20 +621,29 @@ const HoursManager = () => {
                 <TableHead className="sticky left-0 z-10 bg-white">
                   Tutor Name
                 </TableHead>
-                {weeksInMonth.map((week, index) => (
-                  <TableHead key={week.toISOString()}>
-                    {format(week, "MMM d")} -{" "}
-                    {format(
-                      new Date(week.getTime() + 6 * 24 * 60 * 60 * 1000),
-                      "MMM d"
-                    )}
-                  </TableHead>
-                ))}
-                <TableHead>Tutor Referral (all time)</TableHead>
-                <TableHead>Sub Hotline (all time)</TableHead>
-                <TableHead>Other (all time)</TableHead>
-                <TableHead>This Month</TableHead>
-                <TableHead>All Time</TableHead>
+                {allTimeView ? (
+                  <>
+                    <TableHead>All Sessions</TableHead>
+                    <TableHead>Tutor Referral</TableHead>
+                    <TableHead>Sub Hotline</TableHead>
+                    <TableHead>Other</TableHead>
+                    <TableHead>All Time</TableHead>
+                  </>
+                ) : (
+                  <>
+                    {weeksInMonth.map((week) => (
+                      <TableHead key={week.toISOString()}>
+                        {format(week, "MMM d")} -{" "}
+                        {format(addDays(week, 6), "MMM d")}
+                      </TableHead>
+                    ))}
+                    <TableHead>Tutor Referral</TableHead>
+                    <TableHead>Sub Hotline</TableHead>
+                    <TableHead>Other</TableHead>
+                    <TableHead>This Month</TableHead>
+                    <TableHead>All Time</TableHead>
+                  </>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -590,42 +652,66 @@ const HoursManager = () => {
                   <TableCell className="sticky left-0 z-10 bg-white">
                     {tutor.firstName} {tutor.lastName}
                   </TableCell>
-                  {weeksInMonth.map((week) => {
-                    const hours = weeklySessionHours[tutor.id]
-                      ? weeklySessionHours[tutor.id][
-                          week.getTime().toString()
-                        ] || ""
-                      : "";
+                  {allTimeView ? (
+                    <>
+                      {" "}
+                      <TableCell>
+                        {allTimeSessionHours[tutor.id] || ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Tutor Referral"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Sub Hotline"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {/* {calculateExtraHours(tutor.id).toFixed(2)}
+                         */}
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Other"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>{allTimeHours[tutor.id] || ""}</TableCell>
+                    </>
+                  ) : (
+                    <>
+                      {weeksInMonth.map((week) => {
+                        const hours = weeklySessionHours[tutor.id]
+                          ? weeklySessionHours[tutor.id][
+                              week.getTime().toString()
+                            ] || ""
+                          : "";
 
-                    return <TableCell>{hours}</TableCell>;
-                  })}
-                  <TableCell>
-                    {eventHoursData[tutor.id]
-                      ? eventHoursData[tutor.id]["Tutor Referral"]?.toFixed(
-                          2
-                        ) || ""
-                      : ""}
-                  </TableCell>
-                  <TableCell>
-                    {eventHoursData[tutor.id]
-                      ? eventHoursData[tutor.id]["Sub Hotline"]?.toFixed(2) ||
-                        ""
-                      : ""}
-                  </TableCell>
+                        return (
+                          <TableCell key={week.toString()}>{hours}</TableCell>
+                        );
+                      })}
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Tutor Referral"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Sub Hotline"] || ""
+                          : ""}
+                      </TableCell>
 
-                  <TableCell>
-                    {/* {calculateExtraHours(tutor.id).toFixed(2)}
-                     */}
-                    {eventHoursData[tutor.id]
-                      ? eventHoursData[tutor.id]["Other"]?.toFixed(2) || ""
-                      : ""}
-                  </TableCell>
-                  <TableCell>
-                    {monthlyHours[tutor.id]?.toFixed(2) || ""}
-                  </TableCell>
-                  <TableCell>
-                    {allTimeHours[tutor.id]?.toFixed(2) || ""}
-                  </TableCell>
+                      <TableCell>
+                        {/* {calculateExtraHours(tutor.id).toFixed(2)}
+                         */}
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Other"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>{monthlyHours[tutor.id] || ""}</TableCell>
+                      <TableCell>{allTimeHours[tutor.id] || ""}</TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
