@@ -332,6 +332,68 @@ export const getAllSessionHoursBatch = async () => {
     throw error;
   }
 };
+
+export const getTotalSessionHoursRange = async (start: string, end: string) => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_total_session_hours_range",
+      {
+        start_date: start,
+        end_date: end,
+      }
+    );
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error fetching total session hours");
+    throw error;
+  }
+};
+
+export const getTotalEventHoursRange = async (start: string, end: string) => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_total_event_hours_range",
+      {
+        start_date: start,
+        end_date: end,
+      }
+    );
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error fetching total session hours", error);
+    throw error;
+  }
+};
+
+export const getTotalHoursRange = async (start: string, end: string) => {
+  try {
+    const { data: hoursJson, error } = await supabase.rpc(
+      "get_total_hours_range",
+      {
+        start_date: start,
+        end_date: end,
+      }
+    );
+    if (error) throw error;
+    return hoursJson;
+  } catch (error) {
+    console.error("Error fetching tutor hours range", error);
+    throw error;
+  }
+};
+
+export const getTotalHours = async () => {
+  try {
+    const { data, error } = await supabase.rpc("get_total_hours");
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching tutor hours", error);
+    throw error;
+  }
+};
 /**
  * 
  * BEGIN
