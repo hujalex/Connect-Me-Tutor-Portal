@@ -8,7 +8,7 @@ import TutorDashboard from '@/components/tutor/DashboardContent';
 import AdminDashboard from '@/components/admin/DashboardContent';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/ui/dashboard-layout'; // Assuming Sidebar component is available
+import DashboardLayout from '@/components/admin/dashboard-layout'; // Assuming Sidebar component is available
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null);

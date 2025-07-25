@@ -7,6 +7,8 @@ import {
   endOfMonth,
   eachWeekOfInterval,
   parseISO,
+  startOfWeek,
+  addDays,
 } from "date-fns";
 import {
   Table,
@@ -20,6 +22,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -46,6 +49,22 @@ import { Profile, Session, Event } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
 import { Combobox } from "../ui/combobox";
 import { Combobox2 } from "../ui/combobox2";
+import {
+  getAllEventHoursBatch,
+  getAllEventHoursBatchWithType,
+  getAllHours,
+  getAllHoursBatch,
+  getAllSessionHoursBatch,
+  getEventHoursRangeBatch,
+  getHoursRangeBatch,
+  getSessionHoursRange,
+  getSessionHoursRangeBatch,
+  getTotalEventHoursRange,
+  getTotalHours,
+  getTotalHoursRange,
+  getTotalSessionHoursRange,
+} from "@/lib/actions/hours.actions";
+import { resourceLimits } from "worker_threads";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -57,6 +76,36 @@ const HoursManager = () => {
   const [allTimeHours, setAllTimeHours] = useState<{ [key: string]: number }>(
     {}
   );
+  const [allTimeSessionHours, setAllTimeSessionHours] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [eventHoursOther, setEventHoursOther] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [eventHoursData, setEventHoursData] = useState<{
+    [key: string]: { [key: string]: number };
+  }>({});
+
+  const [weeklySessionHours, setWeeklySessionHours] = useState<{
+    [key: string]: { [key: string]: number };
+  }>({});
+
+  const [monthlyHours, setMonthlyHours] = useState<{ [key: string]: number }>(
+    {}
+  );
+  const [totalSessionHours, setTotalSessionHours] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [totalEventHours, setTotalEventHours] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [totalMonthlyHours, setTotalMonthlyHours] = useState(0);
+  const [totalHours, setTotalHours] = useState(0);
+
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isRemoveEventModalOpen, setIsRemoveEventModalOpen] = useState(false);
   const [selectedTutorForEvent, setSelectedTutorForEvent] = useState<
@@ -69,6 +118,9 @@ const HoursManager = () => {
   >(null);
   const [filterValue, setFilterValue] = useState<string>("");
   const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
+  const [eventType, setEventType] = useState("");
+  const [allTimeView, setAllTimeView] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchTutors();
@@ -76,10 +128,31 @@ const HoursManager = () => {
 
   useEffect(() => {
     if (tutors.length > 0) {
-      fetchSessionsAndEvents();
-      calculateAllTimeHours();
+      // fetchSessionsAndEvents();
+      fetchHours();
     }
   }, [tutors, selectedDate]);
+
+  const fetchHours = async () => {
+    setLoading(true);
+    await Promise.all([
+      calculateAllTimeHoursBatch(),
+      calculateEventHours(),
+      calculateWeeklyHoursForMonth(),
+      calculateMonthHours(),
+      calculateTotalMonthlyHours(),
+    ]);
+    setLoading(false);
+  };
+
+  const fetchAllTimeHours = async () => {
+    await Promise.all([
+      calculateAllTimeHoursBatch(),
+      calculateAllTimeEventHours(),
+      calculateAllTimeSessionHours(),
+      calculateTotalMonthlyHours(),
+    ]);
+  };
 
   useEffect(() => {
     const filtered = tutors.filter((tutor) => {
@@ -155,21 +228,23 @@ const HoursManager = () => {
 
   const calculateAllTimeHours = async () => {
     const allTimeHoursPromises = tutors.map(async (tutor) => {
-      const allSessions = await getTutorSessions(tutor.id);
-      const allEvents = await getEvents(tutor.id);
+      // const allSessions = await getTutorSessions(tutor.id);
+      // const allEvents = await getEvents(tutor.id);
 
-      const sessionHours = allSessions
-        .filter((session) => session.status === "Complete")
-        .reduce(
-          (total, session) => total + calculateSessionDuration(session),
-          0
-        );
-      // .reduce((total, session) => total + 1.0)
+      // const sessionHours = allSessions
+      //   .filter((session) => session.status === "Complete")
+      //   .reduce(
+      //     (total, session) => total + calculateSessionDuration(session),
+      //     0
+      //   );
+      // // .reduce((total, session) => total + 1.0)
 
-      const eventHours =
-        allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
+      // const eventHours =
+      //   allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
 
-      return { tutorId: tutor.id, hours: sessionHours + eventHours };
+      const totalHours = await getAllHours(tutor.id);
+
+      return { tutorId: tutor.id, hours: totalHours };
     });
 
     try {
@@ -184,6 +259,41 @@ const HoursManager = () => {
     }
   };
 
+  const calculateAllTimeHoursBatch = async () => {
+    try {
+      const data: { [key: string]: number } = await getAllHoursBatch();
+      setAllTimeHours(data);
+    } catch (error) {
+      toast.error("Unable to set all time hours");
+    }
+  };
+
+  // const calculateWeeklySessionhours = async () => {
+  //   try {
+  //     weeksInMonth.map((week) => {
+  //       const weekHours = getSessionHoursRange();
+  //     });
+  //   } catch (error) {}
+  // };
+
+  const calculateEventHours = async () => {
+    try {
+      const firstDay = startOfWeek(startOfMonth(selectedDate));
+      const lastDay = endOfWeek(endOfMonth(selectedDate));
+
+      const data: { [key: string]: { [key: string]: number } } =
+        await getEventHoursRangeBatch(
+          firstDay.toISOString(),
+          lastDay.toISOString()
+        );
+      setEventHoursData(data);
+      console.log(data);
+      console.log(eventHoursData);
+    } catch (error) {
+      toast.error("Unable to get event hours");
+    }
+  };
+
   const calculateSessionDuration = (session: Session) => {
     const start = new Date(session.date);
     const end = new Date(session.date);
@@ -192,21 +302,167 @@ const HoursManager = () => {
     return (end.getTime() - start.getTime()) / (1000 * 60 * 60); // Convert to hours
   };
 
-  const calculateWeeklyHours = (
-    tutorId: string,
-    weekStart: Date,
-    weekEnd: Date
-  ) => {
-    return (
-      sessionsData[tutorId]
-        ?.filter(
-          (session) =>
-            session.status === "Complete" &&
-            new Date(session.date) >= weekStart &&
-            new Date(session.date) < weekEnd
-        )
-        .reduce((total, session) => total + 1, 0) || 0
-    );
+  const calculateWeeklyHoursForMonth = async () => {
+    const monthlySessionHours: { [key: string]: { [key: string]: number } } =
+      {};
+
+    const weekPromises = weeksInMonth.map(async (week) => {
+      const nextWeek = addDays(week, 7);
+      const data: { [key: string]: number } = await getSessionHoursRangeBatch(
+        week.toISOString(),
+        nextWeek.toISOString()
+      );
+      return {
+        weekKey: week.getTime().toString(),
+        data: data,
+      };
+    });
+
+    const results = await Promise.all(weekPromises);
+    results.forEach(({ weekKey, data }) => {
+      Object.entries(data).forEach(([tutorId, hours]) => {
+        if (!monthlySessionHours[tutorId]) {
+          monthlySessionHours[tutorId] = {};
+        }
+        monthlySessionHours[tutorId][weekKey] = hours;
+      });
+    });
+    console.log(monthlySessionHours);
+    setWeeklySessionHours(monthlySessionHours);
+  };
+
+  const calculateMonthHours = async () => {
+    try {
+      const firstDay = startOfWeek(startOfMonth(selectedDate));
+      const lastDay = endOfWeek(endOfMonth(selectedDate));
+
+      console.log(firstDay);
+      console.log(lastDay);
+
+      const data: { [key: string]: number } = await getHoursRangeBatch(
+        firstDay.toISOString(),
+        lastDay.toISOString()
+      );
+      setMonthlyHours(data);
+    } catch (error) {
+      toast.error("Error fetching monthly hours");
+    }
+  };
+
+  const calculateAllTimeEventHours = async () => {
+    try {
+      const data: { [key: string]: { [key: string]: number } } =
+        await getAllEventHoursBatch();
+      setEventHoursData(data);
+    } catch (error) {
+      toast.error("Error fetching All Time Event Hours");
+    }
+  };
+
+  const calculateTotalMonthHours = async () => {
+    try {
+      const firstDay = startOfWeek(startOfMonth(selectedDate));
+      const lastDay = endOfWeek(endOfMonth(selectedDate));
+
+      const data: number = await getTotalHoursRange(
+        firstDay.toISOString(),
+        lastDay.toISOString()
+      );
+      setTotalMonthlyHours(data);
+    } catch (error) {
+      toast.error("Error fetching total monthly hours");
+    }
+  };
+
+  const calculateTotalHours = async () => {
+    try {
+      const data: number = await getTotalHours();
+      setTotalHours(data);
+    } catch (error) {
+      toast.error("Error fetching total hours");
+    }
+  };
+
+  const calculateAllTimeSessionHours = async () => {
+    try {
+      const data: { [key: string]: number } = await getAllSessionHoursBatch();
+      setAllTimeSessionHours(data);
+    } catch (error) {
+      toast.error("Error fetching All Time Session Hours");
+    }
+  };
+
+  // const calculate = async () => {
+  //   try {
+  //     const data: number = await getTotalSessionHoursRange(
+  //       firstDay.toISOString(),
+  //       lastDay.toISOString()
+  //     );
+  //     return data;
+  //   } catch (error) {
+  //     toast.error("Error calculating total month hours");
+  //   }
+  // };
+
+  const calculateTotalWeeklySessionHours = async () => {
+    try {
+      const weeklyTotalSessionHours: { [key: string]: number } = {};
+
+      const weekPromises = weeksInMonth.map(async (week) => {
+        const nextWeek = addDays(week, 7);
+        console.log("First day", week.toISOString());
+        console.log("Last Day", nextWeek.toISOString());
+
+        const data: number = await getTotalSessionHoursRange(
+          week.toISOString(),
+          nextWeek.toISOString()
+        );
+        return {
+          weekKey: week.getTime().toString(),
+          data: data,
+        };
+      });
+
+      const results = await Promise.all(weekPromises);
+      results.forEach(({ weekKey, data }) => {
+        weeklyTotalSessionHours[weekKey] = data;
+      });
+
+      //--all montly hours
+      const monthlyHours = await calculateMonthHours();
+
+      setTotalSessionHours(weeklyTotalSessionHours);
+    } catch (error) {
+      toast.error("Error fetching Total Weekly Session Hours");
+    }
+  };
+
+  const calculateTotalEventHours = async () => {
+    try {
+      const firstDay = startOfWeek(startOfMonth(selectedDate));
+      const lastDay = endOfWeek(endOfMonth(selectedDate));
+      const data: { [key: string]: number } = await getTotalEventHoursRange(
+        firstDay.toISOString(),
+        lastDay.toISOString()
+      );
+
+      setTotalEventHours(data);
+    } catch (error) {
+      toast.error("Error fetching Total Event Hours");
+    }
+  };
+
+  const calculateTotalMonthlyHours = async () => {
+    try {
+      await Promise.all([
+        calculateTotalWeeklySessionHours(),
+        calculateTotalEventHours(),
+        calculateTotalMonthHours(),
+        calculateTotalHours(),
+      ]);
+    } catch (error) {
+      toast.error("Error fetching Total Session Hours");
+    }
   };
 
   const calculateExtraHours = (tutorId: string) => {
@@ -215,14 +471,14 @@ const HoursManager = () => {
     );
   };
 
-  const calculateMonthHours = (tutorId: string) => {
-    const sessionHours =
-      sessionsData[tutorId]
-        ?.filter((session) => session.status === "Complete")
-        .reduce((total, session) => total + 1, 0) || 0;
-    const extraHours = calculateExtraHours(tutorId);
-    return sessionHours + extraHours;
-  };
+  // const calculateMonthHours = (tutorId: string) => {
+  //   const sessionHours =
+  //     sessionsData[tutorId]
+  //       ?.filter((session) => session.status === "Complete")
+  //       .reduce((total, session) => total + 1, 0) || 0;
+  //   const extraHours = calculateExtraHours(tutorId);
+  //   return sessionHours + extraHours;
+  // };
 
   const weeksInMonth = eachWeekOfInterval({
     start: startOfMonth(selectedDate),
@@ -240,13 +496,15 @@ const HoursManager = () => {
       newEvent.tutorId &&
       newEvent.date &&
       newEvent.hours &&
-      newEvent.summary
+      newEvent.summary &&
+      newEvent.type
     ) {
       try {
         await createEvent(newEvent as Event);
         toast.success("Event added successfully.");
         setIsAddEventModalOpen(false);
         setNewEvent({});
+        setEventType("");
         fetchSessionsAndEvents();
       } catch (error) {
         console.error("Failed to add event:", error);
@@ -295,13 +553,29 @@ const HoursManager = () => {
               />
               <div className="flex space-x-4">
                 <Select
-                  onValueChange={(value) => setSelectedDate(new Date(value))}
-                  defaultValue={selectedDate.toISOString()}
+                  value={
+                    allTimeView
+                      ? "All Time"
+                      : selectedDate?.toISOString() || "placeholder"
+                  }
+                  onValueChange={(value) => {
+                    if (value === "All Time") {
+                      setAllTimeView(true);
+                      fetchAllTimeHours();
+                    } else {
+                      setAllTimeView(false);
+                      setSelectedDate(new Date(value));
+                      fetchHours();
+                    }
+                  }}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select month" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem disabled={loading} value="All Time">
+                      All Time
+                    </SelectItem>
                     {monthYearOptions.map((date) => (
                       <SelectItem
                         key={date.toISOString()}
@@ -312,7 +586,6 @@ const HoursManager = () => {
                     ))}
                   </SelectContent>
                 </Select>
-
                 <Dialog
                   open={isAddEventModalOpen}
                   onOpenChange={setIsAddEventModalOpen}
@@ -338,6 +611,33 @@ const HoursManager = () => {
                         setNewEvent({ ...newEvent, tutorId: value })
                       }
                     />
+                    <Select
+                      value={eventType}
+                      onValueChange={(value) => {
+                        setEventType(value);
+                        setNewEvent({ ...newEvent, type: value });
+                      }}
+                    >
+                      <SelectTrigger className="">
+                        <SelectValue placeholder={"Select Type"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Tutor Referral">
+                          Tutor Referral
+                        </SelectItem>
+                        <SelectItem value="Sub Hotline">Sub Hotline</SelectItem>
+                        <SelectItem value="Additional Tutoring Hours">
+                          Additional Tutoring Hours
+                        </SelectItem>
+                        <SelectItem value="School Tutoring">
+                          School Tutoring
+                        </SelectItem>
+                        <SelectItem value="Biweekly Meeting">
+                          Biweekly Meeting
+                        </SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input
                       type="date"
                       onChange={(e) =>
@@ -355,6 +655,7 @@ const HoursManager = () => {
                       }
                       placeholder="Hours"
                     />
+
                     <Input
                       type="text"
                       onChange={(e) =>
@@ -428,6 +729,7 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
+                <Button>Download Report</Button>
               </div>
             </div>
           </div>
@@ -438,44 +740,129 @@ const HoursManager = () => {
                 <TableHead className="sticky left-0 z-10 bg-white">
                   Tutor Name
                 </TableHead>
-                {weeksInMonth.map((week, index) => (
-                  <TableHead key={week.toISOString()}>
-                    {format(week, "MMM d")} -{" "}
-                    {format(
-                      new Date(week.getTime() + 6 * 24 * 60 * 60 * 1000),
-                      "MMM d"
-                    )}
-                  </TableHead>
-                ))}
-                <TableHead>Added</TableHead>
-                <TableHead>This Month</TableHead>
-                <TableHead>All Time</TableHead>
+                {allTimeView ? (
+                  <>
+                    <TableHead>All Sessions</TableHead>
+                    <TableHead>Biweekly Meetings</TableHead>
+                    <TableHead>Tutor Referral</TableHead>
+                    <TableHead>Sub Hotline</TableHead>
+                    <TableHead>Other</TableHead>
+                    <TableHead>All Time</TableHead>
+                  </>
+                ) : (
+                  <>
+                    {weeksInMonth.map((week) => (
+                      <TableHead key={week.toISOString()}>
+                        {format(week, "MMM d")} -{" "}
+                        {format(addDays(week, 6), "MMM d")}
+                      </TableHead>
+                    ))}
+                    <TableHead>Biweekly Meetings</TableHead>
+                    <TableHead>Tutor Referral</TableHead>
+                    <TableHead>Sub Hotline</TableHead>
+                    <TableHead>Other</TableHead>
+                    <TableHead>This Month</TableHead>
+                    <TableHead>All Time</TableHead>
+                  </>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
+              {allTimeView ? (
+                ""
+              ) : (
+                <TableRow key={"total hours"}>
+                  <TableCell>Total</TableCell>
+                  {weeksInMonth.map((week) => {
+                    const hours = totalSessionHours[week.getTime().toString()]
+                      ? totalSessionHours[week.getTime().toString()] || ""
+                      : "";
+
+                    return <TableCell key={week.toString()}>{hours}</TableCell>;
+                  })}
+                  <TableCell>{totalEventHours["Biweekly Meeting"]}</TableCell>
+                  <TableCell>{totalEventHours["Tutor Referral"]}</TableCell>
+                  <TableCell>{totalEventHours["Sub Hotline"]}</TableCell>
+                  <TableCell>{totalEventHours["Other"]}</TableCell>
+                  <TableCell>{totalMonthlyHours}</TableCell>
+                  <TableCell>TBD</TableCell>
+                </TableRow>
+              )}
               {filteredTutors.map((tutor) => (
                 <TableRow key={tutor.id}>
                   <TableCell className="sticky left-0 z-10 bg-white">
                     {tutor.firstName} {tutor.lastName}
                   </TableCell>
-                  {weeksInMonth.map((week) => (
-                    <TableCell key={week.toISOString()}>
-                      {calculateWeeklyHours(
-                        tutor.id,
-                        week,
-                        new Date(week.getTime() + 7 * 24 * 60 * 60 * 1000)
-                      ).toFixed(2)}
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    {calculateExtraHours(tutor.id).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    {calculateMonthHours(tutor.id).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    {allTimeHours[tutor.id]?.toFixed(2) || "0.00"}
-                  </TableCell>
+                  {allTimeView ? (
+                    <>
+                      {" "}
+                      <TableCell>
+                        {allTimeSessionHours[tutor.id] || ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Biweekly Meeting"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Tutor Referral"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Sub Hotline"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {/* {calculateExtraHours(tutor.id).toFixed(2)}
+                         */}
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Other"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>{allTimeHours[tutor.id] || ""}</TableCell>
+                    </>
+                  ) : (
+                    <>
+                      {weeksInMonth.map((week) => {
+                        const hours = weeklySessionHours[tutor.id]
+                          ? weeklySessionHours[tutor.id][
+                              week.getTime().toString()
+                            ] || ""
+                          : "";
+
+                        return (
+                          <TableCell key={week.toString()}>{hours}</TableCell>
+                        );
+                      })}
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Biweekly Meetings"]
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Tutor Referral"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Sub Hotline"] || ""
+                          : ""}
+                      </TableCell>
+
+                      <TableCell>
+                        {/* {calculateExtraHours(tutor.id).toFixed(2)}
+                         */}
+                        {eventHoursData[tutor.id]
+                          ? eventHoursData[tutor.id]["Other"] || ""
+                          : ""}
+                      </TableCell>
+                      <TableCell>{monthlyHours[tutor.id] || ""}</TableCell>
+                      <TableCell>{allTimeHours[tutor.id] || ""}</TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

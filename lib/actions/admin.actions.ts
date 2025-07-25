@@ -271,7 +271,7 @@ export const addTutor = async (
       role: "Tutor",
       first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
       last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
-      date_of_birth: tutorData.dateOfBirth || "",
+      // date_of_birth: tutorData.dateOfBirth || "",
       start_date: tutorData.startDate || new Date().toISOString(),
       availability: tutorData.availability || [],
       email: lowerCaseEmail,
@@ -306,7 +306,7 @@ export const addTutor = async (
       role: createdProfile.role,
       firstName: createdProfile.firstName,
       lastName: createdProfile.lastName,
-      dateOfBirth: createdProfile.dateOfBirth,
+      // dateOfBirth: createdProfile.dateOfBirth,
       startDate: createdProfile.startDate,
       availability: createdProfile.availability,
       email: createdProfile.email,
@@ -428,7 +428,7 @@ export async function editUser(profile: Profile) {
     grade,
     gender,
     email,
-    dateOfBirth,
+    // dateOfBirth,
     startDate,
     parentName,
     parentPhone,
@@ -448,7 +448,7 @@ export async function editUser(profile: Profile) {
         grade: grade,
         gender: gender,
         email: email,
-        date_of_birth: dateOfBirth,
+        // date_of_birth: dateOfBirth,
         start_date: startDate,
         parent_name: parentName,
         parent_email: parentEmail,
@@ -1698,6 +1698,7 @@ export async function getEvents(tutorId: string): Promise<Event[]> {
         tutorId: event.tutor_id,
         date: event.date,
         hours: event.hours,
+        type: event.type,
       }))
     );
 
@@ -1757,6 +1758,7 @@ export async function getEventsWithTutorMonth(
       tutorId: event.tutor_id,
       date: event.date,
       hours: event.hours,
+      type: event.type,
     }));
 
     return events; // Return the array of events
@@ -1773,6 +1775,7 @@ export async function createEvent(event: Event) {
     summary: event.summary,
     tutor_id: event.tutorId,
     hours: event.hours,
+    type: event.type,
   });
 
   if (eventError) {
