@@ -147,10 +147,10 @@ const Stats = () => {
                 </TableRow>
               </TableFooter>
             </Table>
-            <Table>
+            {/* <Table>
               <TableCell>{totalHoursWithStudent}</TableCell>
               <TableCell>{HoursInRange}</TableCell>
-            </Table>
+            </Table> */}
           </div>
         </div>
       )}

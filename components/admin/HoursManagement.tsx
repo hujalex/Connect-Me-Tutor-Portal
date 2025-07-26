@@ -65,6 +65,7 @@ import {
   getTotalSessionHoursRange,
 } from "@/lib/actions/hours.actions";
 import { resourceLimits } from "worker_threads";
+import { number } from "zod";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -77,10 +78,6 @@ const HoursManager = () => {
     {}
   );
   const [allTimeSessionHours, setAllTimeSessionHours] = useState<{
-    [key: string]: number;
-  }>({});
-
-  const [eventHoursOther, setEventHoursOther] = useState<{
     [key: string]: number;
   }>({});
 
@@ -535,6 +532,48 @@ const HoursManager = () => {
     }
   };
 
+  // Sample data to test the basic PDF
+  const sampleData = {
+    tutors: tutors,
+    totalSessionHours: totalSessionHours,
+    totalEventHours: totalEventHours,
+    totalMonthlyHours: totalMonthlyHours,
+    totalHours: totalHours,
+    allTimeSessionHours: allTimeSessionHours,
+    eventHoursData: eventHoursData,
+    allTimeHours: allTimeHours,
+    weeklySessionHours: weeklySessionHours,
+    monthlyHours: monthlyHours,
+  };
+
+  // Example of how to call the API from the frontend
+  const handleDownloadHoursReport = async () => {
+    try {
+      const response = await fetch("/api/admin/create-hours-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sampleData),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "document.pdf";
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to generate PDF");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to download Hours Report");
+    }
+  };
+
   return (
     <main className="p-8">
       <div>
@@ -729,7 +768,9 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
-                <Button>Download Report</Button>
+                <Button onClick={handleDownloadHoursReport}>
+                  Download Report
+                </Button>
               </div>
             </div>
           </div>
