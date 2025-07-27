@@ -9,6 +9,7 @@ import {
   parseISO,
   startOfWeek,
   addDays,
+  getMonth,
 } from "date-fns";
 import {
   Table,
@@ -65,6 +66,8 @@ import {
   getTotalSessionHoursRange,
 } from "@/lib/actions/hours.actions";
 import { resourceLimits } from "worker_threads";
+import { number } from "zod";
+import { Loader2 } from "lucide-react";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -77,10 +80,6 @@ const HoursManager = () => {
     {}
   );
   const [allTimeSessionHours, setAllTimeSessionHours] = useState<{
-    [key: string]: number;
-  }>({});
-
-  const [eventHoursOther, setEventHoursOther] = useState<{
     [key: string]: number;
   }>({});
 
@@ -121,6 +120,7 @@ const HoursManager = () => {
   const [eventType, setEventType] = useState("");
   const [allTimeView, setAllTimeView] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
     fetchTutors();
@@ -128,21 +128,27 @@ const HoursManager = () => {
 
   useEffect(() => {
     if (tutors.length > 0) {
-      // fetchSessionsAndEvents();
-      fetchHours();
+      if (allTimeView) {
+        fetchAllTimeHours();
+      } else {
+        fetchHours();
+      }
     }
-  }, [tutors, selectedDate]);
+  }, [tutors, selectedDate, allTimeView]);
 
   const fetchHours = async () => {
     setLoading(true);
-    await Promise.all([
-      calculateAllTimeHoursBatch(),
-      calculateEventHours(),
-      calculateWeeklyHoursForMonth(),
-      calculateMonthHours(),
-      calculateTotalMonthlyHours(),
-    ]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        calculateAllTimeHoursBatch(),
+        calculateEventHours(),
+        calculateWeeklyHoursForMonth(),
+        calculateMonthHours(),
+        calculateTotalMonthlyHours(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchAllTimeHours = async () => {
@@ -535,6 +541,60 @@ const HoursManager = () => {
     }
   };
 
+  const handleEditEvent = async () => {
+    try {
+    } catch (error) {}
+  };
+
+  // Sample data to test the basic PDF
+  const reportData = {
+    selectedDate: selectedDate,
+    tutors: tutors,
+    allTimeView: allTimeView,
+    totalSessionHours: totalSessionHours,
+    totalEventHours: totalEventHours,
+    totalMonthlyHours: totalMonthlyHours,
+    totalHours: totalHours,
+    allTimeSessionHours: allTimeSessionHours,
+    eventHoursData: eventHoursData,
+    allTimeHours: allTimeHours,
+    weeklySessionHours: weeklySessionHours,
+    monthlyHours: monthlyHours,
+    filteredTutors: filteredTutors,
+    logoUrl: "/logo.png",
+    month: getMonth(selectedDate).toString(),
+  };
+
+  // Example of how to call the API from the frontend
+  const handleDownloadHoursReport = async () => {
+    try {
+      setReportLoading(true);
+      const response = await fetch("/api/admin/create-hours-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "document.pdf";
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to generate PDF");
+      }
+      setReportLoading(false);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to download Hours Report");
+    }
+  };
+
   return (
     <main className="p-8">
       <div>
@@ -561,11 +621,10 @@ const HoursManager = () => {
                   onValueChange={(value) => {
                     if (value === "All Time") {
                       setAllTimeView(true);
-                      fetchAllTimeHours();
                     } else {
                       setAllTimeView(false);
                       setSelectedDate(new Date(value));
-                      fetchHours();
+                      // fetchHours();
                     }
                   }}
                 >
@@ -729,7 +788,18 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
-                <Button>Download Report</Button>
+
+                <Button
+                  disabled={reportLoading}
+                  onClick={handleDownloadHoursReport}
+                >
+                  Download Report
+                  {reportLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  ) : (
+                    ""
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -785,7 +855,7 @@ const HoursManager = () => {
                   <TableCell>{totalEventHours["Sub Hotline"]}</TableCell>
                   <TableCell>{totalEventHours["Other"]}</TableCell>
                   <TableCell>{totalMonthlyHours}</TableCell>
-                  <TableCell>TBD</TableCell>
+                  <TableCell>{totalHours}</TableCell>
                 </TableRow>
               )}
               {filteredTutors.map((tutor) => (
