@@ -6,244 +6,753 @@ import {
   View,
   StyleSheet,
 } from "@react-pdf/renderer";
-import { Profile } from "@/types";
+import { eachWeekOfInterval, endOfMonth, startOfMonth, format } from "date-fns";
+
+interface Profile {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
 
 interface HoursPDFData {
+  selectedDate: Date;
   tutors: Profile[];
+  allTimeView: boolean;
   totalSessionHours: { [key: string]: number };
   totalEventHours: { [key: string]: number };
   totalMonthlyHours: number;
-  totalHours: number;
-  allTimeSessionHours: { [key: string]: { [key: string]: number } };
+  allTimeSessionHours: { [key: string]: number };
   eventHoursData: { [key: string]: { [key: string]: number } };
   allTimeHours: { [key: string]: number };
   weeklySessionHours: { [key: string]: { [key: string]: number } };
-  monthyHours: { [key: string]: number };
+  monthlyHours: { [key: string]: number };
+  filteredTutors: Profile[];
 }
 
 const styles = StyleSheet.create({
   page: {
     padding: 20,
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
   },
-  title: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
+
+  // Header Styles
+  header: {
+    marginBottom: 25,
+    borderBottom: "2px solid #2563eb",
+    paddingBottom: 15,
+  },
+  companyName: {
+    fontSize: 24,
     fontWeight: "bold",
+    textAlign: "center",
+    color: "#1e40af",
+    marginBottom: 5,
+  },
+  reportTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  reportSubtitle: {
+    fontSize: 12,
+    textAlign: "center",
+    color: "#6b7280",
+    marginBottom: 5,
+  },
+  reportDate: {
+    fontSize: 10,
+    textAlign: "center",
+    color: "#9ca3af",
+  },
+
+  // Table Styles
+  tableContainer: {
+    marginBottom: 20,
   },
   table: {
-    width: "auto",
+    width: "100%",
+    borderRadius: 4,
+    overflow: "hidden",
     borderStyle: "solid",
-    borderWidth: 1,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
+    borderWidth: 1.5,
+    borderColor: "#d1d5db",
   },
   tableRow: {
-    margin: "auto",
     flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    borderBottomStyle: "solid",
   },
+  tableRowLast: {
+    borderBottomWidth: 0,
+  },
+
+  // Header Cells
   tableColHeader: {
-    width: "11%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    backgroundColor: "#f0f0f0",
-  },
-  tableCol: {
-    width: "11%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-  },
-  tableCellHeader: {
-    margin: "auto",
-    marginTop: 5,
-    marginBottom: 5,
-    fontSize: 8,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  tableCell: {
-    margin: "auto",
-    marginTop: 5,
-    marginBottom: 5,
-    fontSize: 8,
-    textAlign: "center",
-  },
-  tutorNameCol: {
-    width: "20%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#f8fafc",
+    borderRightWidth: 1,
+    borderRightColor: "#d1d5db",
+    borderRightStyle: "solid",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    minHeight: 32,
   },
   tutorNameColHeader: {
-    width: "20%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    backgroundColor: "#e0e0e0",
+    width: "18%",
+    backgroundColor: "#f1f5f9",
+    borderRightWidth: 1,
+    borderRightColor: "#d1d5db",
+    borderRightStyle: "solid",
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    minHeight: 32,
   },
-  totalsRow: {
-    backgroundColor: "#e8f4f8",
+
+  // Data Cells
+  tableCol: {
+    borderRightWidth: 1,
+    borderRightColor: "#e5e7eb",
+    borderRightStyle: "solid",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    minHeight: 28,
+    justifyContent: "center",
+  },
+  tutorNameCol: {
+    width: "18%",
+    backgroundColor: "#fefefe",
+    borderRightWidth: 1,
+    borderRightColor: "#e5e7eb",
+    borderRightStyle: "solid",
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    minHeight: 28,
+    justifyContent: "center",
+  },
+
+  // Text Styles
+  tableCellHeader: {
+    fontSize: 8,
     fontWeight: "bold",
+    textAlign: "center",
+    color: "#374151",
+    lineHeight: 1.2,
   },
-  summarySection: {
-    marginTop: 20,
+  tableCell: {
+    fontSize: 8,
+    textAlign: "center",
+    color: "#4b5563",
+  },
+  tutorNameCell: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#1f2937",
+  },
+
+  // Special Rows
+  totalsRow: {
+    backgroundColor: "#dbeafe",
+    borderTopWidth: 2,
+    borderTopColor: "#2563eb",
+    borderTopStyle: "solid",
+  },
+  totalsCell: {
+    fontSize: 8,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#1e40af",
+  },
+
+  // Statistics Section
+  statsSection: {
+    marginTop: 25,
+    backgroundColor: "#f8fafc",
+    borderRadius: 8,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderStyle: "solid",
+  },
+  statsTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1e40af",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  statsCard: {
+    width: "22%",
+    backgroundColor: "#ffffff",
+    borderRadius: 6,
     padding: 10,
-    backgroundColor: "#f5f5f5",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderStyle: "solid",
+    alignItems: "center",
   },
-  summaryText: {
-    fontSize: 10,
-    marginBottom: 5,
+  statsValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1e40af",
+    marginBottom: 4,
+  },
+  statsLabel: {
+    fontSize: 8,
+    color: "#6b7280",
+    textAlign: "center",
+  },
+
+  // Performance Insights
+  insightsSection: {
+    marginTop: 15,
+  },
+  insightsTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 10,
+  },
+  insightItem: {
+    flexDirection: "row",
+    marginBottom: 6,
+    alignItems: "center",
+  },
+  insightBullet: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#2563eb",
+    marginRight: 8,
+  },
+  insightText: {
+    fontSize: 9,
+    color: "#4b5563",
+    lineHeight: 1.3,
+  },
+
+  // Footer
+  footer: {
+    marginTop: 30,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    borderTopStyle: "solid",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  footerText: {
+    fontSize: 8,
+    color: "#9ca3af",
   },
 });
 
-const MyPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
-  // Helper function to safely get hours with default of 0
-  const getHours = (
-    obj: { [key: string]: number } | undefined,
-    key: string
-  ): number => {
-    return obj?.[key] || 0;
+const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
+  const {
+    tutors,
+    selectedDate,
+    allTimeView,
+    totalSessionHours,
+    totalEventHours,
+    totalMonthlyHours,
+    allTimeSessionHours,
+    eventHoursData,
+    allTimeHours,
+    weeklySessionHours,
+    monthlyHours,
+    filteredTutors,
+  } = data;
+
+  const weeksInMonth = eachWeekOfInterval({
+    start: startOfMonth(selectedDate),
+    end: endOfMonth(selectedDate),
+  });
+
+  // Calculate column width based on number of columns
+  const getColumnWidth = () => {
+    if (allTimeView) {
+      return "13.5%"; // 6 columns total (excluding tutor name)
+    } else {
+      const totalCols = weeksInMonth.length + 5;
+      return `${Math.min(82 / totalCols, 11)}%`;
+    }
   };
 
-  // Calculate totals for each column
-  const calculateColumnTotals = () => {
-    const totals = {
-      sessionHours: 0,
-      eventHours: 0,
-      monthlyHours: 0,
-      allTimeHours: 0,
-    };
+  const colWidth = getColumnWidth();
 
-    data.tutors.forEach((tutor) => {
-      totals.sessionHours += getHours(data.totalSessionHours, tutor.id);
-      totals.eventHours += getHours(data.totalEventHours, tutor.id);
-      totals.monthlyHours += getHours(data.monthyHours, tutor.id);
-      totals.allTimeHours += getHours(data.allTimeHours, tutor.id);
+  // Calculate statistics
+  const calculateStats = () => {
+    const activeTutors = filteredTutors.filter((tutor) => {
+      const hasSessionHours = allTimeView
+        ? (allTimeSessionHours[tutor.id] || 0) > 0
+        : Object.values(weeklySessionHours[tutor.id] || {}).some(
+            (hours) => hours > 0
+          );
+      const hasEventHours = Object.values(eventHoursData[tutor.id] || {}).some(
+        (hours) => hours > 0
+      );
+      return hasSessionHours || hasEventHours;
     });
 
-    return totals;
+    const totalTutorHours = filteredTutors.reduce((sum, tutor) => {
+      return (
+        sum +
+        (allTimeView
+          ? allTimeHours[tutor.id] || 0
+          : monthlyHours[tutor.id] || 0)
+      );
+    }, 0);
+
+    const averageHoursPerTutor =
+      activeTutors.length > 0 ? totalTutorHours / activeTutors.length : 0;
+
+    const topPerformer = filteredTutors.reduce((top, tutor) => {
+      const tutorHours = allTimeView
+        ? allTimeHours[tutor.id] || 0
+        : monthlyHours[tutor.id] || 0;
+      const topHours = allTimeView
+        ? allTimeHours[top?.id] || 0
+        : monthlyHours[top?.id] || 0;
+      return tutorHours > topHours ? tutor : top;
+    }, filteredTutors[0]);
+
+    const totalEventHoursSum = Object.values(totalEventHours).reduce(
+      (sum, hours) => sum + (hours || 0),
+      0
+    );
+
+    return {
+      activeTutors: activeTutors.length,
+      totalHours: totalTutorHours,
+      averageHours: averageHoursPerTutor,
+      topPerformer,
+      totalEventHours: totalEventHoursSum,
+    };
   };
 
-  const columnTotals = calculateColumnTotals();
+  const stats = calculateStats();
+
+  // Format date helper
+  const formatDateRange = (date: Date): string => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
+  };
+
+  const addDays = (date: Date, days: number): Date => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  };
 
   return (
     <PDFDocument>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        <Text style={styles.title}>Tutor Hours Report</Text>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <Text style={styles.companyName}>Connect Me Tutoring</Text>
+          <Text style={styles.reportTitle}>
+            {allTimeView ? "All-Time Hours Report" : "Monthly Hours Report"}
+          </Text>
+          <Text style={styles.reportSubtitle}>
+            {allTimeView
+              ? "Comprehensive Performance Overview"
+              : `Performance Report - ${format(selectedDate, "MMMM yyyy")}`}
+          </Text>
+          <Text style={styles.reportDate}>
+            Generated on {format(new Date(), "MMMM dd, yyyy 'at' HH:mm")}
+          </Text>
+        </View>
 
-        <View style={styles.table}>
-          {/* Header Row */}
-          <View style={styles.tableRow}>
-            <View style={styles.tutorNameColHeader}>
-              <Text style={styles.tableCellHeader}>Tutor Name</Text>
+        {/* Main Table */}
+        <View style={styles.tableContainer}>
+          <View style={styles.table}>
+            {/* Header Row */}
+            <View style={styles.tableRow}>
+              <View style={styles.tutorNameColHeader}>
+                <Text style={styles.tableCellHeader}>Tutor Name</Text>
+              </View>
+
+              {allTimeView ? (
+                <>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>All Sessions</Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>
+                      Biweekly{"\n"}Meetings
+                    </Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>
+                      Tutor{"\n"}Referral
+                    </Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>Sub{"\n"}Hotline</Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>Other</Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>
+                      All Time{"\n"}Total
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  {weeksInMonth.map((week) => (
+                    <View
+                      key={week.toISOString()}
+                      style={[styles.tableColHeader, { width: colWidth }]}
+                    >
+                      <Text style={styles.tableCellHeader}>
+                        {formatDateRange(week)} -{"\n"}
+                        {formatDateRange(addDays(week, 6))}
+                      </Text>
+                    </View>
+                  ))}
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>
+                      Biweekly{"\n"}Meetings
+                    </Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>
+                      Tutor{"\n"}Referral
+                    </Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>Sub{"\n"}Hotline</Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>Other</Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>This{"\n"}Month</Text>
+                  </View>
+                  <View style={[styles.tableColHeader, { width: colWidth }]}>
+                    <Text style={styles.tableCellHeader}>
+                      All Time{"\n"}Total
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
-            <View style={styles.tableColHeader}>
-                <Text style = {styles.tableCellHeader}></Text>
+
+            {/* Totals Row - Only show if not allTimeView */}
+            {!allTimeView && (
+              <View style={[styles.tableRow, styles.totalsRow]}>
+                <View style={styles.tutorNameCol}>
+                  <Text style={[styles.tutorNameCell, { color: "#1e40af" }]}>
+                    TOTALS
+                  </Text>
+                </View>
+
+                {weeksInMonth.map((week) => {
+                  const hours =
+                    totalSessionHours[week.getTime().toString()] || 0;
+                  return (
+                    <View
+                      key={week.toString()}
+                      style={[styles.tableCol, { width: colWidth }]}
+                    >
+                      <Text style={styles.totalsCell}>
+                        {hours ? hours.toFixed(1) : "-"}
+                      </Text>
+                    </View>
+                  );
+                })}
+
+                <View style={[styles.tableCol, { width: colWidth }]}>
+                  <Text style={styles.totalsCell}>
+                    {totalEventHours["Biweekly Meeting"]
+                      ? totalEventHours["Biweekly Meeting"].toFixed(1)
+                      : "-"}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { width: colWidth }]}>
+                  <Text style={styles.totalsCell}>
+                    {totalEventHours["Tutor Referral"]
+                      ? totalEventHours["Tutor Referral"].toFixed(1)
+                      : "-"}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { width: colWidth }]}>
+                  <Text style={styles.totalsCell}>
+                    {totalEventHours["Sub Hotline"]
+                      ? totalEventHours["Sub Hotline"].toFixed(1)
+                      : "-"}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { width: colWidth }]}>
+                  <Text style={styles.totalsCell}>
+                    {totalEventHours["Other"]
+                      ? totalEventHours["Other"].toFixed(1)
+                      : "-"}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { width: colWidth }]}>
+                  <Text style={styles.totalsCell}>
+                    {totalMonthlyHours ? totalMonthlyHours.toFixed(1) : "-"}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { width: colWidth }]}>
+                  <Text style={styles.totalsCell}>-</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Data Rows */}
+            {filteredTutors.map((tutor, index) => (
+              <View
+                key={tutor.id}
+                style={[
+                  styles.tableRow,
+                  index === filteredTutors.length - 1
+                    ? styles.tableRowLast
+                    : {},
+                ]}
+              >
+                <View style={styles.tutorNameCol}>
+                  <Text style={styles.tutorNameCell}>
+                    {tutor.firstName} {tutor.lastName}
+                  </Text>
+                </View>
+
+                {allTimeView ? (
+                  <>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {allTimeSessionHours[tutor.id]
+                          ? allTimeSessionHours[tutor.id].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Biweekly Meeting"]
+                          ? eventHoursData[tutor.id][
+                              "Biweekly Meeting"
+                            ].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Tutor Referral"]
+                          ? eventHoursData[tutor.id]["Tutor Referral"].toFixed(
+                              1
+                            )
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Sub Hotline"]
+                          ? eventHoursData[tutor.id]["Sub Hotline"].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Other"]
+                          ? eventHoursData[tutor.id]["Other"].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { fontWeight: "bold", color: "#1e40af" },
+                        ]}
+                      >
+                        {allTimeHours[tutor.id]
+                          ? allTimeHours[tutor.id].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    {weeksInMonth.map((week) => {
+                      const hours =
+                        weeklySessionHours[tutor.id]?.[
+                          week.getTime().toString()
+                        ] || 0;
+                      return (
+                        <View
+                          key={week.toString()}
+                          style={[styles.tableCol, { width: colWidth }]}
+                        >
+                          <Text style={styles.tableCell}>
+                            {hours ? hours.toFixed(1) : "-"}
+                          </Text>
+                        </View>
+                      );
+                    })}
+
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Biweekly Meetings"]
+                          ? eventHoursData[tutor.id][
+                              "Biweekly Meetings"
+                            ].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Tutor Referral"]
+                          ? eventHoursData[tutor.id]["Tutor Referral"].toFixed(
+                              1
+                            )
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Sub Hotline"]
+                          ? eventHoursData[tutor.id]["Sub Hotline"].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {eventHoursData[tutor.id]?.["Other"]
+                          ? eventHoursData[tutor.id]["Other"].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { fontWeight: "bold", color: "#1e40af" },
+                        ]}
+                      >
+                        {monthlyHours[tutor.id]
+                          ? monthlyHours[tutor.id].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { width: colWidth }]}>
+                      <Text style={styles.tableCell}>
+                        {allTimeHours[tutor.id]
+                          ? allTimeHours[tutor.id].toFixed(1)
+                          : "-"}
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Statistics Section */}
+        <View style={styles.statsSection}>
+          <Text style={styles.statsTitle}>Performance Statistics</Text>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statsCard}>
+              <Text style={styles.statsValue}>{stats.activeTutors}</Text>
+              <Text style={styles.statsLabel}>Active Tutors</Text>
             </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>Session Hours</Text>
+
+            <View style={styles.statsCard}>
+              <Text style={styles.statsValue}>
+                {stats.totalHours.toFixed(1)}
+              </Text>
+              <Text style={styles.statsLabel}>Total Hours</Text>
             </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>Event Hours</Text>
+
+            <View style={styles.statsCard}>
+              <Text style={styles.statsValue}>
+                {stats.averageHours.toFixed(1)}
+              </Text>
+              <Text style={styles.statsLabel}>Avg Hours/Tutor</Text>
             </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>Monthly Hours</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>All Time Hours</Text>
+
+            <View style={styles.statsCard}>
+              <Text style={styles.statsValue}>
+                {stats.totalEventHours.toFixed(1)}
+              </Text>
+              <Text style={styles.statsLabel}>Event Hours</Text>
             </View>
           </View>
 
-          {/* Data Rows - Loop through tutors */}
-          {data.tutors.map((tutor) => (
-            <View key={tutor.id} style={styles.tableRow}>
-              <View style={styles.tutorNameCol}>
-                <Text style={styles.tableCell}>
-                  {tutor.firstName + " " + tutor.lastName}
-                </Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>
-                  {getHours(data.totalSessionHours, tutor.id).toFixed(1)}
-                </Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>
-                  {getHours(data.totalEventHours, tutor.id).toFixed(1)}
-                </Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>
-                  {getHours(data.monthyHours, tutor.id).toFixed(1)}
-                </Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>
-                  {getHours(data.allTimeHours, tutor.id).toFixed(1)}
-                </Text>
-              </View>
-            </View>
-          ))}
+          <View style={styles.insightsSection}>
+            <Text style={styles.insightsTitle}>Key Insights</Text>
 
-          {/* Totals Row */}
-          <View style={[styles.tableRow, styles.totalsRow]}>
-            <View style={styles.tutorNameCol}>
-              <Text style={[styles.tableCell, { fontWeight: "bold" }]}>
-                TOTALS
+            <View style={styles.insightItem}>
+              <View style={styles.insightBullet} />
+              <Text style={styles.insightText}>
+                Top performer: {stats.topPerformer?.firstName}{" "}
+                {stats.topPerformer?.lastName} with{" "}
+                {allTimeView
+                  ? (allTimeHours[stats.topPerformer?.id] || 0).toFixed(1)
+                  : (monthlyHours[stats.topPerformer?.id] || 0).toFixed(1)}{" "}
+                hours
               </Text>
             </View>
-            <View style={styles.tableCol}>
-              <Text style={[styles.tableCell, { fontWeight: "bold" }]}>
-                {columnTotals.sessionHours.toFixed(1)}
+
+            <View style={styles.insightItem}>
+              <View style={styles.insightBullet} />
+              <Text style={styles.insightText}>
+                {Math.round((stats.activeTutors / filteredTutors.length) * 100)}
+                % of tutors are actively contributing hours
               </Text>
             </View>
-            <View style={styles.tableCol}>
-              <Text style={[styles.tableCell, { fontWeight: "bold" }]}>
-                {columnTotals.eventHours.toFixed(1)}
-              </Text>
-            </View>
-            <View style={styles.tableCol}>
-              <Text style={[styles.tableCell, { fontWeight: "bold" }]}>
-                {columnTotals.monthlyHours.toFixed(1)}
-              </Text>
-            </View>
-            <View style={styles.tableCol}>
-              <Text style={[styles.tableCell, { fontWeight: "bold" }]}>
-                {columnTotals.allTimeHours.toFixed(1)}
+
+            <View style={styles.insightItem}>
+              <View style={styles.insightBullet} />
+              <Text style={styles.insightText}>
+                Event activities account for{" "}
+                {Math.round((stats.totalEventHours / stats.totalHours) * 100)}%
+                of total hours
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Summary Section */}
-        <View style={styles.summarySection}>
-          <Text
-            style={[styles.summaryText, { fontWeight: "bold", fontSize: 12 }]}
-          >
-            Summary
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            ConnectMe Tutoring - Hours Report
           </Text>
-          <Text style={styles.summaryText}>
-            Total Monthly Hours: {data.totalMonthlyHours.toFixed(1)}
+          <Text style={styles.footerText}>
+            Report Period:{" "}
+            {allTimeView ? "All Time" : format(selectedDate, "MMMM yyyy")}
           </Text>
-          <Text style={styles.summaryText}>
-            Grand Total Hours: {data.totalHours.toFixed(1)}
-          </Text>
-          <Text style={styles.summaryText}>
-            Total Tutors: {data.tutors.length}
-          </Text>
+          <Text style={styles.footerText}>Page 1 of 1</Text>
         </View>
       </Page>
     </PDFDocument>
   );
 };
 
-export default MyPDFDocument;
+export default HoursPDFDocument;

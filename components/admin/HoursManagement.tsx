@@ -66,6 +66,7 @@ import {
 } from "@/lib/actions/hours.actions";
 import { resourceLimits } from "worker_threads";
 import { number } from "zod";
+import { Loader2 } from "lucide-react";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -118,6 +119,7 @@ const HoursManager = () => {
   const [eventType, setEventType] = useState("");
   const [allTimeView, setAllTimeView] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
     fetchTutors();
@@ -534,7 +536,9 @@ const HoursManager = () => {
 
   // Sample data to test the basic PDF
   const sampleData = {
+    selectedDate: selectedDate,
     tutors: tutors,
+    allTimeView: allTimeView,
     totalSessionHours: totalSessionHours,
     totalEventHours: totalEventHours,
     totalMonthlyHours: totalMonthlyHours,
@@ -544,11 +548,13 @@ const HoursManager = () => {
     allTimeHours: allTimeHours,
     weeklySessionHours: weeklySessionHours,
     monthlyHours: monthlyHours,
+    filteredTutors: filteredTutors,
   };
 
   // Example of how to call the API from the frontend
   const handleDownloadHoursReport = async () => {
     try {
+      setReportLoading(true);
       const response = await fetch("/api/admin/create-hours-report", {
         method: "POST",
         headers: {
@@ -568,6 +574,7 @@ const HoursManager = () => {
       } else {
         console.error("Failed to generate PDF");
       }
+      setReportLoading(false);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to download Hours Report");
@@ -768,8 +775,16 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
-                <Button onClick={handleDownloadHoursReport}>
+                <Button
+                  disabled={reportLoading}
+                  onClick={handleDownloadHoursReport}
+                >
                   Download Report
+                  {reportLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  ) : (
+                    ""
+                  )}
                 </Button>
               </div>
             </div>

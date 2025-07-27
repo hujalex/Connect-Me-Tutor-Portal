@@ -2,13 +2,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
-import MyPDFDocument from "@/components/admin/HoursReport";
+import HoursPDFDocument from "@/components/admin/HoursReport";
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
 
-    const pdfBuffer = await renderToBuffer(<MyPDFDocument data={data} />);
+    const pdfBuffer = await renderToBuffer(<HoursPDFDocument data={data} />);
 
     return new NextResponse(pdfBuffer, {
       headers: {
