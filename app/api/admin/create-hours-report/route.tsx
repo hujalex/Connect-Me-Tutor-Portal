@@ -8,12 +8,14 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
 
+    const month = data.month;
+
     const pdfBuffer = await renderToBuffer(<HoursPDFDocument data={data} />);
 
     return new NextResponse(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="document.pdf"',
+        "Content-Disposition": `attachment; filename="Connect Me Hours Report.pdf"`,
       },
     });
   } catch (error) {

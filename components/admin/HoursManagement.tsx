@@ -9,6 +9,7 @@ import {
   parseISO,
   startOfWeek,
   addDays,
+  getMonth,
 } from "date-fns";
 import {
   Table,
@@ -127,10 +128,13 @@ const HoursManager = () => {
 
   useEffect(() => {
     if (tutors.length > 0) {
-      // fetchSessionsAndEvents();
-      fetchHours();
+      if (allTimeView) {
+        fetchAllTimeHours();
+      } else {
+        fetchHours();
+      }
     }
-  }, [tutors, selectedDate]);
+  }, [tutors, selectedDate, allTimeView]);
 
   const fetchHours = async () => {
     setLoading(true);
@@ -543,7 +547,7 @@ const HoursManager = () => {
   };
 
   // Sample data to test the basic PDF
-  const sampleData = {
+  const reportData = {
     selectedDate: selectedDate,
     tutors: tutors,
     allTimeView: allTimeView,
@@ -558,6 +562,7 @@ const HoursManager = () => {
     monthlyHours: monthlyHours,
     filteredTutors: filteredTutors,
     logoUrl: "/logo.png",
+    month: getMonth(selectedDate).toString(),
   };
 
   // Example of how to call the API from the frontend
@@ -569,7 +574,7 @@ const HoursManager = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(sampleData),
+        body: JSON.stringify(reportData),
       });
 
       if (response.ok) {
@@ -616,11 +621,10 @@ const HoursManager = () => {
                   onValueChange={(value) => {
                     if (value === "All Time") {
                       setAllTimeView(true);
-                      fetchAllTimeHours();
                     } else {
                       setAllTimeView(false);
                       setSelectedDate(new Date(value));
-                      fetchHours();
+                      // fetchHours();
                     }
                   }}
                 >
@@ -784,86 +788,7 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
-                <Dialog
-                  open={isAddEventModalOpen}
-                  onOpenChange={setIsAddEventModalOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setIsAddEventModalOpen(true)}>
-                      Add Event
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Event</DialogTitle>
-                    </DialogHeader>
-                    <Combobox
-                      list={tutors
-                        // .filter((student) => student.status === "Active")
-                        .map((tutor) => ({
-                          value: tutor.id,
-                          label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
-                        }))}
-                      category="tutor"
-                      onValueChange={(value) =>
-                        setNewEvent({ ...newEvent, tutorId: value })
-                      }
-                    />
-                    <Select
-                      value={eventType}
-                      onValueChange={(value) => {
-                        setEventType(value);
-                        setNewEvent({ ...newEvent, type: value });
-                      }}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder={"Select Type"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Tutor Referral">
-                          Tutor Referral
-                        </SelectItem>
-                        <SelectItem value="Sub Hotline">Sub Hotline</SelectItem>
-                        <SelectItem value="Additional Tutoring Hours">
-                          Additional Tutoring Hours
-                        </SelectItem>
-                        <SelectItem value="School Tutoring">
-                          School Tutoring
-                        </SelectItem>
-                        <SelectItem value="Biweekly Meeting">
-                          Biweekly Meeting
-                        </SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="date"
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, date: e.target.value })
-                      }
-                      placeholder="Date"
-                    />
-                    <Input
-                      type="number"
-                      onChange={(e) =>
-                        setNewEvent({
-                          ...newEvent,
-                          hours: parseFloat(e.target.value),
-                        })
-                      }
-                      placeholder="Hours"
-                    />
 
-                    <Input
-                      type="text"
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, summary: e.target.value })
-                      }
-                      placeholder="Summary"
-                    />
-                    <Button onClick={handleAddEvent}>Edit Event</Button>
-                  </DialogContent>
-                </Dialog>
                 <Button
                   disabled={reportLoading}
                   onClick={handleDownloadHoursReport}

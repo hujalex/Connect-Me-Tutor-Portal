@@ -419,11 +419,11 @@ const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
         {/* Header Section */}
         <View style={styles.header}>
           {/* Logo in top-left corner */}
-          {logoUrl && (
+          {/* {logoUrl && (
             <View style={styles.logoContainer}>
               <Image src={logoUrl} style={styles.logo} />
             </View>
-          )}
+          )} */}
 
           {/* Header content with padding for logo */}
           <View style={styles.headerContent}>
