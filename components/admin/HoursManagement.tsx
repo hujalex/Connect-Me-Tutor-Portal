@@ -134,14 +134,17 @@ const HoursManager = () => {
 
   const fetchHours = async () => {
     setLoading(true);
-    await Promise.all([
-      calculateAllTimeHoursBatch(),
-      calculateEventHours(),
-      calculateWeeklyHoursForMonth(),
-      calculateMonthHours(),
-      calculateTotalMonthlyHours(),
-    ]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        calculateAllTimeHoursBatch(),
+        calculateEventHours(),
+        calculateWeeklyHoursForMonth(),
+        calculateMonthHours(),
+        calculateTotalMonthlyHours(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchAllTimeHours = async () => {
@@ -534,6 +537,11 @@ const HoursManager = () => {
     }
   };
 
+  const handleEditEvent = async () => {
+    try {
+    } catch (error) {}
+  };
+
   // Sample data to test the basic PDF
   const sampleData = {
     selectedDate: selectedDate,
@@ -549,6 +557,7 @@ const HoursManager = () => {
     weeklySessionHours: weeklySessionHours,
     monthlyHours: monthlyHours,
     filteredTutors: filteredTutors,
+    logoUrl: "/logo.png",
   };
 
   // Example of how to call the API from the frontend
@@ -775,6 +784,86 @@ const HoursManager = () => {
                     <Button onClick={handleRemoveEvent}>Remove Event</Button>
                   </DialogContent>
                 </Dialog>
+                <Dialog
+                  open={isAddEventModalOpen}
+                  onOpenChange={setIsAddEventModalOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsAddEventModalOpen(true)}>
+                      Add Event
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Event</DialogTitle>
+                    </DialogHeader>
+                    <Combobox
+                      list={tutors
+                        // .filter((student) => student.status === "Active")
+                        .map((tutor) => ({
+                          value: tutor.id,
+                          label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
+                        }))}
+                      category="tutor"
+                      onValueChange={(value) =>
+                        setNewEvent({ ...newEvent, tutorId: value })
+                      }
+                    />
+                    <Select
+                      value={eventType}
+                      onValueChange={(value) => {
+                        setEventType(value);
+                        setNewEvent({ ...newEvent, type: value });
+                      }}
+                    >
+                      <SelectTrigger className="">
+                        <SelectValue placeholder={"Select Type"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Tutor Referral">
+                          Tutor Referral
+                        </SelectItem>
+                        <SelectItem value="Sub Hotline">Sub Hotline</SelectItem>
+                        <SelectItem value="Additional Tutoring Hours">
+                          Additional Tutoring Hours
+                        </SelectItem>
+                        <SelectItem value="School Tutoring">
+                          School Tutoring
+                        </SelectItem>
+                        <SelectItem value="Biweekly Meeting">
+                          Biweekly Meeting
+                        </SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="date"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, date: e.target.value })
+                      }
+                      placeholder="Date"
+                    />
+                    <Input
+                      type="number"
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          hours: parseFloat(e.target.value),
+                        })
+                      }
+                      placeholder="Hours"
+                    />
+
+                    <Input
+                      type="text"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, summary: e.target.value })
+                      }
+                      placeholder="Summary"
+                    />
+                    <Button onClick={handleAddEvent}>Edit Event</Button>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   disabled={reportLoading}
                   onClick={handleDownloadHoursReport}
@@ -841,7 +930,7 @@ const HoursManager = () => {
                   <TableCell>{totalEventHours["Sub Hotline"]}</TableCell>
                   <TableCell>{totalEventHours["Other"]}</TableCell>
                   <TableCell>{totalMonthlyHours}</TableCell>
-                  <TableCell>TBD</TableCell>
+                  <TableCell>{totalHours}</TableCell>
                 </TableRow>
               )}
               {filteredTutors.map((tutor) => (

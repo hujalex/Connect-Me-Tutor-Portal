@@ -5,6 +5,7 @@ import {
   Text,
   View,
   StyleSheet,
+  Image,
 } from "@react-pdf/renderer";
 import { eachWeekOfInterval, endOfMonth, startOfMonth, format } from "date-fns";
 
@@ -27,6 +28,7 @@ interface HoursPDFData {
   weeklySessionHours: { [key: string]: { [key: string]: number } };
   monthlyHours: { [key: string]: number };
   filteredTutors: Profile[];
+  logoUrl?: string; // Optional logo URL
 }
 
 const styles = StyleSheet.create({
@@ -42,6 +44,23 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     borderBottom: "2px solid #2563eb",
     paddingBottom: 15,
+    position: "relative",
+  },
+  logoContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 60,
+    height: 60,
+    zIndex: 1,
+  },
+  logo: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+  },
+  headerContent: {
+    paddingLeft: 70, // Make room for logo
   },
   companyName: {
     fontSize: 24,
@@ -256,6 +275,33 @@ const styles = StyleSheet.create({
   },
 });
 
+// Helper function to convert image to base64
+const imageToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+// Helper function to fetch image from URL and convert to base64
+const fetchImageAsBase64 = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    throw error;
+  }
+};
+
 const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
   const {
     tutors,
@@ -270,6 +316,7 @@ const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
     weeklySessionHours,
     monthlyHours,
     filteredTutors,
+    logoUrl,
   } = data;
 
   const weeksInMonth = eachWeekOfInterval({
@@ -371,18 +418,28 @@ const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
       <Page size="A4" orientation="landscape" style={styles.page}>
         {/* Header Section */}
         <View style={styles.header}>
-          <Text style={styles.companyName}>Connect Me Tutoring</Text>
-          <Text style={styles.reportTitle}>
-            {allTimeView ? "All-Time Hours Report" : "Monthly Hours Report"}
-          </Text>
-          <Text style={styles.reportSubtitle}>
-            {allTimeView
-              ? "Comprehensive Performance Overview"
-              : `Performance Report - ${format(selectedDate, "MMMM yyyy")}`}
-          </Text>
-          <Text style={styles.reportDate}>
-            Generated on {format(new Date(), "MMMM dd, yyyy 'at' HH:mm")}
-          </Text>
+          {/* Logo in top-left corner */}
+          {logoUrl && (
+            <View style={styles.logoContainer}>
+              <Image src={logoUrl} style={styles.logo} />
+            </View>
+          )}
+
+          {/* Header content with padding for logo */}
+          <View style={styles.headerContent}>
+            <Text style={styles.companyName}>Connect Me Tutoring</Text>
+            <Text style={styles.reportTitle}>
+              {allTimeView ? "All-Time Hours Report" : "Monthly Hours Report"}
+            </Text>
+            <Text style={styles.reportSubtitle}>
+              {allTimeView
+                ? "Comprehensive Performance Overview"
+                : `Performance Report - ${format(selectedDate, "MMMM yyyy")}`}
+            </Text>
+            <Text style={styles.reportDate}>
+              Generated on {format(new Date(), "MMMM dd, yyyy 'at' HH:mm")}
+            </Text>
+          </View>
         </View>
 
         {/* Main Table */}

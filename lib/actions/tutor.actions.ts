@@ -90,8 +90,6 @@ export async function getTutorSessions(
     })
   );
 
-  console.log("Tutor's sessions", sessions);
-
   return sessions;
 }
 
