@@ -25,6 +25,7 @@ interface CancellationFormProps {
 
 type cancellationReasonType =
   | "studentUnavailable"
+  | "studentAbsent"
   | "emergency"
   | "other"
   | null;
@@ -89,7 +90,11 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
               ...session,
               status: (isCancellationStudentAbsent
                 ? "Complete"
-                : "Cancelled") as "Active" | "Complete" | "Cancelled",
+                : "Cancelled") as
+                | "Active"
+                | "Complete"
+                | "Cancelled"
+                | "Rescheduled",
               session_exit_form: isCancellationOther ? otherReason : "",
             };
             handleStatusChange(updatedSession);
