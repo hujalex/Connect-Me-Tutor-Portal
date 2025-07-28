@@ -5,7 +5,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Image,
 } from "@react-pdf/renderer";
 import { eachWeekOfInterval, endOfMonth, startOfMonth, format } from "date-fns";
 
@@ -22,13 +21,14 @@ interface HoursPDFData {
   totalSessionHours: { [key: string]: number };
   totalEventHours: { [key: string]: number };
   totalMonthlyHours: number;
+  totalHours: number;
   allTimeSessionHours: { [key: string]: number };
   eventHoursData: { [key: string]: { [key: string]: number } };
   allTimeHours: { [key: string]: number };
   weeklySessionHours: { [key: string]: { [key: string]: number } };
   monthlyHours: { [key: string]: number };
   filteredTutors: Profile[];
-  logoUrl?: string; // Optional logo URL
+  logoUrl?: string;
 }
 
 const styles = StyleSheet.create({
@@ -46,21 +46,8 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     position: "relative",
   },
-  logoContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 60,
-    height: 60,
-    zIndex: 1,
-  },
-  logo: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-  },
   headerContent: {
-    paddingLeft: 70, // Make room for logo
+    // paddingLeft: 70, // Make room for logo
   },
   companyName: {
     fontSize: 24,
@@ -105,6 +92,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
     borderBottomStyle: "solid",
+    minHeight: 28, // Ensure consistent row height
   },
   tableRowLast: {
     borderBottomWidth: 0,
@@ -119,6 +107,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
     minHeight: 32,
+    justifyContent: "center", // Center content vertically
   },
   tutorNameColHeader: {
     width: "18%",
@@ -129,6 +118,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 6,
     minHeight: 32,
+    justifyContent: "center",
   },
 
   // Data Cells
@@ -178,6 +168,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     borderTopColor: "#2563eb",
     borderTopStyle: "solid",
+    minHeight: 28, // Consistent height
   },
   totalsCell: {
     fontSize: 8,
@@ -260,7 +251,10 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-    marginTop: 30,
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
     paddingTop: 15,
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
@@ -275,31 +269,355 @@ const styles = StyleSheet.create({
   },
 });
 
-// Helper function to convert image to base64
-const imageToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// Chunk tutors into groups that fit on a page
+const chunkTutors = (
+  tutors: Profile[],
+  maxPerPage: number = 15
+): Profile[][] => {
+  const chunks: Profile[][] = [];
+  for (let i = 0; i < tutors.length; i += maxPerPage) {
+    chunks.push(tutors.slice(i, i + maxPerPage));
+  }
+  return chunks;
 };
 
-// Helper function to fetch image from URL and convert to base64
-const fetchImageAsBase64 = async (url: string): Promise<string> => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error("Error fetching image:", error);
-    throw error;
+const chunkTutorsCustom = (tutors: Profile[]): Profile[][] => {
+  const chunks: Profile[][] = [];
+  let currentIndex = 0;
+
+  // First page: 12 tutors
+  if (tutors.length > 0) {
+    const firstPageTutors = tutors.slice(0, Math.min(11, tutors.length));
+    chunks.push(firstPageTutors);
+    currentIndex = firstPageTutors.length;
   }
+
+  // Subsequent pages: 17 tutors each
+  while (currentIndex < tutors.length) {
+    const nextChunk = tutors.slice(currentIndex, currentIndex + 17);
+    chunks.push(nextChunk);
+    currentIndex += 17;
+  }
+
+  return chunks;
+};
+
+// Component for rendering table headers
+const TableHeader: React.FC<{
+  allTimeView: boolean;
+  weeksInMonth: Date[];
+  colWidth: string;
+}> = ({ allTimeView, weeksInMonth, colWidth }) => {
+  const formatDateRange = (date: Date): string => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
+  };
+
+  const addDays = (date: Date, days: number): Date => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  };
+
+  return (
+    <View style={styles.tableRow}>
+      <View style={styles.tutorNameColHeader}>
+        <Text style={styles.tableCellHeader}>Tutor Name</Text>
+      </View>
+
+      {allTimeView ? (
+        <>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>All Sessions</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Biweekly{"\n"}Meetings</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Tutor{"\n"}Referral</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Sub{"\n"}Hotline</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Other</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>All Time{"\n"}Total</Text>
+          </View>
+        </>
+      ) : (
+        <>
+          {weeksInMonth.map((week) => (
+            <View
+              key={week.toISOString()}
+              style={[styles.tableColHeader, { width: colWidth }]}
+            >
+              <Text style={styles.tableCellHeader}>
+                {formatDateRange(week)} -{"\n"}
+                {formatDateRange(addDays(week, 6))}
+              </Text>
+            </View>
+          ))}
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Biweekly{"\n"}Meetings</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Tutor{"\n"}Referral</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Sub{"\n"}Hotline</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>Other</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>This{"\n"}Month</Text>
+          </View>
+          <View style={[styles.tableColHeader, { width: colWidth }]}>
+            <Text style={styles.tableCellHeader}>All Time{"\n"}Total</Text>
+          </View>
+        </>
+      )}
+    </View>
+  );
+};
+
+// Component for rendering totals row
+const TotalsRow: React.FC<{
+  allTimeView: boolean;
+  weeksInMonth: Date[];
+  colWidth: string;
+  totalSessionHours: { [key: string]: number };
+  totalEventHours: { [key: string]: number };
+  totalMonthlyHours: number;
+  totalHours: number;
+}> = ({
+  allTimeView,
+  weeksInMonth,
+  colWidth,
+  totalSessionHours,
+  totalEventHours,
+  totalMonthlyHours,
+  totalHours,
+}) => {
+  if (allTimeView) return null;
+
+  return (
+    <View style={[styles.tableRow, styles.totalsRow]}>
+      <View style={styles.tutorNameCol}>
+        <Text style={[styles.tutorNameCell, { color: "#1e40af" }]}>TOTALS</Text>
+      </View>
+
+      {weeksInMonth.map((week) => {
+        const hours = totalSessionHours[week.getTime().toString()] || 0;
+        return (
+          <View
+            key={week.toString()}
+            style={[styles.tableCol, { width: colWidth }]}
+          >
+            <Text style={styles.totalsCell}>
+              {hours ? hours.toFixed(1) : "-"}
+            </Text>
+          </View>
+        );
+      })}
+
+      <View style={[styles.tableCol, { width: colWidth }]}>
+        <Text style={styles.totalsCell}>
+          {totalEventHours["Biweekly Meeting"]
+            ? totalEventHours["Biweekly Meeting"].toFixed(1)
+            : "-"}
+        </Text>
+      </View>
+      <View style={[styles.tableCol, { width: colWidth }]}>
+        <Text style={styles.totalsCell}>
+          {totalEventHours["Tutor Referral"]
+            ? totalEventHours["Tutor Referral"].toFixed(1)
+            : "-"}
+        </Text>
+      </View>
+      <View style={[styles.tableCol, { width: colWidth }]}>
+        <Text style={styles.totalsCell}>
+          {totalEventHours["Sub Hotline"]
+            ? totalEventHours["Sub Hotline"].toFixed(1)
+            : "-"}
+        </Text>
+      </View>
+      <View style={[styles.tableCol, { width: colWidth }]}>
+        <Text style={styles.totalsCell}>
+          {totalEventHours["Other"] ? totalEventHours["Other"].toFixed(1) : "-"}
+        </Text>
+      </View>
+      <View style={[styles.tableCol, { width: colWidth }]}>
+        <Text style={styles.totalsCell}>
+          {totalMonthlyHours ? totalMonthlyHours.toFixed(1) : "-"}
+        </Text>
+      </View>
+      <View style={[styles.tableCol, { width: colWidth }]}>
+        <Text style={styles.totalsCell}>{totalHours}</Text>
+      </View>
+    </View>
+  );
+};
+
+// Component for rendering tutor rows
+const TutorRow: React.FC<{
+  tutor: Profile;
+  isLast: boolean;
+  allTimeView: boolean;
+  weeksInMonth: Date[];
+  colWidth: string;
+  allTimeSessionHours: { [key: string]: number };
+  eventHoursData: { [key: string]: { [key: string]: number } };
+  allTimeHours: { [key: string]: number };
+  weeklySessionHours: { [key: string]: { [key: string]: number } };
+  monthlyHours: { [key: string]: number };
+}> = ({
+  tutor,
+  isLast,
+  allTimeView,
+  weeksInMonth,
+  colWidth,
+  allTimeSessionHours,
+  eventHoursData,
+  allTimeHours,
+  weeklySessionHours,
+  monthlyHours,
+}) => {
+  return (
+    <View style={[styles.tableRow, isLast ? styles.tableRowLast : {}]}>
+      <View style={styles.tutorNameCol}>
+        <Text style={styles.tutorNameCell}>
+          {tutor.firstName} {tutor.lastName}
+        </Text>
+      </View>
+
+      {allTimeView ? (
+        <>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {allTimeSessionHours[tutor.id]
+                ? allTimeSessionHours[tutor.id].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Biweekly Meeting"]
+                ? eventHoursData[tutor.id]["Biweekly Meeting"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Tutor Referral"]
+                ? eventHoursData[tutor.id]["Tutor Referral"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Sub Hotline"]
+                ? eventHoursData[tutor.id]["Sub Hotline"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Other"]
+                ? eventHoursData[tutor.id]["Other"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { fontWeight: "bold", color: "#1e40af" },
+              ]}
+            >
+              {allTimeHours[tutor.id] ? allTimeHours[tutor.id].toFixed(1) : "-"}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <>
+          {weeksInMonth.map((week) => {
+            const hours =
+              weeklySessionHours[tutor.id]?.[week.getTime().toString()] || 0;
+            return (
+              <View
+                key={week.toString()}
+                style={[styles.tableCol, { width: colWidth }]}
+              >
+                <Text style={styles.tableCell}>
+                  {hours ? hours.toFixed(1) : "-"}
+                </Text>
+              </View>
+            );
+          })}
+
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Biweekly Meetings"]
+                ? eventHoursData[tutor.id]["Biweekly Meetings"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Tutor Referral"]
+                ? eventHoursData[tutor.id]["Tutor Referral"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Sub Hotline"]
+                ? eventHoursData[tutor.id]["Sub Hotline"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {eventHoursData[tutor.id]?.["Other"]
+                ? eventHoursData[tutor.id]["Other"].toFixed(1)
+                : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text
+              style={[
+                styles.tableCell,
+                { fontWeight: "bold", color: "#1e40af" },
+              ]}
+            >
+              {monthlyHours[tutor.id] ? monthlyHours[tutor.id].toFixed(1) : "-"}
+            </Text>
+          </View>
+          <View style={[styles.tableCol, { width: colWidth }]}>
+            <Text style={styles.tableCell}>
+              {allTimeHours[tutor.id] ? allTimeHours[tutor.id].toFixed(1) : "-"}
+            </Text>
+          </View>
+        </>
+      )}
+    </View>
+  );
 };
 
 const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
@@ -310,6 +628,7 @@ const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
     totalSessionHours,
     totalEventHours,
     totalMonthlyHours,
+    totalHours,
     allTimeSessionHours,
     eventHoursData,
     allTimeHours,
@@ -388,426 +707,172 @@ const HoursPDFDocument: React.FC<{ data: HoursPDFData }> = ({ data }) => {
 
   const stats = calculateStats();
 
-  // Format date helper
-  const formatDateRange = (date: Date): string => {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    return `${months[date.getMonth()]} ${date.getDate()}`;
-  };
-
-  const addDays = (date: Date, days: number): Date => {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  };
+  // Chunk tutors for pagination - adjust based on available space
+  const tutorChunks = chunkTutorsCustom(filteredTutors);
+  const totalPages = tutorChunks.length;
 
   return (
     <PDFDocument>
-      <Page size="A4" orientation="landscape" style={styles.page}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          {/* Logo in top-left corner */}
-          {/* {logoUrl && (
-            <View style={styles.logoContainer}>
-              <Image src={logoUrl} style={styles.logo} />
-            </View>
-          )} */}
-
-          {/* Header content with padding for logo */}
-          <View style={styles.headerContent}>
-            <Text style={styles.companyName}>Connect Me Tutoring</Text>
-            <Text style={styles.reportTitle}>
-              {allTimeView ? "All-Time Hours Report" : "Monthly Hours Report"}
-            </Text>
-            <Text style={styles.reportSubtitle}>
-              {allTimeView
-                ? "Comprehensive Performance Overview"
-                : `Performance Report - ${format(selectedDate, "MMMM yyyy")}`}
-            </Text>
-            <Text style={styles.reportDate}>
-              Generated on {format(new Date(), "MMMM dd, yyyy 'at' HH:mm")}
-            </Text>
-          </View>
-        </View>
-
-        {/* Main Table */}
-        <View style={styles.tableContainer}>
-          <View style={styles.table}>
-            {/* Header Row */}
-            <View style={styles.tableRow}>
-              <View style={styles.tutorNameColHeader}>
-                <Text style={styles.tableCellHeader}>Tutor Name</Text>
+      {tutorChunks.map((tutorChunk, pageIndex) => (
+        <Page
+          key={pageIndex}
+          size="A4"
+          orientation="landscape"
+          style={styles.page}
+        >
+          {/* Header Section - only on first page */}
+          {pageIndex === 0 && (
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <Text style={styles.companyName}>Connect Me Tutoring</Text>
+                <Text style={styles.reportTitle}>
+                  {allTimeView
+                    ? "All-Time Hours Report"
+                    : "Monthly Hours Report"}
+                </Text>
+                <Text style={styles.reportSubtitle}>
+                  {allTimeView
+                    ? "Comprehensive Performance Overview"
+                    : `Performance Report - ${format(selectedDate, "MMMM yyyy")}`}
+                </Text>
+                <Text style={styles.reportDate}>
+                  Generated on {format(new Date(), "MMMM dd, yyyy 'at' HH:mm")}
+                </Text>
               </View>
+            </View>
+          )}
 
-              {allTimeView ? (
-                <>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>All Sessions</Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>
-                      Biweekly{"\n"}Meetings
-                    </Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>
-                      Tutor{"\n"}Referral
-                    </Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>Sub{"\n"}Hotline</Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>Other</Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>
-                      All Time{"\n"}Total
-                    </Text>
-                  </View>
-                </>
-              ) : (
-                <>
-                  {weeksInMonth.map((week) => (
-                    <View
-                      key={week.toISOString()}
-                      style={[styles.tableColHeader, { width: colWidth }]}
-                    >
-                      <Text style={styles.tableCellHeader}>
-                        {formatDateRange(week)} -{"\n"}
-                        {formatDateRange(addDays(week, 6))}
-                      </Text>
-                    </View>
-                  ))}
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>
-                      Biweekly{"\n"}Meetings
-                    </Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>
-                      Tutor{"\n"}Referral
-                    </Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>Sub{"\n"}Hotline</Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>Other</Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>This{"\n"}Month</Text>
-                  </View>
-                  <View style={[styles.tableColHeader, { width: colWidth }]}>
-                    <Text style={styles.tableCellHeader}>
-                      All Time{"\n"}Total
-                    </Text>
-                  </View>
-                </>
+          {/* Main Table */}
+          <View style={styles.tableContainer}>
+            <View style={styles.table}>
+              {/* Header Row - repeat on each page */}
+              <TableHeader
+                allTimeView={allTimeView}
+                weeksInMonth={weeksInMonth}
+                colWidth={colWidth}
+              />
+
+              {/* Totals Row - only on first page and only for monthly view */}
+              {pageIndex === 0 && (
+                <TotalsRow
+                  allTimeView={allTimeView}
+                  weeksInMonth={weeksInMonth}
+                  colWidth={colWidth}
+                  totalSessionHours={totalSessionHours}
+                  totalEventHours={totalEventHours}
+                  totalMonthlyHours={totalMonthlyHours}
+                  totalHours={totalHours}
+                />
               )}
+
+              {/* Data Rows for this page */}
+              {tutorChunk.map((tutor, index) => (
+                <TutorRow
+                  key={tutor.id}
+                  tutor={tutor}
+                  isLast={index === tutorChunk.length - 1}
+                  allTimeView={allTimeView}
+                  weeksInMonth={weeksInMonth}
+                  colWidth={colWidth}
+                  allTimeSessionHours={allTimeSessionHours}
+                  eventHoursData={eventHoursData}
+                  allTimeHours={allTimeHours}
+                  weeklySessionHours={weeklySessionHours}
+                  monthlyHours={monthlyHours}
+                />
+              ))}
             </View>
+          </View>
 
-            {/* Totals Row - Only show if not allTimeView */}
-            {!allTimeView && (
-              <View style={[styles.tableRow, styles.totalsRow]}>
-                <View style={styles.tutorNameCol}>
-                  <Text style={[styles.tutorNameCell, { color: "#1e40af" }]}>
-                    TOTALS
-                  </Text>
+          {/* Statistics Section - only on last page */}
+          {pageIndex === totalPages - 1 && (
+            <View style={styles.statsSection}>
+              <Text style={styles.statsTitle}>Performance Statistics</Text>
+
+              <View style={styles.statsGrid}>
+                <View style={styles.statsCard}>
+                  <Text style={styles.statsValue}>{stats.activeTutors}</Text>
+                  <Text style={styles.statsLabel}>Active Tutors</Text>
                 </View>
 
-                {weeksInMonth.map((week) => {
-                  const hours =
-                    totalSessionHours[week.getTime().toString()] || 0;
-                  return (
-                    <View
-                      key={week.toString()}
-                      style={[styles.tableCol, { width: colWidth }]}
-                    >
-                      <Text style={styles.totalsCell}>
-                        {hours ? hours.toFixed(1) : "-"}
-                      </Text>
-                    </View>
-                  );
-                })}
+                <View style={styles.statsCard}>
+                  <Text style={styles.statsValue}>
+                    {stats.totalHours.toFixed(1)}
+                  </Text>
+                  <Text style={styles.statsLabel}>Total Hours</Text>
+                </View>
 
-                <View style={[styles.tableCol, { width: colWidth }]}>
-                  <Text style={styles.totalsCell}>
-                    {totalEventHours["Biweekly Meeting"]
-                      ? totalEventHours["Biweekly Meeting"].toFixed(1)
-                      : "-"}
+                <View style={styles.statsCard}>
+                  <Text style={styles.statsValue}>
+                    {stats.averageHours.toFixed(1)}
                   </Text>
+                  <Text style={styles.statsLabel}>Avg Hours/Tutor</Text>
                 </View>
-                <View style={[styles.tableCol, { width: colWidth }]}>
-                  <Text style={styles.totalsCell}>
-                    {totalEventHours["Tutor Referral"]
-                      ? totalEventHours["Tutor Referral"].toFixed(1)
-                      : "-"}
+
+                <View style={styles.statsCard}>
+                  <Text style={styles.statsValue}>
+                    {stats.totalEventHours.toFixed(1)}
                   </Text>
-                </View>
-                <View style={[styles.tableCol, { width: colWidth }]}>
-                  <Text style={styles.totalsCell}>
-                    {totalEventHours["Sub Hotline"]
-                      ? totalEventHours["Sub Hotline"].toFixed(1)
-                      : "-"}
-                  </Text>
-                </View>
-                <View style={[styles.tableCol, { width: colWidth }]}>
-                  <Text style={styles.totalsCell}>
-                    {totalEventHours["Other"]
-                      ? totalEventHours["Other"].toFixed(1)
-                      : "-"}
-                  </Text>
-                </View>
-                <View style={[styles.tableCol, { width: colWidth }]}>
-                  <Text style={styles.totalsCell}>
-                    {totalMonthlyHours ? totalMonthlyHours.toFixed(1) : "-"}
-                  </Text>
-                </View>
-                <View style={[styles.tableCol, { width: colWidth }]}>
-                  <Text style={styles.totalsCell}>-</Text>
+                  <Text style={styles.statsLabel}>Event Hours</Text>
                 </View>
               </View>
-            )}
 
-            {/* Data Rows */}
-            {filteredTutors.map((tutor, index) => (
-              <View
-                key={tutor.id}
-                style={[
-                  styles.tableRow,
-                  index === filteredTutors.length - 1
-                    ? styles.tableRowLast
-                    : {},
-                ]}
-              >
-                <View style={styles.tutorNameCol}>
-                  <Text style={styles.tutorNameCell}>
-                    {tutor.firstName} {tutor.lastName}
+              <View style={styles.insightsSection}>
+                <Text style={styles.insightsTitle}>Key Insights</Text>
+
+                <View style={styles.insightItem}>
+                  <View style={styles.insightBullet} />
+                  <Text style={styles.insightText}>
+                    Top performer: {stats.topPerformer?.firstName}{" "}
+                    {stats.topPerformer?.lastName} with{" "}
+                    {allTimeView
+                      ? (allTimeHours[stats.topPerformer?.id] || 0).toFixed(1)
+                      : (monthlyHours[stats.topPerformer?.id] || 0).toFixed(
+                          1
+                        )}{" "}
+                    hours
                   </Text>
                 </View>
 
-                {allTimeView ? (
-                  <>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {allTimeSessionHours[tutor.id]
-                          ? allTimeSessionHours[tutor.id].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Biweekly Meeting"]
-                          ? eventHoursData[tutor.id][
-                              "Biweekly Meeting"
-                            ].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Tutor Referral"]
-                          ? eventHoursData[tutor.id]["Tutor Referral"].toFixed(
-                              1
-                            )
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Sub Hotline"]
-                          ? eventHoursData[tutor.id]["Sub Hotline"].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Other"]
-                          ? eventHoursData[tutor.id]["Other"].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text
-                        style={[
-                          styles.tableCell,
-                          { fontWeight: "bold", color: "#1e40af" },
-                        ]}
-                      >
-                        {allTimeHours[tutor.id]
-                          ? allTimeHours[tutor.id].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    {weeksInMonth.map((week) => {
-                      const hours =
-                        weeklySessionHours[tutor.id]?.[
-                          week.getTime().toString()
-                        ] || 0;
-                      return (
-                        <View
-                          key={week.toString()}
-                          style={[styles.tableCol, { width: colWidth }]}
-                        >
-                          <Text style={styles.tableCell}>
-                            {hours ? hours.toFixed(1) : "-"}
-                          </Text>
-                        </View>
-                      );
-                    })}
+                <View style={styles.insightItem}>
+                  <View style={styles.insightBullet} />
+                  <Text style={styles.insightText}>
+                    {Math.round(
+                      (stats.activeTutors / filteredTutors.length) * 100
+                    )}
+                    % of tutors are actively contributing hours
+                  </Text>
+                </View>
 
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Biweekly Meetings"]
-                          ? eventHoursData[tutor.id][
-                              "Biweekly Meetings"
-                            ].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Tutor Referral"]
-                          ? eventHoursData[tutor.id]["Tutor Referral"].toFixed(
-                              1
-                            )
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Sub Hotline"]
-                          ? eventHoursData[tutor.id]["Sub Hotline"].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {eventHoursData[tutor.id]?.["Other"]
-                          ? eventHoursData[tutor.id]["Other"].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text
-                        style={[
-                          styles.tableCell,
-                          { fontWeight: "bold", color: "#1e40af" },
-                        ]}
-                      >
-                        {monthlyHours[tutor.id]
-                          ? monthlyHours[tutor.id].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                    <View style={[styles.tableCol, { width: colWidth }]}>
-                      <Text style={styles.tableCell}>
-                        {allTimeHours[tutor.id]
-                          ? allTimeHours[tutor.id].toFixed(1)
-                          : "-"}
-                      </Text>
-                    </View>
-                  </>
-                )}
+                <View style={styles.insightItem}>
+                  <View style={styles.insightBullet} />
+                  <Text style={styles.insightText}>
+                    Event activities account for{" "}
+                    {Math.round(
+                      (stats.totalEventHours / stats.totalHours) * 100
+                    )}
+                    % of total hours
+                  </Text>
+                </View>
               </View>
-            ))}
+            </View>
+          )}
+
+          {/* Footer - on every page */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              ConnectMe Tutoring - Hours Report
+            </Text>
+            <Text style={styles.footerText}>
+              Report Period:{" "}
+              {allTimeView ? "All Time" : format(selectedDate, "MMMM yyyy")}
+            </Text>
+            <Text style={styles.footerText}>
+              Page {pageIndex + 1} of {totalPages}
+            </Text>
           </View>
-        </View>
-
-        {/* Statistics Section */}
-        <View style={styles.statsSection}>
-          <Text style={styles.statsTitle}>Performance Statistics</Text>
-
-          <View style={styles.statsGrid}>
-            <View style={styles.statsCard}>
-              <Text style={styles.statsValue}>{stats.activeTutors}</Text>
-              <Text style={styles.statsLabel}>Active Tutors</Text>
-            </View>
-
-            <View style={styles.statsCard}>
-              <Text style={styles.statsValue}>
-                {stats.totalHours.toFixed(1)}
-              </Text>
-              <Text style={styles.statsLabel}>Total Hours</Text>
-            </View>
-
-            <View style={styles.statsCard}>
-              <Text style={styles.statsValue}>
-                {stats.averageHours.toFixed(1)}
-              </Text>
-              <Text style={styles.statsLabel}>Avg Hours/Tutor</Text>
-            </View>
-
-            <View style={styles.statsCard}>
-              <Text style={styles.statsValue}>
-                {stats.totalEventHours.toFixed(1)}
-              </Text>
-              <Text style={styles.statsLabel}>Event Hours</Text>
-            </View>
-          </View>
-
-          <View style={styles.insightsSection}>
-            <Text style={styles.insightsTitle}>Key Insights</Text>
-
-            <View style={styles.insightItem}>
-              <View style={styles.insightBullet} />
-              <Text style={styles.insightText}>
-                Top performer: {stats.topPerformer?.firstName}{" "}
-                {stats.topPerformer?.lastName} with{" "}
-                {allTimeView
-                  ? (allTimeHours[stats.topPerformer?.id] || 0).toFixed(1)
-                  : (monthlyHours[stats.topPerformer?.id] || 0).toFixed(1)}{" "}
-                hours
-              </Text>
-            </View>
-
-            <View style={styles.insightItem}>
-              <View style={styles.insightBullet} />
-              <Text style={styles.insightText}>
-                {Math.round((stats.activeTutors / filteredTutors.length) * 100)}
-                % of tutors are actively contributing hours
-              </Text>
-            </View>
-
-            <View style={styles.insightItem}>
-              <View style={styles.insightBullet} />
-              <Text style={styles.insightText}>
-                Event activities account for{" "}
-                {Math.round((stats.totalEventHours / stats.totalHours) * 100)}%
-                of total hours
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            ConnectMe Tutoring - Hours Report
-          </Text>
-          <Text style={styles.footerText}>
-            Report Period:{" "}
-            {allTimeView ? "All Time" : format(selectedDate, "MMMM yyyy")}
-          </Text>
-          <Text style={styles.footerText}>Page 1 of 1</Text>
-        </View>
-      </Page>
+        </Page>
+      ))}
     </PDFDocument>
   );
 };
