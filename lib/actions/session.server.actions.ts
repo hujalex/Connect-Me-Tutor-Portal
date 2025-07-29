@@ -57,3 +57,5 @@ export async function getSessions(
     throw error;
   }
 }
+
+export async function updateSessionParticipantion(meetingID: string) {}
