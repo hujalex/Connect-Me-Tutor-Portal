@@ -78,7 +78,6 @@ import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
 
 const Schedule = () => {
-  console.log("Component rendered"); // Add this to verify component rendering
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [sessions, setSessions] = useState<Session[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -187,11 +186,8 @@ const Schedule = () => {
 
   const fetchEnrollments = async () => {
     try {
-      console.log("ds");
       const fetchedEnrollments = await getAllEnrollments();
-      console.log(fetchedEnrollments);
       const validEnrollments = fetchedEnrollments?.filter((enrollment) => {
-        console.log(enrollment.endDate);
         if (!enrollment.endDate) return true;
         return isAfter(parseISO(enrollment.endDate), new Date());
       });
@@ -290,12 +286,6 @@ const Schedule = () => {
       meetings.forEach((meeting) => {
         const hasConflict = sessionsToSearch
           ? sessionsToSearch.some((existingSession) => {
-              console.log(
-                "Checking session:",
-                existingSession.id,
-                existingSession.date
-              );
-
               return (
                 session.id !== existingSession.id &&
                 existingSession.meeting?.id === meeting.id &&
@@ -335,8 +325,6 @@ const Schedule = () => {
       const weekStart = startOfWeek(currentWeek);
       const weekEnd = endOfWeek(currentWeek);
 
-      console.log("FLAG");
-
       // Create sessions for all enrollments without checking meeting availability
       const newSessions = await addSessions(
         weekStart.toISOString(),
@@ -366,7 +354,6 @@ const Schedule = () => {
       setSessions((prevSessions) => [...prevSessions, ...newSessions]);
       fetchSessions(); // Reloads only sessions
       toast.success(`${newSessions.length} new sessions added successfully`);
-      console.log(`${newSessions.length} new sessions added sucessfully`);
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
       toast.error(`Failed to add sessions. ${error.message}`);
@@ -428,7 +415,6 @@ const Schedule = () => {
       toast.success("Added Session");
     } catch (error) {
       toast.error("Unable to add session");
-      console.log("Unable to add session", error);
     }
   };
 
@@ -602,7 +588,6 @@ const Schedule = () => {
                       <Select
                         value={newSession?.meeting?.id || ""}
                         onOpenChange={(open) => {
-                          console.log("Opening");
                           if (open && newSession) {
                           }
                         }}
@@ -782,13 +767,11 @@ const Schedule = () => {
                     onValueChange={(
                       value: "Active" | "Complete" | "Cancelled"
                     ) => {
-                      console.log("Selected value:", value);
                       if (value && selectedSession) {
                         const updatedSession = {
                           ...selectedSession,
                           status: value,
                         };
-                        console.log("Updated session:", updatedSession);
                         setSelectedSession(updatedSession);
                       }
                     }}
@@ -812,7 +795,6 @@ const Schedule = () => {
                   <Select
                     value={selectedSession.tutor?.id}
                     onValueChange={async (value) => {
-                      console.log(value);
                       const selectedTutor =
                         await getProfileWithProfileId(value);
                       if (selectedTutor) {
@@ -847,7 +829,6 @@ const Schedule = () => {
                   <Select
                     value={selectedSession.student?.id}
                     onValueChange={async (value) => {
-                      console.log(value);
                       const selectedStudent =
                         await getProfileWithProfileId(value);
                       if (selectedStudent) {
@@ -902,11 +883,7 @@ const Schedule = () => {
                   <Label>Meeting</Label>
                   <Select
                     value={selectedSession?.meeting?.id || ""}
-                    onOpenChange={(open) => {
-                      console.log("Opening");
-                      if (open && selectedSession) {
-                      }
-                    }}
+                    onOpenChange={(open) => {}}
                     onValueChange={async (value) =>
                       setSelectedSession({
                         ...selectedSession,

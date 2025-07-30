@@ -21,7 +21,6 @@ interface ResponseData {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("GET");
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("API route error:", error);
@@ -31,9 +30,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest, response: NextResponse) {
   try {
-    console.log("POSTING");
     const formData = await request.json();
-    console.log("Form Data", formData);
 
     const data = await writeSpreadSheet(formData);
 

@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (sessionError || !session) {
-      console.log("Session not found or deleted");
       return NextResponse.json({
         status: 404,
         message: "Session no longer exists",
@@ -43,7 +42,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (session.status === "Cancelled") {
-      console.log("Session is cancelled");
       return NextResponse.json({
         status: 400,
         message: "Session no longer active",
@@ -67,13 +65,11 @@ export async function POST(request: NextRequest) {
         subject: subject,
         text: body,
       });
-      console.log("Successfully sent email");
       return NextResponse.json({
         status: 200,
         message: "Email sent successfully",
       });
     }
-    console.log("Email Setting turned off");
     return NextResponse.json({
       status: 200,
       message: "Email setting turned off",

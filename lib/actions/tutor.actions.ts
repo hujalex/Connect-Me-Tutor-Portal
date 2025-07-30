@@ -106,7 +106,6 @@ export async function getTutorStudents(tutorId: string) {
     }
 
     if (!enrollments) {
-      console.log("No profile found for tutor ID:", tutorId);
       return null;
     }
 
@@ -159,8 +158,6 @@ export async function rescheduleSession(
   tutorid?: string
 ) {
   try {
-    console.log(sessionId);
-    console.log(newDate);
     const { data: sessionData, error } = await supabase
       .from("Sessions")
       .update({ date: newDate, meeting_id: meetingId })

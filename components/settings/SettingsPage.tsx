@@ -57,15 +57,12 @@ export default function SettingsPage() {
   const fetchNotificationSettings = async () => {
     try {
       if (profile) {
-        console.log(profile.id);
         const { data, error } = await supabase
           .from("User_Notification_Settings")
           .select("*")
           .eq("id", profile.settingsId)
           .single();
         if (error) throw error;
-
-        console.log("Notification Settings", data);
 
         setSessionEmailNotifications(
           data.email_tutoring_session_notifications_enabled
@@ -92,7 +89,6 @@ export default function SettingsPage() {
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log("Profile update submitted");
       // Handle profile update logic here
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -101,14 +97,6 @@ export default function SettingsPage() {
 
   const handleSaveNotifications = async () => {
     try {
-      console.log("Notification settings saved:", {
-        sessionReminders,
-        sessionEmailNotifications,
-        sessionTextNotifications,
-        webinarReminders,
-        webinarEmailNotifications,
-        webinarTextNotifications,
-      });
       // Handle notification settings save logic here
       // You could show a success toast here
 

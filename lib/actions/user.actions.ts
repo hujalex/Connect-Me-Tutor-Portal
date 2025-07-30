@@ -59,7 +59,6 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
     }
 
     if (!data) {
-      console.log("No profile found for user ID:", userId);
       return null;
     }
 
@@ -151,10 +150,7 @@ export const getProfileRole = async (
       return null;
     }
 
-    console.log("Fetched profile data:", data);
-
     if (!data) {
-      console.log("No profile found for user ID:", userId);
       return null;
     }
 
@@ -208,7 +204,6 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
     }
 
     if (!data) {
-      console.log("No profile found for user ID:", userId);
       return null;
     }
 
@@ -284,7 +279,6 @@ export async function getProfileWithProfileId(
     }
 
     if (!data) {
-      console.log("No profile found for user ID:", profileId);
       return null;
     }
 
@@ -379,7 +373,6 @@ export const logoutUser = async () => {
     if (error) {
       console.error("Error logging out:", error.message);
     } else {
-      console.log("User logged out successfully");
     }
   } catch (error) {
     console.error("Unexpected error logging out:", error);

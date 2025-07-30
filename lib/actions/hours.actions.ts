@@ -295,8 +295,6 @@ export const getEventHoursRangeBatch = async (start: string, end: string) => {
       }
     );
 
-    console.log("Event hours batch", hoursJson);
-
     if (error) throw error;
     return hoursJson;
   } catch (error) {

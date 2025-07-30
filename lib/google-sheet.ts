@@ -31,10 +31,8 @@ export async function readSpreadsheet() {
     });
 
     const rows = response.data.values;
-    console.log("Data retrieved", rows);
     return rows;
   } catch (error) {
-    console.log("Unable to retrive rows", error);
     throw error;
   }
 }
@@ -66,7 +64,6 @@ export async function getSheetSize(sheetName: string = "Questions & Concerns") {
     const numRows = rows.length;
     const numCols = rows[0]?.length || 0;
 
-    console.log(`Sheet size: ${numRows} rows, ${numCols} columns`);
     return { numRows, numCols };
   } catch (error) {
     console.error("Error getting sheet size:", error);
@@ -109,10 +106,8 @@ export async function writeSpreadSheet(formData: FormData) {
     await sendDiscordNotification(nextRowIdx, formData);
 
     const rows = response.data;
-    console.log("Data retrieved", rows);
     return rows;
   } catch (error) {
-    console.log("Unable to retrive rows", error);
     throw error;
   }
 }
@@ -139,9 +134,7 @@ async function sendDiscordNotification(rowIdx: number, formData: FormData) {
     )
       .then((res) => res.text())
       .then(console.log);
-    console.log("Success");
   } catch (error) {
-    console.log("Unable to send discord notifcation", error);
     throw error;
   }
 }

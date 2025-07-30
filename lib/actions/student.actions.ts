@@ -113,8 +113,6 @@ export async function rescheduleSession(
     if (notificationError) {
       throw notificationError;
     }
-
-    console.log("Reschedule request notification created successfully");
   } catch (error) {
     console.error("Error creating reschedule request:", error);
     throw error;

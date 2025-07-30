@@ -131,17 +131,10 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
 
       const requestedSessionStartTime = requestedDate;
       const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
-      console.log("Requested date", selectedSessionDate);
 
       meetings.forEach((meeting) => {
         const hasConflict = sessionsToSearch
           ? sessionsToSearch.some((existingSession) => {
-              console.log(
-                "Checking session:",
-                existingSession.id,
-                existingSession.date
-              );
-
               return (
                 session.id !== existingSession.id &&
                 existingSession.meeting?.id === meeting.id &&
@@ -164,7 +157,6 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
           : false;
         updatedMeetingAvailability[meeting.id] = !hasConflict;
       });
-      console.log("Updated Meeting Availability", updatedMeetingAvailability);
       setMeetingAvailability(updatedMeetingAvailability);
     } catch (error) {
       toast.error("Unable to find available meeting links");

@@ -95,7 +95,6 @@ export async function getAllProfiles(
     }
 
     if (!data || data.length === 0) {
-      console.log("No profiles found");
       return null;
     }
 
@@ -137,8 +136,6 @@ export const addStudent = async (
   const supabase = createClientComponentClient();
 
   try {
-    console.log(studentData);
-
     if (!studentData.email) {
       throw new Error("Email is required to create a student profile");
     }
@@ -239,7 +236,6 @@ export const addTutor = async (
 ): Promise<Profile> => {
   const supabase = createClientComponentClient();
   try {
-    console.log(tutorData);
     if (!tutorData.email) {
       throw new Error("Email is required to create a student profile");
     }
@@ -418,7 +414,6 @@ export async function getUserFromId(profileId: string) {
 
 //---updateUser
 export async function editUser(profile: Profile) {
-  console.log(profile);
   const {
     id,
     role,
@@ -519,8 +514,6 @@ export const createUser = async (
       throw new Error(`Error creating user: ${error.message}`);
     }
 
-    console.log("User created successfully:", data);
-
     // Return the user ID
     return data?.user?.id || null; // Use optional chaining to safely access id
   } catch (error) {
@@ -617,8 +610,6 @@ export async function getAllSessions(
         duration: session.duration,
       }))
     );
-
-    console.log(sessions);
 
     return sessions;
   } catch (error) {
@@ -953,7 +944,6 @@ export async function addSessions(
 
       // Skip invalid enrollments
       if (!student?.id || !tutor?.id || !availability?.length) {
-        console.log("Skipping invalid enrollment:", enrollment);
         continue;
       }
 
@@ -981,7 +971,6 @@ export async function addSessions(
         // Skip days that don't match
         if (currentDay !== dayLower) {
           currentDate = addDays(currentDate, 1);
-          console.log("Skip");
           continue;
         }
 
@@ -1013,8 +1002,6 @@ export async function addSessions(
 
           // Create session date with correct time
           // * SetHours and SetMinutes are dependent on local timezone
-          console.log("-----------------");
-          console.log("Hours: ", startHour, "Minutes: ", startMinute);
 
           const dateString = `${format(currentDate, "yyyy-MM-dd")}T${startTime}:00`;
           const sessionStartTime = fromZonedTime(
@@ -1035,8 +1022,6 @@ export async function addSessions(
             sessionStartTime,
             "yyyy-MM-dd-HH:mm"
           )}`;
-
-          console.log(sessionKey);
 
           if (!scheduledSessions.has(sessionKey)) {
             // Add to batch insert
@@ -1266,12 +1251,6 @@ export async function updateSession(
       isFirstSession,
     } = updatedSession;
 
-    console.log(id);
-    console.log(status);
-    console.log(isQuestionOrConcern);
-    console.log(isFirstSession);
-    console.log(meeting);
-
     const { data, error } = await supabase
       .from("Sessions")
       .update({
@@ -1288,7 +1267,6 @@ export async function updateSession(
       .eq("id", id)
       .select()
       .single();
-    console.log("UPDATING...");
 
     if (error) {
       console.error("Error updating session:", error);
@@ -1296,7 +1274,6 @@ export async function updateSession(
     }
 
     if (data) {
-      console.log(data[0]);
       return data[0];
     } else {
       console.error("NO DATA");
@@ -1336,8 +1313,6 @@ export async function removeSession(
     .delete()
     .eq("id", sessionId);
 
-  console.log(sessionId);
-
   if (eventError) {
     throw eventError;
   }
@@ -1368,7 +1343,6 @@ export async function getMeetings(): Promise<Meeting[] | null> {
 
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return null; // Valid return
     }
 
@@ -1440,7 +1414,6 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
 
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return null; // Valid return
     }
 
@@ -1513,7 +1486,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
     }
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return null; // Valid return
     }
     // Mapping the fetched data to the Notification object
@@ -1525,7 +1497,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
       link: data.link,
       createdAt: data.created_at,
     };
-    console.log(meeting);
     return meeting; // Return the array of notifications
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);
@@ -1809,7 +1780,6 @@ export async function removeEvent(eventId: string): Promise<boolean> {
       return false;
     }
 
-    console.log(`Successfully deleted event with ID: ${eventId}`);
     return true;
   } catch (error) {
     console.error("Failed to remove event:", error);

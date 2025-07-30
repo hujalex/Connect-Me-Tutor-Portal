@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get("next") ?? "/";
   const redirectTo = request.nextUrl.clone();
   redirectTo.pathname = next;
-  console.log(redirectTo);
 
   if (token_hash && type) {
     const supabase = await createRouteHandlerClient({ cookies });
@@ -21,13 +20,10 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      console.log("Success");
       return NextResponse.redirect(redirectTo);
     }
   }
 
-  console.log(token_hash);
-  console.log(type);
 
   // return the user to an error page with some instructions
   redirectTo.pathname = "/auth/auth-code-error";

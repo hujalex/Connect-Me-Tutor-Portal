@@ -188,7 +188,6 @@ const AdminDashboard = () => {
       setSelectedSession(null);
       setIsDialogOpen(false);
       // You might want to show a success message to the user here
-      console.log("Reschedule request submitted successfully");
     } catch (error) {
       console.error("Error requesting session reschedule:", error);
       // You might want to show an error message to the user here

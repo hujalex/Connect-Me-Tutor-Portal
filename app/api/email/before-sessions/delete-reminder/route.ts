@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) {
       if (fetchError.code === "PGRST116") {
-        console.log("No scheduled email found for sessionId");
         return NextResponse.json(
           {
             message: "No scheduled email found",
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(emailData);
 
     await deleteMsg(emailData.message_id);
 

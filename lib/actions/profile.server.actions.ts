@@ -55,7 +55,6 @@ export async function getProfileWithProfileId(
     }
 
     if (!data) {
-      console.log("No profile found for user ID:", profileId);
       return null;
     }
 

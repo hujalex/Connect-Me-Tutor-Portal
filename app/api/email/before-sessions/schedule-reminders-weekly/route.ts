@@ -27,9 +27,7 @@ export async function GET(request: NextRequest) {
     const delayBetweenBatches = 1000;
     for (let i = 0; i < sessionsNextWeek.length; i += batchSize) {
       const batch = sessionsNextWeek.slice(i, i + batchSize);
-      console.log(
-        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(sessionsNextWeek.length / batchSize)}`
-      );
+
       await sendScheduledEmailsBeforeSessions(batch);
       if (i + batchSize < sessionsNextWeek.length) {
         await delay(delayBetweenBatches);

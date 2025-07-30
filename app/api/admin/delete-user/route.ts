@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
   const { profileId } = await req.json();
 
   try {
-    console.log(profileId);
     const { data: profileData, error: profileError } = await supabase
       .from("Profiles")
       .select("user_id")

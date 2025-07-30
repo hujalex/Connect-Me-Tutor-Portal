@@ -225,8 +225,6 @@ const HoursManager = () => {
 
       setSessionsData(newSessionsData);
       setEventsData(newEventsData);
-
-      console.log("Fetched");
     } catch (error) {
       console.error("Failed to fetch sessions or events:", error);
     }
@@ -293,8 +291,6 @@ const HoursManager = () => {
           lastDay.toISOString()
         );
       setEventHoursData(data);
-      console.log(data);
-      console.log(eventHoursData);
     } catch (error) {
       toast.error("Unable to get event hours");
     }
@@ -333,7 +329,6 @@ const HoursManager = () => {
         monthlySessionHours[tutorId][weekKey] = hours;
       });
     });
-    console.log(monthlySessionHours);
     setWeeklySessionHours(monthlySessionHours);
   };
 
@@ -341,9 +336,6 @@ const HoursManager = () => {
     try {
       const firstDay = startOfWeek(startOfMonth(selectedDate));
       const lastDay = endOfWeek(endOfMonth(selectedDate));
-
-      console.log(firstDay);
-      console.log(lastDay);
 
       const data: { [key: string]: number } = await getHoursRangeBatch(
         firstDay.toISOString(),
@@ -416,8 +408,6 @@ const HoursManager = () => {
 
       const weekPromises = weeksInMonth.map(async (week) => {
         const nextWeek = addDays(week, 7);
-        console.log("First day", week.toISOString());
-        console.log("Last Day", nextWeek.toISOString());
 
         const data: number = await getTotalSessionHoursRange(
           week.toISOString(),
@@ -524,7 +514,6 @@ const HoursManager = () => {
   const handleRemoveEvent = async () => {
     if (selectedEventToRemove) {
       try {
-        console.log("Selected Event to Remove", selectedEventToRemove);
         const res = await removeEvent(selectedEventToRemove);
         if (res)
           toast.success("Event removed successfully. Refresh to view update.");

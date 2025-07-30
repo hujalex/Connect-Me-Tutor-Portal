@@ -305,8 +305,6 @@ const TutorList = () => {
   const handleResendEmailConfirmation = async () => {
     if (selectedTutor) {
       try {
-        console.log("Resent Confirmation Email");
-        console.log(selectedTutor.email);
         await resendEmailConfirmation(selectedTutor.email);
         toast.success("Resent Email Confirmation");
       } catch (error) {
