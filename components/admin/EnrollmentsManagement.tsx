@@ -231,7 +231,6 @@ const EnrollmentList = () => {
       .availability[0]
       ? formatAvailabilityAsDate(enroll.availability[0])
       : [new Date(NaN), new Date(NaN)];
-    console.log(newEnrollmentStartTime);
     for (const enrollment of enrollments) {
       if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
       try {

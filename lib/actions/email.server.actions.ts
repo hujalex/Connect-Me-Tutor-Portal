@@ -9,7 +9,6 @@ export async function fetchScheduledMessages() {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 
   const messages = await qstash.schedules.list();
-  console.log(messages);
   return messages;
 }
 
@@ -34,7 +33,6 @@ export async function sendScheduledEmailsBeforeSessions(
         }
 
         try {
-          console.log(process.env.NEXT_PUBLIC_SITE_URL);
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/before-sessions/schedule-reminder`,
             {
@@ -57,7 +55,6 @@ export async function sendScheduledEmailsBeforeSessions(
           }
 
           const data = await response.json();
-          console.log(`Successfully scheduled email for session ${session.id}`);
         } catch (sessionError) {
           console.error(
             `Error processing session ${session.id}:`,
@@ -123,7 +120,6 @@ export async function deleteMsg(messageId: string) {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
   try {
     await qstash.messages.delete(messageId);
-    console.log("Successfully deleted message from QStash");
   } catch (qstashError: any) {
     console.warn("Failed to delete message from QStash");
   }
@@ -157,7 +153,6 @@ export async function scheduleEmail({
     });
 
     if (result && result.messageId) {
-      console.log("Successfully scheduled message");
     }
     return result;
   } catch (error) {

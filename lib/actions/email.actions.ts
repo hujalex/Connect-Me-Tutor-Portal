@@ -47,7 +47,6 @@ export async function sendScheduledEmailsBeforeSessions(
           }
 
           const data = await response.json();
-          console.log(`Successfully scheduled email for session ${session.id}`);
         } catch (sessionError) {
           console.error(
             `Error processing session ${session.id}:`,

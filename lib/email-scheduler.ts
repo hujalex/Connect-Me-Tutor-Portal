@@ -39,7 +39,6 @@ export const schedulePreSessionEmail = async (
   notificationTime.setHours(notificationTime.getHours() - hoursBeforeSession);
 
   if (notificationTime < new Date()) {
-    console.log("Notification time already passed");
     return;
   }
 

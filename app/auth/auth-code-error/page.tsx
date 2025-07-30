@@ -39,7 +39,6 @@ export default function AuthError() {
   const sendResetPassword = async () => {
     try {
       const email = form.getValues("email");
-      console.log(email);
 
       const { data: resetData, error } =
         await supabase.auth.resetPasswordForEmail(email, {

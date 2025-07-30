@@ -185,8 +185,6 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
                 isFirstSession
               );
             }
-            console.log(isQuestionOrConcern);
-            console.log(isFirstSession);
           }}
           disabled={!notes || (!nextClassConfirmed && !isQuestionOrConcern)}
         >

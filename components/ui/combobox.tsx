@@ -95,7 +95,6 @@ export function Combobox({
   }, [list, searchTerm]);
 
   const handleValueChange = (newValue: string) => {
-    console.log(newValue);
     setValue(newValue);
     if (onValueChange) {
       onValueChange(newValue);

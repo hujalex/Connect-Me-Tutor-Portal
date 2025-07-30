@@ -59,7 +59,6 @@ export async function getMeeting(meetingId: string): Promise<Meeting | null> {
 
     // Check if data exists
     if (!data) {
-      console.log("No meeting found with ID:", meetingId);
       return null;
     }
 

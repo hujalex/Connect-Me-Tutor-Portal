@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
 
     const scheduledTime = subMinutes(sessionDate, 15);
 
-    console.log("Scheduled date", scheduledTime);
 
     const tutorName: string = tutor
       ? ` ${tutor.firstName} ${tutor.lastName}`
@@ -47,7 +46,6 @@ export async function POST(request: NextRequest) {
       : "your student";
 
     const message = `Hi${tutorName}, your tutoring session with ${studentName} starts soon in 15 minutes!`;
-    console.log("Message", message);
 
     const result = await scheduleEmail({
       notBefore: Math.floor(scheduledTime.getTime() / 1000),
@@ -58,7 +56,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (result && result.messageId) {
-      console.log("Qstash publish successful", result);
 
       const { data, error } = await supabase
         .from("Emails")
