@@ -15,6 +15,7 @@ export const MEETING_ID_TO_SECRET: Record<string, string> = {
   "f87f8d74-6dc4-4a6c-89b7-717df776715f": config.zoom.ZOOM_LINK_H_WH_SECRET,
   "c8e6fe57-59e5-4bbf-8648-ed6cac2df1ea": config.zoom.ZOOM_LINK_I_WH_SECRET,
 };
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { meeting: string } }
@@ -68,7 +69,7 @@ export async function POST(
 
         await logZoomMetadata({
           // id: uuidv4(),
-          session_id: payload?.object?.id, // You may need to map this Zoom ID to your session UUID
+          session_id: payload?.object?.id,
           user_name: participant?.user_name,
           participant_uuid: participant?.user_id,
           email: participant?.email,

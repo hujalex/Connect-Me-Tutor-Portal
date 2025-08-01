@@ -26,7 +26,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "lib/supabase/server.js",
+    "lib/supabase/server.ts",
     "lib/supabase/client.js",
     "lib/supabase/middleware.js"
   ],
