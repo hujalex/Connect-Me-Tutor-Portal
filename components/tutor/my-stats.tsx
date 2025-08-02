@@ -132,6 +132,7 @@ const Stats = () => {
                     )}
                     {allEvents.map((event) => (
                       <TableRow key={event.id}>
+                        
                         <TableCell>Event</TableCell>
                         <TableCell>{event.summary}</TableCell>
                         <TableCell>{event.hours}</TableCell>
