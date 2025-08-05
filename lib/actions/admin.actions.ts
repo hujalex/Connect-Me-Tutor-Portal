@@ -842,6 +842,7 @@ export async function addOneSession(
       status: "Active",
       summary: session.summary,
       meeting_id: session.meeting?.id,
+      duration: 1,
     };
 
     const { data, error } = await supabase
