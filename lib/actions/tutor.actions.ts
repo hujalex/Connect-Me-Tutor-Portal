@@ -144,6 +144,7 @@ export async function getTutorStudents(tutorId: string) {
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
+      languages_spoken: profile.languages_spoken || [],
     }));
 
     return userProfiles;

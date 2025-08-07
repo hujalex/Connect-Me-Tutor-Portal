@@ -92,7 +92,7 @@ export async function getProfileWithProfileId(
   }
 }
 interface UpdateProfileInput {
-  profileId: string;
+  userId: string;
   availability?: { day: string; startTime: string; endTime: string }[];
   subjectsOfInterest?: string[];
   languagesSpoken?: string[]; // Make sure this exists in your DB
@@ -101,21 +101,21 @@ interface UpdateProfileInput {
 export type ProfilePairingMetadata = UpdateProfileInput;
 
 export async function updateProfileDetails({
-  profileId,
+  userId,
   availability,
   subjectsOfInterest,
   languagesSpoken,
 }: UpdateProfileInput): Promise<{ success: boolean; error?: string }> {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ) {
     throw new Error("Missing Supabase environment variables");
   }
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
 
   const updates: Record<string, any> = {};
@@ -124,10 +124,14 @@ export async function updateProfileDetails({
     updates.subjects_of_interest = subjectsOfInterest;
   if (languagesSpoken !== undefined) updates.languages_spoken = languagesSpoken;
 
+  console.log("Updating profile with:", updates);
+
+  console.log("User ID:", userId);
+
   const { error } = await supabase
     .from(Table.Profiles)
     .update(updates)
-    .eq("id", profileId);
+    .eq("user_id", userId);
 
   if (error) {
     console.error("Error updating profile:", error.message);

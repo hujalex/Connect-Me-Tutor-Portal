@@ -47,7 +47,8 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
         subjects_of_interest,
         status,
         student_number,
-        settings_id
+        settings_id,
+        languages_spoken
       `
       )
       .eq("user_id", userId)
@@ -85,6 +86,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       status: data.status,
       studentNumber: data.student_number,
       settingsId: data.settings_id,
+      languages_spoken: data.languages_spoken,
     };
 
     return userProfile;

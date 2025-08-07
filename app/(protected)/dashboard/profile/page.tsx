@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,26 +33,20 @@ import {
   Languages,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { updateProfile } from "@/lib/actions/user.actions";
+import { updateProfileDetails } from "@/lib/actions/profile.server.actions";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useProfile } from "@/hooks/auth";
 
 interface UpdateProfileInput {
-  profileId: string;
+  userId: string;
   availability?: { day: string; startTime: string; endTime: string }[];
   subjectsOfInterest?: string[];
   languagesSpoken?: string[];
 }
 
-// Mock function for demo - replace with your actual import
-async function updateProfileDetails(
-  input: UpdateProfileInput
-): Promise<{ success: boolean; error?: string }> {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("Updating profile with:", input);
-  return { success: true };
-}
-
 interface ProfileUpdateFormProps {
-  profileId: string;
+  userId: string;
   initialData?: {
     availability?: { day: string; startTime: string; endTime: string }[];
     subjectsOfInterest?: string[];
@@ -70,18 +64,16 @@ const DAYS_OF_WEEK = [
   "Sunday",
 ];
 
-export default function ProfileUpdateForm({
-  profileId,
-  initialData = {},
-}: ProfileUpdateFormProps) {
+export default function ProfileUpdateForm() {
+  const { profile: initialData } = useProfile();
   const [availability, setAvailability] = useState<
     { day: string; startTime: string; endTime: string }[]
-  >(initialData.availability || []);
+  >(initialData?.availability || []);
   const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>(
-    initialData.subjectsOfInterest || []
+    initialData?.subjectsOfInterest || []
   );
   const [languagesSpoken, setLanguagesSpoken] = useState<string[]>(
-    initialData.languagesSpoken || []
+    initialData?.languages_spoken || []
   );
   const [newSubject, setNewSubject] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
@@ -90,6 +82,16 @@ export default function ProfileUpdateForm({
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setAvailability(initialData.availability || []);
+      setSubjectsOfInterest(initialData.subjectsOfInterest || []);
+      setLanguagesSpoken(initialData.languages_spoken || []);
+    }
+  }, [initialData]);
+
+  const supabase = createClientComponentClient();
 
   const addAvailabilitySlot = () => {
     setAvailability([
@@ -139,9 +141,11 @@ export default function ProfileUpdateForm({
     setIsLoading(true);
     setMessage(null);
 
+    const user = await supabase.auth.getUser();
+
     // Prepare the data in the exact format required
     const profileData: UpdateProfileInput = {
-      profileId,
+      userId: user.data.user?.id || "",
       availability: availability.length > 0 ? availability : undefined,
       subjectsOfInterest:
         subjectsOfInterest.length > 0 ? subjectsOfInterest : undefined,
@@ -297,8 +301,8 @@ export default function ProfileUpdateForm({
                     Subjects of Interest
                   </CardTitle>
                   <CardDescription>
-                    Add topics and subjects you're passionate about or
-                    knowledgeable in
+                    {`Add topics and subjects you're passionate about or
+                    knowledgeable in`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

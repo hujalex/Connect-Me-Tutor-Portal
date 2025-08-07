@@ -1354,7 +1354,7 @@ export async function removeSession(
 export async function getMeetings(): Promise<Meeting[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase.from("Meetings").select(`
+    const { data, error } = await supabase.from(Table.Meetings).select(`
         id,
         link,
         meeting_id,
@@ -1362,6 +1362,8 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         created_at,
         name
       `);
+
+    console.log("Data: ", data);
 
     // Check for errors and log them
     if (error) {
