@@ -193,11 +193,11 @@ export function ChatRoom({
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      //   toast({
-      //     title: "Error sending message",
-      //     description: "Please try again",
-      //     variant: "destructive",
-      //   })
+      toast({
+        title: "Error sending message",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
@@ -215,7 +215,7 @@ export function ChatRoom({
       // Upload file to Supabase Storage
       const filePath = `${roomId}/${currentUser.id}/${fileId}`;
       const { data, error } = await supabase.current.storage
-        .from("chat_files")
+        .from("enrollment-chat-files")
         .upload(filePath, file, {
           onUploadProgress: (progress) => {
             const percent = Math.round(

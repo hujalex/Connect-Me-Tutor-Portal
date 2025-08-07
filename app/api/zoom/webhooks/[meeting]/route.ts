@@ -81,7 +81,14 @@ export async function POST(
     case "meeting.participant_left":
       {
         const participant = payload?.object?.participant;
-
+        await logZoomMetadata({
+          // id: uuidv4(),
+          session_id: payload?.object?.id,
+          user_name: participant?.user_name,
+          participant_uuid: participant?.user_id,
+          email: participant?.email,
+          date_time: participant?.join_time ?? new Date().toISOString(),
+        });
         //Needs to be retested on new schema
 
         // const { error } = await supabase
