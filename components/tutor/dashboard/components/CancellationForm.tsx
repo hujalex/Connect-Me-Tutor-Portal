@@ -24,8 +24,10 @@ interface CancellationFormProps {
 }
 
 type cancellationReasonType =
-  | "studentUnavailable"
+  | "studentUnavailableWithPriorNotice"
+  | "studentUnavailableWithoutPriorNotice"
   | "studentAbsent"
+  | "tutorCancelledWithPriorNotice"
   | "emergency"
   | "other"
   | null;
@@ -40,9 +42,13 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
     useState<cancellationReasonType>(null);
 
   const isCancellationOther = cancellationReason === "other";
-  const isCancellationStudentAbsent =
-    cancellationReason === "studentUnavailable";
   const isCancellationEmergency = cancellationReason === "emergency";
+  const isCancellationTutorCancelledWithpriorNotice =
+    cancellationReason === "tutorCancelledWithPriorNotice";
+  const isCancellationStudentAbsentWithoutPriorNotice =
+    cancellationReason === "studentUnavailableWithoutPriorNotice";
+  const isCancellationStudentAbsentWithPriorNotice =
+    cancellationReason === "studentUnavailableWithPriorNotice";
 
   return (
     <AlertDialogContent>
@@ -61,10 +67,30 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
         >
           <span className="space-x-2">
             <RadioGroupItem
-              value="studentUnavailable"
-              id="studentUnavailable"
+              value="studentUnavailableWithPriotNotice"
+              id="studentUnavailableWithPriorNotice"
             />
-            <Label htmlFor="studentUnavailable">Student was unavailable</Label>
+            <Label htmlFor="studentUnavailableWithPriorNotice">
+              Student cancelled with prior notice
+            </Label>
+          </span>
+          <span className="space-x-2">
+            <RadioGroupItem
+              value="studentUnavailableWithoutPriorNotice"
+              id="studentUnavailableWithoutPriorNotice"
+            />
+            <Label htmlFor="studentUnavailableWithoutPriorNotice">
+              Student cancelled without prior notice
+            </Label>
+          </span>
+          <span className="space-x-2">
+            <RadioGroupItem
+              value="tutorCancelledWithPriorNotice"
+              id="tutorCancelledWithPriorNotice"
+            />
+            <Label htmlFor="tutorCancelledWithPriorNotice">
+              I am cancelling with prior notice
+            </Label>
           </span>
           <span className="space-x-2">
             <RadioGroupItem value="emergency" id="emergency" />
@@ -88,7 +114,7 @@ const CancellationForm: React.FC<CancellationFormProps> = ({
           onClick={(e) => {
             const updatedSession: Session = {
               ...session,
-              status: (isCancellationStudentAbsent
+              status: (isCancellationStudentAbsentWithoutPriorNotice
                 ? "Complete"
                 : "Cancelled") as
                 | "Active"
