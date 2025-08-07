@@ -74,16 +74,18 @@ export default function LoginForm() {
         email: values.email,
         password: values.password,
       });
+      console.log("Login response:", data, error);
 
       if (error) {
         throw error;
       }
 
       if (data.user) {
+        console.log("DATA: ", data.user);
         toast.success("Logged in successfully");
         // showForms();
-        router.push("/dashboard");
-        router.refresh();
+        // router.push("/dashboard");
+        // router.refresh();
       } else {
         toast.error("Something went wrong. Please try again.");
       }

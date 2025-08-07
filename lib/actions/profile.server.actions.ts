@@ -2,6 +2,7 @@
 
 import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
+import { Table } from "../supabase/tables";
 
 export async function getProfileWithProfileId(
   profileId: string
@@ -20,7 +21,7 @@ export async function getProfileWithProfileId(
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -96,18 +97,15 @@ interface UpdateProfileInput {
   subjectsOfInterest?: string[];
   languagesSpoken?: string[]; // Make sure this exists in your DB
 }
-//{
-// profileId,
-//   availability,
-//   subjectsOfInterest,
-//   languagesSpoken,
-// }
 
-export async function updateProfileDetails(
-  d: UpdateProfileInput
-): Promise<{ success: boolean; error?: string }> {
-  console.log("data: ", d);
-  return;
+export type ProfilePairingMetadata = UpdateProfileInput;
+
+export async function updateProfileDetails({
+  profileId,
+  availability,
+  subjectsOfInterest,
+  languagesSpoken,
+}: UpdateProfileInput): Promise<{ success: boolean; error?: string }> {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -127,7 +125,7 @@ export async function updateProfileDetails(
   if (languagesSpoken !== undefined) updates.languages_spoken = languagesSpoken;
 
   const { error } = await supabase
-    .from("Profiles")
+    .from(Table.Profiles)
     .update(updates)
     .eq("id", profileId);
 

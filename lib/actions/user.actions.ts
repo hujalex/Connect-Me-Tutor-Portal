@@ -1,5 +1,6 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
+import { Table } from "../supabase/tables";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -25,7 +26,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -95,7 +96,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 
 export const getProfileByEmail = async (email: string) => {
   const { data, error } = await supabase
-    .from("Profiles")
+    .from(Table.Profiles)
     .select("*")
     .eq("email", email)
     .single();
@@ -137,7 +138,7 @@ export const getProfileRole = async (
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("role")
       .eq("user_id", userId)
       .single();
@@ -171,7 +172,7 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -247,7 +248,7 @@ export async function getProfileWithProfileId(
 ): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -332,7 +333,7 @@ export async function getUserInfo() {
 export async function updateProfile(userId: string, profileData: any) {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update(profileData)
       .eq("user_id", userId)
       .single();
@@ -357,7 +358,7 @@ export async function createUser(userData: any) {
 
     // If you need to store additional user data, you can do it here
     const { data: profileData, error: profileError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .insert({
         user_id: data.user.id,
         ...userData,
