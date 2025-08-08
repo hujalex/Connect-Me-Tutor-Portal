@@ -132,7 +132,6 @@ const Stats = () => {
                     )}
                     {allEvents.map((event) => (
                       <TableRow key={event.id}>
-                        
                         <TableCell>Event</TableCell>
                         <TableCell>{event.summary}</TableCell>
                         <TableCell>{event.hours}</TableCell>
@@ -148,9 +147,7 @@ const Stats = () => {
                 </TableRow>
               </TableFooter>
             </Table>
-                <Table>
-                  
-                </Table>
+            <Table></Table>
           </div>
         </div>
       )}
