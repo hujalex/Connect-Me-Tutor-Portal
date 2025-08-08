@@ -94,15 +94,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
             Session Exit Form
             <AlertDialog>
               <AlertDialogTrigger>
-                <Button
-                  variant="outline"
-                  // onClick={(e) => {
-                  //   setIsSessionExitFormOpen(false);
-                  // }}
-                >
-                  {" "}
-                  I would like to cancel instead
-                </Button>
+                <Button variant="outline"> The session did not happen</Button>
               </AlertDialogTrigger>
               {selectedSession ? (
                 <CancellationForm
@@ -116,16 +108,6 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
             </AlertDialog>
           </DialogTitle>
         </DialogHeader>
-        {/* <div className="flex items-center space-x-2">
-          <Checkbox
-            id="cancellation"
-            checked={isCancellation}
-            onCheckedChange={(checked) => setisCancellation(checked === true)}
-          />
-          <label htmlFor="cancellation" className="text-sm font-medium">
-            I would like to cancel instead
-          </label>
-        </div> */}
 
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -164,17 +146,6 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
             </label>
           </div>
         </div>
-
-        {/* <div className="flex items-center space-x-2">
-          <Checkbox
-            id="first-session"
-            checked={isFirstSession}
-            onCheckedChange={(checked) => setIsFirstSession(checked === true)}
-          />
-          <label htmlFor="next-class" className="text-sm font-medium">
-            This is my first session
-          </label>
-        </div> */}
         <Button
           onClick={() => {
             if (selectedSession) {
