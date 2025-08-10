@@ -167,7 +167,8 @@ export default function MeetingParticipation() {
       // If still in meeting, calculate duration until meeting end
       if (joinTime && summary.currentlyInMeeting) {
         totalDuration +=
-          (meetingData.endTime.getTime() - joinTime.getTime()) / (1000 * 60);
+          (meetingData.endTime.getTime() - (joinTime as Date).getTime()) /
+          (1000 * 60);
       }
 
       summary.totalDuration = Math.round(totalDuration);

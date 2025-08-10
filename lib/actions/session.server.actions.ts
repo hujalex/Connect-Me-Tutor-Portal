@@ -6,6 +6,7 @@ import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./meeting.server.actions";
 import { createServerClient } from "../supabase/server";
+import { Table } from "../supabase/tables";
 
 export async function getActiveSessionFromMeetingID(meetingID: string) {
   const supabase = await createServerClient();

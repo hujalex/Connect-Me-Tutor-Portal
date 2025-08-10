@@ -1,17 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Check, Filter, Search, UserRound } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { ProfilePairingMetadata } from "@/types/profile"
+import { useState } from "react";
+import { Check, Filter, Search, UserRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { ProfilePairingMetadata } from "@/types/profile";
 
 // Mock data for demonstration
-const mockProfiles: (ProfilePairingMetadata & { name: string; role: string; rating: number })[] = [
+const mockProfiles: (ProfilePairingMetadata & {
+  name: string;
+  role: string;
+  rating: number;
+})[] = [
   {
     profileId: "1",
     name: "Alex Johnson",
@@ -48,30 +65,36 @@ const mockProfiles: (ProfilePairingMetadata & { name: string; role: string; rati
     subjectsOfInterest: ["Biology", "Chemistry"],
     languagesSpoken: ["English", "Mandarin"],
   },
-]
+];
 
 export function PairingInterface() {
-  const [activeTab, setActiveTab] = useState("find")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [subjectFilter, setSubjectFilter] = useState<string | undefined>()
-  const [requestedPairings, setRequestedPairings] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState("find");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState<string | undefined>();
+  const [requestedPairings, setRequestedPairings] = useState<string[]>([]);
 
   const filteredProfiles = mockProfiles.filter((profile) => {
     const matchesSearch =
       profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.subjectsOfInterest.some((subject) => subject.toLowerCase().includes(searchQuery.toLowerCase()))
+      profile.subjectsOfInterest?.some((subject) =>
+        subject.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
-    const matchesSubject = !subjectFilter || profile.subjectsOfInterest.some((subject) => subject === subjectFilter)
+    const matchesSubject =
+      !subjectFilter ||
+      profile.subjectsOfInterest?.some((subject) => subject === subjectFilter);
 
-    return matchesSearch && matchesSubject
-  })
+    return matchesSearch && matchesSubject;
+  });
 
   const handlePairingRequest = (profileId: string) => {
-    setRequestedPairings((prev) => [...prev, profileId])
+    setRequestedPairings((prev) => [...prev, profileId]);
     // In a real app, you would send this request to your backend
-  }
+  };
 
-  const allSubjects = Array.from(new Set(mockProfiles.flatMap((profile) => profile.subjectsOfInterest)))
+  const allSubjects = Array.from(
+    new Set(mockProfiles.flatMap((profile) => profile.subjectsOfInterest))
+  );
 
   return (
     <div className="space-y-4">
@@ -101,9 +124,9 @@ export function PairingInterface() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={undefined}>All Subjects</SelectItem>
+                <SelectItem value={""}>All Subjects</SelectItem>
                 {allSubjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>
+                  <SelectItem key={subject} value={subject!}>
                     {subject}
                   </SelectItem>
                 ))}
@@ -124,15 +147,19 @@ export function PairingInterface() {
                           {profile.role}
                         </CardDescription>
                       </div>
-                      <Badge variant="outline">★ {profile.rating.toFixed(1)}</Badge>
+                      <Badge variant="outline">
+                        ★ {profile.rating.toFixed(1)}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="pb-2">
                     <div className="space-y-2">
                       <div>
-                        <p className="text-xs text-muted-foreground">Subjects</p>
+                        <p className="text-xs text-muted-foreground">
+                          Subjects
+                        </p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {profile.subjectsOfInterest.map((subject, i) => (
+                          {profile.subjectsOfInterest?.map((subject, i) => (
                             <Badge key={i} variant="secondary">
                               {subject}
                             </Badge>
@@ -140,9 +167,11 @@ export function PairingInterface() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Languages</p>
+                        <p className="text-xs text-muted-foreground">
+                          Languages
+                        </p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {profile.languagesSpoken.map((language, i) => (
+                          {profile.languagesSpoken?.map((language, i) => (
                             <Badge key={i} variant="outline">
                               {language}
                             </Badge>
@@ -171,7 +200,9 @@ export function PairingInterface() {
               ))
             ) : (
               <div className="col-span-2 text-center py-8">
-                <p className="text-muted-foreground">No matching profiles found</p>
+                <p className="text-muted-foreground">
+                  No matching profiles found
+                </p>
               </div>
             )}
           </div>
@@ -180,7 +211,9 @@ export function PairingInterface() {
         <TabsContent value="requests">
           <div className="min-h-[300px] flex items-center justify-center">
             <div className="text-center">
-              <p className="text-muted-foreground mb-2">No pending pairing requests</p>
+              <p className="text-muted-foreground mb-2">
+                No pending pairing requests
+              </p>
               <Button variant="outline" onClick={() => setActiveTab("find")}>
                 Find tutors or students
               </Button>
@@ -189,5 +222,5 @@ export function PairingInterface() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

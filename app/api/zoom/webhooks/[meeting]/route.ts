@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { config } from "@/config";
-import { logZoomMetadata } from "@/lib/actions/zoom.server.actions";
-import { getActiveSessionFromMeetingID } from "@/lib/actions/session.server.actions";
+// import { logZoomMetadata } from "@/lib/actions/zoom.server.actions";
+// import { getActiveSessionFromMeetingID } from "@/lib/actions/session.server.actions";
 
-export const MEETING_ID_TO_SECRET: Record<string, string> = {
+const MEETING_ID_TO_SECRET: Record<string, string> = {
   "89d13433-04c3-48d6-9e94-f02103336554": config.zoom.ZOOM_LINK_A_WH_SECRET,
   "72a87729-ae87-468c-9444-5ff9b073f691": config.zoom.ZOOM_LINK_B_WH_SECRET,
   "26576a69-afe8-46c3-bc15-dec992989cdf": config.zoom.ZOOM_LINK_C_WH_SECRET,
@@ -26,6 +26,7 @@ export async function POST(
   console.log("Request body:", body);
 
   const validationSecret = MEETING_ID_TO_SECRET[params.meeting];
+  console.log("secret: ", validationSecret);
   if (!validationSecret)
     return NextResponse.json({
       err: `failed to find credentials for meeting: ${params.meeting}`,
@@ -33,6 +34,7 @@ export async function POST(
 
   //  Handle Zoom's URL validation challenge
   if (body.event === "endpoint.url_validation") {
+    console.log("validating");
     const hashForValidate = crypto
       .createHmac("sha256", validationSecret)
       .update(body.payload.plainToken)
@@ -56,7 +58,7 @@ export async function POST(
   const event = body?.event;
   const payload = body?.payload;
 
-  const session = getActiveSessionFromMeetingID(params.meeting);
+  // const session = await getActiveSessionFromMeetingID(params.meeting);
 
   switch (event) {
     case "meeting.started":
@@ -66,29 +68,31 @@ export async function POST(
     case "meeting.participant_joined":
       {
         const participant = payload?.object?.participant;
+        console.log("JOINED: ", participant);
 
-        await logZoomMetadata({
-          // id: uuidv4(),
-          session_id: payload?.object?.id,
-          user_name: participant?.user_name,
-          participant_uuid: participant?.user_id,
-          email: participant?.email,
-          date_time: participant?.join_time ?? new Date().toISOString(),
-        });
+        // await logZoomMetadata({
+        //   // id: uuidv4(),
+        //   session_id: payload?.object?.id,
+        //   user_name: participant?.user_name,
+        //   participant_uuid: participant?.user_id,
+        //   email: participant?.email,
+        //   date_time: participant?.join_time ?? new Date().toISOString(),
+        // });
       }
       break;
 
     case "meeting.participant_left":
       {
         const participant = payload?.object?.participant;
-        await logZoomMetadata({
-          // id: uuidv4(),
-          session_id: payload?.object?.id,
-          user_name: participant?.user_name,
-          participant_uuid: participant?.user_id,
-          email: participant?.email,
-          date_time: participant?.join_time ?? new Date().toISOString(),
-        });
+        console.log("LEFT: ", participant);
+        // await logZoomMetadata({
+        //   // id: uuidv4(),
+        //   session_id: payload?.object?.id,
+        //   user_name: participant?.user_name,
+        //   participant_uuid: participant?.user_id,
+        //   email: participant?.email,
+        //   date_time: participant?.join_time ?? new Date().toISOString(),
+        // });
         //Needs to be retested on new schema
 
         // const { error } = await supabase

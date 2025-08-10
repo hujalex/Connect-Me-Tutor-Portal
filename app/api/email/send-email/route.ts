@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { ideahub } from "googleapis/build/src/apis/ideahub";
+import { Table } from "@/lib/supabase/tables";
 
 export const dynamic = "force-dynamic";
 

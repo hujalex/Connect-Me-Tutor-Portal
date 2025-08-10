@@ -79,7 +79,7 @@ export default function DashboardLayout({
   const settingsSidebarItems = [
     {
       title: "Profile",
-      href: "/settings",
+      href: "/dashboard/profile",
       icon: <CircleUserRound className="h-5 w-5" />,
     },
   ];
@@ -89,6 +89,16 @@ export default function DashboardLayout({
       title: "Dashboard",
       href: "/dashboard",
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
+    },
+    {
+      title: "Chats",
+      href: "/dashboard/chats",
+      icon: <MessageCircleIcon className="h-5 w-5" />,
+    },
+    {
+      title: "Pairings",
+      href: "/dashboard/pairings",
+      icon: <LinkIcon className="h-5 w-5" />,
     },
   ];
 
@@ -122,6 +132,11 @@ export default function DashboardLayout({
       title: "Profile",
       href: "/dashboard/profile",
       icon: <UserIcon className="h-5 w-5" />,
+    },
+    {
+      title: "Pairings",
+      href: "/dashboard/pairings",
+      icon: <LinkIcon className="h-5 w-5" />,
     },
   ];
 

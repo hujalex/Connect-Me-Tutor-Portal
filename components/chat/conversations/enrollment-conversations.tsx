@@ -1,11 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { SharedEnrollment } from "@/lib/actions/enrollments.action";
+import { SharedEnrollment } from "@/types/enrollment";
 import Link from "next/link";
+import { useMemo } from "react";
 
 interface ChatListProps {
   enrollments: SharedEnrollment[];
   currentUserId?: string;
+  role: "Student" | "Tutor" | "Admin";
 }
 
 // Mock function to simulate unread message counts
@@ -70,8 +72,24 @@ const formatDate = (dateString: string): string => {
     return `${Math.floor(diffInHours / 24)}d`;
   }
 };
-
-export function ChatList({ enrollments, currentUserId }: ChatListProps) {
+export function ChatList({ enrollments, currentUserId, role }: ChatListProps) {
+  const clientConversations = useMemo(
+    () =>
+      enrollments.map((enrollment) => {
+        const profile =
+          role === "Student" ? enrollment["tutor"] : enrollment["student"];
+        return {
+          id: profile.id,
+          name: `${profile.first_name}  ${profile.last_name}`,
+          email: profile.email,
+          startDate: enrollment.start_date,
+          endDate: enrollment.end_date,
+          enrollmentId: enrollment.id,
+        };
+      }),
+    // const d
+    [enrollments, role]
+  );
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -110,15 +128,15 @@ export function ChatList({ enrollments, currentUserId }: ChatListProps) {
             </p>
           </div>
         ) : (
-          enrollments.map((enrollment) => {
-            const lastMessage = getLastMessage(enrollment.id);
-            const unreadCount = getUnreadCount(enrollment.id);
-            const isActive = new Date(enrollment.end_date) > new Date();
+          clientConversations.map((conversation) => {
+            const lastMessage = getLastMessage(conversation.id);
+            const unreadCount = getUnreadCount(conversation.id);
+            const isActive = new Date() > new Date();
 
             return (
               <Link
-                href={`/dashboard/enrollment/${enrollment.id}/chat`}
-                key={enrollment.id}
+                href={`/dashboard/enrollment/${conversation.enrollmentId}/chat`}
+                key={conversation.name}
                 className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50 transition-colors"
               >
                 {/* Tutor Avatar */}
@@ -126,16 +144,14 @@ export function ChatList({ enrollments, currentUserId }: ChatListProps) {
                   <Avatar className="h-12 w-12">
                     <AvatarImage
                       src={
-                        getAvatarUrl(enrollment.profile_name) ||
-                        "/placeholder.svg"
+                        getAvatarUrl(conversation.name) || "/placeholder.svg"
                       }
-                      alt={enrollment.profile_name}
+                      alt={conversation.name}
                     />
                     <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
-                      {enrollment.profile_name.charAt(0).toUpperCase()}
+                      {conversation.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  {/* Active status indicator */}
                   {isActive && (
                     <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                   )}
@@ -146,7 +162,7 @@ export function ChatList({ enrollments, currentUserId }: ChatListProps) {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center">
                       <h3 className="font-medium text-gray-900 truncate">
-                        {enrollment.profile_name}
+                        {conversation.name}
                       </h3>
                       <span className="text-xs text-gray-400 ml-2">Tutor</span>
                     </div>
@@ -159,9 +175,7 @@ export function ChatList({ enrollments, currentUserId }: ChatListProps) {
                     {lastMessage.text}
                   </p>
 
-                  {/* Session Info and Unread Badge */}
                   <div className="flex items-center justify-between">
-                    {/* Session Duration */}
                     <div className="flex items-center text-xs text-gray-500">
                       <svg
                         className="w-3 h-3 mr-1"
@@ -176,15 +190,14 @@ export function ChatList({ enrollments, currentUserId }: ChatListProps) {
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {enrollment.duration}h sessions
-                      {enrollment.summer_paused && (
+                      {/* {conversation.duration}h sessions
+                      {conversation.summer_paused && (
                         <span className="ml-2 px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">
                           Paused
                         </span>
-                      )}
+                      )} */}
                     </div>
 
-                    {/* Unread Badge */}
                     {unreadCount > 0 && (
                       <Badge
                         variant="default"
