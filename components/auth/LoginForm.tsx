@@ -84,8 +84,8 @@ export default function LoginForm() {
         console.log("DATA: ", data.user);
         toast.success("Logged in successfully");
         // showForms();
-        // router.push("/dashboard");
-        // router.refresh();
+        router.push("/dashboard");
+        router.refresh();
       } else {
         toast.error("Something went wrong. Please try again.");
       }

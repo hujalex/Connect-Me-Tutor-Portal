@@ -334,7 +334,7 @@ export function ChatRoom({
             <div key={user.id} className="flex items-center gap-3 mb-3">
               <div className="relative">
                 <Avatar>
-                  <AvatarImage src={user.avatar_url || "/placeholder.svg"} />
+                  <AvatarImage src={user?.avatar_url || "/placeholder.svg"} />
                   <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                 </Avatar>
                 {user.online && (
