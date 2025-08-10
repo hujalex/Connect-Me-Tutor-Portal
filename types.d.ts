@@ -23,6 +23,7 @@ interface Profile {
   tutorIds: string[];
   studentNumber: string | null;
   settingsId: string;
+  languages_spoken: string[];
 }
 
 interface Session {

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const { to, subject, body, sessionId } = await request.json();
 
     const { data: session, error: sessionError } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("*")
       .eq("id", sessionId)
       .single();

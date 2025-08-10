@@ -5,6 +5,17 @@ import { createClient } from "@supabase/supabase-js";
 import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./meeting.server.actions";
+import { createServerClient } from "../supabase/server";
+
+export async function getActiveSessionFromMeetingID(meetingID: string) {
+  const supabase = await createServerClient();
+
+  const { data, error } = await supabase
+    .from(Table.Sessions)
+    .select("*")
+    .eq("meeting_id", meetingID)
+    .eq("is_active", true); // adjust this column name as per your schema
+}
 
 export async function getSessions(
   start: string,
@@ -24,7 +35,7 @@ export async function getSessions(
     );
 
     const { data: sessionData, error: sessionError } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("*")
       .gt("date", start)
       .lt("date", end);

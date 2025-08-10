@@ -36,6 +36,7 @@ import {
   BookOpenText,
   CircleUserRound,
   Mail,
+  MessageCircleIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,11 @@ export default function DashboardLayout({
       icon: <Users className="h-5 w-5" />,
     },
     {
+      title: "Chats",
+      href: "/dashboard/chats",
+      icon: <MessageCircleIcon className="h-5 w-5" />,
+    },
+    {
       title: "My Hours",
       href: "/dashboard/my-stats",
       icon: <TrendingUp className="h-5 w-5" />,
@@ -111,6 +117,11 @@ export default function DashboardLayout({
       title: "Resources",
       href: "/dashboard/resources",
       icon: <Layers className="h-5 w-5" />,
+    },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <UserIcon className="h-5 w-5" />,
     },
   ];
 
@@ -154,6 +165,11 @@ export default function DashboardLayout({
       title: "Email Manager",
       href: "/dashboard/email-manager",
       icon: <Mail className="h-5 w-5" />,
+    },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <UserIcon className="h-5 w-5" />,
     },
     // {
     //   title: "Migrate Profiles",

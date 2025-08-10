@@ -37,6 +37,7 @@ import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
 import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
+import { Table } from "../supabase/tables";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -77,7 +78,7 @@ export async function getAllProfiles(
 
     // Build query
     let query = supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(profileFields)
       .eq("role", role);
 
@@ -147,7 +148,7 @@ export const addStudent = async (
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("user_id")
       .eq("email", lower_case_email);
 
@@ -189,7 +190,7 @@ export const addStudent = async (
 
     // Add student profile to the database
     const { data: profileData, error: profileError } = await supabase
-      .from("Profiles") // Ensure 'profiles' is correctly cased
+      .from(Table.Profiles) // Ensure 'profiles' is correctly cased
       .insert(newStudentProfile)
       .select("*");
 
@@ -248,7 +249,7 @@ export const addTutor = async (
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("user_id")
       .eq("email", lowerCaseEmail);
 
@@ -284,7 +285,7 @@ export const addTutor = async (
 
     // Add tutor profile to the database
     const { data: profileData, error: profileError } = await supabase
-      .from("Profiles") // Ensure 'profiles' is correctly cased
+      .from(Table.Profiles) // Ensure 'profiles' is correctly cased
       .insert(newTutorProfile)
       .select("*");
 
@@ -351,7 +352,7 @@ export async function deleteUser(profileId: string) {
 export async function getUserFromId(profileId: string) {
   try {
     const { data: profile, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         ` id,
           created_at,
@@ -439,7 +440,7 @@ export async function editUser(profile: Profile) {
   } = profile;
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update({
         role: role,
         first_name: firstName.trim(),
@@ -470,7 +471,7 @@ export async function editUser(profile: Profile) {
 export async function deactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update({ status: "Inactive" })
       .eq("id", profileId)
       .select("*")
@@ -486,7 +487,7 @@ export async function deactivateUser(profileId: string) {
 export async function reactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update({ status: "Active" })
       .eq("id", profileId)
       .select("*")
@@ -548,7 +549,7 @@ export const resendEmailConfirmation = async (email: string) => {
 /* SESSIONS */
 export async function createSession(sessionData: any) {
   const { data, error } = await supabase
-    .from("Sessions")
+    .from(Table.Sessions)
     .insert(sessionData)
     .single();
 
@@ -563,7 +564,7 @@ export async function getAllSessions(
   ascending?: boolean
 ): Promise<Session[]> {
   try {
-    let query = supabase.from("Sessions").select(`
+    let query = supabase.from(Table.Sessions).select(`
       id,
       enrollment_id,
       created_at,
@@ -634,7 +635,7 @@ export async function getAllSessions(
 //   ascending?: boolean
 // ) {
 //   try {
-//     let query = supabase.from("Sessions").select(`
+//     let query = supabase.from(Table.Sessions).select(`
 //       id,
 //       created_at,
 //       environment,
@@ -697,8 +698,10 @@ export async function getAllSessions(
 
 export async function rescheduleSession(sessionId: string, newDate: string) {
   const { data, error } = await supabase
-    .from("Sessions")
-    .update({ date: newDate })
+    .from(Table.Sessions)
+    .update({
+      date: newDate,
+    })
     .eq("id", sessionId)
     .single();
 
@@ -711,7 +714,7 @@ export async function getSessionKeys(data?: Session[]) {
 
   if (!data) {
     const { data, error } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("student_id, tutor_id, date");
 
     if (error) {
@@ -854,7 +857,7 @@ export async function addOneSession(
     };
 
     const { data, error } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .insert(newSession)
       .select()
       .single();
@@ -1069,7 +1072,7 @@ export async function addSessions(
     // Perform batch insert if we have sessions to create
     if (sessionsToCreate.length > 0) {
       const { data, error } = await supabase
-        .from("Sessions")
+        .from(Table.Sessions)
         .insert(sessionsToCreate)
         .select();
 
@@ -1220,7 +1223,7 @@ async function logSessionInfo(
 //           console.log(enrollment);
 
 //           const { data: session, error } = await supabase
-//             .from("Sessions")
+//             .from(Table.Sessions)
 //             .insert({
 //               date: sessionStartTime.toISOString(),
 //               student_id: student.id,
@@ -1273,7 +1276,7 @@ export async function updateSession(
     console.log(meeting);
 
     const { data, error } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .update({
         status: status,
         student_id: student?.id,
@@ -1332,7 +1335,7 @@ export async function removeSession(
 ) {
   // Create a notification for the admin
   const { error: eventError } = await supabase
-    .from("Sessions")
+    .from(Table.Sessions)
     .delete()
     .eq("id", sessionId);
 
@@ -1351,7 +1354,7 @@ export async function removeSession(
 export async function getMeetings(): Promise<Meeting[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase.from("Meetings").select(`
+    const { data, error } = await supabase.from(Table.Meetings).select(`
         id,
         link,
         meeting_id,
@@ -1359,6 +1362,8 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         created_at,
         name
       `);
+
+    console.log("Data: ", data);
 
     // Check for errors and log them
     if (error) {
@@ -1418,7 +1423,7 @@ export const createEnrollment = async (
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase.from("Enrollments").select(`
+    const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,
         created_at,
         summary,
@@ -1471,7 +1476,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
 export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
   try {
     const { data, error } = await supabase
-      .from("Enrollments")
+      .from(Table.Enrollments)
       .update({ summer_paused: enrollment.summerPaused })
       .eq("id", enrollment.id)
       .select()
@@ -1539,7 +1544,7 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
 
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase
-        .from("Enrollments")
+        .from(Table.Enrollments)
         .update({
           student_id: enrollment.student?.id,
           tutor_id: enrollment.tutor?.id,
@@ -1562,7 +1567,7 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
     if (enrollment.student && enrollment.tutor) {
       const { data: updateSessionData, error: updateSessionError } =
         await supabase
-          .from("Sessions")
+          .from(Table.Sessions)
           .update({
             student_id: enrollment.student?.id,
             tutor_id: enrollment.tutor?.id,
@@ -1601,7 +1606,7 @@ export const addEnrollment = async (
   }
 
   const { data, error } = await supabase
-    .from("Enrollments")
+    .from(Table.Enrollments)
     .insert({
       student_id: enrollment.student?.id,
       tutor_id: enrollment.tutor?.id,
@@ -1639,7 +1644,7 @@ export const removeEnrollment = async (enrollmentId: string) => {
   const now: string = new Date().toISOString();
 
   const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
-    await supabase.from("Enrollments").delete().eq("id", enrollmentId);
+    await supabase.from(Table.Enrollments).delete().eq("id", enrollmentId);
 
   if (deleteEnrollmentError) {
     console.error("Error removing enrollment:", deleteEnrollmentError);
@@ -1648,7 +1653,7 @@ export const removeEnrollment = async (enrollmentId: string) => {
 
   const { data: deleteSessionsData, error: deleteSessionsError } =
     await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .delete()
       .eq("enrollment_id", enrollmentId)
       .gt("date", now);
