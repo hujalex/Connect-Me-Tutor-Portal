@@ -14,23 +14,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Session, Event } from "@/types";
+import { Session, Event, Enrollment } from "@/types";
 import { addDays, subDays } from "date-fns";
 import {
   getAllEventHours,
   getAllSessionHoursWithStudent,
   getEventHoursRange,
+  getSessionHoursByStudent,
   getSessionHoursRange,
   getSessionHoursRangeWithStudent,
 } from "@/lib/actions/hours.actions";
+import { get } from "http";
+
+interface EnrollmentDetails {
+  studentId : string;
+  firstName : string;
+  lastName : string;
+  hours : number;
+}
+
 
 const Stats = () => {
+
+
+
   const supabase = createClientComponentClient();
   const [totalHours, setTotalHours] = useState<number>(0);
   const [allSessions, setAllSessions] = useState<Session[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [sessionHours, setSessionHours] = useState<Map<string, number>>(
+    new Map()
+  );
+  const [studentSessions, setStudentSessions] = useState<EnrollmentDetails[]>([]);
+  const [eventHours, setEventHours] = useState<Map<string, number>>(
     new Map()
   );
 
@@ -61,6 +78,7 @@ const Stats = () => {
         const [allCompletedSessions, allEvents] = await Promise.all([
           getTutorSessions(profileData.id, undefined, undefined, "Complete"),
           getEvents(profileData.id),
+          fetchEnrollmentDetails(profileData.id),
         ]);
 
         // Process session hours map more efficiently
@@ -93,6 +111,15 @@ const Stats = () => {
 
     fetchData();
   }, [supabase.auth]);
+
+  const fetchEnrollmentDetails = async (tutorId: string) => {
+    try {
+      const data: EnrollmentDetails[] = await getSessionHoursByStudent(tutorId);
+      setStudentSessions(data);
+    } catch (error) {
+
+    }
+  }
 
   return (
     <main className="p-8">

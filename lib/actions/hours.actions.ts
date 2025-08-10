@@ -392,6 +392,19 @@ export const getTotalHours = async () => {
     throw error;
   }
 };
+
+export const getSessionHoursByStudent = async (tutorId: string) => {
+  try {
+    const { data, error } = await supabase.rpc("get_session_hours_by_student", {
+      tutor_id: tutorId,
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching tutor hours", error);
+    throw error;
+  }
+}
 /**
  * 
  * BEGIN
