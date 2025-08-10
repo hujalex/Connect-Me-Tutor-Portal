@@ -27,5 +27,5 @@ export const useProfile = () => {
     })();
   }, [supabase.auth]);
 
-  return { profile };
+  return { profile: profile! };
 };

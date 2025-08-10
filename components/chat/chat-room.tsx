@@ -11,6 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useParams } from "next/navigation";
+import { useProfile } from "@/hooks/auth";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useEnrollment } from "@/hooks/enrollments";
 
 // Types for our chat components
 export type User = {
@@ -59,24 +63,43 @@ export function ChatRoom({
   onFileUpload,
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<Record<string, User>>({});
   const [messageInput, setMessageInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingFiles, setUploadingFiles] = useState<{
     [key: string]: number;
   }>({});
+  const { enrollment } = useEnrollment(roomId);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   //   const { toast } = useToast()
 
-  const supabase = useRef(
-    createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, supabaseKey)
-  );
+  const supabase = createClientComponentClient();
+  const { profile } = useProfile();
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (enrollment) {
+      setUsers({
+        [enrollment.tutor.id]: {
+          role: "tutor",
+          id: enrollment.tutor.id,
+          name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
+        },
+        [enrollment.student.id]: {
+          role: "student",
+          id: enrollment.student.id,
+          name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
+        },
+      });
+    }
+  }, [enrollment]);
 
   // Load initial messages and subscribe to new ones
   useEffect(() => {
@@ -85,11 +108,13 @@ export function ChatRoom({
         setIsLoading(true);
 
         // Fetch messages for this room
-        const { data, error } = await supabase.current
+        const { data, error } = await supabase
           .from("messages")
           .select("*")
           .eq("room_id", roomId)
           .order("created_at", { ascending: true });
+
+        console.log("Data: ", data);
 
         if (error) throw error;
 
@@ -98,16 +123,16 @@ export function ChatRoom({
         }
 
         // Fetch users in this room
-        const { data: usersData, error: usersError } = await supabase.current
-          .from("room_users")
-          .select("users(*)")
-          .eq("room_id", roomId);
+        // const { data: usersData, error: usersError } = await supabase
+        //   .from("room_users")
+        //   .select("*")
+        //   .eq("room_id", roomId);
 
-        if (usersError) throw usersError;
+        // if (usersError) throw usersError;
 
-        if (usersData) {
-          setUsers(usersData.map((item: any) => item.users) as User[]);
-        }
+        // if (usersData) {
+        //   setUsers(usersData.map((item: any) => item.users) as User[]);
+        // }
       } catch (error) {
         console.error("Error loading messages:", error);
         // toast({
@@ -123,7 +148,7 @@ export function ChatRoom({
     loadMessages();
 
     // Subscribe to new messages
-    const messagesSubscription = supabase.current
+    const messagesSubscription = supabase
       .channel("messages")
       .on(
         "postgres_changes",
@@ -141,30 +166,30 @@ export function ChatRoom({
       .subscribe();
 
     // Subscribe to user presence
-    const presenceSubscription = supabase.current
-      .channel("room_presence")
-      .on("presence", { event: "sync" }, () => {
-        // Update online status of users
-        const presenceState = presenceSubscription.presenceState();
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => ({
-            ...user,
-            online: Object.keys(presenceState).includes(user.id),
-          }))
-        );
-      })
-      .subscribe();
+    // const presenceSubscription = supabase
+    //   .channel("room_presence")
+    //   .on("presence", { event: "sync" }, () => {
+    //     // Update online status of users
+    //     const presenceState = presenceSubscription.presenceState();
+    //     setUsers((prevUsers) =>
+    //       prevUsers.map((user) => ({
+    //         ...user,
+    //         online: Object.keys(presenceState).includes(user.id),
+    //       }))
+    //     );
+    //   })
+    //   .subscribe();
 
     // Track current user's presence
     const trackPresence = async () => {
-      await presenceSubscription.track({ user_id: currentUser.id });
+      // await presenceSubscription.track({ user_id: currentUser.id });
     };
 
     trackPresence();
 
     return () => {
-      supabase.current.removeChannel(messagesSubscription);
-      supabase.current.removeChannel(presenceSubscription);
+      supabase.removeChannel(messagesSubscription);
+      // supabase.removeChannel(presenceSubscription);
     };
   }, [roomId, supabaseKey, supabaseUrl, currentUser.id]);
 
@@ -176,13 +201,13 @@ export function ChatRoom({
     try {
       const newMessage = {
         room_id: roomId,
-        user_id: currentUser.id,
+        user_id: profile!.id,
         content: messageInput,
       };
 
-      const { error } = await supabase.current
-        .from("messages")
-        .insert([newMessage]);
+      console.log("trying: ", newMessage);
+
+      const { error } = await supabase.from("messages").insert([newMessage]);
 
       if (error) throw error;
 
@@ -193,11 +218,11 @@ export function ChatRoom({
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast({
-        title: "Error sending message",
-        description: "Please try again",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error sending message",
+      //   description: "Please try again",
+      //   variant: "destructive",
+      // });
     }
   };
 
@@ -214,28 +239,22 @@ export function ChatRoom({
 
       // Upload file to Supabase Storage
       const filePath = `${roomId}/${currentUser.id}/${fileId}`;
-      const { data, error } = await supabase.current.storage
+      const { data, error } = await supabase.storage
         .from("enrollment-chat-files")
-        .upload(filePath, file, {
-          onUploadProgress: (progress) => {
-            const percent = Math.round(
-              (progress.loaded / progress.total) * 100
-            );
-            setUploadingFiles((prev) => ({ ...prev, [fileId]: percent }));
-          },
-        });
+        .upload(filePath, file, {});
 
       if (error) throw error;
 
       // Get public URL for the file
-      const { data: urlData } = supabase.current.storage
-        .from("chat_files")
+      const { data: urlData } = supabase.storage
+        .from("enrollment-chat-files")
         .getPublicUrl(filePath);
 
       // Create a message with the file attachment
+
       const newMessage = {
         room_id: roomId,
-        user_id: currentUser.id,
+        user_id: profile.id,
         content: `Shared a file: ${file.name}`,
         file: {
           name: file.name,
@@ -245,7 +264,8 @@ export function ChatRoom({
         },
       };
 
-      const { error: msgError } = await supabase.current
+      console.log("inserting new message: ", newMessage);
+      const { error: msgError } = await supabase
         .from("messages")
         .insert([newMessage]);
 
@@ -289,15 +309,7 @@ export function ChatRoom({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const getUserById = (userId: string) => {
-    return (
-      users.find((user) => user.id === userId) || {
-        id: userId,
-        name: "Unknown User",
-        role: "student" as const,
-      }
-    );
-  };
+  const getUserById = (userId: string) => users[userId];
 
   const getInitials = (name: string) => {
     return name
@@ -308,6 +320,8 @@ export function ChatRoom({
       .substring(0, 2);
   };
 
+  if (!profile) return <></>;
+
   return (
     <div className="flex h-[80vh] border rounded-lg overflow-hidden bg-white">
       {/* Users sidebar */}
@@ -316,7 +330,7 @@ export function ChatRoom({
           <h3 className="font-semibold text-lg">Participants</h3>
         </div>
         <ScrollArea className="h-full p-4">
-          {users.map((user) => (
+          {Object.values(users).map((user) => (
             <div key={user.id} className="flex items-center gap-3 mb-3">
               <div className="relative">
                 <Avatar>
@@ -347,7 +361,9 @@ export function ChatRoom({
         <div className="p-4 border-b flex justify-between items-center">
           <div>
             <h2 className="font-semibold text-lg">Chat Room</h2>
-            <p className="text-sm text-gray-500">{users.length} participants</p>
+            <p className="text-sm text-gray-500">
+              {Object.keys(users).length} participants
+            </p>
           </div>
           <Button
             variant="outline"
@@ -381,13 +397,13 @@ export function ChatRoom({
           ) : (
             <div className="space-y-4">
               {messages.map((message) => {
-                const user = getUserById(message.user_id);
-                const isCurrentUser = message.user_id === currentUser.id;
+                let user = getUserById(message.user_id);
+                const isCurrentUser = message.user_id === profile!.id;
 
                 return (
                   <div
                     key={message.id}
-                    className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
+                    className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse " : ""}`}
                   >
                     <Avatar>
                       <AvatarImage
@@ -422,13 +438,15 @@ export function ChatRoom({
                       </div>
 
                       <div
-                        className={`rounded-lg p-3 ${
+                        className={`rounded-lg p-3 inline-block max-w-[75%] min-w-[50px] ${
                           isCurrentUser
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-primary text-left text-primary-foreground"
                             : "bg-muted"
                         }`}
                       >
-                        <p>{message.content}</p>
+                        <p className="whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
 
                         {message.file && (
                           <div className="mt-2 p-3 bg-background rounded border">
@@ -527,7 +545,7 @@ export function ChatRoom({
             </form>
           </div>
           <div className="space-y-3">
-            {users.map((user) => (
+            {Object.values(users).map((user) => (
               <div key={user.id} className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar>

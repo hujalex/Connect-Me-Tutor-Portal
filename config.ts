@@ -2,6 +2,10 @@ import { z } from "zod";
 
 // Define schema for Zoom webhook secrets
 const ConfigSchema = z.object({
+  supabase: z.object({
+    url: z.string(),
+    key: z.string(),
+  }),
   zoom: z.object({
     ZOOM_LINK_A_WH_SECRET: z.string(),
     ZOOM_LINK_B_WH_SECRET: z.string(),
@@ -17,6 +21,10 @@ const ConfigSchema = z.object({
 
 // Load values from environment variables
 export const config = {
+  supabase: {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  },
   zoom: {
     ZOOM_LINK_A_WH_SECRET: process.env.ZOOM_LINK_A_WH_SECRET,
     ZOOM_LINK_B_WH_SECRET: process.env.ZOOM_LINK_B_WH_SECRET,
@@ -30,18 +38,20 @@ export const config = {
   },
 } as z.infer<typeof ConfigSchema>;
 
+console.log("config: ", config);
+
 // let validatedConfig: z.infer<typeof ConfigSchema>;
 
-try {
-  ConfigSchema.parse(config);
-} catch (err) {
-  if (err instanceof z.ZodError) {
-    console.error("❌ Environment variable validation failed:");
-    for (const issue of err.errors) {
-      console.error(`→ [${issue.path.join(".")}] ${issue.message}`);
-    }
-    process.exit(1); // Exit early if required config is missing
-  } else {
-    throw err; // Unknown error
-  }
-}
+// try {
+//   ConfigSchema.parse(config);
+// } catch (err) {
+//   if (err instanceof z.ZodError) {
+//     console.error("❌ Environment variable validation failed:");
+//     for (const issue of err.errors) {
+//       console.error(`→ [${issue.path.join(".")}] ${issue.message}`);
+//     }
+//     process.exit(1); // Exit early if required config is missing
+//   } else {
+//     throw err; // Unknown error
+//   }
+// }

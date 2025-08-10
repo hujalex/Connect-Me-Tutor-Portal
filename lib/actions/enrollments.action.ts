@@ -1,28 +1,15 @@
 import { Enrollment } from "@/types";
 import { Table } from "../supabase/tables";
 import { supabase } from "./user.actions";
+import { SharedEnrollment } from "@/types/enrollment";
 
-export interface SharedEnrollment {
-  id: string;
-  created_at: string;
-  student_id: string;
-  tutor_id: string;
-  summary: string;
-  start_date: string;
-  end_date: string;
-  availability: any[];
-  meetingId: string;
-  summer_paused: boolean;
-  duration: number;
-  profile_id: string;
-  profile_user_id: string;
-  profile_name: string;
-  profile_email: string;
-}
 export async function getAccountEnrollments(userId: string) {
-  const { data, error } = await supabase.rpc("get_user_enrollments", {
-    input_user_id: userId,
-  });
+  const { data, error } = await supabase.rpc(
+    "get_user_enrollments_with_profiles",
+    {
+      requestor_auth_id: userId,
+    }
+  );
 
   if (error) {
     console.error("Error fetching enrollments:", error);
