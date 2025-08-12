@@ -37,6 +37,7 @@ import {
   CircleUserRound,
   Mail,
   MessageCircleIcon,
+  ListOrdered,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -129,11 +130,6 @@ export default function DashboardLayout({
       icon: <Layers className="h-5 w-5" />,
     },
     {
-      title: "Profile",
-      href: "/dashboard/profile",
-      icon: <UserIcon className="h-5 w-5" />,
-    },
-    {
       title: "Pairings",
       href: "/dashboard/pairings",
       icon: <LinkIcon className="h-5 w-5" />,
@@ -146,6 +142,7 @@ export default function DashboardLayout({
       href: "/dashboard",
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
     },
+
     {
       title: "Notifications",
       href: "/dashboard/notifications",
@@ -182,9 +179,9 @@ export default function DashboardLayout({
       icon: <Mail className="h-5 w-5" />,
     },
     {
-      title: "Profile",
-      href: "/dashboard/profile",
-      icon: <UserIcon className="h-5 w-5" />,
+      title: "Pairing Que",
+      href: "/dashboard/pairing-que",
+      icon: <ListOrdered className="h-5 w-5" />,
     },
     // {
     //   title: "Migrate Profiles",

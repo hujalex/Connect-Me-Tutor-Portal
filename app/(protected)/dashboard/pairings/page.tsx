@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 
-import { ProfilePreview } from "@/components/profile-preview";
+import { ProfilePreview } from "@/components/profile/profile-preview";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PairingInterface } from "@/components/pairing-interface";
+import { PairingInterface } from "@/components/pairing/pairing-interface";
 
 export default function PairingPage() {
   return (

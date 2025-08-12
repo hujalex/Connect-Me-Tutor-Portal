@@ -1,8 +1,14 @@
-export interface UpdateProfileInput {
-  profileId: string
-  availability?: { day: string; startTime: string; endTime: string }[]
-  subjectsOfInterest?: string[]
-  languagesSpoken?: string[] // Make sure this exists in your DB
+export interface Availability {
+  day: string;
+  startTime: string;
+  endTime: string;
 }
 
-export type ProfilePairingMetadata = UpdateProfileInput
+export interface UpdateProfileInput {
+  profileId: string;
+  availability?: { day: string; startTime: string; endTime: string }[];
+  subjectsOfInterest?: string[];
+  languagesSpoken?: string[];
+}
+
+export type ProfilePairingMetadata = UpdateProfileInput;

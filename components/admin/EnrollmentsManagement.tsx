@@ -1,6 +1,12 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { AlarmClockMinus, Search, Timer, TimerOff } from "lucide-react";
+import {
+  AlarmClockMinus,
+  MessageCircleIcon,
+  Search,
+  Timer,
+  TimerOff,
+} from "lucide-react";
 import { cn, formatDateAdmin } from "@/lib/utils";
 import {
   ChevronDown,
@@ -73,6 +79,8 @@ import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
 import { set } from "date-fns";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
@@ -121,6 +129,8 @@ const EnrollmentList = () => {
   const [meetingAvailability, setMeetingAvailability] = useState<{
     [key: string]: boolean;
   }>({});
+
+  const router = useRouter();
 
   useEffect(() => {
     fetchEnrollments();
@@ -815,6 +825,7 @@ const EnrollmentList = () => {
                   "Meeting Link",
                   "Actions",
                   "Summer",
+                  "Chat",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
@@ -898,6 +909,19 @@ const EnrollmentList = () => {
                           Ongoing
                         </span>
                       )}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      className="gap-2 text-white"
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/enrollment/${enrollment.id}/chat`
+                        )
+                      }
+                    >
+                      View Chat
+                      <MessageCircleIcon />
                     </Button>
                   </TableCell>
                 </TableRow>

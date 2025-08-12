@@ -9,9 +9,11 @@ import { useEffect, useState } from "react";
  * @throws Will throw an error if the user is not authenticated or if there is an issue fetching the profile.
  */
 export const useProfile = () => {
+  const [loading, setLoading] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const supabase = createClientComponentClient();
   useEffect(() => {
+    setLoading(true);
     (async () => {
       const {
         data: { user },
@@ -25,7 +27,9 @@ export const useProfile = () => {
       console.log("Profile data fetched:", profileData);
       setProfile(profileData);
     })();
+
+    setLoading(false);
   }, [supabase.auth]);
 
-  return { profile: profile! };
+  return { profile: profile!, loading };
 };
