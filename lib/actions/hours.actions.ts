@@ -405,6 +405,22 @@ export const getSessionHoursByStudent = async (tutorId: string) => {
     throw error;
   }
 };
+
+export const getAllEventDetailsForTutor = async (tutorId: string) => {
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_all_event_details_for_tutor",
+      {
+        p_tutor_id: tutorId,
+      }
+    );
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching event details", error);
+    throw error;
+  }
+};
 /**
  * 
  * BEGIN
