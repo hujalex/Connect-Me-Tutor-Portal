@@ -309,7 +309,7 @@ const Stats = () => {
                 <CardTitle className="text-lg">Events</CardTitle>
               </CardHeader>
               {Object.entries(eventDetails).map(([eventType, events]) => (
-                <Card className="m-4">
+                <Card key={eventType} className="m-4">
                   <CardHeader>
                     <CardTitle className="text-lg">{eventType}</CardTitle>
                   </CardHeader>
@@ -322,7 +322,7 @@ const Stats = () => {
                     </TableHeader>
                     <TableBody>
                       {events.map((event) => (
-                        <TableRow>
+                        <TableRow key={event.eventId}>
                           <TableCell>{event.summary}</TableCell>
                           <TableCell>{event.hours}</TableCell>
                         </TableRow>
