@@ -392,6 +392,35 @@ export const getTotalHours = async () => {
     throw error;
   }
 };
+
+export const getSessionHoursByStudent = async (tutorId: string) => {
+  try {
+    const { data, error } = await supabase.rpc("get_session_hours_by_student", {
+      p_tutor_id: tutorId,
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching hours by student", error);
+    throw error;
+  }
+};
+
+export const getAllEventDetailsForTutor = async (tutorId: string) => {
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_all_event_details_for_tutor",
+      {
+        p_tutor_id: tutorId,
+      }
+    );
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching event details", error);
+    throw error;
+  }
+};
 /**
  * 
  * BEGIN
