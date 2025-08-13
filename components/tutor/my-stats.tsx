@@ -33,9 +33,7 @@ interface EnrollmentDetails {
   hours: number;
 }
 
-
 const Stats = () => {
-
   const supabase = createClientComponentClient();
   const [totalHours, setTotalHours] = useState<number>(0);
   const [allSessions, setAllSessions] = useState<Session[]>([]);
@@ -44,10 +42,10 @@ const Stats = () => {
   const [sessionHours, setSessionHours] = useState<Map<string, number>>(
     new Map()
   );
-  const [studentSessions, setStudentSessions] = useState<EnrollmentDetails[]>([]);
-  const [eventHours, setEventHours] = useState<Map<string, number>>(
-    new Map()
+  const [studentSessions, setStudentSessions] = useState<EnrollmentDetails[]>(
+    []
   );
+  const [eventHours, setEventHours] = useState<Map<string, number>>(new Map());
 
   //testing
   const [HoursInRange, setHoursInRange] = useState<number>(0);
@@ -74,31 +72,32 @@ const Stats = () => {
 
         // Parallelize all independent API calls
         const [allCompletedSessions, allEvents] = await Promise.all([
-          getTutorSessions(profileData.id, undefined, undefined, "Complete"),
-          getEvents(profileData.id),
+          // getTutorSessions(profileData.id, undefined, undefined, "Complete"),
+          // getEvents(profileData.id),
           fetchEnrollmentDetails(profileData.id),
         ]);
 
-        // Process session hours map more efficiently
-        const sessionMap = allCompletedSessions.reduce((map, session) => {
-          const studentName = `${session.student?.firstName || ""} ${session.student?.lastName || ""
-            }`.trim();
+        // // Process session hours map more efficiently
+        // const sessionMap = allCompletedSessions.reduce((map, session) => {
+        //   const studentName = `${session.student?.firstName || ""} ${
+        //     session.student?.lastName || ""
+        //   }`.trim();
 
-          if (studentName) {
-            map.set(studentName, (map.get(studentName) || 0) + 1);
-          }
-          return map;
-        }, new Map<string, number>());
+        //   if (studentName) {
+        //     map.set(studentName, (map.get(studentName) || 0) + 1);
+        //   }
+        //   return map;
+        // }, new Map<string, number>());
 
-        // Calculate event tutoring hours more efficiently
-        const eventTutoringHours =
-          allEvents?.reduce((total, event) => total + event.hours, 0) || 0;
+        // // Calculate event tutoring hours more efficiently
+        // const eventTutoringHours =
+        //   allEvents?.reduce((total, event) => total + event.hours, 0) || 0;
 
-        // Update all state at once
-        setSessionHours(sessionMap);
-        setTotalHours(allCompletedSessions.length + eventTutoringHours);
-        setAllSessions(allCompletedSessions);
-        setAllEvents(allEvents);
+        // // Update all state at once
+        // setSessionHours(sessionMap);
+        // setTotalHours(allCompletedSessions.length + eventTutoringHours);
+        // setAllSessions(allCompletedSessions);
+        // setAllEvents(allEvents);
       } catch (error) {
         console.log("Error counting hours", error);
       } finally {
@@ -112,13 +111,11 @@ const Stats = () => {
   const fetchEnrollmentDetails = async (tutorId: string) => {
     try {
       const data: EnrollmentDetails[] = await getSessionHoursByStudent(tutorId);
-      console.log(data);
-      
-      setStudentSessions(data);
-    } catch (error) {
+      console.log(data[0]);
 
-    }
-  }
+      setStudentSessions(data);
+    } catch (error) {}
+  };
 
   return (
     <main className="p-8">
@@ -158,7 +155,6 @@ const Stats = () => {
                     )}
                     {allEvents.map((event) => (
                       <TableRow key={event.id}>
-
                         <TableCell>Event</TableCell>
                         <TableCell>{event.summary}</TableCell>
                         <TableCell>{event.hours}</TableCell>
@@ -175,18 +171,31 @@ const Stats = () => {
               </TableFooter>
             </Table>
             <Table>
+              <TableCaption>Sessions</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Hours</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
-                {studentSessions.map((session) => (
-                  <TableRow key={session.studentId}>
-                    <TableCell>{session.firstName} {session.lastName}</TableCell>
-                    <TableCell>{session.hours}</TableCell>
-
+                {studentSessions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center py-4">
+                      No student sessions recorded yet.
+                    </TableCell>
                   </TableRow>
-                ))
-                }
-
+                ) : (
+                  studentSessions.map((session) => (
+                    <TableRow key={session.studentId}>
+                      <TableCell>
+                        {session.firstName} {session.lastName}
+                      </TableCell>
+                      <TableCell>{session.hours}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
-
             </Table>
           </div>
         </div>
