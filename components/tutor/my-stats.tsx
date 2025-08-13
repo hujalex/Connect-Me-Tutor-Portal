@@ -27,16 +27,14 @@ import {
 import { get } from "http";
 
 interface EnrollmentDetails {
-  studentId : string;
-  firstName : string;
-  lastName : string;
-  hours : number;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  hours: number;
 }
 
 
 const Stats = () => {
-
-
 
   const supabase = createClientComponentClient();
   const [totalHours, setTotalHours] = useState<number>(0);
@@ -83,9 +81,8 @@ const Stats = () => {
 
         // Process session hours map more efficiently
         const sessionMap = allCompletedSessions.reduce((map, session) => {
-          const studentName = `${session.student?.firstName || ""} ${
-            session.student?.lastName || ""
-          }`.trim();
+          const studentName = `${session.student?.firstName || ""} ${session.student?.lastName || ""
+            }`.trim();
 
           if (studentName) {
             map.set(studentName, (map.get(studentName) || 0) + 1);
@@ -115,6 +112,8 @@ const Stats = () => {
   const fetchEnrollmentDetails = async (tutorId: string) => {
     try {
       const data: EnrollmentDetails[] = await getSessionHoursByStudent(tutorId);
+      console.log(data);
+      
       setStudentSessions(data);
     } catch (error) {
 
@@ -159,7 +158,7 @@ const Stats = () => {
                     )}
                     {allEvents.map((event) => (
                       <TableRow key={event.id}>
-                        
+
                         <TableCell>Event</TableCell>
                         <TableCell>{event.summary}</TableCell>
                         <TableCell>{event.hours}</TableCell>
@@ -175,9 +174,20 @@ const Stats = () => {
                 </TableRow>
               </TableFooter>
             </Table>
-                <Table>
-                  
-                </Table>
+            <Table>
+              <TableBody>
+                {studentSessions.map((session) => (
+                  <TableRow key={session.studentId}>
+                    <TableCell>{session.firstName} {session.lastName}</TableCell>
+                    <TableCell>{session.hours}</TableCell>
+
+                  </TableRow>
+                ))
+                }
+
+              </TableBody>
+
+            </Table>
           </div>
         </div>
       )}
