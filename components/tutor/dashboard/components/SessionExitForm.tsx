@@ -94,7 +94,7 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
             Session Exit Form
             <AlertDialog>
               <AlertDialogTrigger>
-                <Button variant="outline"> The session did not happen</Button>
+                <Button variant="outline">The session did not happen</Button>
               </AlertDialogTrigger>
               {selectedSession ? (
                 <CancellationForm
