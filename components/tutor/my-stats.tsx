@@ -317,7 +317,8 @@ const Stats = () => {
                     <TableHeader>
                       <TableRow className="bg-gray-50">
                         <TableHead>Summary</TableHead>
-                        <TableHead>Hours</TableHead>
+                        <TableHead>Hours</TableHead>`
+                        `
                       </TableRow>
                     </TableHeader>
                     <TableBody>
