@@ -1565,7 +1565,15 @@ const isValidUUID = (uuid: string): boolean => {
 export const addEnrollment = async (
   enrollment: Omit<Enrollment, "id" | "createdAt">
 ) => {
-  console.log(enrollment);
+  if (enrollment.duration <= 0)
+    throw new Error("Duration should be a positve amount");
+
+  if (enrollment.duration >= 3) {
+    throw new Error(
+      "Please consult an Exec Team member about sessions longer than 3 hours"
+    );
+  }
+
   if (!enrollment.student) throw new Error("Please select a Student");
 
   if (enrollment.meetingId && !isValidUUID(enrollment.meetingId)) {
@@ -1582,7 +1590,7 @@ export const addEnrollment = async (
       end_date: enrollment.endDate,
       availability: enrollment.availability,
       meetingId: enrollment.meetingId,
-      duration: 1, //default
+      duration: enrollment.duration, //default
     })
     .select(`*`)
     .single();

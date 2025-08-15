@@ -73,7 +73,15 @@ import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
 import { set } from "date-fns";
+import { z } from "zod";
 // import Availability from "@/components/student/AvailabilityFormat";
+
+const durationSchema = z.object({
+  duration: z.coerce
+    .number()
+    .positive("Duration must be a positive number")
+    .min(0.1, "Duration must be at least 0.1"),
+});
 
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
@@ -121,6 +129,11 @@ const EnrollmentList = () => {
   const [meetingAvailability, setMeetingAvailability] = useState<{
     [key: string]: boolean;
   }>({});
+
+  const [durationError, setDurationError] = useState<string | null>(null);
+  const [editDurationError, setEditDurationError] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     fetchEnrollments();
@@ -383,10 +396,57 @@ const EnrollmentList = () => {
     currentPage * rowsPerPage
   );
 
+  const validateDuration = (value: string, isEdit: boolean = false) => {
+    try {
+      durationSchema.parse({ duration: value });
+      if (isEdit) {
+        setEditDurationError(null);
+      } else {
+        setDurationError(null);
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessage = error.errors[0]?.message || "Invalid duration";
+        if (isEdit) {
+          setEditDurationError(errorMessage);
+        } else {
+          setDurationError(errorMessage);
+        }
+      }
+    }
+  };
+
   const handleInputChange = (e: {
     target: { name: string; value: string };
   }) => {
     const { name, value } = e.target;
+
+    if (name === "duration") {
+      const numericValue = value.replace(/[^0-9.]/g, "");
+      const parts = value.split(".");
+
+      const cleanedValue =
+        parts.length > 2
+          ? parts[0] + "." + parts.slice(1).join("")
+          : numericValue;
+
+      console.log("Numerical value", cleanedValue);
+
+      if (selectedEnrollment) {
+        validateDuration(cleanedValue, true);
+        setSelectedEnrollment((prev) =>
+          prev ? { ...prev, duration: parseFloat(cleanedValue) || 0 } : null
+        );
+      } else {
+        validateDuration(cleanedValue, false);
+        setNewEnrollment((prev) => ({
+          ...prev,
+          duration: parseFloat(cleanedValue) || 0,
+        }));
+      }
+      return;
+    }
 
     // Helper function to handle nested updates
     const handleNestedChange = (obj: any, key: string, value: any) => {
@@ -435,7 +495,7 @@ const EnrollmentList = () => {
       }
     } catch (error) {
       console.error("Error adding enrollment:", error);
-      toast.error("Failed to add enrollment");
+      toast.error(`${error}`);
     }
   };
 
@@ -701,6 +761,29 @@ const EnrollmentList = () => {
                         }}
                       />
                       <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="duration" className="text-right">
+                          Duration (hrs)
+                        </Label>
+                        <Input
+                          id="duration"
+                          name="duration"
+                          type="text"
+                          inputMode="decimal"
+                          value={newEnrollment.duration.toString()}
+                          onChange={handleInputChange}
+                          placeholder="1.5"
+                          className={
+                            durationError
+                              ? "border-red-500 col-span-3"
+                              : "col-span-3"
+                          }
+                          // onChange = {}
+                        />
+                        {/* {durationError && (
+                          <p className="text-red-500 text-sm mt-1 ">
+                            {durationError}
+                          </p>
+                        )} */}
                         <Label htmlFor="summary" className="text-right">
                           Summary
                         </Label>
@@ -812,6 +895,7 @@ const EnrollmentList = () => {
                   "Start Date",
                   "End Date",
                   "Meeting Link",
+                  "Duration",
                   "Actions",
                   "Summer",
                 ].map((header) => (
@@ -842,16 +926,14 @@ const EnrollmentList = () => {
                     {formatDateAdmin(enrollment.endDate, false, true)}
                   </TableCell>
                   <TableCell>
-                    <TableCell>
-                      {enrollment.meetingId
-                        ? meetings.find(
-                            (meeting) =>
-                              String(meeting.id) ===
-                              String(enrollment.meetingId)
-                          )?.name || "No Meeting"
-                        : "No Meeting Link"}
-                    </TableCell>
+                    {enrollment.meetingId
+                      ? meetings.find(
+                          (meeting) =>
+                            String(meeting.id) === String(enrollment.meetingId)
+                        )?.name || "No Meeting"
+                      : "No Meeting Link"}
                   </TableCell>
+                  <TableCell>{enrollment.duration} hr(s)</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -1151,6 +1233,15 @@ const EnrollmentList = () => {
                   }
                 />
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="duration" className="text-right">
+                    Duration
+                  </Label>
+                  <Input
+                    id="duration"
+                    name="duration"
+                    // onChange = {}
+                    className="col-span-3"
+                  />
                   <Label htmlFor="summary" className="text-right">
                     Summary
                   </Label>
