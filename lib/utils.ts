@@ -90,7 +90,7 @@ export function formatDateAdmin(
   return date.toLocaleDateString("en-US", options);
 }
 
-export function getSessionTimespan(timeStr: string): string {
+export function getSessionTimespan(timeStr: string, duration: number): string {
   const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",
     hour12: true,
@@ -107,8 +107,8 @@ export function getSessionTimespan(timeStr: string): string {
   }
 
   // // Add 1.5 hours (1 hour and 30 minutes)
-  // Add 1 hour
-  const endTime = new Date(originalTime.getTime() + 60 * 60 * 1000); // Had originally multiplied by 1.5 for endtime
+  // Add 1 hour * duration
+  const endTime = new Date(originalTime.getTime() + 60 * 60 * 1000 * duration); // Had originally multiplied by 1.5 for endtime
 
   // Format start and end times
   // const startTimeStr = formatTime(originalTime);

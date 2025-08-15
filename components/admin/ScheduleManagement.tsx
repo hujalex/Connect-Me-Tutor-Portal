@@ -56,7 +56,7 @@ import {
   removeSession,
   getMeeting,
   addOneSession,
-  checkMeetingsAvailability,
+  // checkMeetingsAvailability,
   // isMeetingAvailable,
 } from "@/lib/actions/admin.actions";
 // Add these imports at the top of the file
@@ -281,7 +281,10 @@ const Schedule = () => {
 
       // const requestedSessionStartTime = parseISO(session.date);\
       const requestedSessionStartTime = requestedDate;
-      const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
+      const requestedSessionEndTime = addHours(
+        requestedSessionStartTime,
+        1 * session.duration
+      );
 
       meetings.forEach((meeting) => {
         const hasConflict = sessionsToSearch
@@ -689,7 +692,8 @@ const Schedule = () => {
                           {session.summary}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {getSessionTimespan(session.date)} EDT
+                          {getSessionTimespan(session.date, session.duration)}{" "}
+                          EDT
                         </p>
                         <div
                           className={`text-xs font-medium px-2 py-1 rounded-lg mt-1 border ${

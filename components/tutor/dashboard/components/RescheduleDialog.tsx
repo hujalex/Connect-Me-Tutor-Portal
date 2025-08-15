@@ -130,7 +130,10 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
       });
 
       const requestedSessionStartTime = requestedDate;
-      const requestedSessionEndTime = addHours(requestedSessionStartTime, 1);
+      const requestedSessionEndTime = addHours(
+        requestedSessionStartTime,
+        session.duration
+      );
 
       meetings.forEach((meeting) => {
         const hasConflict = sessionsToSearch
@@ -148,7 +151,10 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
                       ? parseISO(existingSession.date)
                       : new Date(),
                     end: existingSession.date
-                      ? addHours(parseISO(existingSession.date), 1)
+                      ? addHours(
+                          parseISO(existingSession.date),
+                          existingSession.duration
+                        )
                       : new Date(),
                   }
                 )
