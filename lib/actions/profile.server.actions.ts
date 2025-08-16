@@ -1,8 +1,10 @@
-"use client";
+"use server";
 
 import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
 import { Table } from "../supabase/tables";
+
+import axios from "axios";
 
 export async function getProfileWithProfileId(
   profileId: string
@@ -124,9 +126,19 @@ export async function updateProfileDetails({
     updates.subjects_of_interest = subjectsOfInterest;
   if (languagesSpoken !== undefined) updates.languages_spoken = languagesSpoken;
 
-  console.log("Updating profile with:", updates);
+  const updatedSubjects = updates["subjects_of_interest"] as string[];
+  if (updatedSubjects) {
+    console.log(updatedSubjects);
+    const { data } = await axios.post(
+      "http://localhost:3000/api/pairing/embeds",
+      {
+        subjects: updatedSubjects,
+      }
+    );
+    if (data.embed) updates["subjects_of_interest"] = data.embed;
+  }
 
-  console.log("User ID:", userId);
+  console.log(updates);
 
   const { error } = await supabase
     .from(Table.Profiles)

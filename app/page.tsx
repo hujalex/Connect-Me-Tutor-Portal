@@ -34,7 +34,7 @@ export default function LoginPage() {
               Enter your email and password to continue.
             </p>
           </div>
-          
+
           <LoginForm />
         </div>
       </section>

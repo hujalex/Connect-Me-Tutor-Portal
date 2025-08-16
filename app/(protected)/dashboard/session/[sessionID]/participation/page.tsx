@@ -47,8 +47,8 @@ export default function MeetingParticipation() {
   const [meetingData] = useState({
     meetingId: "zoom-meeting-123",
     meetingTitle: "Aaron & Alex Tutoring Session",
-    startTime: new Date("2024-01-15T10:00:00"),
-    endTime: new Date("2024-01-15T11:30:00"),
+    startTime: new Date("2025-01-15T10:00:00"),
+    endTime: new Date("2025-01-15T11:30:00"),
     totalDuration: 90, // minutes
   });
 
@@ -60,7 +60,7 @@ export default function MeetingParticipation() {
       email: "sarah@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "joined",
-      timestamp: new Date("2024-01-15T10:00:00"),
+      timestamp: new Date("2025-01-15T10:00:00"),
     },
     {
       id: "2",
@@ -69,7 +69,7 @@ export default function MeetingParticipation() {
       email: "mike@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "joined",
-      timestamp: new Date("2024-01-15T10:02:00"),
+      timestamp: new Date("2025-01-15T10:02:00"),
     },
     {
       id: "3",
@@ -78,7 +78,7 @@ export default function MeetingParticipation() {
       email: "emily@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "joined",
-      timestamp: new Date("2024-01-15T10:05:00"),
+      timestamp: new Date("2025-01-15T10:05:00"),
     },
     {
       id: "4",
@@ -87,7 +87,7 @@ export default function MeetingParticipation() {
       email: "mike@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "left",
-      timestamp: new Date("2024-01-15T10:45:00"),
+      timestamp: new Date("2025-01-15T10:45:00"),
     },
     {
       id: "5",
@@ -96,7 +96,7 @@ export default function MeetingParticipation() {
       email: "david@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "joined",
-      timestamp: new Date("2024-01-15T10:15:00"),
+      timestamp: new Date("2025-01-15T10:15:00"),
     },
     {
       id: "6",
@@ -105,7 +105,7 @@ export default function MeetingParticipation() {
       email: "mike@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "joined",
-      timestamp: new Date("2024-01-15T11:00:00"),
+      timestamp: new Date("2025-01-15T11:00:00"),
     },
     {
       id: "7",
@@ -114,7 +114,7 @@ export default function MeetingParticipation() {
       email: "emily@company.com",
       avatar: "/placeholder.svg?height=40&width=40",
       action: "left",
-      timestamp: new Date("2024-01-15T11:25:00"),
+      timestamp: new Date("2025-01-15T11:25:00"),
     },
   ]);
 

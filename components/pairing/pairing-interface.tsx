@@ -24,6 +24,8 @@ import {
 import type { ProfilePairingMetadata } from "@/types/profile";
 import { PairingRequestCard } from "./que/request-card";
 import { PairingLogsTable } from "./pairing-logs";
+import { useProfile } from "@/hooks/auth";
+import { TestingPairingControls } from "./test-controls";
 
 // Mock data for demonstration
 const mockProfiles: (ProfilePairingMetadata & {
@@ -75,6 +77,8 @@ export function PairingInterface() {
   const [subjectFilter, setSubjectFilter] = useState<string | undefined>();
   const [requestedPairings, setRequestedPairings] = useState<string[]>([]);
 
+  const { profile } = useProfile();
+
   const filteredProfiles = mockProfiles.filter((profile) => {
     const matchesSearch =
       profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,25 +104,31 @@ export function PairingInterface() {
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="find" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="find">Incoming Pairings</TabsTrigger>
-          <TabsTrigger value="requests">Requested Pairings</TabsTrigger>
-        </TabsList>
+      <div>
+        <Tabs
+          defaultValue="find"
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="find">Incoming Pairings</TabsTrigger>
+            <TabsTrigger value="requests">Requested Pairings</TabsTrigger>
+            <TabsTrigger value="logs">Logs</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="find" className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or subject..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          <TabsContent value="find" className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or subject..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-            {/* <Select
+              {/* <Select
               value={subjectFilter ?? ""}
               onValueChange={setSubjectFilter}
             >
@@ -137,86 +147,87 @@ export function PairingInterface() {
                 ))}
               </SelectContent>
             </Select> */}
-          </div>
+            </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {filteredProfiles.length > 0 ? (
-              filteredProfiles.map((profile) => (
-                <Card key={profile.profileId}>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{profile.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1">
-                          <UserRound className="h-3 w-3" />
-                          {profile.role}
-                        </CardDescription>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {filteredProfiles.length > 0 ? (
+                filteredProfiles.map((profile) => (
+                  <Card key={profile.profileId}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle>{profile.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1">
+                            <UserRound className="h-3 w-3" />
+                            {profile.role}
+                          </CardDescription>
+                        </div>
+                        <Badge variant="outline">
+                          ★ {profile.rating.toFixed(1)}
+                        </Badge>
                       </div>
-                      <Badge variant="outline">
-                        ★ {profile.rating.toFixed(1)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Subjects
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {profile.subjectsOfInterest?.map((subject, i) => (
-                            <Badge key={i} variant="secondary">
-                              {subject}
-                            </Badge>
-                          ))}
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Subjects
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {profile.subjectsOfInterest?.map((subject, i) => (
+                              <Badge key={i} variant="secondary">
+                                {subject}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Languages
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {profile.languagesSpoken?.map((language, i) => (
+                              <Badge key={i} variant="outline">
+                                {language}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Languages
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {profile.languagesSpoken?.map((language, i) => (
-                            <Badge key={i} variant="outline">
-                              {language}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full"
-                      disabled={requestedPairings.includes(profile.profileId)}
-                      onClick={() => handlePairingRequest(profile.profileId)}
-                    >
-                      {requestedPairings.includes(profile.profileId) ? (
-                        <>
-                          <Check className="mr-1 h-4 w-4" />
-                          Request Sent
-                        </>
-                      ) : (
-                        "Request Pairing"
-                      )}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-8">
-                <p className="text-muted-foreground">
-                  No matching profiles found
-                </p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        className="w-full"
+                        disabled={requestedPairings.includes(profile.profileId)}
+                        onClick={() => handlePairingRequest(profile.profileId)}
+                      >
+                        {requestedPairings.includes(profile.profileId) ? (
+                          <>
+                            <Check className="mr-1 h-4 w-4" />
+                            Request Sent
+                          </>
+                        ) : (
+                          "Request Pairing"
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-8">
+                  <p className="text-muted-foreground">
+                    No matching profiles found
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="requests">
-          <PairingRequestCard />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="requests">
+            {profile && <PairingRequestCard userId={profile.userId} />}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

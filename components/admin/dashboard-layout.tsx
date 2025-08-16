@@ -38,6 +38,8 @@ import {
   Mail,
   MessageCircleIcon,
   ListOrdered,
+  BellIcon,
+  BellPlus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -90,6 +92,11 @@ export default function DashboardLayout({
       title: "Dashboard",
       href: "/dashboard",
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
+    },
+    {
+      title: "Announcements",
+      href: "/dashboard/announcements",
+      icon: <BellPlus className="h-5 w-5" />,
     },
     {
       title: "Chats",
@@ -182,6 +189,11 @@ export default function DashboardLayout({
       title: "Pairing Que",
       href: "/dashboard/pairing-que",
       icon: <ListOrdered className="h-5 w-5" />,
+    },
+    {
+      title: "Announcements",
+      href: "/dashboard/announcements",
+      icon: <BellPlus className="h-5 w-5" />,
     },
     // {
     //   title: "Migrate Profiles",
