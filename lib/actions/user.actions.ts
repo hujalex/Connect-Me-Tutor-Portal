@@ -82,7 +82,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       parentEmail: data.parent_email,
       tutorIds: data.tutor_ids,
       timeZone: data.timezone,
-      subjectsOfInterest: data.subjects_of_interest,
+      subjects_of_interest: data.subjects_of_interest,
       status: data.status,
       studentNumber: data.student_number,
       settingsId: data.settings_id,

@@ -41,7 +41,7 @@ export type Message = {
 
 export type ChatRoomProps = {
   roomId: string;
-  currentUser: User;
+  roomName?: string;
   supabaseUrl: string;
   supabaseKey: string;
   initialMessages?: Message[];
@@ -54,7 +54,7 @@ export type ChatRoomProps = {
 
 export function ChatRoom({
   roomId,
-  currentUser,
+  roomName,
   supabaseUrl,
   supabaseKey,
   initialMessages = [],
@@ -191,7 +191,7 @@ export function ChatRoom({
       supabase.removeChannel(messagesSubscription);
       // supabase.removeChannel(presenceSubscription);
     };
-  }, [roomId, supabaseKey, supabaseUrl, currentUser.id]);
+  }, [roomId, supabaseKey, supabaseUrl]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,7 +238,7 @@ export function ChatRoom({
       setUploadingFiles((prev) => ({ ...prev, [fileId]: 0 }));
 
       // Upload file to Supabase Storage
-      const filePath = `${roomId}/${currentUser.id}/${fileId}`;
+      const filePath = `${roomId}/${profile.id}/${fileId}`;
       const { data, error } = await supabase.storage
         .from("enrollment-chat-files")
         .upload(filePath, file, {});
@@ -323,7 +323,7 @@ export function ChatRoom({
   if (!profile) return <></>;
 
   return (
-    <div className="flex h-[80vh] border rounded-lg overflow-hidden bg-white">
+    <div className="flex h-full  border rounded-lg overflow-hidden bg-white">
       {/* Users sidebar */}
       <div className="w-64 border-r bg-gray-50 hidden md:block">
         <div className="p-4 border-b">
@@ -360,7 +360,7 @@ export function ChatRoom({
         {/* Chat header */}
         <div className="p-4 border-b flex justify-between items-center">
           <div>
-            <h2 className="font-semibold text-lg">Chat Room</h2>
+            <h2 className="font-semibold text-lg">{roomName ?? `Chat Room`}</h2>
             <p className="text-sm text-gray-500">
               {Object.keys(users).length} participants
             </p>

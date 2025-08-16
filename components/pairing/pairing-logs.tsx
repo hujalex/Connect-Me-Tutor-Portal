@@ -19,7 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, Users, UserCheck, AlertCircle } from "lucide-react";
+import { Clock, Users, UserCheck, AlertCircle, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // Types based on your schemas
 export type PairingStatus =
@@ -47,7 +48,7 @@ export type LogEntry = {
 const mockLogs: LogEntry[] = [
   {
     id: "1",
-    timestamp: new Date("2024-01-15T10:30:00"),
+    timestamp: new Date("2025-01-15T10:30:00"),
     type: "queue_entry",
     userType: "student",
     userId: "user-123",
@@ -58,7 +59,7 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: "2",
-    timestamp: new Date("2024-01-15T10:32:00"),
+    timestamp: new Date("2025-01-15T10:32:00"),
     type: "queue_entry",
     userType: "tutor",
     userId: "user-456",
@@ -68,7 +69,7 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: "3",
-    timestamp: new Date("2024-01-15T10:33:00"),
+    timestamp: new Date("2025-01-15T10:33:00"),
     type: "match_created",
     userType: "student",
     userId: "user-123",
@@ -79,7 +80,7 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: "4",
-    timestamp: new Date("2024-01-15T10:33:00"),
+    timestamp: new Date("2025-01-15T10:33:00"),
     type: "match_created",
     userType: "tutor",
     userId: "user-456",
@@ -90,7 +91,7 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: "5",
-    timestamp: new Date("2024-01-15T10:35:00"),
+    timestamp: new Date("2025-01-15T10:35:00"),
     type: "status_change",
     userType: "tutor",
     userId: "user-456",
@@ -101,7 +102,7 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: "6",
-    timestamp: new Date("2024-01-15T10:36:00"),
+    timestamp: new Date("2025-01-15T10:36:00"),
     type: "status_change",
     userType: "student",
     userId: "user-123",
@@ -148,12 +149,27 @@ export function PairingLogsTable() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterUserType, setFilterUserType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
   const filteredLogs = logs.filter((log) => {
     if (filterType !== "all" && log.type !== filterType) return false;
     if (filterUserType !== "all" && log.userType !== filterUserType)
       return false;
     if (filterStatus !== "all" && log.status !== filterStatus) return false;
+
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      if (log.timestamp < fromDate) return false;
+    }
+
+    if (dateTo) {
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      if (log.timestamp > toDate) return false;
+    }
+
     return true;
   });
 
@@ -217,6 +233,31 @@ export function PairingLogsTable() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
+            {/* Date Range Filter Controls */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date From</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="pl-10 w-[180px]"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date To</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="pl-10 w-[180px]"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Event Type</label>
               <Select value={filterType} onValueChange={setFilterType}>
@@ -268,6 +309,8 @@ export function PairingLogsTable() {
                   setFilterType("all");
                   setFilterUserType("all");
                   setFilterStatus("all");
+                  setDateFrom("");
+                  setDateTo("");
                 }}
               >
                 Clear Filters

@@ -1,8 +1,10 @@
-"use clietn";
+"use client";
 
 import { PairingRequest } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
-import { getProfileRole } from "./user.actions";
+import { getProfile, getProfileRole } from "./user.actions";
+import { getAccountEnrollments } from "./enrollments.action";
+import { Table } from "../supabase/tables";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -34,23 +36,39 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     throw new Error("Missing Supabase environment variables");
   }
 
-  const role = await getProfileRole(userId);
-
-  if (!role) throw new Error("failed to located profile");
-
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
 
+  const [profile, enrollments] = await Promise.all([
+    getProfile(userId),
+    getAccountEnrollments(userId),
+  ]);
+
+  if (!enrollments) throw new Error("cannot locate account enrollments");
+  if (!profile) throw new Error("failed to validate profile role");
+
+  const priority = enrollments.length < 1 ? 1 : 2;
+
   //Check for current enrollments here to determine assigned priority ranking
-  const result = supabase.from("pairing_request").insert([
+  console.log("f -> ", {
+    user_id: profile.id,
+    type: profile.role.toLowerCase(),
+    priority,
+    notes,
+  });
+
+  const result = await supabase.from(Table.PairingRequests).insert([
     {
-      userId,
-      type: role.toLowerCase(),
-      priority: 1,
+      user_id: profile.id,
+      type: profile.role.toLowerCase(),
+      priority,
+      notes,
     },
   ]);
 
-  return result;
+  console.log("creation result: ", result);
 };
+
+export const acceptStudentMatch = () => {};

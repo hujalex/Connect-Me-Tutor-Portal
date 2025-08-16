@@ -24,6 +24,7 @@ import { PairingRequest } from "@/types/pairing";
 import { getAllPairingRequests } from "@/lib/actions/pairing.actions";
 import { to12Hour } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { TestingPairingControls } from "../test-controls";
 
 type QueViews = "tutors" | "students";
 export default function PriorityQueue() {
@@ -46,6 +47,7 @@ export default function PriorityQueue() {
         currentView === "students" ? "student" : "tutor"
       );
       if (data) {
+        console.log(data);
         requestsCache.current[currentView] = data;
         setPairingRequests(data);
         return;
@@ -116,6 +118,10 @@ export default function PriorityQueue() {
           <p className="text-gray-600">
             Manage tutors and students in the priority queue system
           </p>
+        </div>
+
+        <div>
+          <TestingPairingControls />
         </div>
 
         <div className="mb-6">
@@ -250,29 +256,33 @@ export default function PriorityQueue() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-32">
-                          {request.profile.languages_spoken
-                            .slice(0, 2)
-                            .map((language, index) => (
+                      {request.profile.languages_spoken && (
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-32">
+                            {request.profile.languages_spoken
+                              ?.slice(0, 2)
+
+                              .map((language, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  {language}
+                                </Badge>
+                              ))}
+                            {request.profile.languages_spoken.length > 2 && (
                               <Badge
-                                key={index}
                                 variant="outline"
                                 className="text-xs bg-blue-50 text-blue-700 border-blue-200"
                               >
-                                {language}
+                                +{request.profile.languages_spoken.length - 2}
                               </Badge>
-                            ))}
-                          {request.profile.languages_spoken.length > 2 && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                            >
-                              +{request.profile.languages_spoken.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Select

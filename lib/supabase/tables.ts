@@ -9,6 +9,7 @@ export enum Table {
   Sessions = "Sessions",
   UserAvailabilities = "User_availabilities",
   UserNotificationSettings = "user_notification_settings",
+  PairingRequests = "pairing_requests",
 }
 
 // export enum Table {

@@ -16,6 +16,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { createPairingRequest } from "@/lib/actions/pairing.actions";
+import { useProfile } from "@/hooks/auth";
+import toast from "react-hot-toast";
 
 export type PairingRequest = {
   id: string; //uuid
@@ -28,7 +31,10 @@ export type PairingRequest = {
   createdAt: Date;
 };
 
-export function PairingRequestCard() {
+interface PairingRequestCardProps {
+  userId: string;
+}
+export function PairingRequestCard({ userId }: PairingRequestCardProps) {
   const [notes, setNotes] = useState("");
   const [requestType, setRequestType] = useState<"student" | "tutor">(
     "student"
@@ -48,8 +54,18 @@ export function PairingRequestCard() {
       timestamp: new Date(),
     });
 
-    setIsSubmitting(false);
-    setNotes("");
+    const promise = createPairingRequest(userId, notes);
+
+    toast.promise(promise, {
+      success: "Successfully Added to Pairing Que",
+      loading: "Creating Pairing Request",
+      error: `Failed to Add To Pairing Que `,
+    });
+
+    promise.then(() => setNotes(""));
+    promise.finally(() => {
+      setIsSubmitting(false);
+    });
   };
 
   const getStatusIcon = (status: string) => {
