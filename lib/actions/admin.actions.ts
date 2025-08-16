@@ -190,8 +190,10 @@ export const addStudent = async (
       .insert(newStudentProfile)
       .select("*");
 
-    if (profileError) throw profileError;
-
+    if (profileError) {
+      if (userId) await supabase.auth.admin.deleteUser(userId);
+      throw profileError;
+    }
     // Ensure profileData is defined and cast it to the correct type
     if (!profileData) {
       throw new Error("Profile data not returned after insertion");
@@ -289,7 +291,7 @@ export const addTutor = async (
       .single();
 
     if (profileError) {
-      // transaction mechanism - prevents dangling auth user account with no profile
+      // transaction processing - prevents auth user account with no profile
       await supabase.auth.admin.deleteUser(userId);
       throw profileError;
     }
