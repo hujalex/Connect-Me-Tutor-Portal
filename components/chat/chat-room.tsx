@@ -508,6 +508,7 @@ export function ChatRoom({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <PaperclipIcon className="h-4 w-4" />
+
                                 <span className="text-sm font-medium truncate max-w-[150px]">
                                   {message.file.name}
                                 </span>
