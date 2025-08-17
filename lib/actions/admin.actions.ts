@@ -1395,6 +1395,7 @@ export const createEnrollment = async (
     meetingId: entry.meetingId,
     summerPaused: entry.summerPaused,
     duration: entry.duration,
+    frequency: entry.frequency,
   };
 
   return await addEnrollment(migratedPairing);
@@ -1415,7 +1416,8 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         availability,
         meetingId,
         summer_paused,
-        duration
+        duration,
+        frequency
       `);
 
     // Check for errors and log them
@@ -1443,6 +1445,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         meetingId: enrollment.meetingId,
         summerPaused: enrollment.summer_paused,
         duration: enrollment.duration,
+        frequency: enrollment.frequency,
       }))
     );
 
@@ -1602,6 +1605,7 @@ export const addEnrollment = async (
       availability: enrollment.availability,
       meetingId: enrollment.meetingId,
       duration: enrollment.duration, //default
+      frequency: enrollment.frequency,
     })
     .select(`*`)
     .single();
@@ -1623,6 +1627,8 @@ export const addEnrollment = async (
     endDate: data.end_date,
     availability: data.availability,
     meetingId: data.meetingId,
+    duration: data.duration,
+    frequency: data.frequency,
   };
 };
 

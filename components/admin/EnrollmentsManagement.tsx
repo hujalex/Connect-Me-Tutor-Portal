@@ -125,6 +125,7 @@ const EnrollmentList = () => {
     meetingId: "",
     summerPaused: false,
     duration: 1,
+    frequency: "weekly",
   });
   const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
   const [meetingAvailability, setMeetingAvailability] = useState<{
@@ -445,7 +446,7 @@ const EnrollmentList = () => {
       const newDuration = calculateDuration(newHours, minutes);
       setHours(newHours);
 
-      if (selectedEnrollment) {
+      if (isEditModalOpen) {
         validateDuration(numericValue, true, "hours");
         setSelectedEnrollment((prev) =>
           prev ? { ...prev, duration: newDuration || 0 } : null
@@ -479,6 +480,7 @@ const EnrollmentList = () => {
           duration: newDuration || 0,
         }));
       }
+      return;
     }
 
     // Helper function to handle nested updates
@@ -511,12 +513,16 @@ const EnrollmentList = () => {
     }
   };
 
+  const handleInputSelectionChange = (value: string) => {
+    setNewEnrollment((prev) => ({ ...prev, frequency: value }));
+  };
+
   const handleAddEnrollment = async () => {
     try {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
-          { ...addedEnrollment, summerPaused: false, duration: 1 },
+          { ...addedEnrollment, summerPaused: false },
           ...enrollments,
         ]);
         setIsAddModalOpen(false);
@@ -582,6 +588,7 @@ const EnrollmentList = () => {
       meetingId: "",
       summerPaused: false,
       duration: 1,
+      frequency: "weekly",
     });
   };
 
@@ -823,6 +830,27 @@ const EnrollmentList = () => {
                           {/* <Label>{newEnrollment.duration}</Label> */}
                         </div>
 
+                        <Label htmlFor="frequency" className="text-right">
+                          Frequency
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            name="timeZone"
+                            value={newEnrollment.frequency}
+                            onValueChange={handleInputSelectionChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="weekly" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {/* Add time zone options here */}
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="biweekly">Biweekly</SelectItem>
+                              {/* <SelectItem value="MT">Monthy</SelectItem> */}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         <Label htmlFor="summary" className="text-right">
                           Summary
                         </Label>
@@ -930,6 +958,7 @@ const EnrollmentList = () => {
                   "End Date",
                   "Meeting Link",
                   "Duration",
+                  "Frequency",
                   "Actions",
                   "Summer",
                 ].map((header) => (
@@ -968,6 +997,7 @@ const EnrollmentList = () => {
                       : "No Meeting Link"}
                   </TableCell>
                   <TableCell>{enrollment.duration} hr(s)</TableCell>
+                  <TableCell>{enrollment.frequency}</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -1266,16 +1296,57 @@ const EnrollmentList = () => {
                     } as any)
                   }
                 />
-                <div className="grid grid-cols-4 items-center gap-4">
+                <div className="grid grid-cols-[80px_1fr] items-center gap-4">
                   <Label htmlFor="duration" className="text-right">
                     Duration
                   </Label>
-                  <Input
-                    id="duration"
-                    name="duration"
-                    // onChange = {}
-                    className="col-span-3"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="hours"
+                      name="hours"
+                      type="text"
+                      inputMode="numeric"
+                      value={hours.toString()}
+                      onChange={handleInputChange}
+                      placeholder="1"
+                      className={`w-16 ${hoursError ? "border-red-500" : ""}`}
+                    />
+                    <span className="text-sm">hrs</span>
+                    <Input
+                      id="minutes"
+                      name="minutes"
+                      type="text"
+                      inputMode="numeric"
+                      value={minutes.toString()}
+                      onChange={handleInputChange}
+                      placeholder="0"
+                      className={`w-16 ${minutesError ? "border-red-500" : ""}`}
+                    />
+                    <span className="text-sm">min</span>
+                    {/* <Label>{newEnrollment.duration}</Label> */}
+                  </div>
+
+                  <Label htmlFor="frequency" className="text-right">
+                    Frequency
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      name="timeZone"
+                      value={selectedEnrollment.frequency}
+                      onValueChange={handleInputSelectionChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="weekly" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add time zone options here */}
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="biweekly">Biweekly</SelectItem>
+                        {/* <SelectItem value="MT">Monthy</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Label htmlFor="summary" className="text-right">
                     Summary
                   </Label>
@@ -1284,7 +1355,7 @@ const EnrollmentList = () => {
                     name="summary"
                     value={selectedEnrollment.summary}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    // className="col-span-3"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
