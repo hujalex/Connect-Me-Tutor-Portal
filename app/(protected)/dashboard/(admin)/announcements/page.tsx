@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { config } from "@/config";
 import {
   StudentAnnouncementsRoomId,
   TutorAnnouncementRoomId,
@@ -37,6 +38,8 @@ export default function AnnouncementsPage() {
     );
   }, [currentRoom]);
   if (!profile || !roomID) return <>Loading...</>;
+  // const { supabase: supabaseConfig } = config;
+
   return (
     <main className="h-[90dvh] p-4">
       {profile.role === "Admin" && (
@@ -64,9 +67,11 @@ export default function AnnouncementsPage() {
 
       <div className="h-full pb-5 ">
         <ChatRoom
-          announcements
+          announcements={true}
           roomName={`${currentRoom === "tutors" ? "Tutor" : "Student"} Announcements`}
           roomId={roomID}
+          // supabaseUrl={supabaseConfig.url}
+          // supabaseKey={supabaseConfig.key}
         />
       </div>
     </main>
