@@ -54,7 +54,6 @@ export default async function ChatRoomPage({ params }: Props) {
 
       <ChatRoom
         roomId={params.id}
-        currentUser={{ id: userId! } as any}
         supabaseUrl={supabaseConfig.url}
         supabaseKey={supabaseConfig.key}
         initialMessages={mockMessages}

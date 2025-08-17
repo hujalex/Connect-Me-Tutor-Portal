@@ -50,3 +50,25 @@ export type PairingLog = {
 //   role?: "student" | "tutor";
 //   metadata?: Record<string, any>;
 // };
+
+interface AvailabilityItem {
+  // Fill in based on the actual structure inside the [Object] array
+  day?: string;
+  start_time?: string;
+  end_time?: string;
+}
+
+interface Person {
+  id: string;
+  email: string;
+  user_id: string;
+  last_name: string;
+  first_name: string;
+}
+
+export interface SharedPairing {
+  id: string;
+  created_at: string; // ISO date string
+  student: Person;
+  tutor: Person;
+}
