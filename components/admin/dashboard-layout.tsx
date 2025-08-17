@@ -117,6 +117,11 @@ export default function DashboardLayout({
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
     },
     {
+      title: "Announcements",
+      href: "/dashboard/announcements",
+      icon: <BellPlus className="h-5 w-5" />,
+    },
+    {
       title: "My Students",
       href: "/dashboard/my-students",
       icon: <Users className="h-5 w-5" />,

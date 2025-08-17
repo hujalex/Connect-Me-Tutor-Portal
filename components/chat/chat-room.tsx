@@ -5,7 +5,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 // import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@supabase/supabase-js";
-import { Send, PaperclipIcon, X, Download } from "lucide-react";
+import { Send, PaperclipIcon, X, Download, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,13 +15,14 @@ import { useParams } from "next/navigation";
 import { useProfile } from "@/hooks/auth";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEnrollment } from "@/hooks/enrollments";
+import { fetchAdmins } from "@/lib/actions/chat.actions";
 
 // Types for our chat components
 export type User = {
   id: string;
   name: string;
   avatar_url?: string;
-  role: "tutor" | "student";
+  role: "tutor" | "student" | "admin";
   online?: boolean;
 };
 
@@ -48,6 +49,7 @@ export type ChatRoomProps = {
   initialUsers?: User[];
   onSendMessage?: (message: string) => void;
   onFileUpload?: (file: File) => void;
+  announcements?: boolean;
 };
 
 // Create a singleton Supabase client for the browser
@@ -61,14 +63,24 @@ export function ChatRoom({
   initialUsers = [],
   onSendMessage,
   onFileUpload,
+  announcements = false,
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [users, setUsers] = useState<Record<string, User>>({});
+  const [users, setUsers] = useState<Record<string, User>>({
+    "0f70b4fd-e06a-4b4f-abb3-64ed36add859": {
+      id: "0f70b4fd-e06a-4b4f-abb3-64ed36add859",
+      name: "Connect Me Admin",
+      role: "admin",
+    },
+  });
   const [messageInput, setMessageInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingFiles, setUploadingFiles] = useState<{
     [key: string]: number;
   }>({});
+
+  const hasUsers = Object.entries(users).length > 0;
+
   const { enrollment } = useEnrollment(roomId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -85,19 +97,43 @@ export function ChatRoom({
   }, [messages]);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      if (enrollment) {
+        const administrators = await fetchAdmins();
+
+        const adminUsers =
+          administrators?.reduce(
+            (acc, admin) => {
+              acc[admin.id] = {
+                role: "administrator",
+                id: admin.id,
+                name: `${admin.first_name} ${admin.last_name}`,
+              };
+              return acc;
+            },
+            {} as Record<string, User>
+          ) || {};
+
+        const chatRoomUsers = {
+          [enrollment.tutor.id]: {
+            role: "tutor",
+            id: enrollment.tutor.id,
+            name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
+          },
+          [enrollment.student.id]: {
+            role: "student",
+            id: enrollment.student.id,
+            name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
+          },
+          ...adminUsers,
+        };
+
+        setUsers(chatRoomUsers);
+        console.log("AFTER fetching users", chatRoomUsers);
+      }
+    };
     if (enrollment) {
-      setUsers({
-        [enrollment.tutor.id]: {
-          role: "tutor",
-          id: enrollment.tutor.id,
-          name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
-        },
-        [enrollment.student.id]: {
-          role: "student",
-          id: enrollment.student.id,
-          name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
-        },
-      });
+      fetchUsers();
     }
   }, [enrollment]);
 
@@ -196,7 +232,8 @@ export function ChatRoom({
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!messageInput.trim()) return;
+    if ((announcements && profile.role !== "Admin") || !messageInput.trim())
+      return;
 
     try {
       const newMessage = {
@@ -227,6 +264,8 @@ export function ChatRoom({
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (announcements) return;
+
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -288,11 +327,6 @@ export function ChatRoom({
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      //   toast({
-      //     title: "Error uploading file",
-      //     description: "Please try again",
-      //     variant: "destructive",
-      //   })
 
       // Remove from uploading files on error
       setUploadingFiles((prev) => {
@@ -323,46 +357,66 @@ export function ChatRoom({
   if (!profile) return <></>;
 
   return (
-    <div className="flex h-full  border rounded-lg overflow-hidden bg-white">
+    <div
+      className={`flex h-full  border rounded-lg overflow-hidden ${announcements ? "" : "bg-white"}`}
+    >
       {/* Users sidebar */}
-      <div className="w-64 border-r bg-gray-50 hidden md:block">
-        <div className="p-4 border-b">
-          <h3 className="font-semibold text-lg">Participants</h3>
-        </div>
-        <ScrollArea className="h-full p-4">
-          {Object.values(users).map((user) => (
-            <div key={user.id} className="flex items-center gap-3 mb-3">
-              <div className="relative">
-                <Avatar>
-                  <AvatarImage src={user?.avatar_url || "/placeholder.svg"} />
-                  <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                </Avatar>
-                {user.online && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium">{user.name}</p>
-                <Badge
-                  variant={user.role === "tutor" ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {user.role}
-                </Badge>
-              </div>
+      {!announcements && (
+        <div
+          className={`w-64 border-r hidden md:block ${announcements ? "" : "bg-gray-50"}`}
+        >
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2">
+              {announcements && <Megaphone className="h-5 w-5 " />}
+              <h3 className="font-semibold text-lg">
+                {announcements ? roomName : "Participants"}
+              </h3>
             </div>
-          ))}
-        </ScrollArea>
-      </div>
+          </div>
+          <ScrollArea className="h-full p-4">
+            {Object.values(users).map((user) => (
+              <div key={user.id} className="flex items-center gap-3 mb-3">
+                <div className="relative">
+                  <Avatar>
+                    <AvatarImage src={user?.avatar_url || "/placeholder.svg"} />
+                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                  </Avatar>
+                  {user.online && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{user.name}</p>
+                  <Badge
+                    variant={user.role === "tutor" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {user.role}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </ScrollArea>
+        </div>
+      )}
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
         {/* Chat header */}
-        <div className="p-4 border-b flex justify-between items-center">
+        <div
+          className={`p-4 border-b flex justify-between items-center ${announcements ? "" : ""}`}
+        >
           <div>
-            <h2 className="font-semibold text-lg">{roomName ?? `Chat Room`}</h2>
+            <div className="flex items-center gap-2">
+              {announcements && <Megaphone className="h-5 w-5 " />}
+              <h2 className="font-semibold text-lg">
+                {announcements ? roomName : (roomName ?? `Chat Room`)}
+              </h2>
+            </div>
             <p className="text-sm text-gray-500">
-              {Object.keys(users).length} participants
+              {announcements
+                ? "Read-only announcements channel"
+                : `${Object.keys(users).length} participants`}
             </p>
           </div>
           <Button
@@ -376,13 +430,13 @@ export function ChatRoom({
             }}
             className="md:hidden"
           >
-            Participants
+            {announcements ? "Viewers" : "Participants"}
           </Button>
         </div>
 
         {/* Messages area */}
         <ScrollArea className="flex-1 p-4">
-          {isLoading ? (
+          {isLoading || !hasUsers ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-start gap-3">
@@ -394,16 +448,23 @@ export function ChatRoom({
                 </div>
               ))}
             </div>
+          ) : messages.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+              <div className="text-center">
+                <Megaphone className="mx-auto h-8 w-8 mb-2" />
+                <p className="text-sm">No messages yet</p>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               {messages.map((message) => {
-                let user = getUserById(message.user_id);
+                const user = getUserById(message.user_id);
                 const isCurrentUser = message.user_id === profile!.id;
 
                 return (
                   <div
                     key={message.id}
-                    className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse " : ""}`}
+                    className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
                   >
                     <Avatar>
                       <AvatarImage
@@ -437,13 +498,7 @@ export function ChatRoom({
                         </span>
                       </div>
 
-                      <div
-                        className={`rounded-lg p-3 inline-block max-w-[75%] min-w-[50px] ${
-                          isCurrentUser
-                            ? "bg-primary text-left text-primary-foreground"
-                            : "bg-muted"
-                        }`}
-                      >
+                      <div className="rounded-lg p-3 inline-block max-w-[75%] min-w-[50px]">
                         <p className="whitespace-pre-wrap break-words">
                           {message.content}
                         </p>
@@ -498,46 +553,64 @@ export function ChatRoom({
             </div>
           )}
         </ScrollArea>
-
         {/* Message input */}
-        <div className="p-4 border-t">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-            >
-              <PaperclipIcon className="h-4 w-4" />
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            <input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={isLoading}
-            />
-            <Button type="submit" disabled={isLoading || !messageInput.trim()}>
-              <Send className="h-4 w-4 mr-2" />
-              Send
-            </Button>
-          </form>
-        </div>
+        {announcements && profile.role !== "Admin" ? (
+          <div className="p-4 border-t ">
+            <div className="flex items-center justify-center gap-2 ">
+              <Megaphone className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                This is a read-only announcements channel
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 border-t">
+            <form onSubmit={handleSendMessage} className="flex gap-2">
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+              >
+                <PaperclipIcon className="h-4 w-4" />
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <input
+                type="text"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={isLoading}
+              />
+              <Button
+                type="submit"
+                disabled={isLoading || !messageInput.trim()}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Send
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Mobile participants modal */}
       <dialog id="participants-modal" className="modal">
         <div className="modal-box">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-lg">Participants</h3>
+            <div className="flex items-center gap-2">
+              {announcements && <Megaphone className="h-5 w-5 " />}
+              <h3 className="font-semibold text-lg">
+                {announcements ? "Viewers" : "Participants"}
+              </h3>
+            </div>
             <form method="dialog">
               <Button variant="ghost" size="icon">
                 <X className="h-4 w-4" />

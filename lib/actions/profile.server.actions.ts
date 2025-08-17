@@ -64,6 +64,8 @@ export async function getProfileWithProfileId(
       return null;
     }
 
+    console.log(data);
+
     // Mapping the fetched data to the Profile object
     const userProfile: Profile = {
       id: data.id,
@@ -135,7 +137,7 @@ export async function updateProfileDetails({
         subjects: updatedSubjects,
       }
     );
-    if (data.embed) updates["subjects_of_interest"] = data.embed;
+    if (data.embed) updates["subject_embed"] = data.embed;
   }
 
   console.log(updates);

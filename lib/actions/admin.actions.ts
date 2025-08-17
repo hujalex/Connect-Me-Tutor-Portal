@@ -123,6 +123,8 @@ export async function getAllProfiles(
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
+      subjects_of_interest: profile.subjects_of_interest,
+      languages_spoken: profile.languages_spoken,
     }));
 
     return userProfiles;
