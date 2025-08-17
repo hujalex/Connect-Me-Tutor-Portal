@@ -21,7 +21,7 @@ export type User = {
   id: string;
   name: string;
   avatar_url?: string;
-  role: "tutor" | "student";
+  role: "tutor" | "student" | "admin";
   online?: boolean;
 };
 
@@ -65,7 +65,13 @@ export function ChatRoom({
   announcements = false,
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [users, setUsers] = useState<Record<string, User>>({});
+  const [users, setUsers] = useState<Record<string, User>>({
+    "0f70b4fd-e06a-4b4f-abb3-64ed36add859": {
+      id: "0f70b4fd-e06a-4b4f-abb3-64ed36add859",
+      name: "Connect Me Admin",
+      role: "admin",
+    },
+  });
   const [messageInput, setMessageInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingFiles, setUploadingFiles] = useState<{
@@ -198,7 +204,8 @@ export function ChatRoom({
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (announcements || !messageInput.trim()) return;
+    if ((announcements && profile.role !== "Admin") || !messageInput.trim())
+      return;
 
     try {
       const newMessage = {
@@ -332,11 +339,9 @@ export function ChatRoom({
         >
           <div className="p-4 border-b">
             <div className="flex items-center gap-2">
-              {announcements && (
-                <Megaphone className="h-5 w-5 text-orange-600" />
-              )}
+              {announcements && <Megaphone className="h-5 w-5 " />}
               <h3 className="font-semibold text-lg">
-                {announcements ? "Announcements" : "Participants"}
+                {announcements ? roomName : "Participants"}
               </h3>
             </div>
           </div>
@@ -377,7 +382,7 @@ export function ChatRoom({
             <div className="flex items-center gap-2">
               {announcements && <Megaphone className="h-5 w-5 " />}
               <h2 className="font-semibold text-lg">
-                {announcements ? "Announcements" : (roomName ?? `Chat Room`)}
+                {announcements ? roomName : (roomName ?? `Chat Room`)}
               </h2>
             </div>
             <p className="text-sm text-gray-500">
@@ -521,7 +526,7 @@ export function ChatRoom({
           )}
         </ScrollArea>
         {/* Message input */}
-        {announcements ? (
+        {announcements && profile.role !== "Admin" ? (
           <div className="p-4 border-t ">
             <div className="flex items-center justify-center gap-2 ">
               <Megaphone className="h-4 w-4" />
