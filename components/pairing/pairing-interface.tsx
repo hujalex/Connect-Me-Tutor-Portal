@@ -113,7 +113,6 @@ export function PairingInterface() {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="find">Incoming Pairings</TabsTrigger>
             <TabsTrigger value="requests">Requested Pairings</TabsTrigger>
-            <TabsTrigger value="logs">Logs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="find" className="space-y-4">
