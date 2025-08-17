@@ -15,13 +15,14 @@ import { useParams } from "next/navigation";
 import { useProfile } from "@/hooks/auth";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEnrollment } from "@/hooks/enrollments";
+import { fetchAdmins } from "@/lib/actions/chat.actions";
 
 // Types for our chat components
 export type User = {
   id: string;
   name: string;
   avatar_url?: string;
-  role: "tutor" | "student";
+  role: "tutor" | "student" | "admin";
   online?: boolean;
 };
 
@@ -69,6 +70,9 @@ export function ChatRoom({
   const [uploadingFiles, setUploadingFiles] = useState<{
     [key: string]: number;
   }>({});
+
+  const hasUsers = Object.entries(users).length > 0;
+
   const { enrollment } = useEnrollment(roomId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -85,19 +89,43 @@ export function ChatRoom({
   }, [messages]);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      if (enrollment) {
+        const administrators = await fetchAdmins();
+
+        const adminUsers =
+          administrators?.reduce(
+            (acc, admin) => {
+              acc[admin.id] = {
+                role: "administrator",
+                id: admin.id,
+                name: `${admin.first_name} ${admin.last_name}`,
+              };
+              return acc;
+            },
+            {} as Record<string, User>
+          ) || {};
+
+        const chatRoomUsers = {
+          [enrollment.tutor.id]: {
+            role: "tutor",
+            id: enrollment.tutor.id,
+            name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
+          },
+          [enrollment.student.id]: {
+            role: "student",
+            id: enrollment.student.id,
+            name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
+          },
+          ...adminUsers,
+        };
+
+        setUsers(chatRoomUsers);
+        console.log("AFTER fetching users", chatRoomUsers);
+      }
+    };
     if (enrollment) {
-      setUsers({
-        [enrollment.tutor.id]: {
-          role: "tutor",
-          id: enrollment.tutor.id,
-          name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
-        },
-        [enrollment.student.id]: {
-          role: "student",
-          id: enrollment.student.id,
-          name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
-        },
-      });
+      fetchUsers();
     }
   }, [enrollment]);
 
@@ -382,7 +410,7 @@ export function ChatRoom({
 
         {/* Messages area */}
         <ScrollArea className="flex-1 p-4">
-          {isLoading ? (
+          {isLoading || !hasUsers ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-start gap-3">
@@ -397,7 +425,10 @@ export function ChatRoom({
           ) : (
             <div className="space-y-4">
               {messages.map((message) => {
+                console.log("message user id", message.user_id);
+                console.log("chatroom users", users);
                 let user = getUserById(message.user_id);
+                if (!user) throw new Error("User is null/undefined");
                 const isCurrentUser = message.user_id === profile!.id;
 
                 return (
