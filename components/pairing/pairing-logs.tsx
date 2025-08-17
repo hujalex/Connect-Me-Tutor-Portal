@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,110 +19,122 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, Users, UserCheck, AlertCircle, Calendar } from "lucide-react";
+import {
+  Clock,
+  Users,
+  AlertCircle,
+  Calendar,
+  XCircle,
+  CheckCircle,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { getPairingLogs } from "@/lib/actions/pairing.actions";
 
-// Types based on your schemas
-export type PairingStatus =
-  | "pending"
-  | "matched"
-  | "accepted"
-  | "declined"
-  | "cancelled"
-  | "completed";
-
-export type LogEntry = {
+export type PairingLog = {
   id: string;
-  timestamp: Date;
-  type: "queue_entry" | "match_created" | "status_change";
-  userType: "student" | "tutor";
-  userId: string;
-  userName: string;
-  status: PairingStatus;
-  details: string;
-  matchId?: string;
-  priority?: number;
+  type:
+    | "pairing-match"
+    | "pairing-match-rejected"
+    | "pairing-match-accepted"
+    | "pairing-selection-failed";
+  profile: {
+    firstName: string;
+    lastName: string;
+    role: "student" | "tutor";
+  };
+  message: string;
+  status: string;
+  createdAt: string;
 };
 
-// Mock data - replace with your actual data source
-const mockLogs: LogEntry[] = [
+const mockLogs: PairingLog[] = [
   {
     id: "1",
-    timestamp: new Date("2025-01-15T10:30:00"),
-    type: "queue_entry",
-    userType: "student",
-    userId: "user-123",
-    userName: "Alice Johnson",
-    status: "pending",
-    details: "Student entered tutoring queue",
-    priority: 1,
+    type: "pairing-match",
+    profile: {
+      firstName: "Alice",
+      lastName: "Johnson",
+      role: "student",
+    },
+    message:
+      "Successfully matched with tutor Bob Smith for Math tutoring session",
+    status: "matched",
+    createdAt: "2025-01-15T10:30:00Z",
   },
   {
     id: "2",
-    timestamp: new Date("2025-01-15T10:32:00"),
-    type: "queue_entry",
-    userType: "tutor",
-    userId: "user-456",
-    userName: "Bob Smith",
-    status: "pending",
-    details: "Tutor entered queue and available for matching",
+    type: "pairing-match-accepted",
+    profile: {
+      firstName: "Bob",
+      lastName: "Smith",
+      role: "tutor",
+    },
+    message: "Tutor accepted pairing request from Alice Johnson",
+    status: "accepted",
+    createdAt: "2025-01-15T10:32:00Z",
   },
   {
     id: "3",
-    timestamp: new Date("2025-01-15T10:33:00"),
-    type: "match_created",
-    userType: "student",
-    userId: "user-123",
-    userName: "Alice Johnson",
-    status: "matched",
-    details: "Matched with tutor Bob Smith",
-    matchId: "match-789",
+    type: "pairing-match-accepted",
+    profile: {
+      firstName: "Alice",
+      lastName: "Johnson",
+      role: "student",
+    },
+    message: "Student confirmed pairing with tutor Bob Smith",
+    status: "confirmed",
+    createdAt: "2025-01-15T10:33:00Z",
   },
   {
     id: "4",
-    timestamp: new Date("2025-01-15T10:33:00"),
-    type: "match_created",
-    userType: "tutor",
-    userId: "user-456",
-    userName: "Bob Smith",
-    status: "matched",
-    details: "Matched with student Alice Johnson",
-    matchId: "match-789",
+    type: "pairing-match-rejected",
+    profile: {
+      firstName: "Carol",
+      lastName: "Davis",
+      role: "tutor",
+    },
+    message: "Tutor declined pairing request due to scheduling conflict",
+    status: "declined",
+    createdAt: "2025-01-15T10:35:00Z",
   },
   {
     id: "5",
-    timestamp: new Date("2025-01-15T10:35:00"),
-    type: "status_change",
-    userType: "tutor",
-    userId: "user-456",
-    userName: "Bob Smith",
-    status: "accepted",
-    details: "Tutor accepted the match",
-    matchId: "match-789",
+    type: "pairing-selection-failed",
+    profile: {
+      firstName: "David",
+      lastName: "Wilson",
+      role: "student",
+    },
+    message: "No suitable tutors available for requested subject and time slot",
+    status: "failed",
+    createdAt: "2025-01-15T10:36:00Z",
   },
   {
     id: "6",
-    timestamp: new Date("2025-01-15T10:36:00"),
-    type: "status_change",
-    userType: "student",
-    userId: "user-123",
-    userName: "Alice Johnson",
-    status: "accepted",
-    details: "Student accepted the match",
-    matchId: "match-789",
+    type: "pairing-match",
+    profile: {
+      firstName: "Emma",
+      lastName: "Brown",
+      role: "student",
+    },
+    message: "New pairing created with tutor Michael Chen for Science session",
+    status: "pending",
+    createdAt: "2025-01-15T10:40:00Z",
   },
 ];
 
-const getStatusColor = (status: PairingStatus) => {
-  switch (status) {
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
     case "pending":
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
     case "matched":
       return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
     case "accepted":
+    case "confirmed":
       return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
     case "declined":
-    case "cancelled":
+    case "rejected":
+    case "failed":
       return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
     case "completed":
       return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
@@ -131,59 +143,130 @@ const getStatusColor = (status: PairingStatus) => {
   }
 };
 
-const getTypeIcon = (type: LogEntry["type"]) => {
+const getTypeIcon = (type: PairingLog["type"]) => {
   switch (type) {
-    case "queue_entry":
-      return <Clock className="h-4 w-4" />;
-    case "match_created":
+    case "pairing-match":
       return <Users className="h-4 w-4" />;
-    case "status_change":
-      return <UserCheck className="h-4 w-4" />;
-    default:
+    case "pairing-match-accepted":
+      return <CheckCircle className="h-4 w-4" />;
+    case "pairing-match-rejected":
+      return <XCircle className="h-4 w-4" />;
+    case "pairing-selection-failed":
       return <AlertCircle className="h-4 w-4" />;
+    default:
+      return <Clock className="h-4 w-4" />;
   }
 };
 
 export function PairingLogsTable() {
-  const [logs] = useState<LogEntry[]>(mockLogs);
+  const [logs, setLogs] = useState<PairingLog[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterUserType, setFilterUserType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
 
+  // Load data on component mount and when date filters change
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getPairingLogs(dateFrom || "", dateTo || "");
+
+        setLogs(data ?? []);
+      } catch (err) {
+        console.error("Error loading pairing logs:", err);
+        setError("Failed to load pairing logs");
+        setLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLogs();
+  }, [dateFrom, dateTo]);
+
+  // Filter logs based on current filter settings
   const filteredLogs = logs.filter((log) => {
     if (filterType !== "all" && log.type !== filterType) return false;
-    if (filterUserType !== "all" && log.userType !== filterUserType)
+    if (filterUserType !== "all" && log.profile.role !== filterUserType)
       return false;
-    if (filterStatus !== "all" && log.status !== filterStatus) return false;
-
-    if (dateFrom) {
-      const fromDate = new Date(dateFrom);
-      fromDate.setHours(0, 0, 0, 0);
-      if (log.timestamp < fromDate) return false;
-    }
-
-    if (dateTo) {
-      const toDate = new Date(dateTo);
-      toDate.setHours(23, 59, 59, 999);
-      if (log.timestamp > toDate) return false;
-    }
+    if (
+      filterStatus !== "all" &&
+      log.status.toLowerCase() !== filterStatus.toLowerCase()
+    )
+      return false;
 
     return true;
   });
 
+  // Calculate statistics from actual data
   const stats = {
     total: logs.length,
-    queueEntries: logs.filter((l) => l.type === "queue_entry").length,
-    matches: logs.filter((l) => l.type === "match_created").length,
-    statusChanges: logs.filter((l) => l.type === "status_change").length,
+    matches: logs.filter((l) => l.type === "pairing-match").length,
+    accepted: logs.filter((l) => l.type === "pairing-match-accepted").length,
+    rejected: logs.filter((l) => l.type === "pairing-match-rejected").length,
+    failed: logs.filter((l) => l.type === "pairing-selection-failed").length,
   };
+
+  // Get unique status values from actual data for filter options
+  const uniqueStatuses = Array.from(
+    new Set(logs.map((log) => log.status.toLowerCase()))
+  );
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getPairingLogs(
+        dateFrom || undefined,
+        dateTo || undefined
+      );
+      setLogs(data);
+    } catch (err) {
+      console.error("Error refreshing pairing logs:", err);
+      setError("Failed to refresh pairing logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading && logs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading pairing logs...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Events</CardTitle>
@@ -191,15 +274,6 @@ export function PairingLogsTable() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Queue Entries</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.queueEntries}</div>
           </CardContent>
         </Card>
         <Card>
@@ -215,21 +289,45 @@ export function PairingLogsTable() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Status Changes
-            </CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.statusChanges}</div>
+            <div className="text-2xl font-bold">{stats.accepted}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+            <XCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.rejected}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.failed}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Filters</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
@@ -261,14 +359,21 @@ export function PairingLogsTable() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Event Type</label>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="queue_entry">Queue Entry</SelectItem>
-                  <SelectItem value="match_created">Match Created</SelectItem>
-                  <SelectItem value="status_change">Status Change</SelectItem>
+                  <SelectItem value="pairing-match">Pairing Match</SelectItem>
+                  <SelectItem value="pairing-match-accepted">
+                    Match Accepted
+                  </SelectItem>
+                  <SelectItem value="pairing-match-rejected">
+                    Match Rejected
+                  </SelectItem>
+                  <SelectItem value="pairing-selection-failed">
+                    Selection Failed
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -293,12 +398,11 @@ export function PairingLogsTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="matched">Matched</SelectItem>
-                  <SelectItem value="accepted">Accepted</SelectItem>
-                  <SelectItem value="declined">Declined</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                  {uniqueStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -320,10 +424,12 @@ export function PairingLogsTable() {
         </CardContent>
       </Card>
 
-      {/* Logs Table */}
+      {/* Data Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Activity Logs ({filteredLogs.length} events)</CardTitle>
+          <CardTitle>
+            Pairing Activity Logs ({filteredLogs.length} events)
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -334,40 +440,49 @@ export function PairingLogsTable() {
                   <TableHead>Type</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Match ID</TableHead>
-                  <TableHead>Priority</TableHead>
+                  <TableHead>Message</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredLogs.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={5}
                       className="text-center py-8 text-muted-foreground"
                     >
-                      No logs match the current filters
+                      {logs.length === 0
+                        ? "No pairing logs found"
+                        : "No logs match the current filters"}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-sm">
-                        {log.timestamp.toLocaleString()}
+                        {new Date(log.createdAt).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getTypeIcon(log.type)}
                           <span className="capitalize">
-                            {log.type.replace("_", " ")}
+                            {log.type.replace(/-/g, " ")}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="font-medium">{log.userName}</div>
+                          <div className="font-medium">
+                            {log.profile.firstName} {log.profile.lastName}
+                          </div>
                           <Badge variant="outline" className="text-xs">
-                            {log.userType}
+                            {log.profile.role}
                           </Badge>
                         </div>
                       </TableCell>
@@ -376,15 +491,11 @@ export function PairingLogsTable() {
                           {log.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-xs">
-                        <div className="truncate" title={log.details}>
-                          {log.details}
+                      <TableCell className="max-w-md">
+                        <div className="truncate" title={log.message}>
+                          {log.message}
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {log.matchId || "-"}
-                      </TableCell>
-                      <TableCell>{log.priority || "-"}</TableCell>
                     </TableRow>
                   ))
                 )}

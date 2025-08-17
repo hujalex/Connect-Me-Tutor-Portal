@@ -11,7 +11,7 @@ export type PairingRequest = {
   priority: number;
   createdAt: Date;
 };
-type pairing_matches = {
+export type PairingMatches = {
   id: string; //uuid
   tutorId: string; //uuid
   studentId: string; //uuid
@@ -21,3 +21,32 @@ type pairing_matches = {
   studentPairingRequestId: string; //uuid
   createdAt: Date;
 };
+
+export type PairingLog = {
+  id: string;
+  type:
+    | "pairing-match"
+    | "pairing-match-rejected"
+    | "pairing-match-accepted"
+    | "pairing-selection-failed";
+  profile: {
+    firstName: string;
+    lastName: string;
+    role: "student" | "tutor";
+  };
+  message: string;
+  status: string;
+  createdAt: string;
+};
+
+// DATABSE TABLE SCHEMA PairingLog = {
+//   message: string;
+//   type:
+//     | "pairing-match"
+//     | "pairing-match-rejected"
+//     | "pairing-match-accepted"
+//     | "pairing-selection-failed";
+//   error?: boolean;
+//   role?: "student" | "tutor";
+//   metadata?: Record<string, any>;
+// };

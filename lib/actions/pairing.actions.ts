@@ -1,6 +1,6 @@
 "use client";
 
-import { PairingRequest } from "@/types/pairing";
+import { PairingLog, PairingRequest } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
 import { getProfile, getProfileRole } from "./user.actions";
 import { getAccountEnrollments } from "./enrollments.action";
@@ -72,3 +72,27 @@ export const createPairingRequest = async (userId: string, notes: string) => {
 };
 
 export const acceptStudentMatch = () => {};
+
+export const getPairingLogs = async (
+  start_time: string,
+  end_time: string
+): Promise<PairingLog[]> => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const { data: logs, error } = await supabase.rpc("get_pairing_logs", {
+    start_time,
+    end_time,
+  });
+
+  return logs;
+};
