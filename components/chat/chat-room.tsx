@@ -52,8 +52,6 @@ export type ChatRoomProps = {
   announcements?: boolean;
 };
 
-// Create a singleton Supabase client for the browser
-
 export function ChatRoom({
   roomId,
   roomName,
@@ -66,82 +64,124 @@ export function ChatRoom({
   announcements = false,
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [users, setUsers] = useState<Record<string, User>>({
-    "0f70b4fd-e06a-4b4f-abb3-64ed36add859": {
-      id: "0f70b4fd-e06a-4b4f-abb3-64ed36add859",
-      name: "Connect Me Admin",
-      role: "admin",
-    },
-  });
+  const [users, setUsers] = useState<Record<string, User>>({});
   const [messageInput, setMessageInput] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [uploadingFiles, setUploadingFiles] = useState<{
     [key: string]: number;
   }>({});
 
-  const hasUsers = Object.entries(users).length > 0;
-
   const { enrollment } = useEnrollment(roomId);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  //   const { toast } = useToast()
-
   const supabase = createClientComponentClient();
   const { profile } = useProfile();
+
+  // Computed loading states
+  const isLoading = isLoadingMessages || isLoadingUsers;
+  const hasUsers = Object.keys(users).length > 0;
+  const canShowMessages = !isLoading && hasUsers;
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Fetch users effect
   useEffect(() => {
+    let isMounted = true;
+
     const fetchUsers = async () => {
-      if (enrollment) {
-        const administrators = await fetchAdmins();
+      try {
+        setIsLoadingUsers(true);
 
-        const adminUsers =
-          administrators?.reduce(
-            (acc, admin) => {
-              acc[admin.id] = {
-                role: "administrator",
-                id: admin.id,
-                name: `${admin.first_name} ${admin.last_name}`,
-              };
-              return acc;
+        if (enrollment) {
+          const administrators = await fetchAdmins();
+
+          const adminUsers =
+            administrators?.reduce(
+              (acc, admin) => {
+                acc[admin.id] = {
+                  role: "admin",
+                  id: admin.id,
+                  name: `${admin.first_name} ${admin.last_name}`,
+                };
+                return acc;
+              },
+              {} as Record<string, User>
+            ) || {};
+
+          const chatRoomUsers = {
+            [enrollment.tutor.id]: {
+              role: "tutor",
+              id: enrollment.tutor.id,
+              name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
             },
-            {} as Record<string, User>
-          ) || {};
+            [enrollment.student.id]: {
+              role: "student",
+              id: enrollment.student.id,
+              name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
+            },
+            ...adminUsers,
+          };
 
-        const chatRoomUsers = {
-          [enrollment.tutor.id]: {
-            role: "tutor",
-            id: enrollment.tutor.id,
-            name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
-          },
-          [enrollment.student.id]: {
-            role: "student",
-            id: enrollment.student.id,
-            name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
-          },
-          ...adminUsers,
-        };
+          if (isMounted) {
+            setUsers(chatRoomUsers);
+            console.log("AFTER fetching users", chatRoomUsers);
+          }
+        } else if (announcements) {
+          console.log("MAKING AN ANNOUNCEMENT");
+          const administrators = await fetchAdmins();
 
-        setUsers(chatRoomUsers);
-        console.log("AFTER fetching users", chatRoomUsers);
+          const adminUsers =
+            administrators?.reduce(
+              (acc, admin) => {
+                acc[admin.id] = {
+                  role: "admin",
+                  id: admin.id,
+                  name: `${admin.first_name} ${admin.last_name}`,
+                };
+                return acc;
+              },
+              {} as Record<string, User>
+            ) || {};
+
+          if (isMounted) {
+            setUsers(adminUsers);
+            console.log("AFTER fetching announcement users", adminUsers);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoadingUsers(false);
+        }
       }
     };
-    if (enrollment) {
-      fetchUsers();
-    }
-  }, [enrollment]);
 
-  // Load initial messages and subscribe to new ones
+    // Only fetch users if we have enrollment or it's announcements
+    if (enrollment || announcements) {
+      fetchUsers();
+    } else {
+      // If no enrollment and not announcements, we're not loading users
+      setIsLoadingUsers(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [enrollment, announcements]);
+
+  // Load messages and set up subscriptions
   useEffect(() => {
+    let isMounted = true;
+    let messagesSubscription: any = null;
+
     const loadMessages = async () => {
       try {
-        setIsLoading(true);
+        setIsLoadingMessages(true);
 
         // Fetch messages for this room
         const { data, error } = await supabase
@@ -154,91 +194,68 @@ export function ChatRoom({
 
         if (error) throw error;
 
-        if (data) {
+        if (data && isMounted) {
           setMessages(data as Message[]);
         }
-
-        // Fetch users in this room
-        // const { data: usersData, error: usersError } = await supabase
-        //   .from("room_users")
-        //   .select("*")
-        //   .eq("room_id", roomId);
-
-        // if (usersError) throw usersError;
-
-        // if (usersData) {
-        //   setUsers(usersData.map((item: any) => item.users) as User[]);
-        // }
       } catch (error) {
         console.error("Error loading messages:", error);
-        // toast({
-        //   title: "Error loading messages",
-        //   description: "Please try again later",
-        //   variant: "destructive",
-        // })
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoadingMessages(false);
+        }
       }
     };
 
-    loadMessages();
-
-    // Subscribe to new messages
-    const messagesSubscription = supabase
-      .channel("messages")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `room_id=eq.${roomId}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages((prev) => [...prev, newMessage]);
-        }
-      )
-      .subscribe();
-
-    // Subscribe to user presence
-    // const presenceSubscription = supabase
-    //   .channel("room_presence")
-    //   .on("presence", { event: "sync" }, () => {
-    //     // Update online status of users
-    //     const presenceState = presenceSubscription.presenceState();
-    //     setUsers((prevUsers) =>
-    //       prevUsers.map((user) => ({
-    //         ...user,
-    //         online: Object.keys(presenceState).includes(user.id),
-    //       }))
-    //     );
-    //   })
-    //   .subscribe();
-
-    // Track current user's presence
-    const trackPresence = async () => {
-      // await presenceSubscription.track({ user_id: currentUser.id });
+    const setupSubscription = () => {
+      // Subscribe to new messages
+      messagesSubscription = supabase
+        .channel("messages")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `room_id=eq.${roomId}`,
+          },
+          (payload) => {
+            if (isMounted) {
+              const newMessage = payload.new as Message;
+              setMessages((prev) => [...prev, newMessage]);
+            }
+          }
+        )
+        .subscribe();
     };
 
-    trackPresence();
+    loadMessages().then(() => {
+      if (isMounted) {
+        setupSubscription();
+      }
+    });
 
     return () => {
-      supabase.removeChannel(messagesSubscription);
-      // supabase.removeChannel(presenceSubscription);
+      isMounted = false;
+      if (messagesSubscription) {
+        supabase.removeChannel(messagesSubscription);
+      }
     };
-  }, [roomId, supabaseKey, supabaseUrl]);
+  }, [roomId, supabase]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if ((announcements && profile.role !== "Admin") || !messageInput.trim())
+    if (
+      (announcements && profile?.role !== "Admin") ||
+      !messageInput.trim() ||
+      !profile
+    )
       return;
 
     try {
       const newMessage = {
         room_id: roomId,
-        user_id: profile!.id,
+        user_id: profile.id,
         content: messageInput,
       };
 
@@ -255,16 +272,11 @@ export function ChatRoom({
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      // toast({
-      //   title: "Error sending message",
-      //   description: "Please try again",
-      //   variant: "destructive",
-      // });
     }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (announcements) return;
+    if (announcements || !profile) return;
 
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -290,7 +302,6 @@ export function ChatRoom({
         .getPublicUrl(filePath);
 
       // Create a message with the file attachment
-
       const newMessage = {
         room_id: roomId,
         user_id: profile.id,
@@ -358,7 +369,7 @@ export function ChatRoom({
 
   return (
     <div
-      className={`flex h-full  border rounded-lg overflow-hidden ${announcements ? "" : "bg-white"}`}
+      className={`flex h-full border rounded-lg overflow-hidden ${announcements ? "" : "bg-white"}`}
     >
       {/* Users sidebar */}
       {!announcements && (
@@ -374,28 +385,44 @@ export function ChatRoom({
             </div>
           </div>
           <ScrollArea className="h-full p-4">
-            {Object.values(users).map((user) => (
-              <div key={user.id} className="flex items-center gap-3 mb-3">
-                <div className="relative">
-                  <Avatar>
-                    <AvatarImage src={user?.avatar_url || "/placeholder.svg"} />
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                  </Avatar>
-                  {user.online && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <Badge
-                    variant={user.role === "tutor" ? "default" : "secondary"}
-                    className="text-xs"
-                  >
-                    {user.role}
-                  </Badge>
-                </div>
+            {isLoadingUsers ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              Object.values(users).map((user) => (
+                <div key={user.id} className="flex items-center gap-3 mb-3">
+                  <div className="relative">
+                    <Avatar>
+                      <AvatarImage
+                        src={user?.avatar_url || "/placeholder.svg"}
+                      />
+                      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                    </Avatar>
+                    {user.online && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <Badge
+                      variant={user.role === "tutor" ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {user.role}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
           </ScrollArea>
         </div>
       )}
@@ -436,7 +463,7 @@ export function ChatRoom({
 
         {/* Messages area */}
         <ScrollArea className="flex-1 p-4">
-          {isLoading || !hasUsers ? (
+          {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-start gap-3">
@@ -448,6 +475,12 @@ export function ChatRoom({
                 </div>
               ))}
             </div>
+          ) : !hasUsers ? (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+              <div className="text-center">
+                <p className="text-sm">Unable to load participants</p>
+              </div>
+            </div>
           ) : messages.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
               <div className="text-center">
@@ -457,82 +490,96 @@ export function ChatRoom({
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => {
-                const user = getUserById(message.user_id);
-                const isCurrentUser = message.user_id === profile!.id;
+              {messages
+                .map((message) => {
+                  const user = getUserById(message.user_id);
 
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
-                  >
-                    <Avatar>
-                      <AvatarImage
-                        src={user.avatar_url || "/placeholder.svg"}
-                      />
-                      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                    </Avatar>
+                  if (!user) {
+                    console.warn(
+                      `User not found for message: ${message.id}, user_id: ${message.user_id}`
+                    );
+                    return null; // Skip rendering this message instead of throwing error
+                  }
 
+                  const isCurrentUser = message.user_id === profile.id;
+
+                  return (
                     <div
-                      className={`max-w-[70%] ${isCurrentUser ? "text-right" : "text-left"}`}
+                      key={message.id}
+                      className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <p
-                          className={`text-sm font-medium ${isCurrentUser ? "ml-auto" : ""}`}
-                        >
-                          {user.name}
-                        </p>
-                        <Badge
-                          variant={
-                            user.role === "tutor" ? "default" : "secondary"
-                          }
-                          className="text-xs"
-                        >
-                          {user.role}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          {new Date(message.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
+                      <Avatar>
+                        <AvatarImage
+                          src={user.avatar_url || "/placeholder.svg"}
+                        />
+                        <AvatarFallback>
+                          {getInitials(user.name)}
+                        </AvatarFallback>
+                      </Avatar>
 
-                      <div className="rounded-lg p-3 inline-block max-w-[75%] min-w-[50px]">
-                        <p className="whitespace-pre-wrap break-words">
-                          {message.content}
-                        </p>
+                      <div
+                        className={`max-w-[70%] ${isCurrentUser ? "text-right" : "text-left"}`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <p
+                            className={`text-sm font-medium ${isCurrentUser ? "ml-auto" : ""}`}
+                          >
+                            {user.name}
+                          </p>
+                          <Badge
+                            variant={
+                              user.role === "tutor" ? "default" : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {user.role}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {new Date(message.created_at).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                        </div>
 
-                        {message.file && (
-                          <div className="mt-2 p-3 bg-background rounded border">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <PaperclipIcon className="h-4 w-4" />
+                        <div className="rounded-lg p-3 inline-block max-w-[75%] min-w-[50px]">
+                          <p className="whitespace-pre-wrap break-words">
+                            {message.content}
+                          </p>
 
-                                <span className="text-sm font-medium truncate max-w-[150px]">
-                                  {message.file.name}
-                                </span>
+                          {message.file && (
+                            <div className="mt-2 p-3 bg-background rounded border">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <PaperclipIcon className="h-4 w-4" />
+                                  <span className="text-sm font-medium truncate max-w-[150px]">
+                                    {message.file.name}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {formatFileSize(message.file.size)}
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-500">
-                                {formatFileSize(message.file.size)}
-                              </div>
+                              <a
+                                href={message.file.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                              >
+                                <Download className="h-3 w-3" />
+                                Download
+                              </a>
                             </div>
-                            <a
-                              href={message.file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                            >
-                              <Download className="h-3 w-3" />
-                              Download
-                            </a>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+                .filter(Boolean)}
 
               {/* File upload progress indicators */}
               {Object.entries(uploadingFiles).map(([fileId, progress]) => (
@@ -554,6 +601,7 @@ export function ChatRoom({
             </div>
           )}
         </ScrollArea>
+
         {/* Message input */}
         {announcements && profile.role !== "Admin" ? (
           <div className="p-4 border-t ">
