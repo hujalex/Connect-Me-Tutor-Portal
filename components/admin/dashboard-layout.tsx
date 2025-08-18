@@ -40,6 +40,7 @@ import {
   ListOrdered,
   BellIcon,
   BellPlus,
+  Book,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -199,6 +200,11 @@ export default function DashboardLayout({
       title: "Announcements",
       href: "/dashboard/announcements",
       icon: <BellPlus className="h-5 w-5" />,
+    },
+    {
+      title: "Conversations",
+      href: "/dashboard/admin-conversations",
+      icon: <Book className="h-5 w-5" />,
     },
     // {
     //   title: "Migrate Profiles",

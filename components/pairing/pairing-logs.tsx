@@ -44,7 +44,7 @@ export type PairingLog = {
   };
   message: string;
   status: string;
-  createdAt: string;
+  created_at: string;
 };
 
 const mockLogs: PairingLog[] = [
@@ -158,6 +158,9 @@ const getTypeIcon = (type: PairingLog["type"]) => {
   }
 };
 
+const today = new Date();
+const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 export function PairingLogsTable() {
   const [logs, setLogs] = useState<PairingLog[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -165,8 +168,16 @@ export function PairingLogsTable() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterUserType, setFilterUserType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+
+  const formatDate = (date: Date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const [dateFrom, setDateFrom] = useState<string>(formatDate(oneWeekAgo));
+  const [dateTo, setDateTo] = useState<string>(formatDate(tomorrow));
 
   // Load data on component mount and when date filters change
   useEffect(() => {
@@ -466,7 +477,7 @@ export function PairingLogsTable() {
                   filteredLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-sm">
-                        {new Date(log.createdAt).toLocaleString()}
+                        {new Date(log.created_at).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
