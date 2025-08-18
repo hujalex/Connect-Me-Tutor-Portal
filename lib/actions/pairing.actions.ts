@@ -1,10 +1,11 @@
 "use client";
 
-import { PairingLog, PairingRequest } from "@/types/pairing";
+import { PairingLog, PairingRequest, SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
-import { getProfile, getProfileRole } from "./user.actions";
+import { getProfile, getProfileRole, supabase } from "./user.actions";
 import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
+import { PairingLogSchemaType } from "../pairing/types";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -68,6 +69,19 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     },
   ]);
 
+  if (!result.error) {
+    supabase.from("pairing_logs").insert([
+      {
+        type: "pairing-que-entered",
+        message: `${profile.firstName} ${profile.lastName} has entered the queue.`,
+        error: false,
+        metadata: {
+          profile_id: profile.id,
+        },
+      } as PairingLogSchemaType,
+    ]);
+  }
+
   console.log("creation result: ", result);
 };
 
@@ -116,7 +130,7 @@ export const getIncomingPairingMatches = async (profileId: string) => {
   const { data, error } = await supabase.rpc(
     "get_pairing_matches_with_profiles",
     {
-      requstor: profileId,
+      requestor: profileId,
     }
   );
 
