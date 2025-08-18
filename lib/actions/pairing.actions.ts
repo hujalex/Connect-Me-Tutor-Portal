@@ -116,7 +116,7 @@ export const getIncomingPairingMatches = async (profileId: string) => {
   const { data, error } = await supabase.rpc(
     "get_pairing_matches_with_profiles",
     {
-      requstor: profileId,
+      requestor: profileId,
     }
   );
 
