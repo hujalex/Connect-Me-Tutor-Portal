@@ -11,14 +11,12 @@ export type PairingRequest = {
   priority: number;
   createdAt: Date;
 };
-export type PairingMatches = {
+export type PairingMatch = {
   id: string; //uuid
-  tutorId: string; //uuid
-  studentId: string; //uuid
-  tutorAccepted: PairingStatus; //uuid
-  studentAccepted: PairingStatus;
-  tutorPairingRequestId: string; //uuid
-  studentPairingRequestId: string; //uuid
+  tutor_id: string; //uuid
+  student_id: string; //uuid
+  tutor_status: PairingStatus;
+  similarity: number; //uuid
   createdAt: Date;
 };
 

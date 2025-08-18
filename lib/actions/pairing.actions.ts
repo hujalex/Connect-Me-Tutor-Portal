@@ -94,5 +94,31 @@ export const getPairingLogs = async (
     end_time,
   });
 
+  console.log("logs ", error);
+
+  console.log("selected pairing logs: ", logs, "from ", start_time, end_time);
+
   return logs;
+};
+
+export const getIncomingPairingMatches = async (profileId: string) => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+  const { data, error } = await supabase.rpc(
+    "get_pairing_matches_with_profiles",
+    {
+      requstor: profileId,
+    }
+  );
+
+  console.log(data, error);
 };
