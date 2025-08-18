@@ -5,7 +5,7 @@ interface AvailabilityItem {
   end_time?: string;
 }
 
-interface Person {
+export interface Person {
   id: string;
   email: string;
   user_id: string;

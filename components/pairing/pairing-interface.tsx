@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Filter, Search, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import { PairingRequestCard } from "./que/request-card";
 import { PairingLogsTable } from "./pairing-logs";
 import { useProfile } from "@/hooks/auth";
 import { TestingPairingControls } from "./test-controls";
+import { getIncomingPairingMatches } from "@/lib/actions/pairing.actions";
 
 // Mock data for demonstration
 const mockProfiles: (ProfilePairingMetadata & {
@@ -92,6 +93,13 @@ export function PairingInterface() {
 
     return matchesSearch && matchesSubject;
   });
+
+  useEffect(() => {
+    if (!profile) return;
+    getIncomingPairingMatches(profile.id).then((result) => {
+      console.log("matches");
+    });
+  }, [profile]);
 
   const handlePairingRequest = (profileId: string) => {
     setRequestedPairings((prev) => [...prev, profileId]);
@@ -194,20 +202,20 @@ export function PairingInterface() {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="space-x-4">
                       <Button
-                        className="w-full"
+                        className="w-full bg-green-500"
                         disabled={requestedPairings.includes(profile.profileId)}
                         onClick={() => handlePairingRequest(profile.profileId)}
                       >
-                        {requestedPairings.includes(profile.profileId) ? (
-                          <>
-                            <Check className="mr-1 h-4 w-4" />
-                            Request Sent
-                          </>
-                        ) : (
-                          "Request Pairing"
-                        )}
+                        Accept
+                      </Button>
+                      <Button
+                        className="w-full bg-red-500"
+                        disabled={requestedPairings.includes(profile.profileId)}
+                        onClick={() => handlePairingRequest(profile.profileId)}
+                      >
+                        Decline
                       </Button>
                     </CardFooter>
                   </Card>
