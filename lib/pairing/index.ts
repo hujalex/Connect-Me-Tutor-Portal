@@ -1,7 +1,8 @@
-import { PairingMatch, PairingMatches } from "@/types/pairing";
+import { PairingMatch } from "@/types/pairing";
 import { createClient } from "../supabase/server";
 import { Table } from "../supabase/tables";
 import { Person } from "@/types/enrollment";
+import { PairingLogSchemaType } from "./types";
 
 type QueueItem = {
   pairing_request_id: string;
@@ -15,24 +16,14 @@ type QueueItemMatch = QueueItem & {
   match_profile: Person;
   requestor_profile: Person;
 };
-type PairingLog = {
-  message: string;
-  type:
-    | "pairing-match"
-    | "pairing-match-rejected"
-    | "pairing-match-accepted"
-    | "pairing-selection-failed";
-  error?: boolean;
-  role?: "student" | "tutor";
-  metadata?: Record<string, any>;
-};
+
 export const runPairingWorkflow = async () => {
   const supabase = createClient();
 
   const updatePairingStatus = (requestId: string, status: "paired") =>
     supabase.from("pairing_requests").update({ status }).eq("id", requestId);
 
-  const logs: PairingLog[] = [];
+  const logs: PairingLogSchemaType[] = [];
 
   // Get top pairing requests for tutors & students
   const [tutorQueueResult, studentQueueResult] = await Promise.all([
