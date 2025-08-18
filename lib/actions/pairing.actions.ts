@@ -1,6 +1,6 @@
 "use client";
 
-import { PairingLog, PairingRequest } from "@/types/pairing";
+import { PairingLog, PairingRequest, SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
 import { getProfile, getProfileRole, supabase } from "./user.actions";
 import { getAccountEnrollments } from "./enrollments.action";
@@ -99,10 +99,11 @@ export const getPairingLogs = async (
 
 export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
   try {
+    console.log(enrollmentId);
     const { data, error } = await supabase
       .from("Enrollments")
       .select("pairing_id")
-      .eq("id", enrollmentId)
+      .eq("pairing_id", enrollmentId)
       .single();
     if (error) throw error;
     console.log(data);
@@ -112,3 +113,19 @@ export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
     throw error;
   }
 };
+
+export async function getAccountPairings(userId: string) {
+  const { data, error } = await supabase.rpc(
+    "get_user_pairings_with_profiles",
+    {
+      requestor_auth_id: userId,
+    }
+  );
+
+  if (error) {
+    console.error("Error fetching enrollments:", error);
+    return null;
+  }
+
+  return data as SharedPairing[];
+}

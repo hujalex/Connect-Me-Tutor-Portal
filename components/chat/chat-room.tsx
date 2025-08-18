@@ -73,7 +73,7 @@ export function ChatRoom({
     [key: string]: number;
   }>({});
 
-  const { enrollment } = useEnrollment(roomId);
+  // const { enrollment } = useEnrollment(roomId);
   const { pairing } = usePairing(roomId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
