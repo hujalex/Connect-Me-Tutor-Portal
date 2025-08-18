@@ -73,6 +73,8 @@ export function ChatRoom({
   }>({});
 
   const { enrollment } = useEnrollment(roomId);
+  const { pairing } = usePairing(roomId);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
