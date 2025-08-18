@@ -88,6 +88,7 @@ interface Enrollment {
   meetingId: string;
   summerPaused: boolean;
   duration: number;
+  frequency: string;
 }
 
 // Define the type for availability

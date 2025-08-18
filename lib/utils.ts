@@ -210,3 +210,12 @@ export function formatMilitaryToStandardTime(militaryTime: string) {
 
   return `${hours}:${minutes.toString().padStart(2, "0")}${period}`;
 }
+
+export const formatSessionDuration = (duration: number) => {
+  const hours = Math.floor(duration);
+  const minutes = Math.round((duration - hours) * 60);
+
+  return `${hours > 0 ? `${hours} hr${hours > 1 ? "s" : ""}` : ""} ${
+    minutes > 0 ? `${minutes} min${minutes > 1 ? "s" : ""}` : ""
+  }`.trim();
+};
