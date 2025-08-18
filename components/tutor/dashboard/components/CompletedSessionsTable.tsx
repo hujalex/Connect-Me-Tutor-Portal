@@ -1,6 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import { formatSessionDate } from "@/lib/utils";
+import { formatSessionDate, formatSessionDuration } from "@/lib/utils";
 import { Session, Meeting } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -81,6 +81,7 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Date</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Student</TableHead>
+            <TableHead>Duration</TableHead>
             <TableHead>Meeting Notes</TableHead>
           </TableRow>
         </TableHeader>
@@ -110,6 +111,7 @@ const CompletedSessionsTable: React.FC<SessionsTableProps> = ({
               <TableCell>
                 {session.student?.firstName} {session.student?.lastName}
               </TableCell>
+              <TableCell>{formatSessionDuration(session.duration)}</TableCell>
 
               <TableCell>
                 <Dialog
