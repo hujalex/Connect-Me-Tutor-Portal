@@ -128,6 +128,11 @@ export default function DashboardLayout({
       icon: <Users className="h-5 w-5" />,
     },
     {
+      title: "My Enrollments",
+      href: "/dashboard/my-enrollments",
+      icon: <BookOpenText className="h-5 w-5" />,
+    },
+    {
       title: "Chats",
       href: "/dashboard/chats",
       icon: <MessageCircleIcon className="h-5 w-5" />,
