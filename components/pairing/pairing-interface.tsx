@@ -97,7 +97,7 @@ export function PairingInterface() {
   useEffect(() => {
     if (!profile) return;
     getIncomingPairingMatches(profile.id).then((result) => {
-      console.log("matches");
+      console.log("matches: ", result);
     });
   }, [profile]);
 

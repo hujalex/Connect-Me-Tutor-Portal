@@ -1,18 +1,37 @@
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
+import axios from "axios";
+import toast from "react-hot-toast";
+import {
+  deleteAllPairingRequests,
+  resetPairingQueues,
+} from "@/lib/actions/pairing.server.actions";
 
 export function TestingPairingControls() {
   const router = useRouter();
   const handleResolveQueues = () => {
-    console.log("Resolving queues...");
+    const promise = axios.post("/api/pairing");
+    toast.promise(promise, {
+      success: "Successfully ran pairing process",
+      error: "Failed to run pairing process",
+      loading: "Pairing...",
+    });
   };
 
   const handleClearQueues = () => {
-    console.log("Clearing queues...");
+    toast.promise(resetPairingQueues(), {
+      success: "Successfully Reset Queue",
+      error: "Failed to Reset Queue",
+      loading: "Resetting Queue",
+    });
   };
 
   const handleResetPairings = () => {
-    console.log("Resetting all pairing matches...");
+    toast.promise(deleteAllPairingRequests(), {
+      success: "Successfully Cleared Queue",
+      error: "Failed to clear queue",
+      loading: "Clearing...",
+    });
   };
 
   return (

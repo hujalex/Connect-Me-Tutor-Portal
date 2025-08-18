@@ -1,3 +1,5 @@
+"use server";
+
 import { Meeting } from "@/types";
 import { SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
@@ -60,3 +62,81 @@ export async function getAccountPairings(userId: string) {
     throw error;
   }
 }
+
+export const deleteAllPairingRequests = async () => {
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      throw new Error("Missing Supabase environment variables");
+    }
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Delete all rows from pairing_requests
+    const { error: pairingRequestsError } = await supabase
+      .from("pairing_requests")
+      .delete()
+      .not("id", "is", null);
+
+    if (pairingRequestsError) {
+      console.error("Error deleting pairing_requests:", pairingRequestsError);
+    } else {
+      console.log("All rows deleted from pairing_requests successfully");
+    }
+
+    // Delete all rows from pairing_matches
+    const { error: pairingMatchesError } = await supabase
+      .from("pairing_matches")
+      .delete()
+      .not("id", "is", null);
+
+    if (pairingMatchesError) {
+      console.error("Error deleting pairing_matches:", pairingMatchesError);
+    } else {
+      console.log("All rows deleted from pairing_matches successfully");
+    }
+
+    // Delete all rows from pairing_logs
+    const { error: pairingLogsError } = await supabase
+      .from("pairing_logs")
+      .delete()
+      .not("id", "is", null);
+
+    if (pairingLogsError) {
+      console.error("Error deleting pairing_logs:", pairingLogsError);
+    } else {
+      console.log("All rows deleted from pairing_logs successfully");
+    }
+  } catch (err: any) {
+    console.error(err.message);
+  }
+};
+
+export const resetPairingQueues = async () => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+  const { error } = await supabase
+    .from("pairing_requests")
+    .update({ status: "pending" })
+    .not("id", "is", null); // forces Supabase to delete all rows
+
+  if (error) {
+    console.error("Error deleting rows:", error);
+  } else {
+    console.log("All rows deleted successfully");
+  }
+};
