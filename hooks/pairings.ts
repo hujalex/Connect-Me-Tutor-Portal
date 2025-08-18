@@ -2,7 +2,7 @@ import { SharedPairing } from "@/types/pairing";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEffect, useState } from "react";
 
-export const useEnrollment = (pairingId: string) => {
+export const usePairing = (pairingId: string) => {
   const [pairing, setPairing] = useState<SharedPairing>();
   const supabase = createClientComponentClient();
   useEffect(() => {

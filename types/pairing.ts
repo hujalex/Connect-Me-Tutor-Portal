@@ -69,6 +69,8 @@ interface Person {
 export interface SharedPairing {
   id: string;
   created_at: string; // ISO date string
+  student_id: string;
+  tutor_id: string;
   student: Person;
   tutor: Person;
 }

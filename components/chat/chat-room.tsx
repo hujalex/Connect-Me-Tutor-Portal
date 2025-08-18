@@ -16,6 +16,7 @@ import { useProfile } from "@/hooks/auth";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEnrollment } from "@/hooks/enrollments";
 import { fetchAdmins } from "@/lib/actions/chat.actions";
+import { usePairing } from "@/hooks/pairings";
 
 // Types for our chat components
 export type User = {
@@ -73,6 +74,7 @@ export function ChatRoom({
   }>({});
 
   const { enrollment } = useEnrollment(roomId);
+  const { pairing } = usePairing(roomId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +99,7 @@ export function ChatRoom({
       try {
         setIsLoadingUsers(true);
 
-        if (enrollment) {
+        if (pairing) {
           const administrators = await fetchAdmins();
 
           const adminUsers =
@@ -114,15 +116,15 @@ export function ChatRoom({
             ) || {};
 
           const chatRoomUsers = {
-            [enrollment.tutor.id]: {
+            [pairing.tutor.id]: {
               role: "tutor",
-              id: enrollment.tutor.id,
-              name: `${enrollment.tutor.first_name} ${enrollment.tutor.last_name}`,
+              id: pairing.tutor.id,
+              name: `${pairing.tutor.first_name} ${pairing.tutor.last_name}`,
             },
-            [enrollment.student.id]: {
+            [pairing.student.id]: {
               role: "student",
-              id: enrollment.student.id,
-              name: `${enrollment.student.first_name} ${enrollment.student.last_name}`,
+              id: pairing.student.id,
+              name: `${pairing.student.first_name} ${pairing.student.last_name}`,
             },
             ...adminUsers,
           };
@@ -162,18 +164,18 @@ export function ChatRoom({
       }
     };
 
-    // Only fetch users if we have enrollment or it's announcements
-    if (enrollment || announcements) {
+    // Only fetch users if we have pairing or it's announcements
+    if (pairing || announcements) {
       fetchUsers();
     } else {
-      // If no enrollment and not announcements, we're not loading users
+      // If no pairing and not announcements, we're not loading users
       setIsLoadingUsers(false);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [enrollment, announcements]);
+  }, [pairing, announcements]);
 
   // Load messages and set up subscriptions
   useEffect(() => {

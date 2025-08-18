@@ -2,7 +2,7 @@
 
 import { PairingLog, PairingRequest } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
-import { getProfile, getProfileRole } from "./user.actions";
+import { getProfile, getProfileRole, supabase } from "./user.actions";
 import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
 
@@ -95,4 +95,20 @@ export const getPairingLogs = async (
   });
 
   return logs;
+};
+
+export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("Enrollments")
+      .select("pairing_id")
+      .eq("id", enrollmentId)
+      .single();
+    if (error) throw error;
+    console.log(data);
+    return data.pairing_id;
+  } catch (error) {
+    console.error("Unable to get pairing from enrollment", error);
+    throw error;
+  }
 };
