@@ -28,6 +28,9 @@ import {
   isValid,
   setHours,
   setMinutes,
+  startOfWeek,
+  endOfWeek,
+  subDays,
 } from "date-fns"; // Only use date-fns
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import ResetPassword from "@/app/(public)/set-password/page";
@@ -892,6 +895,24 @@ export async function addOneSession(
   }
 }
 
+async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
+  const midLastWeek = subDays(midWeek, 7);
+
+  const startOfLastWeek: Date = startOfWeek(midLastWeek);
+  const endOfLastWeek: Date = endOfWeek(midLastWeek);
+
+  const { data, error } = await supabase
+    .from("Sessions")
+    .select("*")
+    .lte("date", startOfLastWeek.toISOString())
+    .gte("date", endOfLastWeek.toISOString())
+    .eq("enrollment_id", enrollmentId);
+
+  if (error) throw error;
+
+  return Object.keys(data).length > 0;
+}
+
 /**
  * Add sessions for enrollments within the specified week range
  * @param weekStartString - ISO string of week start in Eastern Time
@@ -935,19 +956,15 @@ export async function addSessions(
         startDate,
         endDate,
         duration,
+        frequency,
       } = enrollment;
+
+      if (frequency === "biweekly") {
+        if (await isSessioninPastWeek(id, addDays(weekStart, 3))) continue;
+      }
 
       const startDate_asDate = new Date(startDate); //UTC
       const endDate_asDate = new Date(endDate); //UTC
-
-      //Check for start time and end time
-      // if (now < startDate_asDate) {
-      //   continue;
-      // }
-
-      // if (now > endDate_asDate) {
-      //   continue;
-      // }
 
       //Check if paused over the summer
       if (enrollment.summerPaused) {
