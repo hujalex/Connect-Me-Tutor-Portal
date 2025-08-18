@@ -47,7 +47,7 @@ export default async function ChatRoomPage({ params }: Props) {
   const user = await supabase.auth.getUser();
   const userId = user.data.user?.id;
 
-  const pairingId: string = await getPairingFromEnrollmentId(params.id);
+  // const pairingId: string = await getPairingFromEnrollmentId(params.id);
 
   // In a real app, these would come from your environment variables
   const { supabase: supabaseConfig } = config;
@@ -57,7 +57,7 @@ export default async function ChatRoomPage({ params }: Props) {
       <h1 className="text-2xl font-bold mb-6">Tutoring Session</h1>
 
       <ChatRoom
-        roomId={pairingId}
+        roomId={params.id}
         supabaseUrl={supabaseConfig.url}
         supabaseKey={supabaseConfig.key}
         initialMessages={mockMessages}
