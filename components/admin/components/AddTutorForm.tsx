@@ -128,8 +128,6 @@ const AddTutorForm = ({
       subjects_of_interest: subjectsOfInterest,
       languages_spoken: languagesSpoken,
     };
-    console.log(subjectsOfInterest);
-    console.log(languagesSpoken);
 
     // handleAddExtendedFields();
 

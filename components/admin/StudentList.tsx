@@ -119,7 +119,7 @@ const StudentList = () =>
       parentPhone: "",
       parentEmail: "",
       timeZone: "",
-      subjectsOfInterest: [],
+      subjects_of_interest: [],
       status: "Active",
       tutorIds: [],
       studentNumber: "",
@@ -304,6 +304,66 @@ const StudentList = () =>
       );
     };
 
+    const handleAddStudentWithParam = async (student: Partial<Profile>) => {
+      try {
+        setAddingStudent(true);
+        // Ensure addStudent returns a Profile
+        const addedStudent: Profile = await addStudent(student);
+
+        // Update local state
+        setStudents((prevStudents) => {
+          // Check if addedStudent is valid
+          if (addedStudent) {
+            return [...prevStudents, addedStudent]; // Ensure returning an array of Profile
+          }
+          return prevStudents; // Return previous state if addedStudent is not valid
+        });
+
+        setFilteredStudents((prevFiltered) => {
+          // Check if addedStudent is valid
+          if (addedStudent) {
+            return [...prevFiltered, addedStudent]; // Ensure returning an array of Profile
+          }
+          return prevFiltered; // Return previous state if addedStudent is not valid
+        });
+
+        if (addedStudent) {
+          // Close modal and show success toast
+          setIsModalOpen(false);
+          setStudents((prevStudents) => [...prevStudents, addedStudent]);
+
+          toast.success("Successfully added student.");
+
+          // Reset form
+          setNewStudent({
+            role: "Student",
+            firstName: "",
+            lastName: "",
+            age: "",
+            grade: "",
+            gender: "",
+            startDate: "",
+            availability: [],
+            email: "",
+            parentName: "",
+            parentPhone: "",
+            parentEmail: "",
+            timeZone: "",
+            subjectsOfInterest: [],
+            status: "Active",
+            tutorIds: [],
+          });
+        }
+      } catch (error) {
+        const err = error as Error;
+        console.error("Error adding student:", error);
+        toast.error("Failed to Add Student.");
+        toast.error(`${err.message}`);
+      } finally {
+        setAddingStudent(false);
+      }
+    };
+
     const handleAddStudent = async () => {
       try {
         setAddingStudent(true);
@@ -460,8 +520,7 @@ const StudentList = () =>
                   handleGradeChange={handleGradeChange}
                   handleTimeZone={handleTimeZone}
                   handleGender={handleGender}
-                  handleSubjectsChange={handleSubjectsChange}
-                  handleAddStudent={handleAddStudent}
+                  handleAddStudent={handleAddStudentWithParam}
                   addingStudent={addingStudent}
                 />
 
