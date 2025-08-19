@@ -349,7 +349,7 @@ const StudentList = () =>
             parentPhone: "",
             parentEmail: "",
             timeZone: "",
-            subjectsOfInterest: [],
+            subjects_of_interest: [],
             status: "Active",
             tutorIds: [],
           });
@@ -460,7 +460,7 @@ const StudentList = () =>
       if (profileId) {
         try {
           const data = await getUserFromId(profileId);
-          setSelectedStudent(data as Profile);
+          setSelectedStudent(data as unknown as Profile);
           // setIsReactivateModalOpen(false);
         } catch (error) {
           console.error("Failed to identify tutor");

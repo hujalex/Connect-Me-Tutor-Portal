@@ -376,6 +376,7 @@ export async function getUserFromId(profileId: string) {
           tutor_ids,
           timezone,
           subjects_of_interest,
+          languages_spoken,
           status,
           student_number,
           settings_id
@@ -389,7 +390,7 @@ export async function getUserFromId(profileId: string) {
     }
     if (!profile) return null;
 
-    const userProfile = {
+    const userProfile: Profile = {
       id: profile.id,
       createdAt: profile.created_at,
       role: profile.role,
@@ -408,7 +409,8 @@ export async function getUserFromId(profileId: string) {
       parentEmail: profile.parent_email,
       tutorIds: profile.tutor_ids,
       timeZone: profile.timezone,
-      subjectsOfInterest: profile.subjects_of_interest,
+      subjects_of_interest: profile.subjects_of_interest,
+      languages_spoken: profile.languages_spoken,
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
@@ -438,7 +440,7 @@ export async function editUser(profile: Profile) {
     parentPhone,
     parentEmail,
     timeZone,
-    subjectsOfInterest,
+    subjects_of_interest,
     studentNumber,
   } = profile;
   try {
@@ -459,7 +461,7 @@ export async function editUser(profile: Profile) {
         parent_phone: parentPhone,
         timezone: timeZone,
         student_number: studentNumber,
-        subjects_of_interest: subjectsOfInterest,
+        subjects_of_interest: subjects_of_interest,
       })
       .eq("id", id)
       .single();
