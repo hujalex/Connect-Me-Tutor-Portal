@@ -96,22 +96,22 @@ export async function getTutorSessions(
 
 export async function getTutorStudents(tutorId: string) {
   try {
-    const { data: enrollments, error: enrollmentError } = await supabase
-      .from(Table.Enrollments)
+    const { data: pairings, error: pairingsError } = await supabase
+      .from(Table.Pairings)
       .select("student_id")
       .eq("tutor_id", tutorId);
 
-    if (enrollmentError) {
-      console.error("Error fetching enrollments:", enrollmentError);
+    if (pairingsError) {
+      console.error("Error fetching enrollments:", pairingsError);
       return null;
     }
 
-    if (!enrollments) {
+    if (!pairings) {
       console.log("No profile found for tutor ID:", tutorId);
       return null;
     }
 
-    const studentIds = enrollments.map((enrollment) => enrollment.student_id);
+    const studentIds = pairings.map((pairing) => pairing.student_id);
 
     const { data: studentProfiles, error: profileError } = await supabase
       .from(Table.Profiles)
@@ -140,7 +140,7 @@ export async function getTutorStudents(tutorId: string) {
       parentEmail: profile.parent_email,
       tutorIds: profile.tutor_ids,
       timeZone: profile.timezone,
-      subjectsOfInterest: profile.subjects_of_interest,
+      subjects_of_interest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,

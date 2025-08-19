@@ -83,6 +83,9 @@ import { set } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getProfile } from "@/lib/actions/user.actions";
+import { getTutorStudents } from "@/lib/actions/tutor.actions";
+import { getProfileWithProfileId } from "@/lib/actions/profile.server.actions";
+import { profile } from "console";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
@@ -369,12 +372,20 @@ const EnrollmentList = () => {
 
   const fetchProfiles = async () => {
     try {
-      const studentsData = await getAllProfiles("Student");
-      const tutorsData = await getAllProfiles("Tutor");
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) throw new Error(userError.message);
+      if (!user) throw new Error("No user found");
+
+      const profileData = await getProfile(user.id);
+      if (!profileData) throw new Error("No profile found");
+
+      const studentsData = await getTutorStudents(profileData.id);
       if (studentsData)
         setStudents(studentsData.filter((s) => s.status === "Active"));
-      if (tutorsData)
-        setTutors(tutorsData.filter((t) => t.status === "Active"));
+      if (profileData) setTutors([profileData]);
     } catch (error) {
       console.error(
         "Error fetching profiles in EnrollmentsMangement.tsx:",
