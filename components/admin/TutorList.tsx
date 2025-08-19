@@ -288,7 +288,7 @@ const TutorList = () => {
           parentPhone: "",
           parentEmail: "",
           timeZone: "",
-          subjectsOfInterest: [],
+          subjects_of_interest: [],
           status: "Active",
           tutorIds: [],
         });

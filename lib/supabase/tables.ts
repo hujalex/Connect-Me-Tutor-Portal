@@ -7,6 +7,7 @@ export enum Table {
   Meetings = "Meetings",
   Notifications = "Notifications",
   Sessions = "Sessions",
+  Pairings = "Pairings",
   UserAvailabilities = "User_availabilities",
   UserNotificationSettings = "user_notification_settings",
   PairingRequests = "pairing_requests",

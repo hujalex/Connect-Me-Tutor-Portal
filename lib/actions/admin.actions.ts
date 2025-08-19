@@ -437,7 +437,7 @@ export async function editUser(profile: Profile) {
     parentPhone,
     parentEmail,
     timeZone,
-    subjectsOfInterest,
+    subjects_of_interest,
     studentNumber,
   } = profile;
   try {
@@ -458,7 +458,7 @@ export async function editUser(profile: Profile) {
         parent_phone: parentPhone,
         timezone: timeZone,
         student_number: studentNumber,
-        subjects_of_interest: subjectsOfInterest,
+        subjects_of_interest: subjects_of_interest,
       })
       .eq("id", id)
       .single();
