@@ -152,6 +152,11 @@ export default function DashboardLayout({
       href: "/dashboard/pairings",
       icon: <LinkIcon className="h-5 w-5" />,
     },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <User className="h-5 w-5" />,
+    },
   ];
 
   const adminSidebarItems = [

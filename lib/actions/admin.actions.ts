@@ -279,7 +279,8 @@ export const addTutor = async (
       availability: tutorData.availability || [],
       email: lowerCaseEmail,
       timezone: tutorData.timeZone || "",
-      subjects_of_interest: tutorData.subjectsOfInterest || [],
+      subjects_of_interest: tutorData.subjects_of_interest || [],
+      languages_spoken: tutorData.languages_spoken || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: null,
