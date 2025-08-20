@@ -133,6 +133,7 @@ export async function getTutorStudents(tutorId: string) {
       startDate: profile.start_date,
       availability: profile.availability,
       email: profile.email,
+      phoneNumber: profile.phone_number,
       parentName: profile.parent_name,
       parentPhone: profile.parent_phone,
       parentEmail: profile.parent_email,
