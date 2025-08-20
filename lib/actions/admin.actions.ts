@@ -279,7 +279,8 @@ export const addTutor = async (
       availability: tutorData.availability || [],
       email: lowerCaseEmail,
       timezone: tutorData.timeZone || "",
-      subjects_of_interest: tutorData.subjectsOfInterest || [],
+      subjects_of_interest: tutorData.subjects_of_interest || [],
+      languages_spoken: tutorData.languages_spoken || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: null,
@@ -375,6 +376,7 @@ export async function getUserFromId(profileId: string) {
           tutor_ids,
           timezone,
           subjects_of_interest,
+          languages_spoken,
           status,
           student_number,
           settings_id
@@ -388,7 +390,7 @@ export async function getUserFromId(profileId: string) {
     }
     if (!profile) return null;
 
-    const userProfile = {
+    const userProfile: Profile = {
       id: profile.id,
       createdAt: profile.created_at,
       role: profile.role,
@@ -407,7 +409,8 @@ export async function getUserFromId(profileId: string) {
       parentEmail: profile.parent_email,
       tutorIds: profile.tutor_ids,
       timeZone: profile.timezone,
-      subjectsOfInterest: profile.subjects_of_interest,
+      subjects_of_interest: profile.subjects_of_interest,
+      languages_spoken: profile.languages_spoken,
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
@@ -1532,7 +1535,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
       link: data.link,
       createdAt: data.created_at,
     };
-    console.log(meeting);
     return meeting; // Return the array of notifications
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);
