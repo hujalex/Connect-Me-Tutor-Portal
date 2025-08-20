@@ -91,6 +91,19 @@ const AddTutorForm = ({
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phoneNumber" className="text-right">
+                Phone Number
+              </Label>
+              <Input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="phoneNumber"
+                value={newTutor.phoneNumber}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="startDate" className="text-right">
                 Start Date
               </Label>

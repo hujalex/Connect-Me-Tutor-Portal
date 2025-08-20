@@ -1,6 +1,10 @@
 import React from "react";
 import { useState } from "react";
-import { formatSessionDate, formatDateAdmin } from "@/lib/utils";
+import {
+  formatSessionDate,
+  formatDateAdmin,
+  formatSessionDuration,
+} from "@/lib/utils";
 import { Session, Meeting } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -137,6 +141,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Date</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Student</TableHead>
+            <TableHead>Duration</TableHead>
             <TableHead>Meeting</TableHead>
             {/* <TableHead>Reschedule</TableHead> */}
             {/* <TableHead>Request Substitute</TableHead> */}
@@ -175,6 +180,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
               <TableCell>
                 {session.student?.firstName} {session.student?.lastName}
               </TableCell>
+              <TableCell>{formatSessionDuration(session.duration)}</TableCell>
               <TableCell>
                 {session.environment !== "In-Person" && (
                   <>

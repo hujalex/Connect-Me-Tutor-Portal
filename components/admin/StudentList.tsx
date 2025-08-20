@@ -412,7 +412,7 @@ const StudentList = () =>
       if (selectedStudent) {
         try {
           await editUser(selectedStudent);
-          toast.success("Tutor Edited Succesfully");
+          toast.success("Tutor Edited Successfully");
           setIsEditModalOpen(false);
           setSelectedStudent(null);
           getStudentData();

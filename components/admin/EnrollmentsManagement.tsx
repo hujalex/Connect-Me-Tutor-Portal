@@ -72,8 +72,17 @@ import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
-import { set } from "date-fns";
+import { previousDay, set } from "date-fns";
+import { z } from "zod";
 // import Availability from "@/components/student/AvailabilityFormat";
+
+const durationSchema = z.object({
+  duration: z.coerce
+    .number()
+    .int()
+    .positive("Duration must be a positive number")
+    .min(0, "Duration must be at least 0"),
+});
 
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
@@ -116,11 +125,20 @@ const EnrollmentList = () => {
     meetingId: "",
     summerPaused: false,
     duration: 1,
+    frequency: "weekly",
   });
   const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
   const [meetingAvailability, setMeetingAvailability] = useState<{
     [key: string]: boolean;
   }>({});
+
+  const [hoursError, setHoursError] = useState<string | null>(null);
+  const [editHoursError, setEditHoursError] = useState<string | null>(null);
+  const [minutesError, setMinutesError] = useState<string | null>(null);
+  const [editMinutesError, setEditMinutesError] = useState<string | null>();
+
+  const [hours, setHours] = useState(1);
+  const [minutes, setMinutes] = useState(0);
 
   useEffect(() => {
     fetchEnrollments();
@@ -383,10 +401,87 @@ const EnrollmentList = () => {
     currentPage * rowsPerPage
   );
 
+  const calculateDuration = (hours: number, minutes: number) => {
+    return parseFloat((hours + minutes / 60.0).toFixed(2));
+  };
+
+  const validateDuration = (
+    value: string,
+    isEdit: boolean = false,
+    unit: "hours" | "minutes"
+  ) => {
+    try {
+      durationSchema.parse({ duration: value });
+      if (isEdit) {
+        unit == "hours" ? setEditHoursError(null) : setEditMinutesError(null);
+      } else {
+        unit == "hours" ? setHoursError(null) : setMinutesError(null);
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessage = error.errors[0]?.message || "Invalid duration";
+        if (isEdit) {
+          unit == "hours"
+            ? setEditHoursError(errorMessage)
+            : setEditMinutesError(errorMessage);
+        } else {
+          unit == "hours"
+            ? setHoursError(errorMessage)
+            : setMinutesError(errorMessage);
+        }
+      }
+    }
+  };
+
   const handleInputChange = (e: {
     target: { name: string; value: string };
   }) => {
     const { name, value } = e.target;
+
+    if (name === "hours") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      const newHours = numericValue ? parseFloat(numericValue) : 0;
+
+      const newDuration = calculateDuration(newHours, minutes);
+      setHours(newHours);
+
+      if (isEditModalOpen) {
+        validateDuration(numericValue, true, "hours");
+        setSelectedEnrollment((prev) =>
+          prev ? { ...prev, duration: newDuration || 0 } : null
+        );
+      } else {
+        validateDuration(numericValue, false, "hours");
+        setNewEnrollment((prev) => ({
+          ...prev,
+          duration: newDuration || 0,
+        }));
+      }
+      return;
+    }
+
+    if (name == "minutes") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      const newMinutes = numericValue ? parseFloat(numericValue) : 0;
+
+      const newDuration = calculateDuration(hours, newMinutes);
+      setMinutes(newMinutes);
+
+      if (selectedEnrollment) {
+        validateDuration(numericValue, true, "minutes");
+        setSelectedEnrollment((prev) =>
+          prev ? { ...prev, duration: newDuration || 0 } : null
+        );
+      } else {
+        validateDuration(numericValue, false, "minutes");
+        setNewEnrollment((prev) => ({
+          ...prev,
+          duration: newDuration || 0,
+        }));
+      }
+      return;
+    }
 
     // Helper function to handle nested updates
     const handleNestedChange = (obj: any, key: string, value: any) => {
@@ -418,12 +513,16 @@ const EnrollmentList = () => {
     }
   };
 
+  const handleInputSelectionChange = (value: string) => {
+    setNewEnrollment((prev) => ({ ...prev, frequency: value }));
+  };
+
   const handleAddEnrollment = async () => {
     try {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
-          { ...addedEnrollment, summerPaused: false, duration: 1 },
+          { ...addedEnrollment, summerPaused: false },
           ...enrollments,
         ]);
         setIsAddModalOpen(false);
@@ -435,7 +534,7 @@ const EnrollmentList = () => {
       }
     } catch (error) {
       console.error("Error adding enrollment:", error);
-      toast.error("Failed to add enrollment");
+      toast.error(`${error}`);
     }
   };
 
@@ -489,6 +588,7 @@ const EnrollmentList = () => {
       meetingId: "",
       summerPaused: false,
       duration: 1,
+      frequency: "weekly",
     });
   };
 
@@ -700,7 +800,57 @@ const EnrollmentList = () => {
                           setNewEnrollment({ ...newEnrollment, availability });
                         }}
                       />
-                      <div className="grid grid-cols-4 items-center gap-4">
+                      <div className="grid grid-cols-[80px_1fr] items-center gap-4">
+                        <Label htmlFor="duration" className="text-right">
+                          Duration
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="hours"
+                            name="hours"
+                            type="text"
+                            inputMode="numeric"
+                            value={hours.toString()}
+                            onChange={handleInputChange}
+                            placeholder="1"
+                            className={`w-16 ${hoursError ? "border-red-500" : ""}`}
+                          />
+                          <span className="text-sm">hrs</span>
+                          <Input
+                            id="minutes"
+                            name="minutes"
+                            type="text"
+                            inputMode="numeric"
+                            value={minutes.toString()}
+                            onChange={handleInputChange}
+                            placeholder="0"
+                            className={`w-16 ${minutesError ? "border-red-500" : ""}`}
+                          />
+                          <span className="text-sm">min</span>
+                          {/* <Label>{newEnrollment.duration}</Label> */}
+                        </div>
+
+                        <Label htmlFor="frequency" className="text-right">
+                          Frequency
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            name="timeZone"
+                            value={newEnrollment.frequency}
+                            onValueChange={handleInputSelectionChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="weekly" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {/* Add time zone options here */}
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="biweekly">Biweekly</SelectItem>
+                              {/* <SelectItem value="MT">Monthy</SelectItem> */}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         <Label htmlFor="summary" className="text-right">
                           Summary
                         </Label>
@@ -709,10 +859,7 @@ const EnrollmentList = () => {
                           name="summary"
                           value={newEnrollment.summary}
                           onChange={handleInputChange}
-                          className="col-span-3"
                         />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="startDate" className="text-right">
                           Start Date
                         </Label>
@@ -722,10 +869,8 @@ const EnrollmentList = () => {
                           type="date"
                           value={newEnrollment.startDate}
                           onChange={handleInputChange}
-                          className="col-span-3"
+                          // className="col-span-3"
                         />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="endDate" className="text-right">
                           End Date
                         </Label>
@@ -735,7 +880,7 @@ const EnrollmentList = () => {
                           type="date"
                           value={newEnrollment.endDate}
                           onChange={handleInputChange}
-                          className="col-span-3"
+                          // className="col-span-3"
                         />
                       </div>
                       <div>
@@ -812,6 +957,8 @@ const EnrollmentList = () => {
                   "Start Date",
                   "End Date",
                   "Meeting Link",
+                  "Duration",
+                  "Frequency",
                   "Actions",
                   "Summer",
                 ].map((header) => (
@@ -842,16 +989,15 @@ const EnrollmentList = () => {
                     {formatDateAdmin(enrollment.endDate, false, true)}
                   </TableCell>
                   <TableCell>
-                    <TableCell>
-                      {enrollment.meetingId
-                        ? meetings.find(
-                            (meeting) =>
-                              String(meeting.id) ===
-                              String(enrollment.meetingId)
-                          )?.name || "No Meeting"
-                        : "No Meeting Link"}
-                    </TableCell>
+                    {enrollment.meetingId
+                      ? meetings.find(
+                          (meeting) =>
+                            String(meeting.id) === String(enrollment.meetingId)
+                        )?.name || "No Meeting"
+                      : "No Meeting Link"}
                   </TableCell>
+                  <TableCell>{enrollment.duration} hr(s)</TableCell>
+                  <TableCell>{enrollment.frequency}</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -1150,7 +1296,57 @@ const EnrollmentList = () => {
                     } as any)
                   }
                 />
-                <div className="grid grid-cols-4 items-center gap-4">
+                <div className="grid grid-cols-[80px_1fr] items-center gap-4">
+                  <Label htmlFor="duration" className="text-right">
+                    Duration
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="hours"
+                      name="hours"
+                      type="text"
+                      inputMode="numeric"
+                      value={hours.toString()}
+                      onChange={handleInputChange}
+                      placeholder="1"
+                      className={`w-16 ${hoursError ? "border-red-500" : ""}`}
+                    />
+                    <span className="text-sm">hrs</span>
+                    <Input
+                      id="minutes"
+                      name="minutes"
+                      type="text"
+                      inputMode="numeric"
+                      value={minutes.toString()}
+                      onChange={handleInputChange}
+                      placeholder="0"
+                      className={`w-16 ${minutesError ? "border-red-500" : ""}`}
+                    />
+                    <span className="text-sm">min</span>
+                    {/* <Label>{newEnrollment.duration}</Label> */}
+                  </div>
+
+                  <Label htmlFor="frequency" className="text-right">
+                    Frequency
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      name="timeZone"
+                      value={selectedEnrollment.frequency}
+                      onValueChange={handleInputSelectionChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="weekly" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add time zone options here */}
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="biweekly">Biweekly</SelectItem>
+                        {/* <SelectItem value="MT">Monthy</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Label htmlFor="summary" className="text-right">
                     Summary
                   </Label>
@@ -1159,7 +1355,7 @@ const EnrollmentList = () => {
                     name="summary"
                     value={selectedEnrollment.summary}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    // className="col-span-3"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
