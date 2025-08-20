@@ -407,6 +407,7 @@ const TutorList = () => {
         const data = await getUserFromId(profileId);
         setSelectedTutor(data as unknown as Profile);
         // setIsReactivateModalOpen(false);
+        return data;
       } catch (error) {
         console.error("Failed to identify tutor");
       }

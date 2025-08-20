@@ -1535,7 +1535,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
       link: data.link,
       createdAt: data.created_at,
     };
-    console.log(meeting);
     return meeting; // Return the array of notifications
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);

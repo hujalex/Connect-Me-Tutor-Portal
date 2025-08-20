@@ -1,19 +1,8 @@
+import { supabase } from "@/lib/supabase/serverClient";
 import { Meeting } from "@/types";
-import { createClient } from "@supabase/supabase-js";
 
 export async function getMeeting(id: string): Promise<Meeting | null> {
   try {
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ) {
-      throw new Error("Missing Supabase environment variables");
-    }
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
       .from("Meetings")
@@ -49,7 +38,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
       link: data.link,
       createdAt: data.created_at,
     };
-    console.log(meeting);
     return meeting; // Return the array of notifications
   } catch (error) {
     console.error("Unexpected error in getMeeting:", error);

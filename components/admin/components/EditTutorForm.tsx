@@ -66,15 +66,10 @@ const EditTutorForm = ({
   handleTimeZoneForEdit,
 }: EditTutorFormProps) => {
   const [activeTab, setActiveTab] = useState("basic");
-
-  const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>([]);
-  const [languagesSpoken, setLanguagesSpoken] = useState<string[]>([]);
-  const [availability, setAvailability] = useState<
-    { day: string; startTime: string; endTime: string }[]
-  >([]);
-
-  const [newSubject, setNewSubject] = useState("");
-  const [newLanguage, setNewLanguage] = useState("");
+  const [newSubject, setNewSubject] = useState<string[]>([]);
+  const [newLanguage, setNewLanguage] = useState<string[]>([]);
+  const [subjectInput, setSubjectInput] = useState("");
+  const [languageInput, setLanguageInput] = useState("");
 
   const addAvailabilitySlot = () => {
     if (!selectedTutor) return;
@@ -111,7 +106,7 @@ const EditTutorForm = ({
   };
 
   const removeAvailabilitySlot = (index: number) => {
-    if (!selectedTutor) return;
+    if (!selectedTutor || !selectedTutor.availability) return;
 
     const updated = selectedTutor.availability.filter((_, i) => i !== index);
 
@@ -122,12 +117,13 @@ const EditTutorForm = ({
       },
     } as any);
   };
+
   const addSubject = () => {
-    if (!selectedTutor || !newSubject.trim()) return;
+    if (!selectedTutor || !subjectInput.trim()) return;
 
     const updated = [
       ...(selectedTutor.subjects_of_interest ?? []),
-      newSubject.trim(),
+      subjectInput.trim(),
     ];
 
     handleInputChangeForEdit({
@@ -137,10 +133,11 @@ const EditTutorForm = ({
       },
     } as any);
 
-    setNewSubject("");
+    setSubjectInput("");
   };
+
   const removeSubject = (subject: string) => {
-    if (!selectedTutor) return;
+    if (!selectedTutor || !selectedTutor.subjects_of_interest) return;
 
     const updated = selectedTutor.subjects_of_interest.filter(
       (s) => s !== subject
@@ -155,11 +152,11 @@ const EditTutorForm = ({
   };
 
   const addLanguage = () => {
-    if (!selectedTutor || !newLanguage.trim()) return;
+    if (!selectedTutor || !languageInput.trim()) return;
 
     const updated = [
       ...(selectedTutor.languages_spoken ?? []),
-      newLanguage.trim(),
+      languageInput.trim(),
     ];
 
     handleInputChangeForEdit({
@@ -169,10 +166,11 @@ const EditTutorForm = ({
       },
     } as any);
 
-    setNewLanguage("");
+    setLanguageInput("");
   };
+
   const removeLanguage = (language: string) => {
-    if (!selectedTutor) return;
+    if (!selectedTutor || !selectedTutor.languages_spoken) return;
 
     const updated = selectedTutor.languages_spoken.filter(
       (l) => l !== language
@@ -185,16 +183,6 @@ const EditTutorForm = ({
       },
     } as any);
   };
-
-  // const addSubject = () => {
-  //   if (!selectedTutor) return;
-  //   handleInputChangeForEdit({
-  //     target: {
-  //       name: "subjectOfInterest",
-  //       value: [..d.(selectedTutor.subjects_of_interest ?? []), newSubject],
-  //     },
-  //   });
-  // };
 
   return (
     <Dialog
@@ -275,7 +263,7 @@ const EditTutorForm = ({
                     <Input
                       id="firstName"
                       name="firstName"
-                      value={selectedTutor?.firstName}
+                      value={selectedTutor?.firstName || ""}
                       onChange={handleInputChangeForEdit}
                       className="col-span-3"
                     />
@@ -287,7 +275,7 @@ const EditTutorForm = ({
                     <Input
                       id="lastName"
                       name="lastName"
-                      value={selectedTutor?.lastName}
+                      value={selectedTutor?.lastName || ""}
                       onChange={handleInputChangeForEdit}
                       className="col-span-3"
                     />
@@ -300,7 +288,7 @@ const EditTutorForm = ({
                       id="email"
                       name="email"
                       type="email"
-                      value={selectedTutor?.email}
+                      value={selectedTutor?.email || ""}
                       onChange={handleInputChangeForEdit}
                       className="col-span-3"
                     />
@@ -313,7 +301,7 @@ const EditTutorForm = ({
                       id="startDate"
                       name="startDate"
                       type="date"
-                      value={selectedTutor?.startDate}
+                      value={selectedTutor?.startDate || ""}
                       onChange={handleInputChangeForEdit}
                       className="col-span-3"
                     />
@@ -325,11 +313,11 @@ const EditTutorForm = ({
                     <div className="col-span-3">
                       <Select
                         name="timeZone"
-                        value={selectedTutor?.timeZone}
+                        value={selectedTutor?.timeZone || ""}
                         onValueChange={handleTimeZoneForEdit}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="" />
+                          <SelectValue placeholder="Select timezone" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="EST">EST</SelectItem>
@@ -350,6 +338,7 @@ const EditTutorForm = ({
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Availability</h3>
                     {selectedTutor &&
+                      selectedTutor.availability &&
                       selectedTutor.availability.map((slot, index) => (
                         <div
                           key={index}
@@ -430,8 +419,8 @@ const EditTutorForm = ({
                       <Input
                         type="text"
                         placeholder="e.g., Mathematics, Physics"
-                        value={selectedTutor?.subjects_of_interest}
-                        onChange={(e) => setNewSubject(e.target.value)}
+                        value={subjectInput}
+                        onChange={(e) => setSubjectInput(e.target.value)}
                         onKeyPress={(e) =>
                           e.key === "Enter" &&
                           (e.preventDefault(), addSubject())
@@ -442,7 +431,8 @@ const EditTutorForm = ({
                       </Button>
                     </div>
                     {selectedTutor &&
-                      selectedTutor?.subjects_of_interest?.length > 0 && (
+                      selectedTutor.subjects_of_interest &&
+                      selectedTutor.subjects_of_interest.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {selectedTutor.subjects_of_interest.map((subject) => (
                             <Badge
@@ -471,8 +461,8 @@ const EditTutorForm = ({
                       <Input
                         type="text"
                         placeholder="e.g., English, Spanish"
-                        value={selectedTutor?.languages_spoken}
-                        onChange={(e) => setNewLanguage(e.target.value)}
+                        value={languageInput}
+                        onChange={(e) => setLanguageInput(e.target.value)}
                         onKeyPress={(e) =>
                           e.key === "Enter" &&
                           (e.preventDefault(), addLanguage())
@@ -483,6 +473,7 @@ const EditTutorForm = ({
                       </Button>
                     </div>
                     {selectedTutor &&
+                      selectedTutor.languages_spoken &&
                       selectedTutor.languages_spoken.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {selectedTutor.languages_spoken.map((language) => (
@@ -511,13 +502,6 @@ const EditTutorForm = ({
             <Button onClick={handleEditTutor}>Finish editing tutor</Button>
           </DialogContent>
         </Dialog>
-
-        {/* <Button
-                        onClick={handleReactivateTutor}
-                        disabled={!selectedTutorId}
-                      >
-                        Confirm Reactivation
-                      </Button> */}
       </DialogContent>
     </Dialog>
   );
