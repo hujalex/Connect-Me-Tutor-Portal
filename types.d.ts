@@ -14,6 +14,7 @@ interface Profile {
   startDate: string; // Format: YYYY-MM-DD, start date of the user's involvement
   availability: { day: string; startTime: string; endTime: string }[]; // Example: [{ day: "Monday", time: "3PM-6PM" }]
   email: string;
+  phoneNumber: string;
   parentName?: string; // Optional
   parentPhone?: string; // Optional
   parentEmail?: string; // Optional
