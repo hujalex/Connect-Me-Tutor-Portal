@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/serverClient";
+import { getSupabase } from "@/lib/supabase/serverClient";
 import { Profile } from "@/types";
 import {
   createPassword,
@@ -12,6 +12,7 @@ export const createUser = async (
 ): Promise<string | null> => {
   try {
     // Call signUp to create a new user
+    const supabase = getSupabase();
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -34,6 +35,8 @@ export const addTutor = async (
 ): Promise<Profile> => {
   let userId: string | null = null;
   try {
+    const supabase = getSupabase();
+
     if (!tutorData.email) {
       throw new Error("Email is required to create a student profile");
     }
