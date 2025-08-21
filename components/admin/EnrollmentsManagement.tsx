@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { AlarmClockMinus, Search, Timer, TimerOff } from "lucide-react";
-import { cn, formatDateAdmin } from "@/lib/utils";
+import { cn, formatDateAdmin, formatSessionDuration } from "@/lib/utils";
 import {
   ChevronDown,
   ChevronsLeft,
@@ -996,7 +996,9 @@ const EnrollmentList = () => {
                         )?.name || "No Meeting"
                       : "No Meeting Link"}
                   </TableCell>
-                  <TableCell>{enrollment.duration} hr(s)</TableCell>
+                  <TableCell>
+                    {formatSessionDuration(enrollment.duration)} hr(s)
+                  </TableCell>
                   <TableCell>{enrollment.frequency}</TableCell>
                   <TableCell>
                     <Button
