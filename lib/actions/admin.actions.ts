@@ -283,6 +283,7 @@ export const addTutor = async (
       start_date: tutorData.startDate || new Date().toISOString(),
       availability: tutorData.availability || [],
       email: lowerCaseEmail,
+      phone_number: tutorData.phoneNumber || "",
       timezone: tutorData.timeZone || "",
       subjects_of_interest: tutorData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
