@@ -283,6 +283,7 @@ export const addTutor = async (
       start_date: tutorData.startDate || new Date().toISOString(),
       availability: tutorData.availability || [],
       email: lowerCaseEmail,
+      phone_number: tutorData.phoneNumber || "",
       timezone: tutorData.timeZone || "",
       subjects_of_interest: tutorData.subjectsOfInterest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
@@ -572,7 +573,7 @@ export const createConfirmationEmail = async (
       },
     });
   } catch (error) {
-    console.error("Unable to create confirmation emaily");
+    console.error("Unable to create confirmation email");
     throw error;
   }
 };
@@ -946,8 +947,8 @@ async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
   const { data, error } = await supabase
     .from("Sessions")
     .select("*")
-    .lte("date", startOfLastWeek.toISOString())
-    .gte("date", endOfLastWeek.toISOString())
+    .gte("date", startOfLastWeek.toISOString())
+    .lte("date", endOfLastWeek.toISOString())
     .eq("enrollment_id", enrollmentId);
 
   if (error) throw error;
@@ -1639,7 +1640,7 @@ export const addEnrollment = async (
   enrollment: Omit<Enrollment, "id" | "createdAt">
 ) => {
   if (enrollment.duration <= 0)
-    throw new Error("Duration should be a positve amount");
+    throw new Error("Duration should be a positive amount");
 
   if (enrollment.duration >= 3) {
     throw new Error(
