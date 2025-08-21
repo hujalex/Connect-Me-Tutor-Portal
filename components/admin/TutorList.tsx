@@ -60,7 +60,7 @@ import {
   editUser,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
-import { addTutor } from "@/lib/actions/auth.server.actions";
+import { addTutor } from "@/lib/actions/auth.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile, Session, Event } from "@/types";

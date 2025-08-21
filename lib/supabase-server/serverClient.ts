@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let supabaseInstance: SupabaseClient | null = null;
@@ -11,8 +13,15 @@ export const getSupabase = (): SupabaseClient => {
       throw new Error("Missing supabase environment variables");
     }
 
-    supabaseInstance = createClient(supabaseServiceKey, supabaseServiceKey);
+    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey);
   }
 
   return supabaseInstance;
 };
+
+// export const getSupabase = () => {
+//   return createClient(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.SUPABASE_SERVICE_ROLE_KEY!
+//   );
+// };

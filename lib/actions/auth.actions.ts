@@ -1,10 +1,17 @@
-import { getSupabase } from "@/lib/supabase/serverClient";
+import { getSupabase } from "@/lib/supabase-server/serverClient";
 import { Profile } from "@/types";
 import {
   createPassword,
   deleteUser,
   sendConfirmationEmail,
 } from "./admin.actions";
+import { NextResponse } from "next/server";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
+const supabase = createClientComponentClient({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+});
 
 export const createUser = async (
   email: string,
@@ -12,18 +19,21 @@ export const createUser = async (
 ): Promise<string | null> => {
   try {
     // Call signUp to create a new user
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
+    const response = await fetch("/api/admin/create-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: email, password: password }),
     });
 
-    if (error) {
-      throw new Error(`Error creating user: ${error.message}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `Error: ${response.status}`);
     }
 
-    // Return the user ID
-    return data?.user?.id || null; // Use optional chaining to safely access id
+    return data.userId || null;
   } catch (error) {
     console.error("Error creating user:", error);
     return null; // Return null if there was an error
@@ -35,8 +45,6 @@ export const addTutor = async (
 ): Promise<Profile> => {
   let userId: string | null = null;
   try {
-    const supabase = getSupabase();
-
     if (!tutorData.email) {
       throw new Error("Email is required to create a student profile");
     }

@@ -41,7 +41,7 @@ import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
-import { createUser } from "./auth.server.actions";
+import { createUser } from "./auth.actions";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -240,7 +240,6 @@ export const addStudent = async (
     throw error;
   }
 };
-
 
 export async function deleteUser(profileId: string) {
   try {
