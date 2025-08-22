@@ -87,43 +87,36 @@ const AdminDashboard = () => {
   // }, []);
 
   useEffect(() => {
-    const getUserData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError) throw new Error(userError.message);
-        if (!user) throw new Error("No user found");
-
-        const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error("No profile found");
-
-        setProfile(profileData);
-
-        let sessionsData = await getAllSessions();
-        if (!sessionsData) throw new Error("No sessions found");
-        sessionsData = sessionsData.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-
-        setSessions(sessionsData);
-        setFilteredSessions(sessionsData);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getUserData();
+    // const getUserData = async () => {
+    //   try {
+    //     setLoading(true);
+    //     setError(null);
+    //     const {
+    //       data: { user },
+    //       error: userError,
+    //     } = await supabase.auth.getUser();
+    //     if (userError) throw new Error(userError.message);
+    //     if (!user) throw new Error("No user found");
+    //     const profileData = await getProfile(user.id);
+    //     if (!profileData) throw new Error("No profile found");
+    //     setProfile(profileData);
+    //     let sessionsData = await getAllSessions();
+    //     if (!sessionsData) throw new Error("No sessions found");
+    //     sessionsData = sessionsData.sort(
+    //       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    //     );
+    //     setSessions(sessionsData);
+    //     setFilteredSessions(sessionsData);
+    //   } catch (error) {
+    //     console.error("Error fetching user data:", error);
+    //     setError(
+    //       error instanceof Error ? error.message : "An unknown error occurred"
+    //     );
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+    // getUserData();
   }, [supabase.auth]);
 
   useEffect(() => {
