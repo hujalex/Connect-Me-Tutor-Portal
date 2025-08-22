@@ -99,6 +99,7 @@ const TutorList = () => {
     startDate: "",
     availability: [],
     email: "",
+    phoneNumber: "",
     parentName: "",
     parentPhone: "",
     parentEmail: "",
@@ -284,6 +285,7 @@ const TutorList = () => {
           startDate: "",
           availability: [],
           email: "",
+          phoneNumber: "",
           parentName: "",
           parentPhone: "",
           parentEmail: "",
@@ -382,88 +384,6 @@ const TutorList = () => {
         toast.error("Failed to deactivate student");
       }
     }
-  };
-
-  const fetchSessionsAndEvents = async () => {
-    let selectedDate = new Date();
-    const sessionsPromises = tutors.map((tutor) =>
-      getTutorSessions(
-        tutor.id,
-        startOfMonth(selectedDate).toISOString(),
-        endOfMonth(selectedDate).toISOString()
-      )
-    );
-    const eventsPromises = tutors.map((tutor) =>
-      getEventsWithTutorMonth(
-        tutor?.id,
-        startOfMonth(selectedDate).toISOString()
-      )
-    );
-
-    try {
-      const sessionsResults = await Promise.all(sessionsPromises);
-      const eventsResults = await Promise.all(eventsPromises);
-
-      const newSessionsData: { [key: string]: Session[] } = {};
-      const newEventsData: { [key: string]: Event[] } = {};
-
-      tutors.forEach((tutor, index) => {
-        newSessionsData[tutor.id] = sessionsResults[index];
-        if (eventsResults[index]) {
-          newEventsData[tutor.id] = eventsResults[index];
-        }
-      });
-
-      setSessionsData(newSessionsData);
-      setEventsData(newEventsData);
-    } catch (error) {
-      console.error("Failed to fetch sessions or events:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (tutors.length > 0) {
-      fetchSessionsAndEvents();
-      calculateAllTimeHours();
-    }
-  }, [tutors]);
-
-  const calculateAllTimeHours = async () => {
-    const allTimeHoursPromises = tutors.map(async (tutor) => {
-      const allSessions = await getTutorSessions(tutor.id);
-      const allEvents = await getEvents(tutor.id);
-
-      const sessionHours = allSessions
-        .filter((session) => session.status === "Complete")
-        .reduce(
-          (total, session) => total + calculateSessionDuration(session),
-          0
-        );
-
-      const eventHours =
-        allEvents?.reduce((total, event) => total + event?.hours, 0) || 0;
-
-      return { tutorId: tutor.id, hours: sessionHours + eventHours };
-    });
-
-    try {
-      const results = await Promise.all(allTimeHoursPromises);
-      const newAllTimeHours: { [key: string]: number } = {};
-      results.forEach((result) => {
-        newAllTimeHours[result.tutorId] = result.hours;
-      });
-      setAllTimeHours(newAllTimeHours);
-    } catch (error) {
-      console.error("Failed to calculate all-time hours:", error);
-    }
-  };
-
-  const calculateSessionDuration = (session: Session) => {
-    const start = new Date(session.date);
-    const end = new Date(session.date);
-    let sessionDuration = 1.5;
-    end.setMinutes(end.getMinutes() + sessionDuration);
-    return (end.getTime() - start.getTime()) / (1000 * 60 * 60); // Convert to hours
   };
 
   return (
