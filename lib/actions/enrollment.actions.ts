@@ -104,3 +104,22 @@ export async function getEnrollments(
     return null;
   }
 }
+
+export const getOverlappingAvailabilites = async (
+  tutorAvailability: { day: string; startTime: string; endTime: string }[],
+  studentAvailability: { day: string; startTime: string; endTime: string }[]
+) => {
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_overlapping_availabilties",
+      {
+        a: tutorAvailability,
+        b: studentAvailability,
+      }
+    );
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Failed to get overlapping availabilities");
+  }
+};
