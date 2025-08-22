@@ -1,13 +1,11 @@
-"use server";
+"use client";
 import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
-import { getSupabase } from "../supabase-server/serverClient";
+import { supabase } from "../supabase/client";
 
 export async function getProfileWithProfileId(
   profileId: string
 ): Promise<Profile | null> {
-  const supabase = getSupabase();
-
   try {
     const { data, error } = await supabase
       .from("Profiles")

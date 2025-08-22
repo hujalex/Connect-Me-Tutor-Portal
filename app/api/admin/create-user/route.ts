@@ -2,9 +2,22 @@ import { getSupabase } from "@/lib/supabase-server/serverClient";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { email, tempPassword } = await request.json();
-  const userId = await createUser(email, tempPassword);
-  return NextResponse.json({ success: true, userId: userId }, { status: 200 });
+  try {
+    const { email, password } = await request.json();
+
+    const userId = await createUser(email, password);
+    return NextResponse.json(
+      { success: true, userId: userId },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error,
+      },
+      { status: 500 }
+    );
+  }
 }
 
 const createUser = async (
