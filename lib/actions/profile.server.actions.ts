@@ -1,21 +1,10 @@
+"use client";
 import { Profile } from "@/types";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../supabase/client";
 
 export async function getProfileWithProfileId(
   profileId: string
 ): Promise<Profile | null> {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    throw new Error("Missing Supabase environment variables");
-  }
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-
   try {
     const { data, error } = await supabase
       .from("Profiles")
