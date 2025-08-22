@@ -37,9 +37,7 @@ const DeleteStudentForm = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button disabled={true} variant="destructive">
-          Delete Student
-        </Button>
+        <Button variant="destructive">Delete Student</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
