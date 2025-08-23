@@ -461,7 +461,7 @@ const AddStudentForm = ({
                     <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
                       <p className="mb-2">No availability slots added yet</p>
                       <p className="text-sm">
-                        Click "Add Time Slot" to get started
+                        {`  Click "Add Time Slot" to get started`}
                       </p>
                     </div>
                   ) : (

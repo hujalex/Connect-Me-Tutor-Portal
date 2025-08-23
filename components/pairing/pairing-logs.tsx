@@ -159,7 +159,7 @@ const getTypeIcon = (type: PairingLog["type"]) => {
 };
 
 const today = new Date();
-const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+const tomorrow = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
 const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 export function PairingLogsTable() {
   const [logs, setLogs] = useState<PairingLog[]>([]);
@@ -488,14 +488,16 @@ export function PairingLogsTable() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">
-                            {log.profile.firstName} {log.profile.lastName}
+                        {log.profile && (
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {log.profile.firstName} {log.profile.lastName}
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {log.profile.role}
+                            </Badge>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {log.profile.role}
-                          </Badge>
-                        </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(log.status)}>
