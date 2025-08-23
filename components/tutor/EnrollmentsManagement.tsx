@@ -575,7 +575,9 @@ const EnrollmentList = () => {
           tutor.availability,
           student.availability
         );
-        setOverlappingAvailabilites(data);
+        if (data) setOverlappingAvailabilites(data);
+
+        console.log(data);
       }
     } catch (error) {
       console.error("Unable to fetch overlapping availabilites");
