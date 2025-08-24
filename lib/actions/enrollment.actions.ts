@@ -9,6 +9,7 @@ import {
   Event,
   Enrollment,
   Meeting,
+  Availability,
 } from "@/types";
 import {
   deleteScheduledEmailBeforeSessions,
@@ -38,6 +39,7 @@ import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
+import Availability from "@/components/student/AvailabilityFormat";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -105,13 +107,39 @@ export async function getEnrollments(
   }
 }
 
+export const getHourInterval = async (availabilityList: Availability[]) => {
+  try {
+    let availabilityListHours: Availability[] = [];
+
+    availabilityList.map((availability) => {
+      availability.day;
+      availability.startTime;
+      availability.endTime;
+    });
+  } catch (error) {
+    console.error("Unable to split into hours", error);
+    throw error;
+  }
+};
+
 export const getOverlappingAvailabilites = async (
-  tutorAvailability: { day: string; startTime: string; endTime: string }[],
-  studentAvailability: { day: string; startTime: string; endTime: string }[]
+  tutorAvailability: {
+    day: string;
+    startTime: string;
+    endTime: string;
+  }[],
+  studentAvailability: {
+    day: string;
+    startTime: string;
+    endTime: string;
+  }[]
 ) => {
   try {
+    console.log(tutorAvailability);
+    console.log(studentAvailability);
+
     const { data, error } = await supabase.rpc(
-      "get_overlapping_availabilties",
+      "get_overlapping_availabilities_array",
       {
         a: tutorAvailability,
         b: studentAvailability,

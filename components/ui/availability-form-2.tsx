@@ -11,10 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Plus, X, AlertCircle } from "lucide-react";
-import { Availability } from "@/types";
+import { Clock, Plus, X, AlertCircle, Info } from "lucide-react";
 
-// Define the props for the AvailabilityForm component
+// Types
+interface Availability {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
 interface AvailabilityFormProps {
   availabilityList: Availability[];
   setAvailabilityList: (availability: Availability[]) => void;
@@ -36,62 +41,145 @@ const timeToMinutes = (time: string): number => {
   return hours * 60 + minutes;
 };
 
-// Helper function to check if a time range is valid within open availabilities
-const isValidTimeRange = (
+// Generate full time options for override mode
+const generateFullTimeOptions = (selectedStartTime?: string) => {
+  const startTimeSet = new Set<string>();
+  const endTimeSet = new Set<string>();
+
+  // Generate 15-minute intervals for full day (6 AM to 10 PM)
+  for (let minutes = 6 * 60; minutes <= 22 * 60; minutes += 15) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const timeString = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+    startTimeSet.add(timeString);
+  }
+
+  // For end times, only show times after selected start time
+  if (selectedStartTime) {
+    const selectedStartMinutes = timeToMinutes(selectedStartTime);
+    for (
+      let minutes = selectedStartMinutes + 15;
+      minutes <= 22 * 60 + 15;
+      minutes += 15
+    ) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const timeString = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+      endTimeSet.add(timeString);
+    }
+  }
+
+  return {
+    startOptions: Array.from(startTimeSet).sort(),
+    endOptions: Array.from(endTimeSet).sort(),
+  };
+};
+const isTimeWithinOpenSlots = (
   day: string,
   startTime: string,
   endTime: string,
   openAvailabilities: Availability[]
-): boolean => {
-  if (!day || !startTime || !endTime) return false;
+): { isValid: boolean; reason?: string } => {
+  if (!day || !startTime || !endTime) {
+    return {
+      isValid: false,
+      reason: "Please select day, start time, and end time.",
+    };
+  }
 
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
 
-  if (startMinutes >= endMinutes) return false;
+  if (startMinutes >= endMinutes) {
+    return { isValid: false, reason: "End time must be after start time." };
+  }
 
   // Find all open slots for the selected day
   const daySlots = openAvailabilities.filter((slot) => slot.day === day);
 
-  // Check if the selected time range falls within any open slot
-  return daySlots.some((slot) => {
+  if (daySlots.length === 0) {
+    return { isValid: false, reason: "No availability for this day." };
+  }
+
+  // Check if the ENTIRE selected time range falls within ANY single open slot
+  const isWithinSlot = daySlots.some((slot) => {
     const slotStart = timeToMinutes(slot.startTime);
     const slotEnd = timeToMinutes(slot.endTime);
     return startMinutes >= slotStart && endMinutes <= slotEnd;
   });
+
+  if (!isWithinSlot) {
+    return {
+      isValid: false,
+      reason:
+        "Selected time must fall completely within an available time slot.",
+    };
+  }
+
+  return { isValid: true };
 };
 
-// Generate time options for a specific day based on open availabilities
-const generateTimeOptions = (
+// Generate time options ONLY within open availabilities with stricter bounds
+const generateStrictTimeOptions = (
   day: string,
   openAvailabilities: Availability[],
-  type: "start" | "end" = "start"
+  selectedStartTime?: string
 ) => {
-  if (!day) return [];
+  if (!day) return { startOptions: [], endOptions: [] };
 
   const daySlots = openAvailabilities.filter((slot) => slot.day === day);
-  const timeSet = new Set<string>();
+  const startTimeSet = new Set<string>();
+  const endTimeSet = new Set<string>();
 
   daySlots.forEach((slot) => {
     const startMinutes = timeToMinutes(slot.startTime);
     const endMinutes = timeToMinutes(slot.endTime);
 
     // Generate 15-minute intervals within each slot
-    for (let minutes = startMinutes; minutes <= endMinutes; minutes += 15) {
-      if (type === "end" && minutes === startMinutes) continue; // Skip start time for end options
-      if (type === "start" && minutes === endMinutes) continue; // Skip end time for start options
-
+    for (let minutes = startMinutes; minutes < endMinutes; minutes += 15) {
       const hours = Math.floor(minutes / 60);
       const mins = minutes % 60;
       const timeString = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
-      timeSet.add(timeString);
+
+      // Add to start time options (can't start at the very end of a slot)
+      if (minutes < endMinutes) {
+        startTimeSet.add(timeString);
+      }
     }
   });
 
-  return Array.from(timeSet).sort();
+  // For end times, only show times that would create valid ranges within the same slot
+  if (selectedStartTime) {
+    const selectedStartMinutes = timeToMinutes(selectedStartTime);
+
+    daySlots.forEach((slot) => {
+      const slotStart = timeToMinutes(slot.startTime);
+      const slotEnd = timeToMinutes(slot.endTime);
+
+      // Only consider this slot if the selected start time is within it
+      if (selectedStartMinutes >= slotStart && selectedStartMinutes < slotEnd) {
+        // Generate end times from 15 minutes after start time to the end of this slot
+        for (
+          let minutes = selectedStartMinutes + 15;
+          minutes <= slotEnd;
+          minutes += 15
+        ) {
+          const hours = Math.floor(minutes / 60);
+          const mins = minutes % 60;
+          const timeString = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+          endTimeSet.add(timeString);
+        }
+      }
+    });
+  }
+
+  return {
+    startOptions: Array.from(startTimeSet).sort(),
+    endOptions: Array.from(endTimeSet).sort(),
+  };
 };
 
-const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
+const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
   availabilityList,
   setAvailabilityList,
   openAvailabilities,
@@ -100,47 +188,44 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
   const [selectedStartTime, setSelectedStartTime] = useState("");
   const [selectedEndTime, setSelectedEndTime] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [overrideMode, setOverrideMode] = useState(false);
 
-  // Get available days from openAvailabilities
-  const availableDays = [
-    ...new Set(openAvailabilities.map((slot) => slot.day)),
+  // Get available days from openAvailabilities (or all days if in override mode)
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
   ];
+  const availableDays = overrideMode
+    ? daysOfWeek
+    : Array.from(new Set(openAvailabilities.map((slot) => slot.day)));
 
-  // Get time options based on selected day
-  const startTimeOptions = generateTimeOptions(
-    selectedDay,
-    openAvailabilities,
-    "start"
-  );
-  const endTimeOptions = generateTimeOptions(
-    selectedDay,
-    openAvailabilities,
-    "end"
-  ).filter((time) =>
-    selectedStartTime
-      ? timeToMinutes(time) > timeToMinutes(selectedStartTime)
-      : true
-  );
+  // Get time options based on selected day and start time (or full time range if in override mode)
+  const { startOptions, endOptions } = overrideMode
+    ? generateFullTimeOptions(selectedStartTime)
+    : generateStrictTimeOptions(
+        selectedDay,
+        openAvailabilities,
+        selectedStartTime
+      );
 
   const addAvailability = () => {
     setValidationError("");
 
-    if (!selectedDay || !selectedStartTime || !selectedEndTime) {
-      setValidationError("Please select day, start time, and end time.");
-      return;
-    }
+    // Strict validation against open availabilities
+    const validation = isTimeWithinOpenSlots(
+      selectedDay,
+      selectedStartTime,
+      selectedEndTime,
+      openAvailabilities
+    );
 
-    if (
-      !isValidTimeRange(
-        selectedDay,
-        selectedStartTime,
-        selectedEndTime,
-        openAvailabilities
-      )
-    ) {
-      setValidationError(
-        "Selected time range must fall within available time slots."
-      );
+    if (!validation.isValid) {
+      setValidationError(validation.reason || "Invalid time selection.");
       return;
     }
 
@@ -158,7 +243,7 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
 
     if (hasOverlap) {
       setValidationError(
-        "This time range overlaps with existing availability."
+        "This time range overlaps with your existing availability."
       );
       return;
     }
@@ -179,21 +264,29 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
   };
 
   const removeAvailability = (index: number) => {
-    const updatedList = availabilityList.filter((_, i) => i !== index);
-    setAvailabilityList(updatedList);
+    setAvailabilityList([]); // Clear the single slot
   };
 
-  // Quick add function to add from open availabilities
   const quickAddAvailability = (availability: Availability) => {
-    // Check for overlaps before adding
+    // Double-check validation even for quick add
+    const validation = isTimeWithinOpenSlots(
+      availability.day,
+      availability.startTime,
+      availability.endTime,
+      openAvailabilities
+    );
+
+    if (!validation.isValid) {
+      setValidationError(validation.reason || "Invalid time slot.");
+      return;
+    }
+
     const hasOverlap = availabilityList.some((existing) => {
       if (existing.day !== availability.day) return false;
-
       const existingStart = timeToMinutes(existing.startTime);
       const existingEnd = timeToMinutes(existing.endTime);
       const newStart = timeToMinutes(availability.startTime);
       const newEnd = timeToMinutes(availability.endTime);
-
       return newStart < existingEnd && newEnd > existingStart;
     });
 
@@ -202,20 +295,29 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
       setAvailabilityList(updatedList);
       setValidationError("");
     } else {
-      setValidationError("This time slot overlaps with existing availability.");
+      setValidationError(
+        "This time slot overlaps with your existing availability."
+      );
     }
   };
 
-  // Reset end time when start time changes
   const handleStartTimeChange = (startTime: string) => {
     setSelectedStartTime(startTime);
-    setSelectedEndTime(""); // Reset end time when start time changes
+    setSelectedEndTime("");
     setValidationError("");
   };
 
-  // Reset times when day changes
   const handleDayChange = (day: string) => {
     setSelectedDay(day);
+    setSelectedStartTime("");
+    setSelectedEndTime("");
+    setValidationError("");
+  };
+
+  const toggleOverrideMode = () => {
+    setOverrideMode(!overrideMode);
+    // Reset form when toggling modes
+    setSelectedDay("");
     setSelectedStartTime("");
     setSelectedEndTime("");
     setValidationError("");
@@ -233,16 +335,47 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
     {} as Record<string, Availability[]>
   );
 
+  // Show which open slots are still available (not conflicting with user's selections)
+  const getAvailableSlots = () => {
+    return openAvailabilities.filter((openSlot) => {
+      return !availabilityList.some((userSlot) => {
+        if (userSlot.day !== openSlot.day) return false;
+        const openStart = timeToMinutes(openSlot.startTime);
+        const openEnd = timeToMinutes(openSlot.endTime);
+        const userStart = timeToMinutes(userSlot.startTime);
+        const userEnd = timeToMinutes(userSlot.endTime);
+        return userStart < openEnd && userEnd > openStart;
+      });
+    });
+  };
+
+  const availableSlots = getAvailableSlots();
+  const groupedAvailableSlots = availableSlots.reduce(
+    (acc, slot) => {
+      if (!acc[slot.day]) acc[slot.day] = [];
+      acc[slot.day].push(slot);
+      return acc;
+    },
+    {} as Record<string, Availability[]>
+  );
+
   return (
     <div className="availability-form space-y-6">
       <div>
         <Label className="text-lg font-semibold">
           Manage Availability (EST)
         </Label>
+        <div className="flex items-center gap-2 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <Info className="h-4 w-4 text-blue-600" />
+          <span className="text-sm text-blue-800">
+            You can only select times within the available time slots shown
+            below.
+          </span>
+        </div>
       </div>
 
-      {/* Show Open Availabilities Section */}
-      {openAvailabilities.length > 0 && (
+      {/* Show Available Time Slots */}
+      {Object.keys(groupedAvailableSlots).length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -252,7 +385,7 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(groupedOpenAvailabilities).map(([day, slots]) => (
+              {Object.entries(groupedAvailableSlots).map(([day, slots]) => (
                 <div key={day} className="space-y-2">
                   <Label className="font-medium text-sm">{day}</Label>
                   <div className="flex flex-wrap gap-2">
@@ -277,93 +410,130 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
             </p>
           </CardContent>
         </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                {openAvailabilities.length === 0
+                  ? "No time slots are currently available."
+                  : "All available time slots have been selected or overlap with your existing availability."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Separator />
 
-      {/* Manual Entry Section */}
-      <div className="space-y-4">
-        <Label className="font-medium">Add Custom Availability</Label>
+      {/* Manual Entry Section - Only show if there are available options */}
+      {availableDays.length > 0 && (
+        <div className="space-y-4">
+          <Label className="font-medium">Add Custom Availability</Label>
 
-        {validationError && (
-          <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-            <AlertCircle className="h-4 w-4 text-destructive" />
-            <span className="text-sm text-destructive">{validationError}</span>
-          </div>
-        )}
+          {validationError && (
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-destructive">
+                {validationError}
+              </span>
+            </div>
+          )}
 
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="day" className="text-right">
-              Day:
-            </Label>
-            <Select
-              name="day"
-              value={selectedDay}
-              onValueChange={handleDayChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a day" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableDays.map((day) => (
-                  <SelectItem key={day} value={day}>
-                    {day}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="day" className="text-right">
+                Day:
+              </Label>
+              <Select
+                name="day"
+                value={selectedDay}
+                onValueChange={handleDayChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDays.map((day) => (
+                    <SelectItem key={day} value={day}>
+                      {day}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="start-time" className="text-right">
+                Start Time:
+              </Label>
+              <Select
+                value={selectedStartTime}
+                onValueChange={handleStartTimeChange}
+                disabled={!selectedDay || startOptions.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      !selectedDay
+                        ? "Select a day first"
+                        : startOptions.length === 0
+                          ? "No times available"
+                          : "Select start time"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {startOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {formatTime(time)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="end-time" className="text-right">
+                End Time:
+              </Label>
+              <Select
+                value={selectedEndTime}
+                onValueChange={setSelectedEndTime}
+                disabled={!selectedStartTime || endOptions.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      !selectedStartTime
+                        ? "Select start time first"
+                        : endOptions.length === 0
+                          ? "No end times available"
+                          : "Select end time"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {endOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {formatTime(time)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="start-time" className="text-right">
-              Start Time:
-            </Label>
-            <Select
-              value={selectedStartTime}
-              onValueChange={handleStartTimeChange}
-              disabled={!selectedDay}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select start time" />
-              </SelectTrigger>
-              <SelectContent>
-                {startTimeOptions.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {formatTime(time)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="end-time" className="text-right">
-              End Time:
-            </Label>
-            <Select
-              value={selectedEndTime}
-              onValueChange={setSelectedEndTime}
-              disabled={!selectedStartTime}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select end time" />
-              </SelectTrigger>
-              <SelectContent>
-                {endTimeOptions.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {formatTime(time)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Button
+            onClick={addAvailability}
+            className="mt-4"
+            disabled={!selectedDay || !selectedStartTime || !selectedEndTime}
+          >
+            Add Availability
+          </Button>
         </div>
-
-        <Button onClick={addAvailability} className="mt-4">
-          Add Availability
-        </Button>
-      </div>
+      )}
 
       <Separator />
 
@@ -407,4 +577,4 @@ const AvailabilityForm2: React.FC<AvailabilityFormProps> = ({
   );
 };
 
-export default AvailabilityForm2;
+export default EnhancedAvailabilityForm;
