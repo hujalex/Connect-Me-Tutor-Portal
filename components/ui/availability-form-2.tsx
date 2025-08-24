@@ -368,8 +368,14 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
         <div className="flex items-center gap-2 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <Info className="h-4 w-4 text-blue-600" />
           <span className="text-sm text-blue-800">
-            You can only select times within the available time slots shown
-            below.
+            You can only select times within the available time slots shown. You
+            can view your student's availabilities here{" "}
+            <a
+              href="/dashboard/my-students"
+              className="underline font-semibold"
+            >
+              (student availabilities)
+            </a>
           </span>
         </div>
       </div>
@@ -394,9 +400,9 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
                         key={index}
                         variant="outline"
                         className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors p-2"
-                        onClick={() => quickAddAvailability(slot)}
+                        // onClick={() => quickAddAvailability(slot)}
                       >
-                        <Plus className="h-3 w-3 mr-1" />
+                        {/* <Plus className="h-3 w-3 mr-1" /> */}
                         {formatTime(slot.startTime)} -{" "}
                         {formatTime(slot.endTime)}
                       </Badge>
@@ -405,9 +411,9 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
                 </div>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
+            {/* <p className="text-sm text-muted-foreground mt-4">
               Click on any time slot to add it to your availability
-            </p>
+            </p> */}
           </CardContent>
         </Card>
       ) : (
@@ -430,7 +436,7 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
       {/* Manual Entry Section - Only show if there are available options */}
       {availableDays.length > 0 && (
         <div className="space-y-4">
-          <Label className="font-medium">Add Custom Availability</Label>
+          <Label className="font-medium">Enter enrollment time</Label>
 
           {validationError && (
             <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -568,8 +574,8 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
           </div>
         ) : (
           <p className="text-muted-foreground text-sm bg-muted/50 p-4 rounded-lg border-dashed border-2">
-            No availability selected. Choose from the available slots above or
-            add custom times within the open availability windows.
+            No availability selected. Add times within the open availability
+            windows.
           </p>
         )}
       </div>
