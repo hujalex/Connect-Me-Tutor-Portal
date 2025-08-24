@@ -71,7 +71,10 @@ import {
   getMeetings,
   pauseEnrollmentOverSummer,
 } from "@/lib/actions/admin.actions";
-import { getEnrollments } from "@/lib/actions/enrollment.actions";
+import {
+  getEnrollments,
+  getOverlappingAvailabilites,
+} from "@/lib/actions/enrollment.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Enrollment, Profile, Event, Meeting, Availability } from "@/types";
 import toast from "react-hot-toast";
@@ -86,10 +89,12 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { getProfileWithProfileId } from "@/lib/actions/profile.server.actions";
 import { profile } from "console";
+import AvailabilityForm2 from "../ui/availability-form-2";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
   const supabase = createClientComponentClient();
+  const [userData, setUserData] = useState<Profile | null>(null);
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -134,6 +139,11 @@ const EnrollmentList = () => {
   const [meetingAvailability, setMeetingAvailability] = useState<{
     [key: string]: boolean;
   }>({});
+  const [overlappingAvailabilties, setOverlappingAvailabilites] = useState<
+    { day: string; startTime: string; endTime: string }[]
+  >([]);
+  const [showOverlappingAvailabilites, setShowOverlappingAvailabilties] =
+    useState(true);
 
   const router = useRouter();
 
@@ -357,6 +367,7 @@ const EnrollmentList = () => {
           new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
       );
 
+      setUserData(profileData);
       setEnrollments(sortedEnrollments);
       setFilteredEnrollments(sortedEnrollments);
     } catch (error) {
@@ -443,6 +454,19 @@ const EnrollmentList = () => {
         handleNestedChange({ ...prevState }, name, value)
       );
     }
+  };
+
+  const handleStudentSelect = (student: Profile) => {
+    setSelectedStudentId(student.id);
+    handleInputChange({
+      target: {
+        name: "student.id",
+        value: student.id,
+      },
+    });
+    setOpenStudentOptions(false);
+
+    handleGetOverlappingAvailabilites(student);
   };
 
   const handleAddEnrollment = async () => {
@@ -538,9 +562,38 @@ const EnrollmentList = () => {
     }
   };
 
+  const handleGetOverlappingAvailabilites = async (student: Profile) => {
+    try {
+      const tutor: Profile | null = userData;
+
+      if (tutor && student.availability) {
+        const data: {
+          day: string;
+          startTime: string;
+          endTime: string;
+        }[] = await getOverlappingAvailabilites(
+          tutor.availability,
+          student.availability
+        );
+        if (data) setOverlappingAvailabilites(data);
+
+        console.log(data);
+      }
+    } catch (error) {
+      console.error("Unable to fetch overlapping availabilites");
+    }
+  };
+
   return (
     <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">Enrollments</h1>
+      {/* <div className="flex space-x-6">
+        <div className="flex-grow bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between items-center mb-4">
+            Availabilites
+          </div>
+        </div>
+      </div> */}
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
@@ -608,14 +661,7 @@ const EnrollmentList = () => {
                                         student.email,
                                       ]}
                                       onSelect={() => {
-                                        setSelectedStudentId(student.id);
-                                        handleInputChange({
-                                          target: {
-                                            name: "student.id",
-                                            value: student.id,
-                                          },
-                                        });
-                                        setOpenStudentOptions(false);
+                                        handleStudentSelect(student);
                                       }}
                                     >
                                       <Check
@@ -719,14 +765,32 @@ const EnrollmentList = () => {
                           </PopoverContent>
                         </Popover>
                       </div>
-                      <AvailabilityForm
-                        // availabilityList={newEnrollment.availability}
-                        availabilityList={availabilityList} // new enrollment by default will not have an availability
-                        setAvailabilityList={(availability) => {
-                          setAvailabilityList(availability);
-                          setNewEnrollment({ ...newEnrollment, availability });
-                        }}
-                      />
+                      {showOverlappingAvailabilites ? (
+                        <AvailabilityForm2
+                          availabilityList={availabilityList} // new enrollment by default will not have an availability
+                          setAvailabilityList={(availability) => {
+                            setAvailabilityList(availability);
+                            setNewEnrollment({
+                              ...newEnrollment,
+                              availability,
+                            });
+                          }}
+                          openAvailabilities={overlappingAvailabilties}
+                        />
+                      ) : (
+                        <AvailabilityForm
+                          // availabilityList={newEnrollment.availability}
+                          availabilityList={availabilityList} // new enrollment by default will not have an availability
+                          setAvailabilityList={(availability) => {
+                            setAvailabilityList(availability);
+                            setNewEnrollment({
+                              ...newEnrollment,
+                              availability,
+                            });
+                          }}
+                        />
+                      )}
+
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="summary" className="text-right">
                           Summary
@@ -828,6 +892,7 @@ const EnrollmentList = () => {
               </Dialog>
             </div>
           </div>
+
           <Table>
             <TableHeader>
               <TableRow>
