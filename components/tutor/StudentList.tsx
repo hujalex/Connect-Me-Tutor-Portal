@@ -33,6 +33,8 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
+import { StudentAnnouncementsRoomId } from "@/constants/chat";
+import { StudentAvailabilities } from "./dashboard/components/StudentAvailabilities";
 
 const StudentList = () => {
   const supabase = createClientComponentClient();
@@ -144,10 +146,11 @@ const StudentList = () => {
                     {student.firstName} {student.lastName}
                   </TableCell>
                   <TableCell>
-                    <AvailabilityFormat availability={student.availability} />
+                    <StudentAvailabilities student={student} />
+                    {/* <AvailabilityFormat availability={student.availability} /> */}
                   </TableCell>
                   <TableCell className="flex flex-col">
-                    {student.subjectsOfInterest?.map((item, index) => (
+                    {student.subjects_of_interest?.map((item, index) => (
                       <span key={index}>{item}</span>
                     ))}
                   </TableCell>

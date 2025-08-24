@@ -8,13 +8,7 @@ import {
 } from "@/components/ui/select"; // Adjust import as necessary
 import { Button } from "@/components/ui/button"; // Import Button and other UI elements
 import { Label } from "@/components/ui/label";
-
-// Define the type for availability
-interface Availability {
-  day: string;
-  startTime: string;
-  endTime: string;
-}
+import { Availability } from "@/types";
 // Define the props for the AvailabilityForm component
 interface AvailabilityFormProps {
   availabilityList: Availability[];
