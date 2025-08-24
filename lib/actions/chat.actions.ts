@@ -1,7 +1,9 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
+import { AdminConversation } from "@/types/chat";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createAdminConversation } from "./chat.server.actions";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,4 +22,9 @@ export async function fetchAdmins() {
   } catch (error) {
     console.error("unable to fetch admin information");
   }
+}
+
+export async function fetchAdminConversations() {
+  const { data, error } = await supabase.rpc("get_admin_conversations");
+  return data as AdminConversation[];
 }
