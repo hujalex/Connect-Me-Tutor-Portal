@@ -14,16 +14,16 @@ interface Profile {
   startDate: string; // Format: YYYY-MM-DD, start date of the user's involvement
   availability: { day: string; startTime: string; endTime: string }[]; // Example: [{ day: "Monday", time: "3PM-6PM" }]
   email: string;
-  phoneNumber: string;
   parentName?: string; // Optional
   parentPhone?: string; // Optional
   parentEmail?: string; // Optional
   timeZone: string; // Example: 'America/New_York'
-  subjectsOfInterest: string[]; // Array of subjects
+  subjects_of_interest: string[]; // Array of subjects
   status: "Active" | "Inactive" | "Deleted";
   tutorIds: string[];
   studentNumber: string | null;
   settingsId: string;
+  languages_spoken: string[];
 }
 
 interface Session {
@@ -89,7 +89,6 @@ interface Enrollment {
   meetingId: string;
   summerPaused: boolean;
   duration: number;
-  frequency: string;
 }
 
 // Define the type for availability

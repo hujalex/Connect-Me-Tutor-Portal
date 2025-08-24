@@ -48,6 +48,7 @@ const AvailabilityForm: React.FC<AvailabilityFormProps> = ({
           endTime: selectedEndTime,
         },
       ];
+      console.log(updatedList);
       setAvailabilityList(updatedList);
       setSelectedDay("");
       setSelectedStartTime("");
