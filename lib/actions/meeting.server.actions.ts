@@ -1,8 +1,10 @@
-import { supabase } from "@/lib/supabase/serverClient";
 import { Meeting } from "@/types";
+import { getSupabase } from "../supabase/serverClient";
 
 export async function getMeeting(id: string): Promise<Meeting | null> {
   try {
+    const supabase = getSupabase();
+
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
       .from("Meetings")

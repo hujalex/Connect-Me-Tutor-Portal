@@ -369,7 +369,7 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
           <Info className="h-4 w-4 text-blue-600" />
           <span className="text-sm text-blue-800">
             You can only select times within the available time slots shown. You
-            can view your student's availabilities here{" "}
+            can view your {"student's"} availabilities here{" "}
             <a
               href="/dashboard/my-students"
               className="underline font-semibold"
