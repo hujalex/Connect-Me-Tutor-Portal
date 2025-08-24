@@ -127,7 +127,7 @@ export function AdminConversationManager() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="">
           {/* Create Conversation Form */}
           <div className="lg:col-span-2">
             <Card>
@@ -212,19 +212,19 @@ export function AdminConversationManager() {
                                       : "opacity-0"
                                   )}
                                 />
-                                {/* <div className="flex items-center gap-3">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                                    {profile.avatar}
-                                  </div>
+                                <div className="flex items-center gap-3">
+                                  {/* <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                                    {profile}
+                                  </div> */}
                                   <div>
                                     <div className="font-medium">
-                                      {profile.name}
+                                      {`${profile.firstName} ${profile.lastName}`}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {profile.role}
                                     </div>
                                   </div>
-                                </div> */}
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -234,22 +234,11 @@ export function AdminConversationManager() {
                   </Popover>
                 </div>
 
-                {/* Conversation Title */}
-                <div className="space-y-2">
-                  <Label htmlFor="title">Conversation Title</Label>
-                  <Input
-                    id="title"
-                    placeholder="Enter conversation title..."
-                    value={conversationTitle}
-                    onChange={(e) => setConversationTitle(e.target.value)}
-                  />
-                </div>
-
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4">
                   <Button
                     onClick={handleCreateConversation}
-                    disabled={!selectedProfileId || ""}
+                    disabled={!!selectedProfileId}
                     className="flex-1"
                   >
                     Create Conversation
@@ -305,7 +294,7 @@ export function AdminConversationManager() {
             )}
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="mt-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Recent Conversations</CardTitle>

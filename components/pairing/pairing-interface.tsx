@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Filter, Search, UserRound } from "lucide-react";
+import { Check, Clock, Filter, Search, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,7 +48,7 @@ export function PairingInterface() {
   useEffect(() => {
     if (!profile) return;
     getIncomingPairingMatches(profile.id).then((result) => {
-      setMatchedPairings(result);
+      if (result) setMatchedPairings(result);
 
       console.log("matches: ", result);
     });
@@ -164,31 +164,41 @@ export function PairingInterface() {
                           </div>
                         </div>
                       </CardContent>
-                      <CardFooter className="space-x-4">
-                        <Button
-                          className="w-full bg-green-500"
-                          // disabled={requestedPairings.includes(matchedProfile.matchedProfileId)}
-                          onClick={() =>
-                            handleAcceptPairingMatch(
-                              match.pairing_match_id,
-                              "accepted"
-                            )
-                          }
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          className="w-full bg-red-500"
-                          // disabled={requestedPairings.includes(matchedProfile.matchedProfileId)}
-                          onClick={() =>
-                            handleAcceptPairingMatch(
-                              match.pairing_match_id,
-                              "rejected"
-                            )
-                          }
-                        >
-                          Decline
-                        </Button>
+                      <CardFooter>
+                        {profile.role === "Tutor" && (
+                          <div className="space-x-4 flex">
+                            <Button
+                              className="w-full bg-green-500"
+                              // disabled={requestedPairings.includes(matchedProfile.matchedProfileId)}
+                              onClick={() =>
+                                handleAcceptPairingMatch(
+                                  match.pairing_match_id,
+                                  "accepted"
+                                )
+                              }
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              className="w-full bg-red-500"
+                              // disabled={requestedPairings.includes(matchedProfile.matchedProfileId)}
+                              onClick={() =>
+                                handleAcceptPairingMatch(
+                                  match.pairing_match_id,
+                                  "rejected"
+                                )
+                              }
+                            >
+                              Decline
+                            </Button>
+                          </div>
+                        )}
+                        {profile.role === "Student" && (
+                          <Button className="w-full gap-2 p-4">
+                            <Clock />
+                            Waiting
+                          </Button>
+                        )}
                       </CardFooter>
                     </Card>
                   );

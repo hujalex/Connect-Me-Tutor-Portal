@@ -70,7 +70,7 @@ export default function ProfileUpdateForm() {
     { day: string; startTime: string; endTime: string }[]
   >(initialData?.availability || []);
   const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>(
-    initialData?.subjectsOfInterest || []
+    initialData?.subjects_of_interest || []
   );
   const [languagesSpoken, setLanguagesSpoken] = useState<string[]>(
     initialData?.languages_spoken || []
@@ -86,7 +86,7 @@ export default function ProfileUpdateForm() {
   useEffect(() => {
     if (initialData) {
       setAvailability(initialData.availability || []);
-      setSubjectsOfInterest(initialData.subjectsOfInterest || []);
+      setSubjectsOfInterest(initialData.subjects_of_interest || []);
       setLanguagesSpoken(initialData.languages_spoken || []);
     }
   }, [initialData]);

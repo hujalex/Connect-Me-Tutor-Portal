@@ -146,5 +146,7 @@ export const getIncomingPairingMatches = async (profileId: string) => {
     }
   );
 
+  console.log("returned matches: ", data);
+
   return data;
 };

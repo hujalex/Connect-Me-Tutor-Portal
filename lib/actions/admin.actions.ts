@@ -1600,7 +1600,8 @@ const isValidUUID = (uuid: string): boolean => {
 };
 
 export const addEnrollment = async (
-  enrollment: Omit<Enrollment, "id" | "createdAt">
+  enrollment: Omit<Enrollment, "id" | "createdAt">,
+  sendEmail?: boolean
 ) => {
   console.log(enrollment);
   if (!enrollment.student) throw new Error("Please select a Student");
