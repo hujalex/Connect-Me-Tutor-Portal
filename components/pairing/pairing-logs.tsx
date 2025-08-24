@@ -203,7 +203,7 @@ export function PairingLogsTable() {
   // Filter logs based on current filter settings
   const filteredLogs = logs.filter((log) => {
     if (filterType !== "all" && log.type !== filterType) return false;
-    if (filterUserType !== "all" && log.profile.role !== filterUserType)
+    if (filterUserType !== "all" && log?.profile?.role !== filterUserType)
       return false;
     if (
       filterStatus !== "all" &&

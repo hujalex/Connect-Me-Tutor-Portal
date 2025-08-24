@@ -21,6 +21,7 @@ import {
 import { Profile } from "@/types";
 import { Combobox } from "@/components/ui/combobox";
 import { X, Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface AddTutorFormProps {
   newTutor: Partial<Profile>;
@@ -30,7 +31,10 @@ interface AddTutorFormProps {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => void;
-  handleAddTutor: (value: Partial<Profile>) => void;
+  handleAddTutor: (
+    value: Partial<Profile>,
+    addToPairingQueue?: boolean
+  ) => void;
   handleTimeZone: (value: string) => void;
   setNewTutor: React.Dispatch<React.SetStateAction<Partial<Profile>>>; // 👈 add this
 }
@@ -55,6 +59,8 @@ const AddTutorForm = ({
 }: AddTutorFormProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [addNewProfilesToQueue, setAddNewProfilesToQueue] =
+    useState<boolean>(false);
 
   // Extended profile fields (moved from the original component state)
   const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>([]);
@@ -119,7 +125,7 @@ const AddTutorForm = ({
   // };
 
   // Enhanced handleAddTutor to include extended fields
-  const handleEnhancedAddTutor = () => {
+  const handleEnhancedAddTutor = (addToPairingQueue?: boolean) => {
     // You'll need to modify this to include the extended fields
     // This assumes your Profile type and handleAddTutor can accept these fields
     const tutorWithExtendedFields = {
@@ -133,7 +139,7 @@ const AddTutorForm = ({
 
     // Call original handler - you may need to modify the parent component
     // to handle these additional fields
-    handleAddTutor(tutorWithExtendedFields);
+    handleAddTutor(tutorWithExtendedFields, addToPairingQueue);
   };
 
   return (
@@ -247,6 +253,13 @@ const AddTutorForm = ({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="p-4 flex justify-center gap-4 items-center rounded-lg w-full">
+                <Switch
+                  checked={addNewProfilesToQueue}
+                  onCheckedChange={setAddNewProfilesToQueue}
+                />
+                Add To Pairing Queue
               </div>
             </div>
           )}

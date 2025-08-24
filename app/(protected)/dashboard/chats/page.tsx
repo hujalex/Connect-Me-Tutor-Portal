@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 export default async function ChatPage() {
   const supabase = createClient();
   const user = await supabase.auth.getUser();
-  console.log("returned user");
   const userId = user.data.user?.id;
   if (!userId) redirect("/");
 

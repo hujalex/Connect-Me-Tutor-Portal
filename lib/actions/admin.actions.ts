@@ -29,7 +29,7 @@ import {
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import * as DateFNS from "date-fns-tz";
 import ResetPassword from "@/app/(public)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
@@ -38,8 +38,10 @@ import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
+import { createPairingRequest } from "./pairing.actions";
 // import { getMeeting } from "./meeting.actions";
 
+const { toZonedTime, fromZonedTime } = DateFNS;
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -238,7 +240,8 @@ export const addStudent = async (
 };
 
 export const addTutor = async (
-  tutorData: Partial<Profile>
+  tutorData: Partial<Profile>,
+  addToPairingQueue?: boolean
 ): Promise<Profile> => {
   const supabase = createClientComponentClient();
   try {
@@ -297,6 +300,10 @@ export const addTutor = async (
     // Ensure profileData is defined and cast it to the correct type
     if (!profileData) {
       throw new Error("Profile data not returned after insertion");
+    }
+
+    if (addToPairingQueue) {
+      await createPairingRequest(userId!, "");
     }
 
     // Type assertion to ensure profileData is of type Profile

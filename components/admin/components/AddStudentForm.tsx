@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scrollarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import { Profile } from "@/types";
+import { Switch } from "@/components/ui/switch";
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -57,7 +58,8 @@ const AddStudentForm = ({
 }: AddStudentFormProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
-
+  const [addNewProfilesToQueue, setAddNewProfilesToQueue] =
+    useState<boolean>(false);
   // Mock student state - replace with your actual state management
 
   const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>([]);
@@ -431,6 +433,13 @@ const AddStudentForm = ({
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div className="p-4 flex justify-center gap-4 items-center rounded-lg w-full">
+                  <Switch
+                    checked={addNewProfilesToQueue}
+                    onCheckedChange={setAddNewProfilesToQueue}
+                  />
+                  Add To Pairing Queue
                 </div>
               </div>
             </ScrollArea>
