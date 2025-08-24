@@ -6,6 +6,9 @@ import { getProfile, getProfileRole, supabase } from "./user.actions";
 import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
 import { PairingLogSchemaType } from "../pairing/types";
+import { Person } from "@/types/enrollment";
+import { Availability } from "@/types";
+import { ProfilePairingMetadata } from "@/types/profile";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -115,6 +118,14 @@ export const getPairingLogs = async (
   return logs;
 };
 
+export type IncomingPairingMatch = {
+  tutor: Person & ProfilePairingMetadata;
+  student: Person & ProfilePairingMetadata;
+  tutor_id: string;
+  pairing_match_id: string;
+  created_at: string;
+};
+
 export const getIncomingPairingMatches = async (profileId: string) => {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -127,6 +138,7 @@ export const getIncomingPairingMatches = async (profileId: string) => {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
+  console.log("PROFILE ID: ", profileId);
   const { data, error } = await supabase.rpc(
     "get_pairing_matches_with_profiles",
     {
@@ -134,5 +146,5 @@ export const getIncomingPairingMatches = async (profileId: string) => {
     }
   );
 
-  console.log(data, error);
+  return data;
 };
