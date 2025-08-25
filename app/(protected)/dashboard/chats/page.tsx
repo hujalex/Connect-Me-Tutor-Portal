@@ -20,8 +20,13 @@ import { Button } from "@/components/ui/button";
 
 export default async function ChatPage() {
   const supabase = createClient();
-  const user = await supabase.auth.getUser();
-  const userId = user.data.user?.id;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const userId = user?.id;
+  
+
   if (!userId) redirect("/");
 
   // const [enrollments, role] = await Promise.all([
