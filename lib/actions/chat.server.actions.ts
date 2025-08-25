@@ -6,7 +6,7 @@ import { AdminConversation } from "@/types/chat";
 import { getUserFromAction } from "./user.server.actions";
 import { getUserFromId } from "./admin.actions";
 
-export const createAdminConversation = async (profile_id: string) => {
+export const createAdminConversation = async (user_id: string) => {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -16,12 +16,22 @@ export const createAdminConversation = async (profile_id: string) => {
   }
   const supabase = createClient();
 
+  console.log(user_id);
+
   const createdConversationID = await fetchUserAdminConversations(
-    profile_id,
+    user_id,
     false
   );
 
-  const user = await getUserFromId(profile_id);
+  const { data: profileData, error } = await supabase
+    .from("Profiles")
+    .select("id")
+    .eq("user_id", user_id)
+    .single();
+  if (error) throw error;
+  const profileId = profileData.id;
+
+  const user = await getUserFromId(profileId);
   if (!user) throw new Error("failed to locate profile");
 
   console.log("created ID: ", createdConversationID);
@@ -41,7 +51,7 @@ export const createAdminConversation = async (profile_id: string) => {
     .insert([
       {
         conversation_id: conversationID,
-        profile_id,
+        user_id,
       },
     ]);
 
@@ -51,7 +61,7 @@ export const createAdminConversation = async (profile_id: string) => {
 };
 
 export async function fetchUserAdminConversations(
-  profile_id: string,
+  user_id: string,
   createIfNull: boolean = true
 ) {
   if (
@@ -62,6 +72,17 @@ export async function fetchUserAdminConversations(
     throw new Error("Missing Supabase environment variables");
   }
   const supabase = createClient();
+
+  const { data: profile_id_json, error } = await supabase
+    .from("Profiles")
+    .select("id")
+    .eq("user_id", user_id)
+    .single();
+
+  if (error) throw error;
+
+  const profileId = profile_id_json.id;
+
   const requestorProfile = await getUserFromAction();
   if (!requestorProfile) return null;
   const { data } = await supabase
@@ -72,6 +93,6 @@ export async function fetchUserAdminConversations(
   const result = data as AdminConversation;
 
   if (result) return result.conversation_id;
-  if (createIfNull) await createAdminConversation(profile_id);
+  if (createIfNull) await createAdminConversation(user_id);
   return null;
 }

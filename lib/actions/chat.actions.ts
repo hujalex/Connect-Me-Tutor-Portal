@@ -3,7 +3,6 @@
 // lib/student.actions.ts
 import { AdminConversation } from "@/types/chat";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { createAdminConversation } from "./chat.server.actions";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
