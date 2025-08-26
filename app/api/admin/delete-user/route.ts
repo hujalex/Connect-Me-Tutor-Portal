@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { Table } from "@/lib/supabase/tables";
 
 export async function POST(req: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies });
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { data: profileData, error: profileError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("user_id")
       .eq("id", profileId)
       .single();
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // Delete from profiles table
     const { error: deleteError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .delete()
       .eq("id", profileId);
 

@@ -219,3 +219,10 @@ export const formatSessionDuration = (duration: number) => {
     minutes > 0 ? `${minutes} min${minutes > 1 ? "s" : ""}` : ""
   }`.trim();
 };
+
+export function to12Hour(time24: string) {
+  let [hour, minute] = time24.split(":").map(Number);
+  const ampm = hour >= 12 ? "pm" : "am";
+  hour = hour % 12 || 12; // convert 0 to 12 for 12am
+  return `${hour}${minute === 0 ? "" : `:${minute.toString().padStart(2, "0")}`}${ampm}`;
+}

@@ -1,7 +1,18 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
+<<<<<<< HEAD
 import { AlarmClockMinus, Search, Timer, TimerOff } from "lucide-react";
 import { cn, formatDateAdmin, formatSessionDuration } from "@/lib/utils";
+=======
+import {
+  AlarmClockMinus,
+  MessageCircleIcon,
+  Search,
+  Timer,
+  TimerOff,
+} from "lucide-react";
+import { cn, formatDateAdmin } from "@/lib/utils";
+>>>>>>> connectme-portal/pairings
 import {
   ChevronDown,
   ChevronsLeft,
@@ -72,8 +83,14 @@ import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
+<<<<<<< HEAD
 import { previousDay, set } from "date-fns";
 import { z } from "zod";
+=======
+import { set } from "date-fns";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+>>>>>>> connectme-portal/pairings
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const durationSchema = z.object({
@@ -132,6 +149,7 @@ const EnrollmentList = () => {
     [key: string]: boolean;
   }>({});
 
+<<<<<<< HEAD
   const [hoursError, setHoursError] = useState<string | null>(null);
   const [editHoursError, setEditHoursError] = useState<string | null>(null);
   const [minutesError, setMinutesError] = useState<string | null>(null);
@@ -139,6 +157,9 @@ const EnrollmentList = () => {
 
   const [hours, setHours] = useState(1);
   const [minutes, setMinutes] = useState(0);
+=======
+  const router = useRouter();
+>>>>>>> connectme-portal/pairings
 
   useEffect(() => {
     fetchEnrollments();
@@ -961,6 +982,7 @@ const EnrollmentList = () => {
                   "Frequency",
                   "Actions",
                   "Summer",
+                  "Chat",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
@@ -1045,6 +1067,19 @@ const EnrollmentList = () => {
                           Ongoing
                         </span>
                       )}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      className="gap-2 text-white"
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/enrollment/${enrollment.id}/chat`
+                        )
+                      }
+                    >
+                      View Chat
+                      <MessageCircleIcon />
                     </Button>
                   </TableCell>
                 </TableRow>

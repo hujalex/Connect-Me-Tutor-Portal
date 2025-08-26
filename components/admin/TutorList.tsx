@@ -104,7 +104,7 @@ const TutorList = () => {
     parentPhone: "",
     parentEmail: "",
     timeZone: "",
-    subjectsOfInterest: [],
+    subjects_of_interest: [],
     status: "Active",
     tutorIds: [],
   });
@@ -246,6 +246,63 @@ const TutorList = () => {
     setNewTutor((prev) => ({ ...prev, subjectsOfInterest: subjects }));
   };
 
+  const handleAddTutorWithParam = async (tutor: Partial<Profile>) => {
+    try {
+      setAddingTutor(true);
+      // Ensure addStudent returns a Profile
+      const addedTutor: Profile = await addTutor(tutor);
+
+      // Update local state
+      setTutors((prevTutors) => {
+        // Check if addedStudent is valid
+        if (addedTutor) {
+          return [...prevTutors, addedTutor]; // Ensure returning an array of Profile
+        }
+        return prevTutors; // Return previous state if addedStudent is not valid
+      });
+
+      setFilteredTutors((prevFiltered) => {
+        // Check if addedStudent is valid
+        if (addedTutor) {
+          return [...prevFiltered, addedTutor]; // Ensure returning an array of Profile
+        }
+        return prevFiltered; // Return previous state if addedStudent is not valid
+      });
+
+      if (addedTutor) {
+        // Close modal and show success toast
+        setIsModalOpen(false);
+        setTutors((prevTutors) => [...prevTutors, addedTutor]);
+
+        toast.success("Successfully added tutor.");
+
+        // Reset form
+        setNewTutor({
+          role: "Tutor",
+          firstName: "",
+          lastName: "",
+          // dateOfBirth: "",
+          startDate: "",
+          availability: [],
+          email: "",
+          parentName: "",
+          parentPhone: "",
+          parentEmail: "",
+          timeZone: "",
+          subjects_of_interest: [],
+          status: "Active",
+          tutorIds: [],
+        });
+      }
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error adding tutor:", error);
+      toast.error(`Failed to add tutor ${err.message}`);
+    } finally {
+      setAddingTutor(false);
+    }
+  };
+
   const handleAddTutor = async () => {
     try {
       setAddingTutor(true);
@@ -290,7 +347,7 @@ const TutorList = () => {
           parentPhone: "",
           parentEmail: "",
           timeZone: "",
-          subjectsOfInterest: [],
+          subjects_of_interest: [],
           status: "Active",
           tutorIds: [],
         });
@@ -348,8 +405,9 @@ const TutorList = () => {
     if (profileId) {
       try {
         const data = await getUserFromId(profileId);
-        setSelectedTutor(data as Profile);
+        setSelectedTutor(data as unknown as Profile);
         // setIsReactivateModalOpen(false);
+        return data;
       } catch (error) {
         console.error("Failed to identify tutor");
       }
@@ -404,9 +462,10 @@ const TutorList = () => {
               {/*Add Student*/}
               <AddTutorForm
                 newTutor={newTutor}
+                setNewTutor={setNewTutor}
                 addingTutor={addingTutor}
                 handleInputChange={handleInputChange}
-                handleAddTutor={handleAddTutor}
+                handleAddTutor={handleAddTutorWithParam}
                 handleTimeZone={handleTimeZone}
               />
               {/*Delete Student*/}
@@ -461,7 +520,7 @@ const TutorList = () => {
                     <AvailabilityFormat availability={tutor.availability} />
                   </TableCell>
                   <TableCell className="flex flex-col">
-                    {tutor.subjectsOfInterest?.map((item, index) => (
+                    {tutor.subjects_of_interest?.map((item, index) => (
                       <span key={index}>{item}</span>
                     ))}
                   </TableCell>

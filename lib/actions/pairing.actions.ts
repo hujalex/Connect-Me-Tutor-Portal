@@ -1,0 +1,152 @@
+"use client";
+
+import { PairingLog, PairingRequest, SharedPairing } from "@/types/pairing";
+import { createClient } from "@supabase/supabase-js";
+import { getProfile, getProfileRole, supabase } from "./user.actions";
+import { getAccountEnrollments } from "./enrollments.action";
+import { Table } from "../supabase/tables";
+import { PairingLogSchemaType } from "../pairing/types";
+import { Person } from "@/types/enrollment";
+import { Availability } from "@/types";
+import { ProfilePairingMetadata } from "@/types/profile";
+
+export const getAllPairingRequests = async (
+  profileType: "student" | "tutor"
+) => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const { data, error } = await supabase.rpc("get_all_pairing_requests", {
+    p_type: profileType,
+  });
+
+  return { data: data as PairingRequest[], error };
+};
+
+export const createPairingRequest = async (userId: string, notes: string) => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const [profile, enrollments] = await Promise.all([
+    getProfile(userId),
+    getAccountEnrollments(userId),
+  ]);
+
+  if (!enrollments) throw new Error("cannot locate account enrollments");
+  if (!profile) throw new Error("failed to validate profile role");
+
+  const priority = enrollments.length < 1 ? 1 : 2;
+
+  //Check for current enrollments here to determine assigned priority ranking
+  console.log("f -> ", {
+    user_id: profile.id,
+    type: profile.role.toLowerCase(),
+    priority,
+    notes,
+  });
+
+  const result = await supabase.from(Table.PairingRequests).insert([
+    {
+      user_id: profile.id,
+      type: profile.role.toLowerCase(),
+      priority,
+      notes,
+    },
+  ]);
+
+  if (!result.error) {
+    supabase.from("pairing_logs").insert([
+      {
+        type: "pairing-que-entered",
+        message: `${profile.firstName} ${profile.lastName} has entered the queue.`,
+        error: false,
+        metadata: {
+          profile_id: profile.id,
+        },
+      } as PairingLogSchemaType,
+    ]);
+  }
+
+  console.log("creation result: ", result);
+};
+
+export const acceptStudentMatch = () => {};
+
+export const getPairingLogs = async (
+  start_time: string,
+  end_time: string
+): Promise<PairingLog[]> => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const { data: logs, error } = await supabase.rpc("get_pairing_logs", {
+    start_time,
+    end_time,
+  });
+
+  console.log("logs ", error);
+
+  console.log("selected pairing logs: ", logs, "from ", start_time, end_time);
+
+  return logs;
+};
+
+export type IncomingPairingMatch = {
+  tutor: Person & ProfilePairingMetadata;
+  student: Person & ProfilePairingMetadata;
+  tutor_id: string;
+  pairing_match_id: string;
+  created_at: string;
+};
+
+export const getIncomingPairingMatches = async (profileId: string) => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+  console.log("PROFILE ID: ", profileId);
+  const { data, error } = await supabase.rpc(
+    "get_pairing_matches_with_profiles",
+    {
+      requestor: profileId,
+    }
+  );
+
+  console.log("returned matches: ", data);
+
+  return data;
+};
