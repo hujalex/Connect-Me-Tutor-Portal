@@ -20,11 +20,7 @@ export default async function Layout({
   const supabase = createClientComponentClient();
   const {
     data: { user },
-<<<<<<< HEAD
-  } = await supabase.auth.getUser();
 
-  const userId = user ? user.id : "";
-=======
     error,
   } = await supabase.auth.getUser();
 
@@ -32,7 +28,6 @@ export default async function Layout({
 
   const userId = user ? user.id : "";
   console.log("USER ID", user, "Layout");
->>>>>>> connectme-portal/pairings
   const data = await getProfile(userId);
 
   return <div className="flex-col h-full w-full m-auto">{children}</div>;
