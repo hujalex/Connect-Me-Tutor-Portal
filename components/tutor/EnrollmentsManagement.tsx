@@ -7,7 +7,7 @@ import {
   Timer,
   TimerOff,
 } from "lucide-react";
-import { cn, formatDateAdmin } from "@/lib/utils";
+import { cn, formatDateAdmin, timeStrToHours } from "@/lib/utils";
 import {
   ChevronDown,
   ChevronsLeft,
@@ -87,7 +87,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
-import { getProfileWithProfileId } from "@/lib/actions/profile.server.actions";
 import { profile } from "console";
 import AvailabilityForm2 from "../ui/availability-form-2";
 // import Availability from "@/components/student/AvailabilityFormat";
@@ -134,6 +133,7 @@ const EnrollmentList = () => {
     meetingId: "",
     summerPaused: false,
     duration: 1,
+    frequency: "weekly",
   });
   const [availabilityList, setAvailabilityList] = useState<Availability[]>([]);
   const [meetingAvailability, setMeetingAvailability] = useState<{
@@ -471,6 +471,11 @@ const EnrollmentList = () => {
 
   const handleAddEnrollment = async () => {
     try {
+      await handleValidateDuration(
+        newEnrollment.duration,
+        newEnrollment.availability[0].startTime,
+        newEnrollment.availability[0].endTime
+      );
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
@@ -540,6 +545,7 @@ const EnrollmentList = () => {
       meetingId: "",
       summerPaused: false,
       duration: 1,
+      frequency: "weekly",
     });
   };
 
@@ -581,6 +587,28 @@ const EnrollmentList = () => {
       }
     } catch (error) {
       console.error("Unable to fetch overlapping availabilites");
+    }
+  };
+
+  const handleValidateDuration = async (
+    duration: number,
+    startTime: string,
+    endTime: string
+  ) => {
+    try {
+      const startTimeNumber: number = timeStrToHours(startTime);
+      const endTimeNumber: number = timeStrToHours(endTime);
+      const difference = endTimeNumber - startTimeNumber;
+      console.log(difference);
+      console.log(duration);
+
+      if (difference !== duration) {
+        toast.error("Duration does not match time range");
+        throw new Error("Duration does not match time range");
+      }
+    } catch (error) {
+      console.log("Unable to validate time");
+      throw error;
     }
   };
 
@@ -1000,6 +1028,7 @@ const EnrollmentList = () => {
                           `/dashboard/enrollment/${enrollment.id}/chat`
                         )
                       }
+                      variant="outline"
                     >
                       View Chat
                       <MessageCircleIcon />

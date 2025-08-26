@@ -967,7 +967,6 @@ export async function addSessions(
         meetingId,
         summary,
         startDate,
-        endDate,
         duration,
         frequency,
       } = enrollment;
@@ -977,7 +976,6 @@ export async function addSessions(
       }
 
       const startDate_asDate = new Date(startDate); //UTC
-      const endDate_asDate = new Date(endDate); //UTC
 
       //Check if paused over the summer
       if (enrollment.summerPaused) {
@@ -1053,10 +1051,6 @@ export async function addSessions(
 
           if (sessionStartTime < startDate_asDate) {
             throw new Error("Session occurs before start date");
-          }
-
-          if (sessionStartTime > endDate_asDate) {
-            throw new Error("Session occurs after start date");
           }
 
           // Check for duplicate session

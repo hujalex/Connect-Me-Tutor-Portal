@@ -1,6 +1,12 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { AlarmClockMinus, Search, Timer, TimerOff } from "lucide-react";
+import {
+  AlarmClockMinus,
+  MessageCircleIcon,
+  Search,
+  Timer,
+  TimerOff,
+} from "lucide-react";
 import { cn, formatDateAdmin, formatSessionDuration } from "@/lib/utils";
 import {
   ChevronDown,
@@ -122,7 +128,7 @@ const EnrollmentList = () => {
     tutor: {} as Profile, // Initialize as an empty Profile
     summary: "",
     startDate: "",
-    endDate: "",
+    endDate: new Date().toISOString(),
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
     summerPaused: false,
@@ -874,7 +880,7 @@ const EnrollmentList = () => {
                           onChange={handleInputChange}
                           // className="col-span-3"
                         />
-                        <Label htmlFor="endDate" className="text-right">
+                        {/* <Label htmlFor="endDate" className="text-right">
                           End Date
                         </Label>
                         <Input
@@ -884,7 +890,7 @@ const EnrollmentList = () => {
                           value={newEnrollment.endDate}
                           onChange={handleInputChange}
                           // className="col-span-3"
-                        />
+                        /> */}
                       </div>
                       <div>
                         <Label>Meeting Link</Label>
@@ -1059,6 +1065,7 @@ const EnrollmentList = () => {
                           `/dashboard/enrollment/${enrollment.id}/chat`
                         )
                       }
+                      variant="outline"
                     >
                       View Chat
                       <MessageCircleIcon />
@@ -1390,7 +1397,7 @@ const EnrollmentList = () => {
                     className="col-span-3"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
+                {/* <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="endDate" className="text-right">
                     End Date
                   </Label>
@@ -1402,7 +1409,7 @@ const EnrollmentList = () => {
                     onChange={handleInputChange}
                     className="col-span-3"
                   />
-                </div>
+                </div> */}
 
                 <div>
                   <Label>Meeting Link</Label>
