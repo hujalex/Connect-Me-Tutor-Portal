@@ -78,7 +78,7 @@ import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
-import { previousDay, set } from "date-fns";
+import { areIntervalsOverlapping, previousDay, set } from "date-fns";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -264,13 +264,25 @@ const EnrollmentList = () => {
         const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
           enrollment.availability[0]
         );
-        const isOverlap =
-          (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
-            newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
-          (newEnrollmentStartTime < existingEndTime &&
-            newEnrollmentStartTime > existingStartTime) ||
-          (newEnrollmentEndTime < existingEndTime &&
-            newEnrollmentEndTime > existingStartTime);
+
+        const isOverlap = areIntervalsOverlapping(
+          {
+            start: newEnrollmentStartTime.getTime(),
+            end: newEnrollmentEndTime.getTime(),
+          },
+          {
+            start: existingStartTime.getTime(),
+            end: existingEndTime.getTime(),
+          }
+        );
+
+        // const isOverlap =
+        //   (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
+        //     newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
+        //   (newEnrollmentStartTime < existingEndTime &&
+        //     newEnrollmentStartTime > existingStartTime) ||
+        //   (newEnrollmentEndTime < existingEndTime &&
+        //     newEnrollmentEndTime > existingStartTime);
         //-----Only change to false if true before-----
         if (updatedMeetingAvailability[enrollment.meetingId]) {
           // if (isOverlap) {
@@ -1323,7 +1335,7 @@ const EnrollmentList = () => {
                   }
                 />
                 <div className="grid grid-cols-[80px_1fr] items-center gap-4">
-                  <Label htmlFor="duration" className="text-right">
+                  {/* <Label htmlFor="duration" className="text-right">
                     Duration
                   </Label>
                   <div className="flex items-center gap-2">
@@ -1350,7 +1362,7 @@ const EnrollmentList = () => {
                     />
                     <span className="text-sm">min</span>
                     {/* <Label>{newEnrollment.duration}</Label> */}
-                  </div>
+                  {/* </div>  */}
 
                   <Label htmlFor="frequency" className="text-right">
                     Frequency

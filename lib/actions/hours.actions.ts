@@ -35,6 +35,7 @@ import toast from "react-hot-toast";
 import { DatabaseIcon, UserRoundIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { getAllSessions } from "./admin.actions";
+import { timeStrToHours } from "../utils";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -419,6 +420,25 @@ export const getAllEventDetailsForTutor = async (tutorId: string) => {
   } catch (error) {
     console.error("Error fetching event details", error);
     throw error;
+  }
+};
+
+export const handleCalculateDuration = async (
+  startTime: string,
+  endTime: string
+) => {
+  try {
+    const startTimeNumber: number = timeStrToHours(startTime);
+    const endTimeNumber: number = timeStrToHours(endTime);
+    let difference = endTimeNumber - startTimeNumber;
+    if (difference < 0) {
+      difference += 24;
+    }
+
+    return difference;
+  } catch (error) {
+    toast.error("Unable to calculate duration");
+    console.error("Unable to calculate duration", error);
   }
 };
 /**

@@ -43,6 +43,7 @@ import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
 import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
 import { createUser } from "./auth.actions";
+import { handleCalculateDuration } from "./hours.actions";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -1606,57 +1607,69 @@ export const addEnrollment = async (
   enrollment: Omit<Enrollment, "id" | "createdAt">,
   sendEmail?: boolean
 ) => {
-  if (enrollment.duration <= 0)
-    throw new Error("Duration should be a positive amount");
+  try {
+    console.log("Duration", enrollment.availability[0]);
 
-  if (enrollment.duration >= 3) {
-    throw new Error(
-      "Please consult an Exec Team member about sessions longer than 3 hours"
+    const duration = await handleCalculateDuration(
+      enrollment.availability[0].startTime,
+      enrollment.availability[0].endTime
     );
-  }
+    console.log("Duration", duration);
 
-  if (!enrollment.student) throw new Error("Please select a Student");
+    if (enrollment.duration <= 0)
+      throw new Error("Duration should be a positive amount");
 
-  if (enrollment.meetingId && !isValidUUID(enrollment.meetingId)) {
-    throw new Error("Invalid or no meeting link");
-  }
+    if (enrollment.duration >= 3) {
+      throw new Error(
+        "Please consult an Exec Team member about sessions longer than 3 hours"
+      );
+    }
 
-  const { data, error } = await supabase
-    .from(Table.Enrollments)
-    .insert({
-      student_id: enrollment.student?.id,
-      tutor_id: enrollment.tutor?.id,
-      summary: enrollment.summary,
-      start_date: enrollment.startDate,
-      end_date: enrollment.endDate,
-      availability: enrollment.availability,
-      meetingId: enrollment.meetingId,
-      duration: enrollment.duration, //default
-      frequency: enrollment.frequency,
-    })
-    .select(`*`)
-    .single();
+    if (!enrollment.student) throw new Error("Please select a Student");
 
-  if (error) {
-    console.error("Error adding enrollment:", error);
+    if (enrollment.meetingId && !isValidUUID(enrollment.meetingId)) {
+      throw new Error("Invalid or no meeting link");
+    }
+
+    const { data, error } = await supabase
+      .from(Table.Enrollments)
+      .insert({
+        student_id: enrollment.student?.id,
+        tutor_id: enrollment.tutor?.id,
+        summary: enrollment.summary,
+        start_date: enrollment.startDate,
+        end_date: enrollment.endDate,
+        availability: enrollment.availability,
+        meetingId: enrollment.meetingId,
+        duration: duration, //default
+        frequency: enrollment.frequency,
+      })
+      .select(`*`)
+      .single();
+
+    if (error) {
+      console.error("Error adding enrollment:", error);
+      throw error;
+    }
+
+    console.log(data);
+
+    return {
+      createdAt: data.created_at,
+      id: data.id,
+      summary: data.summary,
+      student: await getProfileWithProfileId(data.student_id),
+      tutor: await getProfileWithProfileId(data.tutor_id),
+      startDate: data.start_date,
+      endDate: data.end_date,
+      availability: data.availability,
+      meetingId: data.meetingId,
+      duration: data.duration,
+      frequency: data.frequency,
+    };
+  } catch (error) {
     throw error;
   }
-
-  console.log(data);
-
-  return {
-    createdAt: data.created_at,
-    id: data.id,
-    summary: data.summary,
-    student: await getProfileWithProfileId(data.student_id),
-    tutor: await getProfileWithProfileId(data.tutor_id),
-    startDate: data.start_date,
-    endDate: data.end_date,
-    availability: data.availability,
-    meetingId: data.meetingId,
-    duration: data.duration,
-    frequency: data.frequency,
-  };
 };
 
 export const removeEnrollment = async (enrollmentId: string) => {

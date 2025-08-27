@@ -471,11 +471,6 @@ const EnrollmentList = () => {
 
   const handleAddEnrollment = async () => {
     try {
-      await handleValidateDuration(
-        newEnrollment.duration,
-        newEnrollment.availability[0].startTime,
-        newEnrollment.availability[0].endTime
-      );
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
@@ -590,27 +585,34 @@ const EnrollmentList = () => {
     }
   };
 
-  const handleValidateDuration = async (
-    duration: number,
-    startTime: string,
-    endTime: string
-  ) => {
-    try {
-      const startTimeNumber: number = timeStrToHours(startTime);
-      const endTimeNumber: number = timeStrToHours(endTime);
-      const difference = endTimeNumber - startTimeNumber;
-      console.log(difference);
-      console.log(duration);
+  // const handleValidateDuration = async (
+  //   duration: number,
+  //   startTime: string,
+  //   endTime: string
+  // ) => {
+  //   try {
+  //     const startTimeNumber: number = timeStrToHours(startTime);
+  //     const endTimeNumber: number = timeStrToHours(endTime);
+  //     let difference = endTimeNumber - startTimeNumber;
 
-      if (difference !== duration) {
-        toast.error("Duration does not match time range");
-        throw new Error("Duration does not match time range");
-      }
-    } catch (error) {
-      console.log("Unable to validate time");
-      throw error;
-    }
-  };
+  //     if (difference < 0) {
+  //       difference += 24;
+  //     }
+
+  //     console.log(difference);
+  //     console.log(duration);
+
+  //     const tolerance = 0.01;
+
+  //     if (Math.abs(difference - duration) > tolerance) {
+  //       toast.error("Duration does not match time range");
+  //       throw new Error("Duration does not match time range");
+  //     }
+  //   } catch (error) {
+  //     console.log("Unable to validate time");
+  //     throw error;
+  //   }
+  // };
 
   return (
     <main className="p-8">
