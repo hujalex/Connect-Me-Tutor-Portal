@@ -935,7 +935,7 @@ const EnrollmentList = () => {
                   "End Date",
                   "Meeting Link",
                   "Actions",
-                  "Summer",
+                  "Status",
                   "Chat",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
@@ -1024,7 +1024,7 @@ const EnrollmentList = () => {
                   </TableCell>
                   <TableCell>
                     <Button
-                      className="gap-2 text-white"
+                      className="gap-2"
                       onClick={() =>
                         router.push(
                           `/dashboard/enrollment/${enrollment.id}/chat`

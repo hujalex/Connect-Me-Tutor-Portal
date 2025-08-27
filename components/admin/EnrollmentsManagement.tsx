@@ -246,7 +246,7 @@ const EnrollmentList = () => {
     }
   };
 
-  const areMeetingsAvailable = (
+  const setAvailableMeetingsForEnrollments = (
     enroll: Omit<Enrollment, "id" | "createdAt">
   ) => {
     setIsCheckingMeetingAvailability(true);
@@ -534,8 +534,14 @@ const EnrollmentList = () => {
     }
   };
 
-  const handleInputSelectionChange = (value: string) => {
-    setNewEnrollment((prev) => ({ ...prev, frequency: value }));
+  const handleInputSelectionChange = (value: string, type: "add" | "edit") => {
+    {
+      type === "add"
+        ? setNewEnrollment((prev) => ({ ...prev, frequency: value }))
+        : setSelectedEnrollment((prev) => 
+            prev ? { ...prev, frequency: value } : null
+          );
+    }
   };
 
   const handleAddEnrollment = async () => {
@@ -911,7 +917,7 @@ const EnrollmentList = () => {
                           value={newEnrollment.meetingId}
                           onOpenChange={(open) => {
                             if (open && newEnrollment) {
-                              areMeetingsAvailable(newEnrollment);
+                              setAvailableMeetingsForEnrollments(newEnrollment);
                             }
                           }}
                           onValueChange={(value) =>
@@ -976,12 +982,11 @@ const EnrollmentList = () => {
                   "Availability",
                   "Summary",
                   "Start Date",
-                  "End Date",
                   "Meeting Link",
                   "Duration",
                   "Frequency",
                   "Actions",
-                  "Summer",
+                  "Status",
                   "Chat",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
@@ -1007,9 +1012,9 @@ const EnrollmentList = () => {
                   <TableCell>
                     {formatDateAdmin(enrollment.startDate, false, true)}
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {formatDateAdmin(enrollment.endDate, false, true)}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     {enrollment.meetingId
                       ? meetings.find(
@@ -1071,7 +1076,7 @@ const EnrollmentList = () => {
                   </TableCell>
                   <TableCell>
                     <Button
-                      className="gap-2 text-white"
+                      className="gap-2"
                       onClick={() =>
                         router.push(
                           `/dashboard/enrollment/${enrollment.id}/chat`
@@ -1430,7 +1435,7 @@ const EnrollmentList = () => {
                     value={selectedEnrollment.meetingId}
                     onOpenChange={(open) => {
                       if (open && selectedEnrollment) {
-                        areMeetingsAvailable(selectedEnrollment);
+                        setAvailableMeetingsForEnrollments(selectedEnrollment);
                       }
                     }}
                     onValueChange={(value) =>

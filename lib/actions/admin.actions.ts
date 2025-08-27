@@ -1550,6 +1550,11 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
   try {
     const now = new Date().toISOString();
 
+    const duration = await handleCalculateDuration(
+      enrollment.availability[0].startTime,
+      enrollment.availability[0].endTime
+    );
+
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase
         .from(Table.Enrollments)
@@ -1561,6 +1566,8 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
           end_date: enrollment.endDate,
           availability: enrollment.availability,
           meetingId: enrollment.meetingId,
+          duration: duration,
+          frequency: enrollment.frequency,
         })
         .eq("id", enrollment.id)
         .select("*") // Ensure it selects all columns
