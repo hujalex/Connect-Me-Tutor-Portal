@@ -250,7 +250,7 @@ const TutorList = () => {
     try {
       setAddingTutor(true);
       // Ensure addStudent returns a Profile
-      const addedTutor: Profile = await addTutor(tutor);
+      const addedTutor: Profile = await addUser(tutor, "Tutor");
 
       // Update local state
       setTutors((prevTutors) => {
@@ -504,7 +504,7 @@ const TutorList = () => {
                 <TableHead>Availability</TableHead>
                 <TableHead>Subjects Teaching </TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Total Hours</TableHead>
+                <TableHead>Phone Number</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -525,9 +525,7 @@ const TutorList = () => {
                     ))}
                   </TableCell>
                   <TableCell>{tutor.email}</TableCell>
-                  <TableCell>
-                    {allTimeHours[tutor.id]?.toFixed(2) || "0.00"}
-                  </TableCell>
+                  <TableCell>{tutor.phoneNumber}</TableCell>
                   <TableCell>
                     <AlertDialog>
                       <AlertDialogTrigger>

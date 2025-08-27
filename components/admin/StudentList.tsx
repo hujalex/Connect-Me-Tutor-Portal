@@ -556,6 +556,7 @@ const StudentList = () =>
                   <TableHead>Status</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>Student Name</TableHead>
+                  <TableHead>Grade Level</TableHead>
                   {/* <TableHead>Availability</TableHead> */}
                   <TableHead>Subjects Learning</TableHead>
                   <TableHead>Email</TableHead>
@@ -572,11 +573,12 @@ const StudentList = () =>
                     <TableCell>
                       {student.firstName} {student.lastName}
                     </TableCell>
+                    <TableCell>{student.grade}</TableCell>
                     {/* <TableCell>
                       <AvailabilityFormat availability={student.availability} />
                     </TableCell> */}
                     <TableCell className="flex flex-col">
-                      {student.subjectsOfInterest?.map((item, index) => (
+                      {student.subjects_of_interest?.map((item, index) => (
                         <span key={index}>{item}</span>
                       ))}
                     </TableCell>

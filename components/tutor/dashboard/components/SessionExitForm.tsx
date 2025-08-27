@@ -71,7 +71,10 @@ const SessionExitForm: React.FC<SessionExitFormProps> = ({
           <HoverCardTrigger>
             <Button
               variant="outline"
-              disabled={isAfter(parseISO(currSession.date), Date.now())}
+              disabled={
+                isAfter(parseISO(currSession.date), Date.now()) ||
+                currSession.status !== "Active"
+              }
               onClick={() => {
                 setSelectedSession(currSession);
                 setIsSessionExitFormOpen(true);
