@@ -11,6 +11,7 @@ export interface Person {
   user_id: string;
   last_name: string;
   first_name: string;
+  role: string;
 }
 
 export interface SharedEnrollment {

@@ -52,12 +52,14 @@ export const runPairingWorkflow = async () => {
   for (let i = 0; i < maxLength; i++) {
     if (i < studentQueue.length) {
       const studentReq = studentQueue[i];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .rpc("get_best_match", {
           request_type: "student",
           request_id: studentReq.pairing_request_id,
         })
         .single();
+
+      console.log("call error: ", error);
       const result = data as QueueItemMatch;
       console.log("r: ", result);
       if (result) {
@@ -155,7 +157,13 @@ export const runPairingWorkflow = async () => {
 
   const r1 = await supabase
     .from("pairing_matches")
-    .insert([...matchedStudents, ...matchedTutors]);
-  const r2 = await supabase.from("pairing_logs").insert(logs);
+    .insert(
+      [...matchedStudents, ...matchedTutors].filter(
+        ({ similarity }) => similarity
+      )
+    );
+  const r2 = await supabase
+    .from("pairing_logs")
+    .insert(logs.filter((log) => !log.error));
   console.log(r1, r2);
 };

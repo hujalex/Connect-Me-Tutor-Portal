@@ -12,7 +12,7 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import * as DateFns from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,6 +76,8 @@ import {
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
+
+const { toZonedTime } = DateFns;
 
 const Schedule = () => {
   console.log("Component rendered"); // Add this to verify component rendering

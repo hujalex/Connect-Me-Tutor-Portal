@@ -203,9 +203,9 @@ export default function PriorityQueue() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={`${getStatusColor(request.status)} font-semibold capitalize`}
+                          className={`${getStatusColor("pending")} font-semibold capitalize`}
                         >
-                          {request.status}
+                          {"Pending"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -237,6 +237,7 @@ export default function PriorityQueue() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1 max-w-48">
+                          <></>
                           {request.profile.subjects_of_interest
                             .slice(0, 2)
                             .map((subject, index) => (

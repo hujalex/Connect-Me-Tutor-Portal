@@ -109,6 +109,11 @@ export default function DashboardLayout({
       href: "/dashboard/pairings",
       icon: <LinkIcon className="h-5 w-5" />,
     },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <User className="h-5 w-5" />,
+    },
   ];
 
   const tutorSidebarItems = [
@@ -126,6 +131,11 @@ export default function DashboardLayout({
       title: "My Students",
       href: "/dashboard/my-students",
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "My Enrollments",
+      href: "/dashboard/my-enrollments",
+      icon: <BookOpenText className="h-5 w-5" />,
     },
     {
       title: "Chats",
@@ -146,6 +156,11 @@ export default function DashboardLayout({
       title: "Pairings",
       href: "/dashboard/pairings",
       icon: <LinkIcon className="h-5 w-5" />,
+    },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <User className="h-5 w-5" />,
     },
   ];
 

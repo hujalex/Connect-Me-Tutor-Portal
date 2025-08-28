@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,9 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Profile } from "@/types";
-import { Combobox } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scrollarea";
+import { Badge } from "@/components/ui/badge";
+import { Plus, X } from "lucide-react";
+import { Profile } from "@/types";
+import { Switch } from "@/components/ui/switch";
+
+const DAYS_OF_WEEK = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 interface AddStudentFormProps {
   newStudent: Partial<Profile>;
@@ -29,10 +40,10 @@ interface AddStudentFormProps {
     >
   ) => void;
   handleGradeChange: (value: string) => void;
+
   handleTimeZone: (value: string) => void;
   handleGender: (value: string) => void;
-  handleSubjectsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleAddStudent: () => void;
+  handleAddStudent: (value: Partial<Profile>) => void;
   addingStudent: boolean;
 }
 
@@ -42,17 +53,84 @@ const AddStudentForm = ({
   handleGradeChange,
   handleTimeZone,
   handleGender,
-  handleSubjectsChange,
   handleAddStudent,
   addingStudent,
 }: AddStudentFormProps) => {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("basic");
+  const [addNewProfilesToQueue, setAddNewProfilesToQueue] =
+    useState<boolean>(false);
+  // Mock student state - replace with your actual state management
 
-  const getOrdinalSuffix = (num: number): string => {
+  const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>([]);
+
+  const [languagesSpoken, setLanguagesSpoken] = useState<string[]>([]);
+
+  const [availability, setAvailability] = useState<
+    { day: string; startTime: string; endTime: string }[]
+  >([]);
+  const [newSubject, setNewSubject] = useState("");
+  const [newLanguage, setNewLanguage] = useState("");
+
+  // Mock handlers - replace with your actual handlers
+
+  const addAvailabilitySlot = () => {
+    setAvailability([
+      ...availability,
+      { day: "Monday", startTime: "09:00", endTime: "17:00" },
+    ]);
+  };
+
+  const updateAvailabilitySlot = (
+    index: number,
+    field: keyof (typeof availability)[0],
+    value: string
+  ) => {
+    const updated = [...availability];
+    updated[index] = { ...updated[index], [field]: value };
+    setAvailability(updated);
+  };
+
+  const removeAvailabilitySlot = (index: number) => {
+    setAvailability(availability.filter((_, i) => i !== index));
+  };
+
+  const addSubject = () => {
+    if (newSubject.trim() && !subjectsOfInterest.includes(newSubject.trim())) {
+      setSubjectsOfInterest([...subjectsOfInterest, newSubject.trim()]);
+      setNewSubject("");
+    }
+  };
+  const removeSubject = (subject: string) => {
+    setSubjectsOfInterest(subjectsOfInterest.filter((s) => s !== subject));
+  };
+
+  const addLanguage = () => {
+    if (newLanguage.trim() && !languagesSpoken.includes(newLanguage.trim())) {
+      setLanguagesSpoken([...languagesSpoken, newLanguage.trim()]);
+      setNewLanguage("");
+    }
+  };
+
+  const removeLanguage = (language: string) => {
+    setLanguagesSpoken(languagesSpoken.filter((l) => l !== language));
+  };
+
+  const getOrdinalSuffix = (num: number) => {
     if (num === 1) return "st";
     if (num === 2) return "nd";
     if (num === 3) return "rd";
     return "th";
+  };
+
+  const handleEnhancedAddStudent = () => {
+    const studentWithExtendedFields = {
+      ...newStudent,
+      availability,
+      subjects_of_interest: subjectsOfInterest,
+    };
+
+    handleAddStudent(studentWithExtendedFields);
   };
 
   return (
@@ -60,215 +138,529 @@ const AddStudentForm = ({
       <DialogTrigger asChild>
         <Button>Add Student</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add New Student</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col">
+        <DialogHeader className="px-6 py-4 border-b bg-gray-50/50 shrink-0">
+          <DialogTitle className="text-xl font-semibold text-gray-900">
+            Add New Student
+          </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[calc(80vh-120px)] pr-4">
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="studentNumber" className="text-right">
-                Student #
-              </Label>
-              <Input
-                id="studentNumber"
-                name="studentNumber"
-                value={newStudent.studentNumber ?? ""}
-                onChange={handleInputChange}
-                className="col-span-3"
-              ></Input>
-            </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="firstName" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                value={newStudent.firstName}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lastName" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                value={newStudent.lastName}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-8 items-center gap-4">
-              <Label htmlFor="age" className="text-right col-span-2">
-                Age
-              </Label>
-              <div className="col-span-2">
-                <Input
-                  id="age"
-                  name="age"
-                  value={newStudent.age}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                ></Input>
-              </div>
-              <Label htmlFor="grade" className="text-right">
-                Grade
-              </Label>
-              <div className="col-span-3">
-                <Select
-                  name="grade"
-                  value={newStudent.grade}
-                  onValueChange={handleGradeChange}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Kindergarten">Kindergarten</SelectItem>
-                    <SelectItem value="Kindergarten">K</SelectItem>
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <SelectItem
-                        key={i}
-                        value={`${i + 1}${getOrdinalSuffix(i + 1)}-grade`}
+        {/* Tab Navigation */}
+        <div className="flex border-b bg-white px-6 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab("basic")}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "basic"
+                ? "border-blue-500 text-blue-600 bg-blue-50/30"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+            }`}
+          >
+            Basic Information
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("extended")}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "extended"
+                ? "border-blue-500 text-blue-600 bg-blue-50/30"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+            }`}
+          >
+            Extended Profile
+          </button>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {activeTab === "basic" && (
+            <ScrollArea className="h-[calc(90vh-200px)] px-6 py-10">
+              <div className="space-y-6">
+                {/* Student ID Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Label
+                      htmlFor="studentNumber"
+                      className="text-sm font-medium text-gray-700 w-28 text-right"
+                    >
+                      Student #
+                    </Label>
+                    <Input
+                      id="studentNumber"
+                      name="studentNumber"
+                      value={newStudent.studentNumber || ""}
+                      onChange={handleInputChange}
+                      className="flex-1"
+                      placeholder="Enter student number"
+                    />
+                  </div>
+                </div>
+
+                {/* Personal Information Section */}
+                <div className="space-y-4 pt-2 border-t">
+                  <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                    Personal Information
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="firstName"
+                        className="text-sm font-medium text-gray-700"
                       >
-                        {`${i + 1}${getOrdinalSuffix(i + 1)}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="gender" className="text-right">
-                Gender
-              </Label>
-              <div className="col-span-3">
-                {" "}
-                <Select
-                  name="gender"
-                  value={newStudent.gender}
-                  onValueChange={handleGender}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={newStudent.email}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
+                        First Name
+                      </Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={newStudent.firstName}
+                        onChange={handleInputChange}
+                        placeholder="Enter first name"
+                      />
+                    </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="startDate" className="text-right">
-                Start Date
-              </Label>
-              <Input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={newStudent.startDate}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="parentName" className="text-right">
-                Parent Name
-              </Label>
-              <Input
-                id="parentName"
-                name="parentName"
-                value={newStudent.parentName}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="parentPhone" className="text-right">
-                Parent Phone
-              </Label>
-              <Input
-                id="parentPhone"
-                name="parentPhone"
-                value={newStudent.parentPhone}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="parentEmail" className="text-right">
-                Parent Email
-              </Label>
-              <Input
-                id="parentEmail"
-                name="parentEmail"
-                type="email"
-                value={newStudent.parentEmail}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="timeZone" className="text-right">
-                Time Zone
-              </Label>
-              <div className="col-span-3">
-                <Select
-                  name="timeZone"
-                  value={newStudent.timeZone}
-                  onValueChange={handleTimeZone}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EST">EST</SelectItem>
-                    <SelectItem value="CST">CST</SelectItem>
-                    <SelectItem value="MT">MT</SelectItem>
-                    <SelectItem value="PST">PST</SelectItem>
-                  </SelectContent>
-                </Select>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="lastName"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Last Name
+                      </Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={newStudent.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Enter last name"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="age"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Age
+                      </Label>
+                      <Input
+                        id="age"
+                        name="age"
+                        type="number"
+                        value={newStudent.age}
+                        onChange={handleInputChange}
+                        placeholder="Age"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="grade"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Grade
+                      </Label>
+                      <Select
+                        name="grade"
+                        value={newStudent.grade}
+                        onValueChange={handleGradeChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select grade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Kindergarten">
+                            Kindergarten
+                          </SelectItem>
+                          <SelectItem value="K">K</SelectItem>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <SelectItem
+                              key={i}
+                              value={`${i + 1}${getOrdinalSuffix(i + 1)}-grade`}
+                            >
+                              {`${i + 1}${getOrdinalSuffix(i + 1)} Grade`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="gender"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Gender
+                      </Label>
+                      <Select
+                        name="gender"
+                        value={newStudent.gender}
+                        onValueChange={handleGender}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="email"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Student Email
+                      </Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={newStudent.email}
+                        onChange={handleInputChange}
+                        placeholder="student@example.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="startDate"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Start Date
+                      </Label>
+                      <Input
+                        id="startDate"
+                        name="startDate"
+                        type="date"
+                        value={newStudent.startDate}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Parent Information Section */}
+                <div className="space-y-4 pt-2 border-t">
+                  <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                    Parent/Guardian Information
+                  </h3>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="parentName"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Parent/Guardian Name
+                    </Label>
+                    <Input
+                      id="parentName"
+                      name="parentName"
+                      value={newStudent.parentName}
+                      onChange={handleInputChange}
+                      placeholder="Enter parent/guardian name"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="parentPhone"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="parentPhone"
+                        name="parentPhone"
+                        type="tel"
+                        value={newStudent.parentPhone}
+                        onChange={handleInputChange}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="parentEmail"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Email Address
+                      </Label>
+                      <Input
+                        id="parentEmail"
+                        name="parentEmail"
+                        type="email"
+                        value={newStudent.parentEmail}
+                        onChange={handleInputChange}
+                        placeholder="parent@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="timeZone"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Time Zone
+                    </Label>
+                    <Select
+                      name="timeZone"
+                      value={newStudent.timeZone}
+                      onValueChange={handleTimeZone}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time zone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="EST">
+                          Eastern Standard Time (EST)
+                        </SelectItem>
+                        <SelectItem value="CST">
+                          Central Standard Time (CST)
+                        </SelectItem>
+                        <SelectItem value="MT">Mountain Time (MT)</SelectItem>
+                        <SelectItem value="PST">
+                          Pacific Standard Time (PST)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="p-4 flex justify-center gap-4 items-center rounded-lg w-full">
+                  <Switch
+                    checked={addNewProfilesToQueue}
+                    onCheckedChange={setAddNewProfilesToQueue}
+                  />
+                  Add To Pairing Queue
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="subjectsOfInterest" className="text-right">
-                Subjects of Interest
-              </Label>
-              <Input
-                id="subjectsOfInterest"
-                name="subjectsOfInterest"
-                value={newStudent.subjectsOfInterest?.join(", ")}
-                onChange={handleSubjectsChange}
-                className="col-span-3"
-              />
-            </div>
-            {/* Add more fields for availability if needed */}
-          </div>
-          <Button onClick={handleAddStudent} disabled={addingStudent}>
-            {addingStudent ? "Adding Student..." : "Add Student"}
+            </ScrollArea>
+          )}
+
+          {activeTab === "extended" && (
+            <ScrollArea className="h-[calc(90vh-200px)] px-6 py-10">
+              <div className="space-y-8">
+                {/* Availability Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Availability Schedule
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addAvailabilitySlot}
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Time Slot
+                    </Button>
+                  </div>
+
+                  {availability.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
+                      <p className="mb-2">No availability slots added yet</p>
+                      <p className="text-sm">
+                        {`  Click "Add Time Slot" to get started`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {availability.map((slot, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex-1">
+                            <Select
+                              value={slot.day}
+                              onValueChange={(value) =>
+                                updateAvailabilitySlot(index, "day", value)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DAYS_OF_WEEK.map(
+                                  (day) =>
+                                    +(
+                                      <SelectItem key={day} value={day}>
+                                        {day}
+                                      </SelectItem>
+                                    )
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="time"
+                              value={slot.startTime}
+                              onChange={(e) =>
+                                updateAvailabilitySlot(
+                                  index,
+                                  "startTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-32"
+                            />
+                            <span className="text-gray-500 text-sm">to</span>
+                            <Input
+                              type="time"
+                              value={slot.endTime}
+                              onChange={(e) =>
+                                updateAvailabilitySlot(
+                                  index,
+                                  "endTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-32"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeAvailabilitySlot(index)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Subjects Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Subjects of Interest
+                  </h3>
+
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="e.g., Mathematics, Physics, Chemistry"
+                      value={newSubject}
+                      onChange={(e) => setNewSubject(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && (e.preventDefault(), addSubject())
+                      }
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addSubject}
+                      size="sm"
+                      className="px-4"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {subjectsOfInterest.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg min-h-[60px] border">
+                      {subjectsOfInterest.map((subject) => (
+                        <Badge
+                          key={subject}
+                          variant="secondary"
+                          className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        >
+                          {subject}
+                          <button
+                            type="button"
+                            onClick={() => removeSubject(subject)}
+                            className="hover:bg-blue-300 rounded-full p-0.5 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Languages Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Languages Spoken
+                  </h3>
+
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="e.g., English, Spanish, French"
+                      value={newLanguage}
+                      onChange={(e) => setNewLanguage(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && (e.preventDefault(), addLanguage())
+                      }
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addLanguage}
+                      size="sm"
+                      className="px-4"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {languagesSpoken.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg min-h-[60px] border">
+                      {languagesSpoken.map((language) => (
+                        <Badge
+                          key={language}
+                          variant="secondary"
+                          className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 hover:bg-green-200"
+                        >
+                          {language}
+                          <button
+                            type="button"
+                            onClick={() => removeLanguage(language)}
+                            className="hover:bg-green-300 rounded-full p-0.5 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+
+        {/* Footer with Action Button */}
+        <div className="px-6 py-4 border-t bg-gray-50/50 flex justify-end gap-3 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsModalOpen(false)}
+            disabled={addingStudent}
+          >
+            Cancel
           </Button>
-        </ScrollArea>
+          <Button onClick={handleEnhancedAddStudent} disabled={addingStudent}>
+            {addingStudent ? "Adding..." : "Add Student"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Filter, Search, UserRound } from "lucide-react";
+import { Check, Clock, Filter, Search, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,51 +26,12 @@ import { PairingRequestCard } from "./que/request-card";
 import { PairingLogsTable } from "./pairing-logs";
 import { useProfile } from "@/hooks/auth";
 import { TestingPairingControls } from "./test-controls";
-import { getIncomingPairingMatches } from "@/lib/actions/pairing.actions";
-
-// Mock data for demonstration
-const mockProfiles: (ProfilePairingMetadata & {
-  name: string;
-  role: string;
-  rating: number;
-})[] = [
-  {
-    profileId: "1",
-    name: "Alex Johnson",
-    role: "Tutor",
-    rating: 4.8,
-    availability: [
-      { day: "Monday", startTime: "3:00 PM", endTime: "6:00 PM" },
-      { day: "Wednesday", startTime: "4:00 PM", endTime: "7:00 PM" },
-    ],
-    subjectsOfInterest: ["Mathematics", "Physics"],
-    languagesSpoken: ["English", "Spanish"],
-  },
-  {
-    profileId: "2",
-    name: "Jamie Smith",
-    role: "Student",
-    rating: 4.5,
-    availability: [
-      { day: "Tuesday", startTime: "5:00 PM", endTime: "8:00 PM" },
-      { day: "Thursday", startTime: "4:00 PM", endTime: "6:00 PM" },
-    ],
-    subjectsOfInterest: ["Computer Science", "Mathematics"],
-    languagesSpoken: ["English", "French"],
-  },
-  {
-    profileId: "3",
-    name: "Taylor Lee",
-    role: "Tutor",
-    rating: 4.9,
-    availability: [
-      { day: "Monday", startTime: "1:00 PM", endTime: "5:00 PM" },
-      { day: "Friday", startTime: "3:00 PM", endTime: "7:00 PM" },
-    ],
-    subjectsOfInterest: ["Biology", "Chemistry"],
-    languagesSpoken: ["English", "Mandarin"],
-  },
-];
+import {
+  getIncomingPairingMatches,
+  IncomingPairingMatch,
+} from "@/lib/actions/pairing.actions";
+import { updatePairingMatchStatus } from "@/lib/actions/pairing.server.actions";
+import toast from "react-hot-toast";
 
 export function PairingInterface() {
   const [activeTab, setActiveTab] = useState("find");
@@ -80,35 +41,31 @@ export function PairingInterface() {
 
   const { profile } = useProfile();
 
-  const filteredProfiles = mockProfiles.filter((profile) => {
-    const matchesSearch =
-      profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.subjectsOfInterest?.some((subject) =>
-        subject.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-    const matchesSubject =
-      !subjectFilter ||
-      profile.subjectsOfInterest?.some((subject) => subject === subjectFilter);
-
-    return matchesSearch && matchesSubject;
-  });
+  const [matchedPairings, setMatchedPairings] = useState<
+    IncomingPairingMatch[]
+  >([]);
 
   useEffect(() => {
     if (!profile) return;
     getIncomingPairingMatches(profile.id).then((result) => {
+      if (result) setMatchedPairings(result);
+
       console.log("matches: ", result);
     });
   }, [profile]);
 
-  const handlePairingRequest = (profileId: string) => {
-    setRequestedPairings((prev) => [...prev, profileId]);
-    // In a real app, you would send this request to your backend
+  //handle mutating match state
+  const handleAcceptPairingMatch = (
+    matchId: string,
+    status: "accepted" | "rejected"
+  ) => {
+    const promise = updatePairingMatchStatus(profile.id, matchId, status);
+    toast.promise(promise, {
+      success: `Successfully ${status} match`,
+      error: `Failed to ${status} match`,
+      loading: "Loading...",
+    });
   };
-
-  const allSubjects = Array.from(
-    new Set(mockProfiles.flatMap((profile) => profile.subjectsOfInterest))
-  );
 
   return (
     <div className="space-y-4">
@@ -157,69 +114,95 @@ export function PairingInterface() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {filteredProfiles.length > 0 ? (
-                filteredProfiles.map((profile) => (
-                  <Card key={profile.profileId}>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{profile.name}</CardTitle>
-                          <CardDescription className="flex items-center gap-1">
-                            <UserRound className="h-3 w-3" />
-                            {profile.role}
-                          </CardDescription>
-                        </div>
-                        <Badge variant="outline">
-                          ★ {profile.rating.toFixed(1)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="space-y-2">
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Subjects
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {profile.subjectsOfInterest?.map((subject, i) => (
-                              <Badge key={i} variant="secondary">
-                                {subject}
-                              </Badge>
-                            ))}
+              {matchedPairings.length > 0 ? (
+                matchedPairings.map((match) => {
+                  const roleFilter =
+                    profile.role === "Student" ? "tutor" : "student";
+                  const matchedProfile = match[roleFilter];
+                  return (
+                    <Card key={match.pairing_match_id}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle>{`${matchedProfile.first_name} ${matchedProfile.last_name}`}</CardTitle>
+                            <CardDescription className="flex items-center gap-1">
+                              <UserRound className="h-3 w-3" />
+                              {matchedProfile.role}
+                            </CardDescription>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            Languages
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {profile.languagesSpoken?.map((language, i) => (
-                              <Badge key={i} variant="outline">
-                                {language}
-                              </Badge>
-                            ))}
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Subjects
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {matchedProfile.subjectsOfInterest?.map(
+                                (subject, i) => (
+                                  <Badge key={i} variant="secondary">
+                                    {subject}
+                                  </Badge>
+                                )
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Languages
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {matchedProfile.languagesSpoken?.map(
+                                (language, i) => (
+                                  <Badge key={i} variant="outline">
+                                    {language}
+                                  </Badge>
+                                )
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="space-x-4">
-                      <Button
-                        className="w-full bg-green-500"
-                        disabled={requestedPairings.includes(profile.profileId)}
-                        onClick={() => handlePairingRequest(profile.profileId)}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        className="w-full bg-red-500"
-                        disabled={requestedPairings.includes(profile.profileId)}
-                        onClick={() => handlePairingRequest(profile.profileId)}
-                      >
-                        Decline
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))
+                      </CardContent>
+                      <CardFooter>
+                        {profile.role === "Tutor" && (
+                          <div className="space-x-4 flex">
+                            <Button
+                              className="w-full bg-green-500"
+                              // disabled={requestedPairings.includes(matchedProfile.matchedProfileId)}
+                              onClick={() =>
+                                handleAcceptPairingMatch(
+                                  match.pairing_match_id,
+                                  "accepted"
+                                )
+                              }
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              className="w-full bg-red-500"
+                              // disabled={requestedPairings.includes(matchedProfile.matchedProfileId)}
+                              onClick={() =>
+                                handleAcceptPairingMatch(
+                                  match.pairing_match_id,
+                                  "rejected"
+                                )
+                              }
+                            >
+                              Decline
+                            </Button>
+                          </div>
+                        )}
+                        {profile.role === "Student" && (
+                          <Button className="w-full gap-2 p-4">
+                            <Clock />
+                            Waiting
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  );
+                })
               ) : (
                 <div className="col-span-2 text-center py-8">
                   <p className="text-muted-foreground">

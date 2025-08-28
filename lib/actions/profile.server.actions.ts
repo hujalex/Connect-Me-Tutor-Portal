@@ -44,6 +44,7 @@ export async function getProfileWithProfileId(
         subjects_of_interest,
         status,
         student_number,
+        languages_spoken,
         settings_id
       `
       )
@@ -83,7 +84,8 @@ export async function getProfileWithProfileId(
       tutorIds: data.tutor_ids,
       parentEmail: data.parent_email,
       timeZone: data.timezone,
-      subjectsOfInterest: data.subjects_of_interest,
+      subjects_of_interest: data.subjects_of_interest,
+      languages_spoken: data.languages_spoken,
       status: data.status,
       studentNumber: data.student_number,
       settingsId: data.settings_id,
