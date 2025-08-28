@@ -15,8 +15,9 @@ import { getAccountPairings } from "@/lib/actions/pairing.server.actions";
 import { getProfileRole } from "@/lib/actions/user.actions";
 import { createClient, createServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { fetchUserAdminConversations } from "@/lib/actions/chat.server.actions";
+import { fetchUserAdminConversation } from "@/lib/actions/chat.server.actions";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function ChatPage() {
   const supabase = createClient();
@@ -25,7 +26,6 @@ export default async function ChatPage() {
   } = await supabase.auth.getUser();
 
   const userId = user?.id;
-  
 
   if (!userId) redirect("/");
 
@@ -35,7 +35,7 @@ export default async function ChatPage() {
   // ]);
 
   const [adminConversationID, pairings, role] = await Promise.all([
-    fetchUserAdminConversations(userId),
+    fetchUserAdminConversation(userId),
     getAccountPairings(userId),
     getProfileRole(userId),
   ]);
@@ -79,12 +79,12 @@ export default async function ChatPage() {
                 </div>
               </div>
 
-              <Button
-                // onClick={handleAccessAdmin}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 transition-colors"
+              <Link
+                href={`/dashboard/chats/${adminConversationID}`}
+                className="w-full p-4 rounded-lg  bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 transition-colors"
               >
                 Access Admin Conversation
-              </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

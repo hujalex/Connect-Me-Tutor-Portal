@@ -33,6 +33,7 @@ import toast from "react-hot-toast";
 import { fetchAdminConversations } from "@/lib/actions/chat.actions";
 import { AdminConversation } from "@/types/chat";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // Sample profiles data - replace with your actual data source
 // const profiles = [
@@ -78,7 +79,8 @@ const existingConversations = [
 ];
 
 export function AdminConversationManager() {
-  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
+  const [selectedProfileUserId, setSelectedProfileUserId] =
+    useState<string>("");
   const [openProfileOptions, setOpenProfileOptions] = useState(false);
   const [profileSearch, setProfileSearch] = useState("");
   const [conversationTitle, setConversationTitle] = useState("");
@@ -87,7 +89,7 @@ export function AdminConversationManager() {
     useState<AdminConversation[]>();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const selectedProfile = profiles.find(
-    (profile) => profile.id === selectedProfileId
+    (profile) => profile.userId === selectedProfileUserId
   );
 
   const router = useRouter();
@@ -115,8 +117,8 @@ export function AdminConversationManager() {
   }, []);
 
   const handleCreateConversation = () => {
-    if (!selectedProfileId) return;
-    const promise = createAdminConversation(selectedProfileId);
+    if (!selectedProfileUserId) return;
+    const promise = createAdminConversation(selectedProfileUserId);
     toast.promise(promise, {
       success: "Successfully created conversation",
       error: "Failed to create conversation",
@@ -127,13 +129,13 @@ export function AdminConversationManager() {
 
     // Handle conversation creation logic here
     console.log("Creating conversation:", {
-      profileId: selectedProfileId,
+      profileId: selectedProfileUserId,
       title: conversationTitle,
       description: conversationDescription,
     });
 
     // Reset form
-    setSelectedProfileId("");
+    setSelectedProfileUserId("");
     setConversationTitle("");
     setConversationDescription("");
     setProfileSearch("");
@@ -224,14 +226,14 @@ export function AdminConversationManager() {
                                   profile.role,
                                 ]}
                                 onSelect={() => {
-                                  setSelectedProfileId(profile.id);
+                                  setSelectedProfileUserId(profile.userId);
                                   setOpenProfileOptions(false);
                                 }}
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    selectedProfileId === profile.id
+                                    selectedProfileUserId === profile.id
                                       ? "opacity-100"
                                       : "opacity-0"
                                   )}
@@ -262,7 +264,7 @@ export function AdminConversationManager() {
                 <div className="flex gap-3 pt-4">
                   <Button
                     onClick={handleCreateConversation}
-                    disabled={!selectedProfileId}
+                    disabled={!selectedProfileUserId}
                     className="flex-1"
                   >
                     Create Conversation
@@ -270,7 +272,7 @@ export function AdminConversationManager() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setSelectedProfileId("");
+                      setSelectedProfileUserId("");
                       setConversationTitle("");
                       setConversationDescription("");
                       setProfileSearch("");
@@ -320,7 +322,8 @@ export function AdminConversationManager() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {existingConversations?.map((conversation) => (
-                  <div
+                  <Link
+                    href={`/dashboard/chats/${conversation.conversation_id}`}
                     key={conversation.conversation_id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
                   >
@@ -329,7 +332,7 @@ export function AdminConversationManager() {
                         {`${conversation.participants[0].first_name} ${conversation.participants[0].last_name}`}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 {existingConversations?.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">

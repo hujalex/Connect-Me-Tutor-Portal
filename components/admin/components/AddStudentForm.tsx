@@ -491,11 +491,14 @@ const AddStudentForm = ({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {DAYS_OF_WEEK.map((day) => (
-                                  <SelectItem key={day} value={day}>
-                                    {day}
-                                  </SelectItem>
-                                ))}
+                                {DAYS_OF_WEEK.map(
+                                  (day) =>
+                                    +(
+                                      <SelectItem key={day} value={day}>
+                                        {day}
+                                      </SelectItem>
+                                    )
+                                )}
                               </SelectContent>
                             </Select>
                           </div>

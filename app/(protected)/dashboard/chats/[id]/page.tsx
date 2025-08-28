@@ -10,7 +10,6 @@ interface Props {
 export default async function ChatRoomPage({ params }: Props) {
   // In a real app, these would come from your authentication system and API
 
-  const mockMessages: Message[] = [];
   const supabase = createClient();
   const user = await supabase.auth.getUser();
   const userId = user.data.user?.id;
@@ -23,10 +22,11 @@ export default async function ChatRoomPage({ params }: Props) {
       <h1 className="text-2xl font-bold mb-6">Tutoring Session</h1>
 
       <ChatRoom
+        type="admin"
         roomId={params.id}
         supabaseUrl={supabaseConfig.url}
         supabaseKey={supabaseConfig.key}
-        initialMessages={mockMessages}
+
         // onSendMessage={(message) => console.log("Message sent:", message)}
         // onFileUpload={(file) => console.log("File uploaded:", file.name)}
       />
