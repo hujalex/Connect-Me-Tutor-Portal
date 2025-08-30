@@ -1,6 +1,9 @@
 "use client";
 import { Profile } from "@/types";
 import { createClient } from "@supabase/supabase-js";
+import { Table } from "../supabase/tables";
+
+import axios from "axios";
 import { supabase } from "../supabase/client";
 
 export async function getProfileWithProfileId(
@@ -8,7 +11,7 @@ export async function getProfileWithProfileId(
 ): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -30,6 +33,7 @@ export async function getProfileWithProfileId(
         subjects_of_interest,
         status,
         student_number,
+        languages_spoken,
         settings_id
       `
       )
@@ -49,6 +53,8 @@ export async function getProfileWithProfileId(
       return null;
     }
 
+    console.log(data);
+
     // Mapping the fetched data to the Profile object
     const userProfile: Profile = {
       id: data.id,
@@ -67,7 +73,8 @@ export async function getProfileWithProfileId(
       tutorIds: data.tutor_ids,
       parentEmail: data.parent_email,
       timeZone: data.timezone,
-      subjectsOfInterest: data.subjects_of_interest,
+      subjects_of_interest: data.subjects_of_interest,
+      languages_spoken: data.languages_spoken,
       status: data.status,
       studentNumber: data.student_number,
       settingsId: data.settings_id,

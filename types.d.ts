@@ -19,11 +19,12 @@ interface Profile {
   parentPhone?: string; // Optional
   parentEmail?: string; // Optional
   timeZone: string; // Example: 'America/New_York'
-  subjectsOfInterest: string[]; // Array of subjects
+  subjects_of_interest: string[]; // Array of subjects
   status: "Active" | "Inactive" | "Deleted";
   tutorIds: string[];
   studentNumber: string | null;
   settingsId: string;
+  languages_spoken: string[];
 }
 
 interface Session {

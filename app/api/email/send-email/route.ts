@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { ideahub } from "googleapis/build/src/apis/ideahub";
 import { getSupabase } from "@/lib/supabase-server/serverClient";
+import { Table } from "@/lib/supabase/tables";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { to, subject, body, sessionId } = await request.json();
 
     const { data: session, error: sessionError } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("*")
       .eq("id", sessionId)
       .single();

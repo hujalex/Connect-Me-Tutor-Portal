@@ -1,7 +1,8 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
+import { Table } from "../supabase/tables";
 
-const supabase = createClientComponentClient({
+export const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
@@ -25,7 +26,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -47,7 +48,8 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
         subjects_of_interest,
         status,
         student_number,
-        settings_id
+        settings_id,
+        languages_spoken
       `
       )
       .eq("user_id", userId)
@@ -81,10 +83,11 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       parentEmail: data.parent_email,
       tutorIds: data.tutor_ids,
       timeZone: data.timezone,
-      subjectsOfInterest: data.subjects_of_interest,
+      subjects_of_interest: data.subjects_of_interest,
       status: data.status,
       studentNumber: data.student_number,
       settingsId: data.settings_id,
+      languages_spoken: data.languages_spoken,
     };
 
     return userProfile;
@@ -96,7 +99,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 
 export const getProfileByEmail = async (email: string) => {
   const { data, error } = await supabase
-    .from("Profiles")
+    .from(Table.Profiles)
     .select("*")
     .eq("email", email)
     .single();
@@ -139,7 +142,7 @@ export const getProfileRole = async (
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("role")
       .eq("user_id", userId)
       .single();
@@ -170,7 +173,7 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
 
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -247,7 +250,7 @@ export async function getProfileWithProfileId(
 ): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         `
         id,
@@ -306,7 +309,7 @@ export async function getProfileWithProfileId(
       tutorIds: data.tutor_ids,
       parentEmail: data.parent_email,
       timeZone: data.timezone,
-      subjectsOfInterest: data.subjects_of_interest,
+      subjects_of_interest: data.subjects_of_interest,
       status: data.status,
       studentNumber: data.student_number,
       settingsId: data.settings_id,
@@ -333,7 +336,7 @@ export async function getUserInfo() {
 export async function updateProfile(userId: string, profileData: any) {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update(profileData)
       .eq("user_id", userId)
       .single();
@@ -358,7 +361,7 @@ export async function createUser(userData: any) {
 
     // If you need to store additional user data, you can do it here
     const { data: profileData, error: profileError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .insert({
         user_id: data.user.id,
         ...userData,

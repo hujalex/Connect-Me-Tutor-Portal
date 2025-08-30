@@ -5,6 +5,7 @@ import { Profile, Session } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./admin.actions";
 import { Stats } from "fs";
+import { Table } from "../supabase/tables";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -28,7 +29,7 @@ export async function getTutorSessions(
   ascending?: boolean
 ): Promise<Session[]> {
   let query = supabase
-    .from("Sessions")
+    .from(Table.Sessions)
     .select(
       `
      *
@@ -95,24 +96,25 @@ export async function getTutorSessions(
 
 export async function getTutorStudents(tutorId: string) {
   try {
-    const { data: enrollments, error: enrollmentError } = await supabase
-      .from("Enrollments")
+    const { data: pairings, error: pairingsError } = await supabase
+      .from(Table.Pairings)
       .select("student_id")
       .eq("tutor_id", tutorId);
 
-    if (enrollmentError) {
-      console.error("Error fetching enrollments:", enrollmentError);
+    if (pairingsError) {
+      console.error("Error fetching enrollments:", pairingsError);
       return null;
     }
 
-    if (!enrollments) {
+    if (!pairings) {
+      console.log("No profile found for tutor ID:", tutorId);
       return null;
     }
 
-    const studentIds = enrollments.map((enrollment) => enrollment.student_id);
+    const studentIds = pairings.map((pairing) => pairing.student_id);
 
     const { data: studentProfiles, error: profileError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("*")
       .in("id", studentIds);
 
@@ -139,10 +141,11 @@ export async function getTutorStudents(tutorId: string) {
       parentEmail: profile.parent_email,
       tutorIds: profile.tutor_ids,
       timeZone: profile.timezone,
-      subjectsOfInterest: profile.subjects_of_interest,
+      subjects_of_interest: profile.subjects_of_interest,
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
+      languages_spoken: profile.languages_spoken || [],
     }));
 
     return userProfiles;
@@ -160,8 +163,11 @@ export async function rescheduleSession(
 ) {
   try {
     const { data: sessionData, error } = await supabase
-      .from("Sessions")
-      .update({ date: newDate, meeting_id: meetingId })
+      .from(Table.Sessions)
+      .update({
+        date: newDate,
+        meeting_id: meetingId,
+      })
       .eq("id", sessionId)
       .select("*")
       .single();
@@ -192,8 +198,10 @@ export async function rescheduleSession(
 
 export async function cancelSession(sessionId: string) {
   const { data, error } = await supabase
-    .from("Sessions")
-    .update({ status: "CANCELLED" })
+    .from(Table.Sessions)
+    .update({
+      status: "CANCELLED",
+    })
     .eq("id", sessionId)
     .single();
 
@@ -203,8 +211,10 @@ export async function cancelSession(sessionId: string) {
 
 export async function addSessionNotes(sessionId: string, notes: string) {
   const { data, error } = await supabase
-    .from("Sessions")
-    .update({ notes: notes })
+    .from(Table.Sessions)
+    .update({
+      notes: notes,
+    })
     .eq("id", sessionId)
     .single();
 
@@ -247,8 +257,10 @@ export async function logSessionAttendance(
   attended: boolean
 ) {
   const { data, error } = await supabase
-    .from("Sessions")
-    .update({ attended: attended })
+    .from(Table.Sessions)
+    .update({
+      attended: attended,
+    })
     .eq("id", sessionId)
     .single();
 
@@ -258,8 +270,10 @@ export async function logSessionAttendance(
 
 export async function recordSessionExitForm(sessionId: string, notes: string) {
   const { data, error } = await supabase
-    .from("Sessions")
-    .update({ session_exit_form: notes })
+    .from(Table.Sessions)
+    .update({
+      session_exit_form: notes,
+    })
     .eq("id", sessionId)
     .single();
   if (error) throw error;
