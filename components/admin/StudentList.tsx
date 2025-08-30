@@ -274,6 +274,12 @@ const StudentList = () =>
       );
     };
 
+    const handleEditProfile = (name: string, value: any) => {
+      setSelectedStudent((prev) =>
+        prev ? ({ ...prev, [name]: value } as Profile) : null
+      );
+    };
+
     const handleAvailabilityChange = (
       e: React.ChangeEvent<HTMLInputElement>,
       index: number
@@ -543,6 +549,7 @@ const StudentList = () =>
                   handleGenderForEdit={handleGenderForEdit}
                   handleTimeZoneForEdit={handleTimeZoneForEdit}
                   handleSubjectsChangeForEdit={handleSubjectsChangeForEdit}
+                  handleEditProfile={handleEditProfile}
                   getOrdinalSuffix={getOrdinalSuffix}
                   handleEditStudent={handleEditStudent}
                 />

@@ -44,6 +44,7 @@ import { Table } from "../supabase/tables";
 import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
 import { createUser } from "./auth.actions";
 import { handleCalculateDuration } from "./hours.actions";
+import { language } from "googleapis/build/src/apis/language";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -78,6 +79,7 @@ export async function getAllProfiles(
       tutor_ids,
       timezone,
       subjects_of_interest,
+      languages_spoken,
       status,
       student_number,
       settings_id
@@ -189,7 +191,7 @@ export const addStudent = async (
       parent_phone: studentData.parentPhone || "",
       parent_email: studentData.parentEmail || "",
       timezone: studentData.timeZone || "",
-      subjects_of_interest: studentData.subjectsOfInterest || [],
+      subjects_of_interest: studentData.subjects_of_interest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: studentData.studentNumber,
@@ -233,7 +235,7 @@ export const addStudent = async (
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjectsOfInterest,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
@@ -245,98 +247,98 @@ export const addStudent = async (
   }
 };
 
-export const addTutor = async (
-  tutorData: Partial<Profile>
-): Promise<Profile> => {
-  const supabase = createClientComponentClient();
-  try {
-    console.log(tutorData);
-    if (!tutorData.email) {
-      throw new Error("Email is required to create a student profile");
-    }
+// export const addTutor = async (
+//   tutorData: Partial<Profile>
+// ): Promise<Profile> => {
+//   const supabase = createClientComponentClient();
+//   try {
+//     console.log(tutorData);
+//     if (!tutorData.email) {
+//       throw new Error("Email is required to create a student profile");
+//     }
 
-    const lowerCaseEmail = tutorData.email.toLowerCase().trim();
+//     const lowerCaseEmail = tutorData.email.toLowerCase().trim();
 
-    // Check if a user with this email already exists
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from(Table.Profiles)
-      .select("user_id")
-      .eq("email", lowerCaseEmail);
+//     // Check if a user with this email already exists
+//     const { data: existingUser, error: userCheckError } = await supabase
+//       .from(Table.Profiles)
+//       .select("user_id")
+//       .eq("email", lowerCaseEmail);
 
-    if (userCheckError && userCheckError.code !== "PGRST116") {
-      // PGRST116 means no rows returned, which is what we want
-      throw userCheckError;
-    }
+//     if (userCheckError && userCheckError.code !== "PGRST116") {
+//       // PGRST116 means no rows returned, which is what we want
+//       throw userCheckError;
+//     }
 
-    if (existingUser && existingUser.length > 0) {
-      throw new Error("A user with this email already exists");
-    }
+//     if (existingUser && existingUser.length > 0) {
+//       throw new Error("A user with this email already exists");
+//     }
 
-    //-----Moved After Duplicate Check to prevent Sending confimration email-----
-    const tempPassword = await createPassword();
-    const userId = await createUser(lowerCaseEmail, tempPassword);
+//     //-----Moved After Duplicate Check to prevent Sending confimration email-----
+//     const tempPassword = await createPassword();
+//     const userId = await createUser(lowerCaseEmail, tempPassword);
 
-    // Create the student profile without id and createdAt
-    const newTutorProfile = {
-      user_id: userId,
-      role: "Tutor",
-      first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
-      last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
-      // date_of_birth: tutorData.dateOfBirth || "",
-      start_date: tutorData.startDate || new Date().toISOString(),
-      availability: tutorData.availability || [],
-      email: lowerCaseEmail,
-      timezone: tutorData.timeZone || "",
-      subjects_of_interest: tutorData.subjects_of_interest || [],
-      languages_spoken: tutorData.languages_spoken || [],
-      tutor_ids: [], // Changed from tutorIds to tutor_ids
-      status: "Active",
-      student_number: null,
-    };
+//     // Create the student profile without id and createdAt
+//     const newTutorProfile = {
+//       user_id: userId,
+//       role: "Tutor",
+//       first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
+//       last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
+//       // date_of_birth: tutorData.dateOfBirth || "",
+//       start_date: tutorData.startDate || new Date().toISOString(),
+//       availability: tutorData.availability || [],
+//       email: lowerCaseEmail,
+//       timezone: tutorData.timeZone || "",
+//       subjects_of_interest: tutorData.subjects_of_interest || [],
+//       languages_spoken: tutorData.languages_spoken || [],
+//       tutor_ids: [], // Changed from tutorIds to tutor_ids
+//       status: "Active",
+//       student_number: null,
+//     };
 
-    // Add tutor profile to the database
-    const { data: profileData, error: profileError } = await supabase
-      .from(Table.Profiles) // Ensure 'profiles' is correctly cased
-      .insert(newTutorProfile)
-      .select("*");
+//     // Add tutor profile to the database
+//     const { data: profileData, error: profileError } = await supabase
+//       .from(Table.Profiles) // Ensure 'profiles' is correctly cased
+//       .insert(newTutorProfile)
+//       .select("*");
 
-    if (profileError) throw profileError;
+//     if (profileError) throw profileError;
 
-    // Ensure profileData is defined and cast it to the correct type
-    if (!profileData) {
-      throw new Error("Profile data not returned after insertion");
-    }
+//     // Ensure profileData is defined and cast it to the correct type
+//     if (!profileData) {
+//       throw new Error("Profile data not returned after insertion");
+//     }
 
-    // Type assertion to ensure profileData is of type Profile
-    const createdProfile: any = profileData;
+//     // Type assertion to ensure profileData is of type Profile
+//     const createdProfile: any = profileData;
 
-    // Return the newly created profile data, including autogenerated fields
-    return {
-      id: createdProfile.id, // Assuming 'id' is the generated key
-      createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
-      userId: createdProfile.userId, // Adjust based on your schema
-      role: createdProfile.role,
-      firstName: createdProfile.firstName,
-      lastName: createdProfile.lastName,
-      // dateOfBirth: createdProfile.dateOfBirth,
-      startDate: createdProfile.startDate,
-      availability: createdProfile.availability,
-      email: createdProfile.email,
-      parentName: createdProfile.parentName,
-      parentPhone: createdProfile.parentPhone,
-      parentEmail: createdProfile.parentEmail,
-      timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
-      tutorIds: createdProfile.tutorIds,
-      status: createdProfile.status,
-      studentNumber: createdProfile.student_number,
-      settingsId: createdProfile.settings_id,
-    };
-  } catch (error) {
-    console.error("Error adding student:", error);
-    throw error;
-  }
-};
+//     // Return the newly created profile data, including autogenerated fields
+//     return {
+//       id: createdProfile.id, // Assuming 'id' is the generated key
+//       createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
+//       userId: createdProfile.userId, // Adjust based on your schema
+//       role: createdProfile.role,
+//       firstName: createdProfile.firstName,
+//       lastName: createdProfile.lastName,
+//       // dateOfBirth: createdProfile.dateOfBirth,
+//       startDate: createdProfile.startDate,
+//       availability: createdProfile.availability,
+//       email: createdProfile.email,
+//       parentName: createdProfile.parentName,
+//       parentPhone: createdProfile.parentPhone,
+//       parentEmail: createdProfile.parentEmail,
+//       timeZone: createdProfile.timeZone,
+//       subjectsOfInterest: createdProfile.subjectsOfInterest,
+//       tutorIds: createdProfile.tutorIds,
+//       status: createdProfile.status,
+//       studentNumber: createdProfile.student_number,
+//       settingsId: createdProfile.settings_id,
+//     };
+//   } catch (error) {
+//     console.error("Error adding student:", error);
+//     throw error;
+//   }
+// };
 
 export async function deleteUser(profileId: string) {
   try {
@@ -382,6 +384,7 @@ export async function getUserFromId(profileId: string) {
           start_date,
           availability,
           email,
+          phone_number,
           parent_name,
           parent_phone,
           parent_email,
@@ -416,6 +419,7 @@ export async function getUserFromId(profileId: string) {
       startDate: profile.start_date,
       availability: profile.availability,
       email: profile.email,
+      phoneNumber: profile.phone_number,
       parentName: profile.parent_name,
       parentPhone: profile.parent_phone,
       parentEmail: profile.parent_email,
@@ -452,6 +456,7 @@ export async function editUser(profile: Profile) {
     parentEmail,
     timeZone,
     subjects_of_interest,
+    languages_spoken,
     studentNumber,
   } = profile;
   try {
@@ -473,6 +478,7 @@ export async function editUser(profile: Profile) {
         timezone: timeZone,
         student_number: studentNumber,
         subjects_of_interest: subjects_of_interest,
+        languages_spoken: languages_spoken,
       })
       .eq("id", id)
       .single();

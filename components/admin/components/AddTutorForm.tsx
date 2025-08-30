@@ -92,6 +92,8 @@ const AddTutorForm = ({
       setSubjectsOfInterest([...subjectsOfInterest, newSubject.trim()]);
       setNewSubject("");
     }
+    console.log(newSubject);
+    console.log(subjectsOfInterest);
   };
 
   const removeSubject = (subject: string) => {
@@ -103,6 +105,8 @@ const AddTutorForm = ({
       setLanguagesSpoken([...languagesSpoken, newLanguage.trim()]);
       setNewLanguage("");
     }
+    console.log(newLanguage);
+    console.log(languagesSpoken);
   };
 
   const removeLanguage = (language: string) => {
@@ -122,6 +126,11 @@ const AddTutorForm = ({
   const handleEnhancedAddTutor = () => {
     // You'll need to modify this to include the extended fields
     // This assumes your Profile type and handleAddTutor can accept these fields
+
+    console.log(availability);
+    console.log(subjectsOfInterest);
+    console.log(languagesSpoken);
+
     const tutorWithExtendedFields = {
       ...newTutor,
       availability,
@@ -353,7 +362,7 @@ const AddTutorForm = ({
                       placeholder="e.g., Mathematics, Physics"
                       value={newSubject}
                       onChange={(e) => setNewSubject(e.target.value)}
-                      onKeyPress={(e) =>
+                      onKeyDown={(e) =>
                         e.key === "Enter" && (e.preventDefault(), addSubject())
                       }
                     />
@@ -392,7 +401,7 @@ const AddTutorForm = ({
                       placeholder="e.g., English, Spanish"
                       value={newLanguage}
                       onChange={(e) => setNewLanguage(e.target.value)}
-                      onKeyPress={(e) =>
+                      onKeyDown={(e) =>
                         e.key === "Enter" && (e.preventDefault(), addLanguage())
                       }
                     />

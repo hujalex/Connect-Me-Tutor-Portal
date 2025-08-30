@@ -40,113 +40,113 @@ export const createUser = async (
   }
 };
 
-export const addTutor = async (
-  tutorData: Partial<Profile>
-): Promise<Profile> => {
-  let userId: string | null = null;
-  try {
-    if (!tutorData.email) {
-      throw new Error("Email is required to create a tutor profile");
-    }
+// export const addTutor = async (
+//   tutorData: Partial<Profile>
+// ): Promise<Profile> => {
+//   let userId: string | null = null;
+//   try {
+//     if (!tutorData.email) {
+//       throw new Error("Email is required to create a tutor profile");
+//     }
 
-    const lowerCaseEmail = tutorData.email.toLowerCase().trim();
+//     const lowerCaseEmail = tutorData.email.toLowerCase().trim();
 
-    // Check if a user with this email already exists
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from("Profiles")
-      .select("user_id")
-      .eq("email", lowerCaseEmail);
+//     // Check if a user with this email already exists
+//     const { data: existingUser, error: userCheckError } = await supabase
+//       .from("Profiles")
+//       .select("user_id")
+//       .eq("email", lowerCaseEmail);
 
-    if (userCheckError && userCheckError.code !== "PGRST116") {
-      // PGRST116 means no rows returned, which is what we want
-      throw userCheckError;
-    }
+//     if (userCheckError && userCheckError.code !== "PGRST116") {
+//       // PGRST116 means no rows returned, which is what we want
+//       throw userCheckError;
+//     }
 
-    if (existingUser && existingUser.length > 0) {
-      throw new Error("A user with this email already exists");
-    }
+//     if (existingUser && existingUser.length > 0) {
+//       throw new Error("A user with this email already exists");
+//     }
 
-    //-----Moved After Duplicate Check to prevent Sending confimration email-----
-    const tempPassword = await createPassword();
-    userId = await createUser(lowerCaseEmail, tempPassword);
+//     //-----Moved After Duplicate Check to prevent Sending confimration email-----
+//     const tempPassword = await createPassword();
+//     userId = await createUser(lowerCaseEmail, tempPassword);
 
-    if (!userId) {
-      throw new Error("Failed to create user account");
-    }
-    // Create the student profile without id and createdAt
-    const newTutorProfile = {
-      user_id: userId,
-      role: "Tutor",
-      first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
-      last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
-      start_date: tutorData.startDate || new Date().toISOString(),
-      availability: tutorData.availability || [],
-      email: lowerCaseEmail,
-      phone_number: tutorData.phoneNumber || "",
-      timezone: tutorData.timeZone || "",
-      subjects_of_interest: tutorData.subjectsOfInterest || [],
-      tutor_ids: [], // Changed from tutorIds to tutor_ids
-      status: "Active",
-      student_number: null,
-    };
+//     if (!userId) {
+//       throw new Error("Failed to create user account");
+//     }
+//     // Create the student profile without id and createdAt
+//     const newTutorProfile = {
+//       user_id: userId,
+//       role: "Tutor",
+//       first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
+//       last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
+//       start_date: tutorData.startDate || new Date().toISOString(),
+//       availability: tutorData.availability || [],
+//       email: lowerCaseEmail,
+//       phone_number: tutorData.phoneNumber || "",
+//       timezone: tutorData.timeZone || "",
+//       subjects_of_interest: tutorData.subjectsOfInterest || [],
+//       tutor_ids: [], // Changed from tutorIds to tutor_ids
+//       status: "Active",
+//       student_number: null,
+//     };
 
-    // Add tutor profile to the database
-    const { data: profileData, error: profileError } = await supabase
-      .from("Profiles") // Ensure 'profiles' is correctly cased
-      .insert(newTutorProfile)
-      .select("*")
-      .single();
+//     // Add tutor profile to the database
+//     const { data: profileData, error: profileError } = await supabase
+//       .from("Profiles") // Ensure 'profiles' is correctly cased
+//       .insert(newTutorProfile)
+//       .select("*")
+//       .single();
 
-    if (profileError) {
-      // transaction processing - prevents auth user account with no profile
-      await deleteUser(userId);
-      throw profileError;
-    }
+//     if (profileError) {
+//       // transaction processing - prevents auth user account with no profile
+//       await deleteUser(userId);
+//       throw profileError;
+//     }
 
-    // Ensure profileData is defined and cast it to the correct type
-    if (!profileData) {
-      throw new Error("Profile data not returned after insertion");
-    }
+//     // Ensure profileData is defined and cast it to the correct type
+//     if (!profileData) {
+//       throw new Error("Profile data not returned after insertion");
+//     }
 
-    await sendConfirmationEmail(profileData.email);
-    // Type assertion to ensure profileData is of type Profile
-    const createdProfile: Profile = profileData;
-    // Return the newly created profile data, including autogenerated fields
-    return {
-      id: createdProfile.id, // Assuming 'id' is the generated key
-      createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
-      userId: createdProfile.userId, // Adjust based on your schema
-      role: createdProfile.role,
-      firstName: createdProfile.firstName,
-      lastName: createdProfile.lastName,
-      // dateOfBirth: createdProfile.dateOfBirth,
-      startDate: createdProfile.startDate,
-      availability: createdProfile.availability,
-      email: createdProfile.email,
-      phoneNumber: createdProfile.phoneNumber,
-      parentName: createdProfile.parentName,
-      parentPhone: createdProfile.parentPhone,
-      parentEmail: createdProfile.parentEmail,
-      timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
-      tutorIds: createdProfile.tutorIds,
-      status: createdProfile.status,
-      studentNumber: createdProfile.studentNumber,
-      settingsId: createdProfile.settingsId,
-    };
-  } catch (error) {
-    console.error("Error adding tutor:", error);
+//     await sendConfirmationEmail(profileData.email);
+//     // Type assertion to ensure profileData is of type Profile
+//     const createdProfile: Profile = profileData;
+//     // Return the newly created profile data, including autogenerated fields
+//     return {
+//       id: createdProfile.id, // Assuming 'id' is the generated key
+//       createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
+//       userId: createdProfile.userId, // Adjust based on your schema
+//       role: createdProfile.role,
+//       firstName: createdProfile.firstName,
+//       lastName: createdProfile.lastName,
+//       // dateOfBirth: createdProfile.dateOfBirth,
+//       startDate: createdProfile.startDate,
+//       availability: createdProfile.availability,
+//       email: createdProfile.email,
+//       phoneNumber: createdProfile.phoneNumber,
+//       parentName: createdProfile.parentName,
+//       parentPhone: createdProfile.parentPhone,
+//       parentEmail: createdProfile.parentEmail,
+//       timeZone: createdProfile.timeZone,
+//       subjectsOfInterest: createdProfile.subjectsOfInterest,
+//       tutorIds: createdProfile.tutorIds,
+//       status: createdProfile.status,
+//       studentNumber: createdProfile.studentNumber,
+//       settingsId: createdProfile.settingsId,
+//     };
+//   } catch (error) {
+//     console.error("Error adding tutor:", error);
 
-    if (userId) {
-      try {
-        await deleteUser(userId);
-      } catch (error) {
-        console.error("Unable to execute rollback transaction");
-      }
-    }
-    throw error;
-  }
-};
+//     if (userId) {
+//       try {
+//         await deleteUser(userId);
+//       } catch (error) {
+//         console.error("Unable to execute rollback transaction");
+//       }
+//     }
+//     throw error;
+//   }
+// };
 
 export const addUser = async (
   userData: Partial<Profile>,
@@ -175,7 +175,7 @@ export const addUser = async (
       throw new Error("A user with this email already exists");
     }
 
-    //-----Moved After Duplicate Check to prevent Sending confimration email-----
+  //-----Moved After Duplicate Check to prevent Sending confimration email-----
     const tempPassword = await createPassword();
     userId = await createUser(lowerCaseEmail, tempPassword);
 
@@ -197,13 +197,13 @@ export const addUser = async (
       parent_name: userData.parentName || "",
       parent_phone: userData.parentPhone || "",
       parent_email: userData.parentEmail || "",
-
       phone_number: userData.phoneNumber || "",
       timezone: userData.timeZone || "",
-      subjects_of_interest: userData.subjectsOfInterest || [],
+      subjects_of_interest: userData.subjects_of_interest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: userData.studentNumber || null,
+      languages_spoken: userData.languages_spoken,
     };
 
     // Add tutor profile to the database
@@ -244,11 +244,12 @@ export const addUser = async (
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjects_of_interest,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
       settingsId: createdProfile.settingsId,
+      languages_spoken: createdProfile.languages_spoken,
     };
   } catch (error) {
     console.error("Error adding tutor:", error);

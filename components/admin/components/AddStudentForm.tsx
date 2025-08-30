@@ -126,6 +126,7 @@ const AddStudentForm = ({
       ...newStudent,
       availability,
       subjects_of_interest: subjectsOfInterest,
+      languages_spoken: languagesSpoken,
     };
 
     handleAddStudent(studentWithExtendedFields);
