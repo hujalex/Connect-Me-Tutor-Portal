@@ -314,7 +314,7 @@ const StudentList = () =>
       try {
         setAddingStudent(true);
         // Ensure addStudent returns a Profile
-        const addedStudent: Profile = await addUser(student, "Student");
+        const addedStudent: Profile = await addUser(student, "Student", true);
 
         // Update local state
         setStudents((prevStudents) => {
@@ -374,7 +374,11 @@ const StudentList = () =>
       try {
         setAddingStudent(true);
         // Ensure addStudent returns a Profile
-        const addedStudent: Profile = await addUser(newStudent, "Student");
+        const addedStudent: Profile = await addUser(
+          newStudent,
+          "Student",
+          true
+        );
 
         // Update local state
         setStudents((prevStudents) => {
@@ -415,7 +419,7 @@ const StudentList = () =>
             parentPhone: "",
             parentEmail: "",
             timeZone: "",
-            subjectsOfInterest: [],
+            subjects_of_interest: [],
             status: "Active",
             tutorIds: [],
           });

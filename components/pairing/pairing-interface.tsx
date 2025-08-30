@@ -60,10 +60,12 @@ export function PairingInterface() {
     status: "accepted" | "rejected"
   ) => {
     const promise = updatePairingMatchStatus(profile.id, matchId, status);
+
     toast.promise(promise, {
-      success: `Successfully ${status} match`,
-      error: `Failed to ${status} match`,
-      loading: "Loading...",
+      loading: `${status === "accepted" ? "Accepting" : "Rejecting"} pairing...`,
+      success: `Successfully ${status} pairing`,
+      error: (err) =>
+        `Failed to ${status.slice(0, -2)} pairing: ${err.message}`,
     });
   };
 
