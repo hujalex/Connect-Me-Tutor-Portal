@@ -214,39 +214,39 @@ const EnhancedAvailabilityForm: React.FC<AvailabilityFormProps> = ({
       );
 
   const addAvailability = () => {
-    setValidationError("");
+    // setValidationError("");
 
-    // Strict validation against open availabilities
-    const validation = isTimeWithinOpenSlots(
-      selectedDay,
-      selectedStartTime,
-      selectedEndTime,
-      openAvailabilities
-    );
+    // // Strict validation against open availabilities
+    // const validation = isTimeWithinOpenSlots(
+    //   selectedDay,
+    //   selectedStartTime,
+    //   selectedEndTime,
+    //   openAvailabilities
+    // );
 
-    if (!validation.isValid) {
-      setValidationError(validation.reason || "Invalid time selection.");
-      return;
-    }
+    // if (!validation.isValid) {
+    //   setValidationError(validation.reason || "Invalid time selection.");
+    //   return;
+    // }
 
-    // Check for overlaps with existing availability
-    const hasOverlap = availabilityList.some((existing) => {
-      if (existing.day !== selectedDay) return false;
+    // // Check for overlaps with existing availability
+    // const hasOverlap = availabilityList.some((existing) => {
+    //   if (existing.day !== selectedDay) return false;
 
-      const existingStart = timeToMinutes(existing.startTime);
-      const existingEnd = timeToMinutes(existing.endTime);
-      const newStart = timeToMinutes(selectedStartTime);
-      const newEnd = timeToMinutes(selectedEndTime);
+    //   const existingStart = timeToMinutes(existing.startTime);
+    //   const existingEnd = timeToMinutes(existing.endTime);
+    //   const newStart = timeToMinutes(selectedStartTime);
+    //   const newEnd = timeToMinutes(selectedEndTime);
 
-      return newStart < existingEnd && newEnd > existingStart;
-    });
+    //   return newStart < existingEnd && newEnd > existingStart;
+    // });
 
-    if (hasOverlap) {
-      setValidationError(
-        "This time range overlaps with your existing availability."
-      );
-      return;
-    }
+    // if (hasOverlap) {
+    //   setValidationError(
+    //     "This time range overlaps with your existing availability."
+    //   );
+    //   return;
+    // }
 
     const updatedList = [
       ...availabilityList,

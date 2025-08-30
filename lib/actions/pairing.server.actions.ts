@@ -217,11 +217,14 @@ export const updatePairingMatchStatus = async (
 
     //send respective pairing email to student and tutor
 
-    // await axios.post("/api/email/pairing?type=match-accepted", {
-    //   emailType: "match-accepted",
-    //   data: emailData,
-    // });
+    // if (status == "accepted") {
+    //   await axios.post("/api/email/pairing?type=match-accepted", {
+    //     emailType: "match-accepted",
+    //     data: emailData,
+    //   });
+    // }
 
+    console.log("student", student);
     // Replace the fetch with:
     await sendPairingEmail("match-accepted", emailData);
 

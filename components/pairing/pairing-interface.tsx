@@ -67,6 +67,8 @@ export function PairingInterface() {
       error: (err) =>
         `Failed to ${status.slice(0, -2)} pairing: ${err.message}`,
     });
+
+    
   };
 
   return (
