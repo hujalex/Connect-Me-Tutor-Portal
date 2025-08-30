@@ -11,6 +11,8 @@ import { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-m
 import { IncomingPairingMatch } from "./pairing.actions";
 import { NextResponse } from "next/server";
 import { PairingLogSchemaType } from "../pairing/types";
+import { getSupabase } from "../supabase-server/serverClient";
+import { sendPairingEmail } from "./email.server.actions";
 
 export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
   try {
@@ -159,14 +161,15 @@ export const updatePairingMatchStatus = async (
   matchId: string,
   status: "accepted" | "rejected"
 ) => {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    throw new Error("Missing Supabase environment variables");
-  }
-  console.log("logs fine here!");
-  const supabase = await createServerClient();
+  // if (
+  //   !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  //   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // ) {
+  //   throw new Error("Missing Supabase environment variables");
+  // }
+  // console.log("logs fine here!");
+  // const supabase = await createServerClient();
+  const supabase = await getSupabase();
 
   //
   const updateResponse = await supabase
@@ -213,13 +216,14 @@ export const updatePairingMatchStatus = async (
     } as TutorMatchingNotificationEmailProps;
 
     //send respective pairing email to student and tutor
-    await axios.post(
-      "http://localhost:3000/api/email/pairing?type=match-accepted",
-      {
-        emailType: "match-accepted",
-        data: emailData,
-      }
-    );
+
+    // await axios.post("/api/email/pairing?type=match-accepted", {
+    //   emailType: "match-accepted",
+    //   data: emailData,
+    // });
+
+    // Replace the fetch with:
+    await sendPairingEmail("match-accepted", emailData);
 
     const log = await supabase.from("pairing_logs").insert([
       {
