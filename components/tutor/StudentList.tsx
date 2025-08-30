@@ -35,6 +35,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import { StudentAnnouncementsRoomId } from "@/constants/chat";
 import { StudentAvailabilities } from "./dashboard/components/StudentAvailabilities";
+import DeletePairingForm from "./dashboard/components/DeletePairingForm";
 
 const StudentList = () => {
   const supabase = createClientComponentClient();
@@ -136,6 +137,7 @@ const StudentList = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Parent Phone</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -156,6 +158,10 @@ const StudentList = () => {
                   </TableCell>
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.parentPhone}</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell>
+                    <DeletePairingForm student={student} tutor={profile} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

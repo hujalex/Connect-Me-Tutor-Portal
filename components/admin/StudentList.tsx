@@ -308,7 +308,7 @@ const StudentList = () =>
       try {
         setAddingStudent(true);
         // Ensure addStudent returns a Profile
-        const addedStudent: Profile = await addStudent(student);
+        const addedStudent: Profile = await addUser(student, "Student");
 
         // Update local state
         setStudents((prevStudents) => {

@@ -150,3 +150,24 @@ export const getIncomingPairingMatches = async (profileId: string) => {
 
   return data;
 };
+
+export const deletePairing = async (tutorId: string, studentId: string) => {
+  try {
+    console.log(tutorId);
+    console.log(studentId);
+
+    const { data, error } = await supabase
+      .from("Pairings")
+      .delete()
+      .eq("tutor_id", tutorId)
+      .eq("student_id", studentId);
+
+    if (error) throw error;
+    console.log(data);
+
+    console.log("Deleted");
+  } catch (error) {
+    console.error("Failed to delete pairing", error);
+    throw error;
+  }
+};
