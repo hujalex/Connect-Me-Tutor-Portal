@@ -12,15 +12,17 @@ export async function POST(req: NextRequest) {
   try {
     const { emailType, data } = await req.json();
 
-    if (!emailType || !allowedEmailTypes.includes(emailType))
+    if (!emailType || !allowedEmailTypes.includes(emailType)) {
       return NextResponse.json({ error: "must provide valid email type" });
+    }
 
     if (emailType === "match-accepted") {
       console.log("rendering with", data);
       const emailHtml = await render(
         React.createElement(TutorMatchingNotificationEmail, data)
-      ); // ✅ no JSX
+      );
       console.log("email temp: ", emailHtml);
+
       const emailResult = await resend.emails.send({
         from: "reminder@connectmego.app",
         to: "aaronmarsh755@gmail.com",

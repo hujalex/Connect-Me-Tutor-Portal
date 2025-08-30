@@ -18,6 +18,7 @@ type QueueItemMatch = QueueItem & {
 };
 
 export const runPairingWorkflow = async () => {
+  console.log("STARTING PAIRING WORKFLOW");
   const supabase = createClient();
 
   const updatePairingStatus = (requestId: string, status: "paired") =>
@@ -164,4 +165,5 @@ export const runPairingWorkflow = async () => {
     );
   const r2 = await supabase.from("pairing_logs").insert(logs);
   console.log(r1, r2);
+  console.log("PAIRINGS ENDING");
 };
