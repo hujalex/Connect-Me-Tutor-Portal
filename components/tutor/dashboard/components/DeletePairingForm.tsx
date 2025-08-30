@@ -96,16 +96,15 @@ const DeletePairingForm = ({ tutor, student }: DeletePairingFormProps) => {
     <AlertDialog>
       <AlertDialogTrigger>
         <Button variant="ghost" size="icon">
-          <Trash className="h-4 w-4" />
+          <Trash className="h-4 w-4" color="#ef4444" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Cancel Pairing</AlertDialogTitle>
+          <AlertDialogTitle>Remove Pairing</AlertDialogTitle>
           <AlertDialogDescription>
-            {/* {" "}
-            Note: Will not resend confirmation email if the user has already
-            signed in before */}
+            {" "}
+            Note: This actions is irreversible
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
