@@ -1493,6 +1493,9 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       }
     }
 
+    //remove future sessions
+    await removeFutureSessions(enrollment.id);
+
     return updateEnrollmentData;
   } catch (error) {
     console.error("Unable to update Enrollment", error);
@@ -1562,8 +1565,30 @@ export const addEnrollment = async (
   };
 };
 
+export const removeFutureSessions = async (enrollmentId: string) => {
+  try {
+    const now: string = new Date().toISOString();
+    const { data: deleteSessionsData, error: deleteSessionsError } =
+      await supabase
+        .from("Sessions")
+        .delete()
+        .eq("enrollment_id", enrollmentId)
+        .eq("status", "Active")
+        .gte("date", now);
+
+    console.log("Successfully deleted sessions");
+
+    if (deleteSessionsError) {
+      throw deleteSessionsError;
+    }
+  } catch (error) {
+    console.error("Unable to remove future sessions", error);
+    throw error;
+  }
+};
+
 export const removeEnrollment = async (enrollmentId: string) => {
-  const now: string = new Date().toISOString();
+  await removeFutureSessions(enrollmentId);
 
   const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
     await supabase.from("Enrollments").delete().eq("id", enrollmentId);
@@ -1571,18 +1596,6 @@ export const removeEnrollment = async (enrollmentId: string) => {
   if (deleteEnrollmentError) {
     console.error("Error removing enrollment:", deleteEnrollmentError);
     throw deleteEnrollmentError;
-  }
-
-  const { data: deleteSessionsData, error: deleteSessionsError } =
-    await supabase
-      .from("Sessions")
-      .delete()
-      .eq("enrollment_id", enrollmentId)
-      .gt("date", now);
-
-  if (deleteSessionsError) {
-    console.error("Error Deleting related sessions", deleteSessionsError);
-    throw deleteSessionsError;
   }
 };
 
