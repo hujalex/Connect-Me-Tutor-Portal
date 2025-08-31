@@ -6,6 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { ideahub } from "googleapis/build/src/apis/ideahub";
+import { getSupabase } from "@/lib/supabase-server/serverClient";
+import { Table } from "@/lib/supabase/tables";
 
 export const dynamic = "force-dynamic";
 
@@ -13,23 +15,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ) {
-      throw new Error("Missing Supabase environment variables");
-    }
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    const supabase = getSupabase();
 
     const { to, subject, body, sessionId } = await request.json();
 
     const { data: session, error: sessionError } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("*")
       .eq("id", sessionId)
       .single();

@@ -18,7 +18,7 @@ export async function getStudentSessions(
   ascending?: boolean
 ): Promise<Session[]> {
   let query = supabase
-    .from("Sessions")
+    .from(Table.Sessions)
     .select(
       `
       *
@@ -84,7 +84,7 @@ export async function rescheduleSession(
   try {
     // First, get the current session details
     const { data: sessionData, error: sessionError } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("*")
       .eq("id", sessionId)
       .single();
@@ -122,8 +122,10 @@ export async function rescheduleSession(
 export async function enrollInSession(studentId: string, sessionId: string) {
   try {
     const { data, error } = await supabase
-      .from("Sessions")
-      .update({ student_id: studentId })
+      .from(Table.Sessions)
+      .update({
+        student_id: studentId,
+      })
       .eq("id", sessionId)
       .is("student_id", null) // Ensure the session is not already taken
       .single();
@@ -139,8 +141,10 @@ export async function enrollInSession(studentId: string, sessionId: string) {
 export async function cancelEnrollment(sessionId: string) {
   try {
     const { data, error } = await supabase
-      .from("Sessions")
-      .update({ student_id: null })
+      .from(Table.Sessions)
+      .update({
+        student_id: null,
+      })
       .eq("id", sessionId)
       .single();
 

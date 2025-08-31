@@ -33,6 +33,9 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
+import { StudentAnnouncementsRoomId } from "@/constants/chat";
+import { StudentAvailabilities } from "./dashboard/components/StudentAvailabilities";
+import DeletePairingForm from "./dashboard/components/DeletePairingForm";
 
 const StudentList = () => {
   const supabase = createClientComponentClient();
@@ -134,6 +137,7 @@ const StudentList = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Parent Phone</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -144,15 +148,20 @@ const StudentList = () => {
                     {student.firstName} {student.lastName}
                   </TableCell>
                   <TableCell>
-                    <AvailabilityFormat availability={student.availability} />
+                    <StudentAvailabilities student={student} />
+                    {/* <AvailabilityFormat availability={student.availability} /> */}
                   </TableCell>
                   <TableCell className="flex flex-col">
-                    {student.subjectsOfInterest?.map((item, index) => (
+                    {student.subjects_of_interest?.map((item, index) => (
                       <span key={index}>{item}</span>
                     ))}
                   </TableCell>
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.parentPhone}</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell>
+                    <DeletePairingForm student={student} tutor={profile} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

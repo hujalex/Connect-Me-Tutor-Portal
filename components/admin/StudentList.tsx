@@ -45,7 +45,6 @@ import {
 import { getProfile } from "@/lib/actions/user.actions";
 import {
   getAllProfiles,
-  addStudent,
   deactivateUser,
   reactivateUser,
   deleteUser,
@@ -53,6 +52,7 @@ import {
   getUserFromId,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
+import { addUser } from "@/lib/actions/auth.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import {
@@ -119,7 +119,7 @@ const StudentList = () =>
       parentPhone: "",
       parentEmail: "",
       timeZone: "",
-      subjectsOfInterest: [],
+      subjects_of_interest: [],
       status: "Active",
       tutorIds: [],
       studentNumber: "",
@@ -304,11 +304,71 @@ const StudentList = () =>
       );
     };
 
+    const handleAddStudentWithParam = async (student: Partial<Profile>) => {
+      try {
+        setAddingStudent(true);
+        // Ensure addStudent returns a Profile
+        const addedStudent: Profile = await addUser(student, "Student");
+
+        // Update local state
+        setStudents((prevStudents) => {
+          // Check if addedStudent is valid
+          if (addedStudent) {
+            return [...prevStudents, addedStudent]; // Ensure returning an array of Profile
+          }
+          return prevStudents; // Return previous state if addedStudent is not valid
+        });
+
+        setFilteredStudents((prevFiltered) => {
+          // Check if addedStudent is valid
+          if (addedStudent) {
+            return [...prevFiltered, addedStudent]; // Ensure returning an array of Profile
+          }
+          return prevFiltered; // Return previous state if addedStudent is not valid
+        });
+
+        if (addedStudent) {
+          // Close modal and show success toast
+          setIsModalOpen(false);
+          setStudents((prevStudents) => [...prevStudents, addedStudent]);
+
+          toast.success("Successfully added student.");
+
+          // Reset form
+          setNewStudent({
+            role: "Student",
+            firstName: "",
+            lastName: "",
+            age: "",
+            grade: "",
+            gender: "",
+            startDate: "",
+            availability: [],
+            email: "",
+            parentName: "",
+            parentPhone: "",
+            parentEmail: "",
+            timeZone: "",
+            subjects_of_interest: [],
+            status: "Active",
+            tutorIds: [],
+          });
+        }
+      } catch (error) {
+        const err = error as Error;
+        console.error("Error adding student:", error);
+        toast.error("Failed to Add Student.");
+        toast.error(`${err.message}`);
+      } finally {
+        setAddingStudent(false);
+      }
+    };
+
     const handleAddStudent = async () => {
       try {
         setAddingStudent(true);
         // Ensure addStudent returns a Profile
-        const addedStudent: Profile = await addStudent(newStudent);
+        const addedStudent: Profile = await addUser(newStudent, "Student");
 
         // Update local state
         setStudents((prevStudents) => {
@@ -400,7 +460,7 @@ const StudentList = () =>
       if (profileId) {
         try {
           const data = await getUserFromId(profileId);
-          setSelectedStudent(data as Profile);
+          setSelectedStudent(data as unknown as Profile);
           // setIsReactivateModalOpen(false);
         } catch (error) {
           console.error("Failed to identify tutor");
@@ -460,8 +520,7 @@ const StudentList = () =>
                   handleGradeChange={handleGradeChange}
                   handleTimeZone={handleTimeZone}
                   handleGender={handleGender}
-                  handleSubjectsChange={handleSubjectsChange}
-                  handleAddStudent={handleAddStudent}
+                  handleAddStudent={handleAddStudentWithParam}
                   addingStudent={addingStudent}
                 />
 
@@ -497,6 +556,7 @@ const StudentList = () =>
                   <TableHead>Status</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>Student Name</TableHead>
+                  <TableHead>Grade Level</TableHead>
                   {/* <TableHead>Availability</TableHead> */}
                   <TableHead>Subjects Learning</TableHead>
                   <TableHead>Email</TableHead>
@@ -513,11 +573,12 @@ const StudentList = () =>
                     <TableCell>
                       {student.firstName} {student.lastName}
                     </TableCell>
+                    <TableCell>{student.grade}</TableCell>
                     {/* <TableCell>
                       <AvailabilityFormat availability={student.availability} />
                     </TableCell> */}
                     <TableCell className="flex flex-col">
-                      {student.subjectsOfInterest?.map((item, index) => (
+                      {student.subjects_of_interest?.map((item, index) => (
                         <span key={index}>{item}</span>
                       ))}
                     </TableCell>
