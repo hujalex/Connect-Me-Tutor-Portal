@@ -84,7 +84,7 @@ export const addTutor = async (
       email: lowerCaseEmail,
       phone_number: tutorData.phoneNumber || "",
       timezone: tutorData.timeZone || "",
-      subjects_of_interest: tutorData.subjectsOfInterest || [],
+      subjects_of_interest: tutorData.subjects_of_interest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: null,
@@ -128,7 +128,8 @@ export const addTutor = async (
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjects_of_interest,
+      languages_spoken: createdProfile.languages_spoken,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
@@ -200,7 +201,7 @@ export const addUser = async (
 
       phone_number: userData.phoneNumber || "",
       timezone: userData.timeZone || "",
-      subjects_of_interest: userData.subjectsOfInterest || [],
+      subjects_of_interest: userData.subjects_of_interest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: userData.studentNumber || null,
@@ -244,7 +245,8 @@ export const addUser = async (
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjects_of_interest,
+      languages_spoken: createdProfile.languages_spoken,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,

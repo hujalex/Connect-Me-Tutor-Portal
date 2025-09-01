@@ -78,6 +78,7 @@ export async function getAllProfiles(
       tutor_ids,
       timezone,
       subjects_of_interest,
+      languages_spoken,
       status,
       student_number,
       settings_id
@@ -189,7 +190,7 @@ export const addStudent = async (
       parent_phone: studentData.parentPhone || "",
       parent_email: studentData.parentEmail || "",
       timezone: studentData.timeZone || "",
-      subjects_of_interest: studentData.subjectsOfInterest || [],
+      subjects_of_interest: studentData.subjects_of_interest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: studentData.studentNumber,
@@ -233,7 +234,8 @@ export const addStudent = async (
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjects_of_interest,
+      languages_spoken: createdProfile.languages_spoken,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
@@ -322,11 +324,13 @@ export const addTutor = async (
       startDate: createdProfile.startDate,
       availability: createdProfile.availability,
       email: createdProfile.email,
+      phoneNumber: createdProfile.phoneNumber,
       parentName: createdProfile.parentName,
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjectsOfInterest,
+      languages_spoken: createdProfile.languages_spoken,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.student_number,
@@ -382,6 +386,7 @@ export async function getUserFromId(profileId: string) {
           start_date,
           availability,
           email,
+          phone_number,
           parent_name,
           parent_phone,
           parent_email,
@@ -416,6 +421,7 @@ export async function getUserFromId(profileId: string) {
       startDate: profile.start_date,
       availability: profile.availability,
       email: profile.email,
+      phoneNumber: profile.phone_number,
       parentName: profile.parent_name,
       parentPhone: profile.parent_phone,
       parentEmail: profile.parent_email,
@@ -1944,14 +1950,53 @@ export const updateNotification = async (
   }
 };
 
-export async function createPassword(): Promise<string> {
+export async function createPassword(length: number = 16): Promise<string> {
+  // Character sets for password generation
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+  const allChars = lowercase + uppercase + numbers + symbols;
+
+  // Use crypto.getRandomValues for cryptographically secure randomness
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+
   let password = "";
 
-  for (let i = 0; i < 10; ++i) {
-    password += Math.floor(Math.random() * 10);
+  // Ensure at least one character from each character set
+  const guaranteedChars = [
+    lowercase[array[0] % lowercase.length],
+    uppercase[array[1] % uppercase.length],
+    numbers[array[2] % numbers.length],
+    symbols[array[3] % symbols.length],
+  ];
+
+  // Fill remaining positions with random characters from all sets
+  for (let i = 4; i < length; i++) {
+    password += allChars[array[i] % allChars.length];
   }
 
-  return password;
+  // Add guaranteed characters
+  password += guaranteedChars.join("");
+
+  // Shuffle the password to randomize guaranteed character positions
+  return shuffleString(password);
+}
+
+function shuffleString(str: string): string {
+  const array = str.split("");
+  const randomArray = new Uint8Array(array.length);
+  crypto.getRandomValues(randomArray);
+
+  // Fisher-Yates shuffle with crypto random
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = randomArray[i] % (i + 1);
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array.join("");
 }
 // function zonedTimeToUtc(arg0: any, arg1: string) {
 //   throw new Error("Function not implemented.");
