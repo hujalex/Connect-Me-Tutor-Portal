@@ -40,8 +40,10 @@ import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
 import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
+import { Table } from "../supabase/tables";
 import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
 import { createUser } from "./auth.actions";
+import { handleCalculateDuration } from "./hours.actions";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -76,6 +78,7 @@ export async function getAllProfiles(
       tutor_ids,
       timezone,
       subjects_of_interest,
+      languages_spoken,
       status,
       student_number,
       settings_id
@@ -83,7 +86,7 @@ export async function getAllProfiles(
 
     // Build query
     let query = supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(profileFields)
       .eq("role", role);
 
@@ -128,6 +131,8 @@ export async function getAllProfiles(
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
+      subjects_of_interest: profile.subjects_of_interest,
+      languages_spoken: profile.languages_spoken,
     }));
 
     return userProfiles;
@@ -151,7 +156,7 @@ export const addStudent = async (
 
     // Check if a user with this email already exists
     const { data: existingUser, error: userCheckError } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select("user_id")
       .eq("email", lower_case_email);
 
@@ -185,7 +190,7 @@ export const addStudent = async (
       parent_phone: studentData.parentPhone || "",
       parent_email: studentData.parentEmail || "",
       timezone: studentData.timeZone || "",
-      subjects_of_interest: studentData.subjectsOfInterest || [],
+      subjects_of_interest: studentData.subjects_of_interest || [],
       tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
       student_number: studentData.studentNumber,
@@ -193,7 +198,7 @@ export const addStudent = async (
 
     // Add student profile to the database
     const { data: profileData, error: profileError } = await supabase
-      .from("Profiles") // Ensure 'profiles' is correctly cased
+      .from(Table.Profiles) // Ensure 'profiles' is correctly cased
       .insert(newStudentProfile)
       .select("*");
 
@@ -229,10 +234,106 @@ export const addStudent = async (
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjects_of_interest,
+      languages_spoken: createdProfile.languages_spoken,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
+      settingsId: createdProfile.settings_id,
+    };
+  } catch (error) {
+    console.error("Error adding student:", error);
+    throw error;
+  }
+};
+
+export const addTutor = async (
+  tutorData: Partial<Profile>
+): Promise<Profile> => {
+  const supabase = createClientComponentClient();
+  try {
+    console.log(tutorData);
+    if (!tutorData.email) {
+      throw new Error("Email is required to create a student profile");
+    }
+
+    const lowerCaseEmail = tutorData.email.toLowerCase().trim();
+
+    // Check if a user with this email already exists
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from(Table.Profiles)
+      .select("user_id")
+      .eq("email", lowerCaseEmail);
+
+    if (userCheckError && userCheckError.code !== "PGRST116") {
+      // PGRST116 means no rows returned, which is what we want
+      throw userCheckError;
+    }
+
+    if (existingUser && existingUser.length > 0) {
+      throw new Error("A user with this email already exists");
+    }
+
+    //-----Moved After Duplicate Check to prevent Sending confimration email-----
+    const tempPassword = await createPassword();
+    const userId = await createUser(lowerCaseEmail, tempPassword);
+
+    // Create the student profile without id and createdAt
+    const newTutorProfile = {
+      user_id: userId,
+      role: "Tutor",
+      first_name: tutorData.firstName ? tutorData.firstName.trim() : "",
+      last_name: tutorData.lastName ? tutorData.lastName.trim() : "",
+      // date_of_birth: tutorData.dateOfBirth || "",
+      start_date: tutorData.startDate || new Date().toISOString(),
+      availability: tutorData.availability || [],
+      email: lowerCaseEmail,
+      timezone: tutorData.timeZone || "",
+      subjects_of_interest: tutorData.subjects_of_interest || [],
+      languages_spoken: tutorData.languages_spoken || [],
+      tutor_ids: [], // Changed from tutorIds to tutor_ids
+      status: "Active",
+      student_number: null,
+    };
+
+    // Add tutor profile to the database
+    const { data: profileData, error: profileError } = await supabase
+      .from(Table.Profiles) // Ensure 'profiles' is correctly cased
+      .insert(newTutorProfile)
+      .select("*");
+
+    if (profileError) throw profileError;
+
+    // Ensure profileData is defined and cast it to the correct type
+    if (!profileData) {
+      throw new Error("Profile data not returned after insertion");
+    }
+
+    // Type assertion to ensure profileData is of type Profile
+    const createdProfile: any = profileData;
+
+    // Return the newly created profile data, including autogenerated fields
+    return {
+      id: createdProfile.id, // Assuming 'id' is the generated key
+      createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
+      userId: createdProfile.userId, // Adjust based on your schema
+      role: createdProfile.role,
+      firstName: createdProfile.firstName,
+      lastName: createdProfile.lastName,
+      // dateOfBirth: createdProfile.dateOfBirth,
+      startDate: createdProfile.startDate,
+      availability: createdProfile.availability,
+      email: createdProfile.email,
+      phoneNumber: createdProfile.phoneNumber,
+      parentName: createdProfile.parentName,
+      parentPhone: createdProfile.parentPhone,
+      parentEmail: createdProfile.parentEmail,
+      timeZone: createdProfile.timeZone,
+      subjects_of_interest: createdProfile.subjectsOfInterest,
+      languages_spoken: createdProfile.languages_spoken,
+      tutorIds: createdProfile.tutorIds,
+      status: createdProfile.status,
+      studentNumber: createdProfile.student_number,
       settingsId: createdProfile.settings_id,
     };
   } catch (error) {
@@ -270,7 +371,7 @@ export async function deleteUser(profileId: string) {
 export async function getUserFromId(profileId: string) {
   try {
     const { data: profile, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .select(
         ` id,
           created_at,
@@ -285,12 +386,14 @@ export async function getUserFromId(profileId: string) {
           start_date,
           availability,
           email,
+          phone_number,
           parent_name,
           parent_phone,
           parent_email,
           tutor_ids,
           timezone,
           subjects_of_interest,
+          languages_spoken,
           status,
           student_number,
           settings_id
@@ -304,7 +407,7 @@ export async function getUserFromId(profileId: string) {
     }
     if (!profile) return null;
 
-    const userProfile = {
+    const userProfile: Profile = {
       id: profile.id,
       createdAt: profile.created_at,
       role: profile.role,
@@ -318,12 +421,14 @@ export async function getUserFromId(profileId: string) {
       startDate: profile.start_date,
       availability: profile.availability,
       email: profile.email,
+      phoneNumber: profile.phone_number,
       parentName: profile.parent_name,
       parentPhone: profile.parent_phone,
       parentEmail: profile.parent_email,
       tutorIds: profile.tutor_ids,
       timeZone: profile.timezone,
-      subjectsOfInterest: profile.subjects_of_interest,
+      subjects_of_interest: profile.subjects_of_interest,
+      languages_spoken: profile.languages_spoken,
       status: profile.status,
       studentNumber: profile.student_number,
       settingsId: profile.settings_id,
@@ -352,12 +457,12 @@ export async function editUser(profile: Profile) {
     parentPhone,
     parentEmail,
     timeZone,
-    subjectsOfInterest,
+    subjects_of_interest,
     studentNumber,
   } = profile;
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update({
         role: role,
         first_name: firstName.trim(),
@@ -373,7 +478,7 @@ export async function editUser(profile: Profile) {
         parent_phone: parentPhone,
         timezone: timeZone,
         student_number: studentNumber,
-        subjects_of_interest: subjectsOfInterest,
+        subjects_of_interest: subjects_of_interest,
       })
       .eq("id", id)
       .single();
@@ -388,7 +493,7 @@ export async function editUser(profile: Profile) {
 export async function deactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update({ status: "Inactive" })
       .eq("id", profileId)
       .select("*")
@@ -404,7 +509,7 @@ export async function deactivateUser(profileId: string) {
 export async function reactivateUser(profileId: string) {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from(Table.Profiles)
       .update({ status: "Active" })
       .eq("id", profileId)
       .select("*")
@@ -467,7 +572,7 @@ export const resendEmailConfirmation = async (email: string) => {
 /* SESSIONS */
 export async function createSession(sessionData: any) {
   const { data, error } = await supabase
-    .from("Sessions")
+    .from(Table.Sessions)
     .insert(sessionData)
     .single();
 
@@ -482,7 +587,7 @@ export async function getAllSessions(
   ascending?: boolean
 ): Promise<Session[]> {
   try {
-    let query = supabase.from("Sessions").select(`
+    let query = supabase.from(Table.Sessions).select(`
       id,
       enrollment_id,
       created_at,
@@ -552,7 +657,7 @@ export async function getAllSessions(
 //   ascending?: boolean
 // ) {
 //   try {
-//     let query = supabase.from("Sessions").select(`
+//     let query = supabase.from(Table.Sessions).select(`
 //       id,
 //       created_at,
 //       environment,
@@ -615,8 +720,10 @@ export async function getAllSessions(
 
 export async function rescheduleSession(sessionId: string, newDate: string) {
   const { data, error } = await supabase
-    .from("Sessions")
-    .update({ date: newDate })
+    .from(Table.Sessions)
+    .update({
+      date: newDate,
+    })
     .eq("id", sessionId)
     .single();
 
@@ -629,7 +736,7 @@ export async function getSessionKeys(data?: Session[]) {
 
   if (!data) {
     const { data, error } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .select("student_id, tutor_id, date");
 
     if (error) {
@@ -773,7 +880,7 @@ export async function addOneSession(
     };
 
     const { data, error } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .insert(newSession)
       .select()
       .single();
@@ -867,7 +974,6 @@ export async function addSessions(
         meetingId,
         summary,
         startDate,
-        endDate,
         duration,
         frequency,
       } = enrollment;
@@ -877,7 +983,6 @@ export async function addSessions(
       }
 
       const startDate_asDate = new Date(startDate); //UTC
-      const endDate_asDate = new Date(endDate); //UTC
 
       //Check if paused over the summer
       if (enrollment.summerPaused) {
@@ -955,10 +1060,6 @@ export async function addSessions(
             throw new Error("Session occurs before start date");
           }
 
-          if (sessionStartTime > endDate_asDate) {
-            throw new Error("Session occurs after start date");
-          }
-
           // Check for duplicate session
           const sessionKey = `${student.id}-${tutor.id}-${format(
             sessionStartTime,
@@ -996,7 +1097,7 @@ export async function addSessions(
     // Perform batch insert if we have sessions to create
     if (sessionsToCreate.length > 0) {
       const { data, error } = await supabase
-        .from("Sessions")
+        .from(Table.Sessions)
         .insert(sessionsToCreate)
         .select();
 
@@ -1147,7 +1248,7 @@ async function logSessionInfo(
 //           console.log(enrollment);
 
 //           const { data: session, error } = await supabase
-//             .from("Sessions")
+//             .from(Table.Sessions)
 //             .insert({
 //               date: sessionStartTime.toISOString(),
 //               student_id: student.id,
@@ -1194,7 +1295,7 @@ export async function updateSession(
     } = updatedSession;
 
     const { data, error } = await supabase
-      .from("Sessions")
+      .from(Table.Sessions)
       .update({
         status: status,
         student_id: student?.id,
@@ -1251,7 +1352,7 @@ export async function removeSession(
 ) {
   // Create a notification for the admin
   const { error: eventError } = await supabase
-    .from("Sessions")
+    .from(Table.Sessions)
     .delete()
     .eq("id", sessionId);
 
@@ -1268,7 +1369,7 @@ export async function removeSession(
 export async function getMeetings(): Promise<Meeting[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase.from("Meetings").select(`
+    const { data, error } = await supabase.from(Table.Meetings).select(`
         id,
         link,
         meeting_id,
@@ -1276,6 +1377,8 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         created_at,
         name
       `);
+
+    console.log("Data: ", data);
 
     // Check for errors and log them
     if (error) {
@@ -1335,7 +1438,7 @@ export const createEnrollment = async (
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase.from("Enrollments").select(`
+    const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,
         created_at,
         summary,
@@ -1389,7 +1492,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
 export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
   try {
     const { data, error } = await supabase
-      .from("Enrollments")
+      .from(Table.Enrollments)
       .update({ summer_paused: enrollment.summerPaused })
       .eq("id", enrollment.id)
       .select()
@@ -1453,9 +1556,14 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
   try {
     const now = new Date().toISOString();
 
+    const duration = await handleCalculateDuration(
+      enrollment.availability[0].startTime,
+      enrollment.availability[0].endTime
+    );
+
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase
-        .from("Enrollments")
+        .from(Table.Enrollments)
         .update({
           student_id: enrollment.student?.id,
           tutor_id: enrollment.tutor?.id,
@@ -1464,6 +1572,8 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
           end_date: enrollment.endDate,
           availability: enrollment.availability,
           meetingId: enrollment.meetingId,
+          duration: duration,
+          frequency: enrollment.frequency,
         })
         .eq("id", enrollment.id)
         .select("*") // Ensure it selects all columns
@@ -1478,7 +1588,7 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
     if (enrollment.student && enrollment.tutor) {
       const { data: updateSessionData, error: updateSessionError } =
         await supabase
-          .from("Sessions")
+          .from(Table.Sessions)
           .update({
             student_id: enrollment.student?.id,
             tutor_id: enrollment.tutor?.id,
@@ -1510,59 +1620,72 @@ const isValidUUID = (uuid: string): boolean => {
 };
 
 export const addEnrollment = async (
-  enrollment: Omit<Enrollment, "id" | "createdAt">
+  enrollment: Omit<Enrollment, "id" | "createdAt">,
+  sendEmail?: boolean
 ) => {
-  if (enrollment.duration <= 0)
-    throw new Error("Duration should be a positive amount");
+  try {
+    console.log("Duration", enrollment.availability[0]);
 
-  if (enrollment.duration >= 3) {
-    throw new Error(
-      "Please consult an Exec Team member about sessions longer than 3 hours"
+    const duration = await handleCalculateDuration(
+      enrollment.availability[0].startTime,
+      enrollment.availability[0].endTime
     );
-  }
+    console.log("Duration", duration);
 
-  if (!enrollment.student) throw new Error("Please select a Student");
+    if (enrollment.duration <= 0)
+      throw new Error("Duration should be a positive amount");
 
-  if (enrollment.meetingId && !isValidUUID(enrollment.meetingId)) {
-    throw new Error("Invalid or no meeting link");
-  }
+    if (enrollment.duration >= 3) {
+      throw new Error(
+        "Please consult an Exec Team member about sessions longer than 3 hours"
+      );
+    }
 
-  const { data, error } = await supabase
-    .from("Enrollments")
-    .insert({
-      student_id: enrollment.student?.id,
-      tutor_id: enrollment.tutor?.id,
-      summary: enrollment.summary,
-      start_date: enrollment.startDate,
-      end_date: enrollment.endDate,
-      availability: enrollment.availability,
-      meetingId: enrollment.meetingId,
-      duration: enrollment.duration, //default
-      frequency: enrollment.frequency,
-    })
-    .select(`*`)
-    .single();
+    if (!enrollment.student) throw new Error("Please select a Student");
 
-  if (error) {
-    console.error("Error adding enrollment:", error);
+    if (enrollment.meetingId && !isValidUUID(enrollment.meetingId)) {
+      throw new Error("Invalid or no meeting link");
+    }
+
+    const { data, error } = await supabase
+      .from(Table.Enrollments)
+      .insert({
+        student_id: enrollment.student?.id,
+        tutor_id: enrollment.tutor?.id,
+        summary: enrollment.summary,
+        start_date: enrollment.startDate,
+        end_date: enrollment.endDate,
+        availability: enrollment.availability,
+        meetingId: enrollment.meetingId,
+        duration: duration, //default
+        frequency: enrollment.frequency,
+      })
+      .select(`*`)
+      .single();
+
+    if (error) {
+      console.error("Error adding enrollment:", error);
+      throw error;
+    }
+
+    console.log(data);
+
+    return {
+      createdAt: data.created_at,
+      id: data.id,
+      summary: data.summary,
+      student: await getProfileWithProfileId(data.student_id),
+      tutor: await getProfileWithProfileId(data.tutor_id),
+      startDate: data.start_date,
+      endDate: data.end_date,
+      availability: data.availability,
+      meetingId: data.meetingId,
+      duration: data.duration,
+      frequency: data.frequency,
+    };
+  } catch (error) {
     throw error;
   }
-
-  console.log(data);
-
-  return {
-    createdAt: data.created_at,
-    id: data.id,
-    summary: data.summary,
-    student: await getProfileWithProfileId(data.student_id),
-    tutor: await getProfileWithProfileId(data.tutor_id),
-    startDate: data.start_date,
-    endDate: data.end_date,
-    availability: data.availability,
-    meetingId: data.meetingId,
-    duration: data.duration,
-    frequency: data.frequency,
-  };
 };
 
 export const removeFutureSessions = async (enrollmentId: string) => {
@@ -1827,14 +1950,53 @@ export const updateNotification = async (
   }
 };
 
-export async function createPassword(): Promise<string> {
+export async function createPassword(length: number = 16): Promise<string> {
+  // Character sets for password generation
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+  const allChars = lowercase + uppercase + numbers + symbols;
+
+  // Use crypto.getRandomValues for cryptographically secure randomness
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+
   let password = "";
 
-  for (let i = 0; i < 10; ++i) {
-    password += Math.floor(Math.random() * 10);
+  // Ensure at least one character from each character set
+  const guaranteedChars = [
+    lowercase[array[0] % lowercase.length],
+    uppercase[array[1] % uppercase.length],
+    numbers[array[2] % numbers.length],
+    symbols[array[3] % symbols.length],
+  ];
+
+  // Fill remaining positions with random characters from all sets
+  for (let i = 4; i < length; i++) {
+    password += allChars[array[i] % allChars.length];
   }
 
-  return password;
+  // Add guaranteed characters
+  password += guaranteedChars.join("");
+
+  // Shuffle the password to randomize guaranteed character positions
+  return shuffleString(password);
+}
+
+function shuffleString(str: string): string {
+  const array = str.split("");
+  const randomArray = new Uint8Array(array.length);
+  crypto.getRandomValues(randomArray);
+
+  // Fisher-Yates shuffle with crypto random
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = randomArray[i] % (i + 1);
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array.join("");
 }
 // function zonedTimeToUtc(arg0: any, arg1: string) {
 //   throw new Error("Function not implemented.");

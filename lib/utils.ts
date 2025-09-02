@@ -219,3 +219,28 @@ export const formatSessionDuration = (duration: number) => {
     minutes > 0 ? `${minutes} min${minutes > 1 ? "s" : ""}` : ""
   }`.trim();
 };
+
+export function to12Hour(time24: string) {
+  let [hour, minute] = time24.split(":").map(Number);
+  const ampm = hour >= 12 ? "pm" : "am";
+  hour = hour % 12 || 12; // convert 0 to 12 for 12am
+  return `${hour}${minute === 0 ? "" : `:${minute.toString().padStart(2, "0")}`}${ampm}`;
+}
+
+/**
+ *
+ * @param timeStr - string representation of time in HH:MM
+ */
+
+export function timeStrToHours(timeStr: string) {
+  const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
+  const isValid = timeRegex.test(timeStr);
+
+  if (isValid) {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours + minutes / 60;
+  } else {
+    throw new Error("time string not in HH:MM format");
+  }
+}

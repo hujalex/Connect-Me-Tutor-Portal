@@ -1,9 +1,10 @@
+"use server";
 import { Session } from "@/types";
 import { Client } from "@upstash/qstash";
-import { createClient } from "@supabase/supabase-js";
-import { Profile } from "@/types";
-import { getProfileWithProfileId } from "./profile.server.actions";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import TutorMatchingNotificationEmail from "@/components/emails/tutor-matching-notification";
+import { render } from "@react-email/components";
+import React from "react";
+import { Resend } from "resend";
 
 export async function fetchScheduledMessages() {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
@@ -57,7 +58,8 @@ export async function sendScheduledEmailsBeforeSessions(
           const data = await response.json();
         } catch (sessionError) {
           console.error(
-            `Error processing session ${session.id}:`,
+            "Error processing session %s:",
+            session.id,
             sessionError
           );
           // Continue processing other sessions instead of failing entirely
@@ -159,4 +161,40 @@ export async function scheduleEmail({
     console.error("Unable to schedule email");
     throw error;
   }
+}
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+type EmailData = {
+  studentName: string;
+  studentGender: string;
+  parentName: string;
+};
+
+export async function sendPairingEmail(emailType: string, data: EmailData) {
+  const allowedEmailTypes: string[] = ["match-accepted"];
+
+  if (!emailType || !allowedEmailTypes.includes(emailType)) {
+    throw new Error("Must provide valid email type");
+  }
+
+  if (emailType === "match-accepted") {
+    console.log("rendering with", data);
+    const emailHtml = await render(
+      React.createElement(TutorMatchingNotificationEmail, data)
+    );
+    console.log("email temp: ", emailHtml);
+
+    const emailResult = await resend.emails.send({
+      from: "reminder@connectmego.app",
+      to: "aaronmarsh755@gmail.com",
+      subject: "Connect Me Email",
+      html: emailHtml,
+    });
+
+    console.log("email result:", emailResult);
+    return emailResult;
+  }
+
+  throw new Error("Unsupported email type");
 }

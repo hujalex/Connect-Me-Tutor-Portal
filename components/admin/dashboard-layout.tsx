@@ -36,6 +36,11 @@ import {
   BookOpenText,
   CircleUserRound,
   Mail,
+  MessageCircleIcon,
+  ListOrdered,
+  BellIcon,
+  BellPlus,
+  Book,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -78,7 +83,7 @@ export default function DashboardLayout({
   const settingsSidebarItems = [
     {
       title: "Profile",
-      href: "/settings",
+      href: "/dashboard/profile",
       icon: <CircleUserRound className="h-5 w-5" />,
     },
   ];
@@ -89,6 +94,26 @@ export default function DashboardLayout({
       href: "/dashboard",
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
     },
+    {
+      title: "Announcements",
+      href: "/dashboard/announcements",
+      icon: <BellPlus className="h-5 w-5" />,
+    },
+    {
+      title: "Chats",
+      href: "/dashboard/chats",
+      icon: <MessageCircleIcon className="h-5 w-5" />,
+    },
+    // {
+    //   title: "Pairings",
+    //   href: "/dashboard/pairings",
+    //   icon: <LinkIcon className="h-5 w-5" />,
+    // },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <User className="h-5 w-5" />,
+    },
   ];
 
   const tutorSidebarItems = [
@@ -98,9 +123,24 @@ export default function DashboardLayout({
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
     },
     {
+      title: "Announcements",
+      href: "/dashboard/announcements",
+      icon: <BellPlus className="h-5 w-5" />,
+    },
+    {
       title: "My Students",
       href: "/dashboard/my-students",
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "My Enrollments",
+      href: "/dashboard/my-enrollments",
+      icon: <BookOpenText className="h-5 w-5" />,
+    },
+    {
+      title: "Chats",
+      href: "/dashboard/chats",
+      icon: <MessageCircleIcon className="h-5 w-5" />,
     },
     {
       title: "My Hours",
@@ -112,6 +152,16 @@ export default function DashboardLayout({
       href: "/dashboard/resources",
       icon: <Layers className="h-5 w-5" />,
     },
+    // {
+    //   title: "Pairings",
+    //   href: "/dashboard/pairings",
+    //   icon: <LinkIcon className="h-5 w-5" />,
+    // },
+    {
+      title: "Profile",
+      href: "/dashboard/profile",
+      icon: <User className="h-5 w-5" />,
+    },
   ];
 
   const adminSidebarItems = [
@@ -120,6 +170,7 @@ export default function DashboardLayout({
       href: "/dashboard",
       icon: <LayoutDashboardIcon className="h-5 w-5" />,
     },
+
     {
       title: "Notifications",
       href: "/dashboard/notifications",
@@ -154,6 +205,21 @@ export default function DashboardLayout({
       title: "Email Manager",
       href: "/dashboard/email-manager",
       icon: <Mail className="h-5 w-5" />,
+    },
+    // {
+    //   title: "Pairing Que",
+    //   href: "/dashboard/pairing-que",
+    //   icon: <ListOrdered className="h-5 w-5" />,
+    // },
+    {
+      title: "Announcements",
+      href: "/dashboard/announcements",
+      icon: <BellPlus className="h-5 w-5" />,
+    },
+    {
+      title: "Conversations",
+      href: "/dashboard/admin-conversations",
+      icon: <Book className="h-5 w-5" />,
     },
     // {
     //   title: "Migrate Profiles",

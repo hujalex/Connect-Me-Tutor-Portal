@@ -1,6 +1,12 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { AlarmClockMinus, Search, Timer, TimerOff } from "lucide-react";
+import {
+  AlarmClockMinus,
+  MessageCircleIcon,
+  Search,
+  Timer,
+  TimerOff,
+} from "lucide-react";
 import { cn, formatDateAdmin, formatSessionDuration } from "@/lib/utils";
 import {
   ChevronDown,
@@ -72,8 +78,10 @@ import AvailabilityFormat from "@/components/student/AvailabilityFormat";
 import AvailabilityForm from "@/components/ui/availability-form";
 import { formatDate } from "@/lib/utils";
 import { normalize } from "path";
-import { previousDay, set } from "date-fns";
+import { areIntervalsOverlapping, previousDay, set } from "date-fns";
 import { z } from "zod";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const durationSchema = z.object({
@@ -93,8 +101,8 @@ const EnrollmentList = () => {
     []
   );
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [openStudentOptions, setOpenStudentOptions] = React.useState(false);
-  const [openTutorOptions, setOpentTutorOptions] = React.useState(false);
+  const [openStudentOptions, setOpenStudentOptions] = useState(false);
+  const [openTutorOptions, setOpentTutorOptions] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [students, setStudents] = useState<Profile[]>([]);
@@ -120,7 +128,7 @@ const EnrollmentList = () => {
     tutor: {} as Profile, // Initialize as an empty Profile
     summary: "",
     startDate: "",
-    endDate: "",
+    endDate: new Date().toISOString(),
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
     summerPaused: false,
@@ -139,6 +147,7 @@ const EnrollmentList = () => {
 
   const [hours, setHours] = useState(1);
   const [minutes, setMinutes] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     fetchEnrollments();
@@ -237,7 +246,7 @@ const EnrollmentList = () => {
     }
   };
 
-  const areMeetingsAvailable = (
+  const setAvailableMeetingsForEnrollments = (
     enroll: Omit<Enrollment, "id" | "createdAt">
   ) => {
     setIsCheckingMeetingAvailability(true);
@@ -255,13 +264,25 @@ const EnrollmentList = () => {
         const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
           enrollment.availability[0]
         );
-        const isOverlap =
-          (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
-            newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
-          (newEnrollmentStartTime < existingEndTime &&
-            newEnrollmentStartTime > existingStartTime) ||
-          (newEnrollmentEndTime < existingEndTime &&
-            newEnrollmentEndTime > existingStartTime);
+
+        const isOverlap = areIntervalsOverlapping(
+          {
+            start: newEnrollmentStartTime.getTime(),
+            end: newEnrollmentEndTime.getTime(),
+          },
+          {
+            start: existingStartTime.getTime(),
+            end: existingEndTime.getTime(),
+          }
+        );
+
+        // const isOverlap =
+        //   (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
+        //     newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
+        //   (newEnrollmentStartTime < existingEndTime &&
+        //     newEnrollmentStartTime > existingStartTime) ||
+        //   (newEnrollmentEndTime < existingEndTime &&
+        //     newEnrollmentEndTime > existingStartTime);
         //-----Only change to false if true before-----
         if (updatedMeetingAvailability[enrollment.meetingId]) {
           // if (isOverlap) {
@@ -513,8 +534,14 @@ const EnrollmentList = () => {
     }
   };
 
-  const handleInputSelectionChange = (value: string) => {
-    setNewEnrollment((prev) => ({ ...prev, frequency: value }));
+  const handleInputSelectionChange = (value: string, type: "add" | "edit") => {
+    {
+      type === "add"
+        ? setNewEnrollment((prev) => ({ ...prev, frequency: value }))
+        : setSelectedEnrollment((prev) =>
+            prev ? { ...prev, frequency: value } : null
+          );
+    }
   };
 
   const handleAddEnrollment = async () => {
@@ -801,10 +828,10 @@ const EnrollmentList = () => {
                         }}
                       />
                       <div className="grid grid-cols-[80px_1fr] items-center gap-4">
-                        <Label htmlFor="duration" className="text-right">
+                        {/* <Label htmlFor="duration" className="text-right">
                           Duration
-                        </Label>
-                        <div className="flex items-center gap-2">
+                        </Label> */}
+                        {/* <div className="flex items-center gap-2">
                           <Input
                             id="hours"
                             name="hours"
@@ -828,7 +855,7 @@ const EnrollmentList = () => {
                           />
                           <span className="text-sm">min</span>
                           {/* <Label>{newEnrollment.duration}</Label> */}
-                        </div>
+                        {/* </div> */}
 
                         <Label htmlFor="frequency" className="text-right">
                           Frequency
@@ -837,7 +864,9 @@ const EnrollmentList = () => {
                           <Select
                             name="timeZone"
                             value={newEnrollment.frequency}
-                            onValueChange={handleInputSelectionChange}
+                            onValueChange={(value) =>
+                              handleInputSelectionChange(value, "add")
+                            }
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="weekly" />
@@ -871,7 +900,7 @@ const EnrollmentList = () => {
                           onChange={handleInputChange}
                           // className="col-span-3"
                         />
-                        <Label htmlFor="endDate" className="text-right">
+                        {/* <Label htmlFor="endDate" className="text-right">
                           End Date
                         </Label>
                         <Input
@@ -881,7 +910,7 @@ const EnrollmentList = () => {
                           value={newEnrollment.endDate}
                           onChange={handleInputChange}
                           // className="col-span-3"
-                        />
+                        /> */}
                       </div>
                       <div>
                         <Label>Meeting Link</Label>
@@ -890,7 +919,7 @@ const EnrollmentList = () => {
                           value={newEnrollment.meetingId}
                           onOpenChange={(open) => {
                             if (open && newEnrollment) {
-                              areMeetingsAvailable(newEnrollment);
+                              setAvailableMeetingsForEnrollments(newEnrollment);
                             }
                           }}
                           onValueChange={(value) =>
@@ -955,12 +984,12 @@ const EnrollmentList = () => {
                   "Availability",
                   "Summary",
                   "Start Date",
-                  "End Date",
                   "Meeting Link",
                   "Duration",
                   "Frequency",
                   "Actions",
-                  "Summer",
+                  "Status",
+                  "Chat",
                 ].map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
@@ -985,9 +1014,9 @@ const EnrollmentList = () => {
                   <TableCell>
                     {formatDateAdmin(enrollment.startDate, false, true)}
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {formatDateAdmin(enrollment.endDate, false, true)}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     {enrollment.meetingId
                       ? meetings.find(
@@ -1045,6 +1074,20 @@ const EnrollmentList = () => {
                           Ongoing
                         </span>
                       )}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      className="gap-2"
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/enrollment/${enrollment.id}/chat`
+                        )
+                      }
+                      variant="outline"
+                    >
+                      View Chat
+                      <MessageCircleIcon />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -1299,10 +1342,10 @@ const EnrollmentList = () => {
                   }
                 />
                 <div className="grid grid-cols-[80px_1fr] items-center gap-4">
-                  <Label htmlFor="duration" className="text-right">
+                  {/* <Label htmlFor="duration" className="text-right">
                     Duration
-                  </Label>
-                  <div className="flex items-center gap-2">
+                  </Label> */}
+                  {/* <div className="flex items-center gap-2">
                     <Input
                       id="hours"
                       name="hours"
@@ -1325,8 +1368,8 @@ const EnrollmentList = () => {
                       className={`w-16 ${minutesError ? "border-red-500" : ""}`}
                     />
                     <span className="text-sm">min</span>
-                    {/* <Label>{newEnrollment.duration}</Label> */}
-                  </div>
+                    <Label>{newEnrollment.duration}</Label>
+                  </div> */}
 
                   <Label htmlFor="frequency" className="text-right">
                     Frequency
@@ -1335,7 +1378,9 @@ const EnrollmentList = () => {
                     <Select
                       name="timeZone"
                       value={selectedEnrollment.frequency}
-                      onValueChange={handleInputSelectionChange}
+                      onValueChange={(value) =>
+                        handleInputSelectionChange(value, "edit")
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="weekly" />
@@ -1373,7 +1418,7 @@ const EnrollmentList = () => {
                     className="col-span-3"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
+                {/* <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="endDate" className="text-right">
                     End Date
                   </Label>
@@ -1385,7 +1430,7 @@ const EnrollmentList = () => {
                     onChange={handleInputChange}
                     className="col-span-3"
                   />
-                </div>
+                </div> */}
 
                 <div>
                   <Label>Meeting Link</Label>
@@ -1394,7 +1439,7 @@ const EnrollmentList = () => {
                     value={selectedEnrollment.meetingId}
                     onOpenChange={(open) => {
                       if (open && selectedEnrollment) {
-                        areMeetingsAvailable(selectedEnrollment);
+                        setAvailableMeetingsForEnrollments(selectedEnrollment);
                       }
                     }}
                     onValueChange={(value) =>
