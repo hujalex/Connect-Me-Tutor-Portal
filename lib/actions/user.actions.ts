@@ -18,6 +18,7 @@ export const getUser = async () => {
   return user;
 };
 
+//Fetches profile through userId
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   if (!userId) {
     console.error("User ID is required to fetch profile data");
@@ -26,7 +27,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 
   try {
     const { data, error } = await supabase
-      .from(Table.Profiles)
+      .from("Profiles")
       .select(
         `
         id,

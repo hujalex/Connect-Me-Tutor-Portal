@@ -7,7 +7,12 @@ import {
   Timer,
   TimerOff,
 } from "lucide-react";
-import { cn, formatDateAdmin, timeStrToHours } from "@/lib/utils";
+import {
+  cn,
+  formatDateAdmin,
+  formatSessionDuration,
+  timeStrToHours,
+} from "@/lib/utils";
 import {
   ChevronDown,
   ChevronsLeft,
@@ -471,6 +476,7 @@ const EnrollmentList = () => {
 
   const handleAddEnrollment = async () => {
     try {
+      console.log("Enrollment", newEnrollment);
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([

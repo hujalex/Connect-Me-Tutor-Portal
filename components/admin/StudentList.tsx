@@ -275,6 +275,12 @@ const StudentList = () =>
       );
     };
 
+    const handleEditProfile = (name: string, value: any) => {
+      setSelectedStudent((prev) =>
+        prev ? ({ ...prev, [name]: value } as Profile) : null
+      );
+    };
+
     const handleAvailabilityChange = (
       e: React.ChangeEvent<HTMLInputElement>,
       index: number
@@ -309,7 +315,7 @@ const StudentList = () =>
       try {
         setAddingStudent(true);
         // Ensure addStudent returns a Profile
-        const addedStudent: Profile = await addUser(student, "Student");
+        const addedStudent: Profile = await addUser(student, "Student", true);
 
         // Update local state
         setStudents((prevStudents) => {
@@ -369,7 +375,11 @@ const StudentList = () =>
       try {
         setAddingStudent(true);
         // Ensure addStudent returns a Profile
-        const addedStudent: Profile = await addUser(newStudent, "Student");
+        const addedStudent: Profile = await addUser(
+          newStudent,
+          "Student",
+          true
+        );
 
         // Update local state
         setStudents((prevStudents) => {
@@ -544,6 +554,7 @@ const StudentList = () =>
                   handleGenderForEdit={handleGenderForEdit}
                   handleTimeZoneForEdit={handleTimeZoneForEdit}
                   handleSubjectsChangeForEdit={handleSubjectsChangeForEdit}
+                  handleEditProfile={handleEditProfile}
                   getOrdinalSuffix={getOrdinalSuffix}
                   handleEditStudent={handleEditStudent}
                 />

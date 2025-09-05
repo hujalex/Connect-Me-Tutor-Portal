@@ -38,6 +38,7 @@ interface EditStudentFormProps {
   handleGenderForEdit: (value: string) => void;
   handleTimeZoneForEdit: (value: string) => void;
   handleSubjectsChangeForEdit: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleEditProfile: (name: string, value: any) => void;
   getOrdinalSuffix: (value: number) => void;
   handleEditStudent: () => void;
 }
@@ -63,6 +64,7 @@ const EditStudentForm = ({
   handleGenderForEdit,
   handleTimeZoneForEdit,
   handleSubjectsChangeForEdit,
+  handleEditProfile,
   getOrdinalSuffix,
   handleEditStudent,
 }: EditStudentFormProps) => {
@@ -83,12 +85,7 @@ const EditStudentForm = ({
       { day: "Monday", startTime: "09:00", endTime: "17:00" },
     ];
 
-    handleInputChangeForEdit({
-      target: {
-        name: "availability",
-        value: newAvailability,
-      },
-    } as any);
+    handleEditProfile("availability", newAvailability);
   };
 
   const updateAvailabilitySlot = (
@@ -101,12 +98,7 @@ const EditStudentForm = ({
     const updated = [...(selectedStudent.availability ?? [])];
     updated[index] = { ...updated[index], [field]: value };
 
-    handleInputChangeForEdit({
-      target: {
-        name: "availability",
-        value: updated,
-      },
-    } as any);
+    handleEditProfile("availability", updated);
   };
 
   const removeAvailabilitySlot = (index: number) => {
@@ -114,12 +106,7 @@ const EditStudentForm = ({
 
     const updated = selectedStudent.availability.filter((_, i) => i !== index);
 
-    handleInputChangeForEdit({
-      target: {
-        name: "availability",
-        value: updated,
-      },
-    } as any);
+    handleEditProfile("availability", updated);
   };
 
   const addSubject = () => {
@@ -130,12 +117,7 @@ const EditStudentForm = ({
       subjectInput.trim(),
     ];
 
-    handleInputChangeForEdit({
-      target: {
-        name: "subjects_of_interest",
-        value: updated,
-      },
-    } as any);
+    handleEditProfile("subjects_of_interest", updated);
 
     setSubjectInput("");
   };
@@ -147,12 +129,7 @@ const EditStudentForm = ({
       (s) => s !== subject
     );
 
-    handleInputChangeForEdit({
-      target: {
-        name: "subjects_of_interest",
-        value: updated,
-      },
-    } as any);
+    handleEditProfile("subjects_of_interest", updated);
   };
 
   const addLanguage = () => {
@@ -163,12 +140,7 @@ const EditStudentForm = ({
       languageInput.trim(),
     ];
 
-    handleInputChangeForEdit({
-      target: {
-        name: "languages_spoken",
-        value: updated,
-      },
-    } as any);
+    handleEditProfile("languages_spoken", updated);
 
     setLanguageInput("");
   };
@@ -180,12 +152,7 @@ const EditStudentForm = ({
       (l) => l !== language
     );
 
-    handleInputChangeForEdit({
-      target: {
-        name: "languages_spoken",
-        value: updated,
-      },
-    } as any);
+    handleEditProfile("languages_spoken", updated);
   };
 
   return (
@@ -200,6 +167,7 @@ const EditStudentForm = ({
         <DialogHeader>
           <DialogTitle>Select a Student to Edit</DialogTitle>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
           <Label htmlFor="studentSelect" className="text-right">
             Student

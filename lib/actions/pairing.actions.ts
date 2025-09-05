@@ -9,6 +9,8 @@ import { PairingLogSchemaType } from "../pairing/types";
 import { Person } from "@/types/enrollment";
 import { Availability } from "@/types";
 import { ProfilePairingMetadata } from "@/types/profile";
+import axios, { AxiosResponse } from "axios"; // Not used, can be removed
+import { toast } from "react-hot-toast";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -40,6 +42,8 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     throw new Error("Missing Supabase environment variables");
   }
 
+  console.log(userId);
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -49,6 +53,8 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     getProfile(userId),
     getAccountEnrollments(userId),
   ]);
+
+  console.log(enrollments);
 
   if (!enrollments) throw new Error("cannot locate account enrollments");
   if (!profile) throw new Error("failed to validate profile role");
@@ -170,4 +176,13 @@ export const deletePairing = async (tutorId: string, studentId: string) => {
     console.error("Failed to delete pairing", error);
     throw error;
   }
+};
+
+export const handleResolveQueues = () => {
+  const promise = axios.post("/api/pairing");
+  toast.promise(promise, {
+    success: "Successfully ran pairing process",
+    error: "Failed to run pairing process",
+    loading: "Pairing...",
+  });
 };
