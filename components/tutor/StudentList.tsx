@@ -34,7 +34,7 @@ import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import { StudentAnnouncementsRoomId } from "@/constants/chat";
-import { StudentAvailabilities } from "./dashboard/components/StudentAvailabilities";
+import { UserAvailabilities } from "../ui/UserAvailabilities";
 import DeletePairingForm from "./dashboard/components/DeletePairingForm";
 
 const StudentList = () => {
@@ -148,7 +148,7 @@ const StudentList = () => {
                     {student.firstName} {student.lastName}
                   </TableCell>
                   <TableCell>
-                    <StudentAvailabilities student={student} />
+                    <UserAvailabilities user={student} />
                     {/* <AvailabilityFormat availability={student.availability} /> */}
                   </TableCell>
                   <TableCell className="flex flex-col">
