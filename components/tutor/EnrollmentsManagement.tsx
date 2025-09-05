@@ -128,7 +128,7 @@ const EnrollmentList = () => {
     tutor: {} as Profile, // Initialize as an empty Profile
     summary: "",
     startDate: "",
-    endDate: "",
+    endDate: null,
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
     summerPaused: false,
@@ -535,7 +535,7 @@ const EnrollmentList = () => {
       tutor: {} as Profile,
       summary: "",
       startDate: "",
-      endDate: "",
+      endDate: null,
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
       summerPaused: false,
@@ -846,19 +846,7 @@ const EnrollmentList = () => {
                           className="col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="endDate" className="text-right">
-                          End Date
-                        </Label>
-                        <Input
-                          id="endDate"
-                          name="endDate"
-                          type="date"
-                          value={newEnrollment.endDate}
-                          onChange={handleInputChange}
-                          className="col-span-3"
-                        />
-                      </div>
+
                       <div>
                         <Label>Meeting Link</Label>
                         <Select
@@ -932,7 +920,6 @@ const EnrollmentList = () => {
                   "Availability",
                   "Summary",
                   "Start Date",
-                  "End Date",
                   "Meeting Link",
                   "Actions",
                   "Status",
@@ -960,9 +947,6 @@ const EnrollmentList = () => {
                   <TableCell>{enrollment.summary}</TableCell>
                   <TableCell>
                     {formatDateAdmin(enrollment.startDate, false, true)}
-                  </TableCell>
-                  <TableCell>
-                    {formatDateAdmin(enrollment.endDate, false, true)}
                   </TableCell>
                   <TableCell>
                     <TableCell>
@@ -1308,19 +1292,6 @@ const EnrollmentList = () => {
                     name="startDate"
                     type="date"
                     value={selectedEnrollment.startDate}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="endDate" className="text-right">
-                    End Date
-                  </Label>
-                  <Input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={selectedEnrollment.endDate}
                     onChange={handleInputChange}
                     className="col-span-3"
                   />

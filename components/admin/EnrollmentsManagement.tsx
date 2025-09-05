@@ -128,7 +128,7 @@ const EnrollmentList = () => {
     tutor: {} as Profile, // Initialize as an empty Profile
     summary: "",
     startDate: "",
-    endDate: new Date().toISOString(),
+    endDate: null,
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
     summerPaused: false,
@@ -610,7 +610,7 @@ const EnrollmentList = () => {
       tutor: {} as Profile,
       summary: "",
       startDate: "",
-      endDate: "",
+      endDate: null,
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
       summerPaused: false,
