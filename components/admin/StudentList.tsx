@@ -70,6 +70,7 @@ import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
 import AddStudentForm from "./components/AddStudentForm";
 import DeleteStudentForm from "./components/DeleteStudentForm";
 import EditStudentForm from "./components/EditStudentForm";
+import { UserAvailabilities } from "../ui/UserAvailabilities";
 
 const getOrdinalSuffix = (num: number): string => {
   if (num === 1) return "st";
@@ -568,7 +569,7 @@ const StudentList = () =>
                   <TableHead>Start Date</TableHead>
                   <TableHead>Student Name</TableHead>
                   <TableHead>Grade Level</TableHead>
-                  {/* <TableHead>Availability</TableHead> */}
+                  <TableHead>Availability</TableHead>
                   <TableHead>Subjects Learning</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Parent Phone</TableHead>
@@ -585,9 +586,9 @@ const StudentList = () =>
                       {student.firstName} {student.lastName}
                     </TableCell>
                     <TableCell>{student.grade}</TableCell>
-                    {/* <TableCell>
-                      <AvailabilityFormat availability={student.availability} />
-                    </TableCell> */}
+                    <TableCell>
+                      <UserAvailabilities user={student} />
+                    </TableCell>
                     <TableCell className="flex flex-col">
                       {student.subjects_of_interest?.map((item, index) => (
                         <span key={index}>{item}</span>

@@ -124,7 +124,7 @@ export const getProfileByEmail = async (email: string) => {
     tutorIds: data.tutor_ids,
     parentEmail: data.parent_email,
     timeZone: data.timezone,
-    subjectsOfInterest: data.subjects_of_interest,
+    subjects_of_interest: data.subjects_of_interest,
     status: data.status,
     studentNumber: data.student_number,
     settingsId: data.settings_id,

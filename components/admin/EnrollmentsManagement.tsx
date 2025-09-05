@@ -101,8 +101,8 @@ const EnrollmentList = () => {
     []
   );
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [openStudentOptions, setOpenStudentOptions] = React.useState(false);
-  const [openTutorOptions, setOpentTutorOptions] = React.useState(false);
+  const [openStudentOptions, setOpenStudentOptions] = useState(false);
+  const [openTutorOptions, setOpentTutorOptions] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [students, setStudents] = useState<Profile[]>([]);
@@ -128,7 +128,7 @@ const EnrollmentList = () => {
     tutor: {} as Profile, // Initialize as an empty Profile
     summary: "",
     startDate: "",
-    endDate: new Date().toISOString(),
+    endDate: null,
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
     summerPaused: false,
@@ -538,7 +538,7 @@ const EnrollmentList = () => {
     {
       type === "add"
         ? setNewEnrollment((prev) => ({ ...prev, frequency: value }))
-        : setSelectedEnrollment((prev) => 
+        : setSelectedEnrollment((prev) =>
             prev ? { ...prev, frequency: value } : null
           );
     }
@@ -610,7 +610,7 @@ const EnrollmentList = () => {
       tutor: {} as Profile,
       summary: "",
       startDate: "",
-      endDate: "",
+      endDate: null,
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
       summerPaused: false,
@@ -828,10 +828,10 @@ const EnrollmentList = () => {
                         }}
                       />
                       <div className="grid grid-cols-[80px_1fr] items-center gap-4">
-                        <Label htmlFor="duration" className="text-right">
+                        {/* <Label htmlFor="duration" className="text-right">
                           Duration
-                        </Label>
-                        <div className="flex items-center gap-2">
+                        </Label> */}
+                        {/* <div className="flex items-center gap-2">
                           <Input
                             id="hours"
                             name="hours"
@@ -855,7 +855,7 @@ const EnrollmentList = () => {
                           />
                           <span className="text-sm">min</span>
                           {/* <Label>{newEnrollment.duration}</Label> */}
-                        </div>
+                        {/* </div> */}
 
                         <Label htmlFor="frequency" className="text-right">
                           Frequency
@@ -864,7 +864,9 @@ const EnrollmentList = () => {
                           <Select
                             name="timeZone"
                             value={newEnrollment.frequency}
-                            onValueChange={handleInputSelectionChange}
+                            onValueChange={(value) =>
+                              handleInputSelectionChange(value, "add")
+                            }
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="weekly" />
@@ -1342,8 +1344,8 @@ const EnrollmentList = () => {
                 <div className="grid grid-cols-[80px_1fr] items-center gap-4">
                   {/* <Label htmlFor="duration" className="text-right">
                     Duration
-                  </Label>
-                  <div className="flex items-center gap-2">
+                  </Label> */}
+                  {/* <div className="flex items-center gap-2">
                     <Input
                       id="hours"
                       name="hours"
@@ -1366,8 +1368,8 @@ const EnrollmentList = () => {
                       className={`w-16 ${minutesError ? "border-red-500" : ""}`}
                     />
                     <span className="text-sm">min</span>
-                    {/* <Label>{newEnrollment.duration}</Label> */}
-                  {/* </div>  */}
+                    <Label>{newEnrollment.duration}</Label>
+                  </div> */}
 
                   <Label htmlFor="frequency" className="text-right">
                     Frequency
@@ -1376,7 +1378,9 @@ const EnrollmentList = () => {
                     <Select
                       name="timeZone"
                       value={selectedEnrollment.frequency}
-                      onValueChange={handleInputSelectionChange}
+                      onValueChange={(value) =>
+                        handleInputSelectionChange(value, "edit")
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="weekly" />

@@ -376,6 +376,7 @@ const EditStudentForm = ({
                       <Input
                         id="parentPhone"
                         name="parentPhone"
+                        placeholder="(555) 124-4567"
                         value={selectedStudent?.parentPhone}
                         onChange={handleInputChangeForEdit}
                         className="col-span-3"
@@ -438,8 +439,9 @@ const EditStudentForm = ({
                 </ScrollArea>
               )}
               {activeTab === "extended" && (
-                <ScrollArea className="h-[calc(90vh-200px)]">
-                  <div className="space-y-6 mb-12">
+                <ScrollArea className="h-[calc(80vh-120px)]">
+                  {" "}
+                  <div className="space-y-6">
                     {/* Availability Section */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Availability</h3>

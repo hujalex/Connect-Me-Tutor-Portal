@@ -58,7 +58,8 @@ export async function sendScheduledEmailsBeforeSessions(
           const data = await response.json();
         } catch (sessionError) {
           console.error(
-            `Error processing session ${session.id}:`,
+            "Error processing session %s:",
+            session.id,
             sessionError
           );
           // Continue processing other sessions instead of failing entirely

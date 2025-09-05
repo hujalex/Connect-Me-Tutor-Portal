@@ -21,6 +21,7 @@ import {
 import { Profile } from "@/types";
 import { Combobox } from "@/components/ui/combobox";
 import { X, Plus } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scrollarea";
 
 interface AddTutorFormProps {
   newTutor: Partial<Profile>;
@@ -185,171 +186,174 @@ const AddTutorForm = ({
           <div className="grid gap-4 py-4">
             {/* Basic Info Tab */}
             {activeTab === "basic" && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="firstName" className="text-right">
-                    First Name
-                  </Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    value={newTutor.firstName}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="lastName" className="text-right">
-                    Last Name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    value={newTutor.lastName}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={newTutor.email}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="phoneNumber" className="text-right">
-                    Phone Number
-                  </Label>
-                  <Input
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    type="phonenumber"
-                    value={newTutor.phoneNumber}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="startDate" className="text-right">
-                    Start Date
-                  </Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    value={newTutor.startDate}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="timeZone" className="text-right">
-                    Time Zone
-                  </Label>
-                  <div className="col-span-3">
-                    <Select
-                      name="timeZone"
-                      value={newTutor.timeZone}
-                      onValueChange={handleTimeZone}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="EST">EST</SelectItem>
-                        <SelectItem value="CST">CST</SelectItem>
-                        <SelectItem value="MT">MT</SelectItem>
-                        <SelectItem value="PST">PST</SelectItem>
-                      </SelectContent>
-                    </Select>
+              <ScrollArea className="h-[calc(70vh-120px)] pr-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="firstName" className="text-right">
+                      First Name
+                    </Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      value={newTutor.firstName}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="lastName" className="text-right">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      value={newTutor.lastName}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="email" className="text-right">
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={newTutor.email}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="phoneNumber" className="text-right">
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="phonenumber"
+                      value={newTutor.phoneNumber}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="startDate" className="text-right">
+                      Start Date
+                    </Label>
+                    <Input
+                      id="startDate"
+                      name="startDate"
+                      type="date"
+                      value={newTutor.startDate}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="timeZone" className="text-right">
+                      Time Zone
+                    </Label>
+                    <div className="col-span-3">
+                      <Select
+                        name="timeZone"
+                        value={newTutor.timeZone}
+                        onValueChange={handleTimeZone}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="EST">EST</SelectItem>
+                          <SelectItem value="CST">CST</SelectItem>
+                          <SelectItem value="MT">MT</SelectItem>
+                          <SelectItem value="PST">PST</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollArea>
             )}
 
             {/* Extended Profile Tab */}
             {activeTab === "extended" && (
-              <div className="space-y-6">
-                {/* Availability Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Availability</h3>
-                  {availability.map((slot, index) => (
-                    <div
-                      key={index}
-                      className="flex gap-2 p-3 border rounded-lg bg-gray-50"
-                    >
-                      <div className="flex-1">
-                        <Select
-                          value={slot.day}
-                          onValueChange={(value) =>
-                            updateAvailabilitySlot(index, "day", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DAYS_OF_WEEK.map((day) => (
-                              <SelectItem key={day} value={day}>
-                                {day}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex-1">
-                        <Input
-                          type="time"
-                          value={slot.startTime}
-                          onChange={(e) =>
-                            updateAvailabilitySlot(
-                              index,
-                              "startTime",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <Input
-                          type="time"
-                          value={slot.endTime}
-                          onChange={(e) =>
-                            updateAvailabilitySlot(
-                              index,
-                              "endTime",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeAvailabilitySlot(index)}
+              <ScrollArea className="h-[calc(70vh-120px)] pr-4">
+                <div className="space-y-6">
+                  {/* Availability Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Availability</h3>
+                    {availability.map((slot, index) => (
+                      <div
+                        key={index}
+                        className="flex gap-2 p-3 border rounded-lg bg-gray-50"
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addAvailabilitySlot}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Time Slot
-                  </Button>
-                </div>
+                        <div className="flex-1">
+                          <Select
+                            value={slot.day}
+                            onValueChange={(value) =>
+                              updateAvailabilitySlot(index, "day", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DAYS_OF_WEEK.map((day) => (
+                                <SelectItem key={day} value={day}>
+                                  {day}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            type="time"
+                            value={slot.startTime}
+                            onChange={(e) =>
+                              updateAvailabilitySlot(
+                                index,
+                                "startTime",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            type="time"
+                            value={slot.endTime}
+                            onChange={(e) =>
+                              updateAvailabilitySlot(
+                                index,
+                                "endTime",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeAvailabilitySlot(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addAvailabilitySlot}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Time Slot
+                    </Button>
+                  </div>
 
                 {/* Subjects Section */}
                 <div className="space-y-4">
