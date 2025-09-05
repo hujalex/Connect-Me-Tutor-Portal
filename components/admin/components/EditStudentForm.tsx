@@ -408,6 +408,7 @@ const EditStudentForm = ({
                       <Input
                         id="parentPhone"
                         name="parentPhone"
+                        placeholder="(555) 124-4567"
                         value={selectedStudent?.parentPhone}
                         onChange={handleInputChangeForEdit}
                         className="col-span-3"
@@ -470,171 +471,178 @@ const EditStudentForm = ({
                 </ScrollArea>
               )}
               {activeTab === "extended" && (
-                <div className="space-y-6">
-                  {/* Availability Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Availability</h3>
-                    {selectedStudent &&
-                      selectedStudent.availability &&
-                      selectedStudent.availability.map((slot, index) => (
-                        <div
-                          key={index}
-                          className="flex gap-2 p-3 border rounded-lg bg-gray-50"
-                        >
-                          <div className="flex-1">
-                            <Select
-                              value={slot.day}
-                              onValueChange={(value) =>
-                                updateAvailabilitySlot(index, "day", value)
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {DAYS_OF_WEEK.map((day) => (
-                                  <SelectItem key={day} value={day}>
-                                    {day}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex-1">
-                            <Input
-                              type="time"
-                              value={slot.startTime}
-                              onChange={(e) =>
-                                updateAvailabilitySlot(
-                                  index,
-                                  "startTime",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <Input
-                              type="time"
-                              value={slot.endTime}
-                              onChange={(e) =>
-                                updateAvailabilitySlot(
-                                  index,
-                                  "endTime",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeAvailabilitySlot(index)}
+                <ScrollArea className="h-[calc(80vh-120px)]">
+                  {" "}
+                  <div className="space-y-6">
+                    {/* Availability Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Availability</h3>
+                      {selectedStudent &&
+                        selectedStudent.availability &&
+                        selectedStudent.availability.map((slot, index) => (
+                          <div
+                            key={index}
+                            className="flex gap-2 p-3 border rounded-lg bg-gray-50"
                           >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={addAvailabilitySlot}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Time Slot
-                    </Button>
-                  </div>
-
-                  {/* Subjects Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">
-                      Subjects of Interest
-                    </h3>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        placeholder="e.g., Mathematics, Physics"
-                        value={subjectInput}
-                        onChange={(e) => setSubjectInput(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" &&
-                          (e.preventDefault(), addSubject())
-                        }
-                      />
-                      <Button type="button" onClick={addSubject} size="sm">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    {selectedStudent &&
-                      selectedStudent.subjects_of_interest &&
-                      selectedStudent.subjects_of_interest.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedStudent.subjects_of_interest.map(
-                            (subject) => (
-                              <Badge
-                                key={subject}
-                                variant="secondary"
-                                className="flex items-center gap-1"
+                            <div className="flex-1">
+                              <Select
+                                value={slot.day}
+                                onValueChange={(value) =>
+                                  updateAvailabilitySlot(index, "day", value)
+                                }
                               >
-                                {subject}
-                                <button
-                                  type="button"
-                                  onClick={() => removeSubject(subject)}
-                                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </Badge>
-                            )
-                          )}
-                        </div>
-                      )}
-                  </div>
-
-                  {/* Languages Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Languages Spoken</h3>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        placeholder="e.g., English, Spanish"
-                        value={languageInput}
-                        onChange={(e) => setLanguageInput(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" &&
-                          (e.preventDefault(), addLanguage())
-                        }
-                      />
-                      <Button type="button" onClick={addLanguage} size="sm">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    {selectedStudent &&
-                      selectedStudent.languages_spoken &&
-                      selectedStudent.languages_spoken.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedStudent.languages_spoken.map((language) => (
-                            <Badge
-                              key={language}
-                              variant="secondary"
-                              className="flex items-center gap-1"
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {DAYS_OF_WEEK.map((day) => (
+                                    <SelectItem key={day} value={day}>
+                                      {day}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex-1">
+                              <Input
+                                type="time"
+                                value={slot.startTime}
+                                onChange={(e) =>
+                                  updateAvailabilitySlot(
+                                    index,
+                                    "startTime",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <Input
+                                type="time"
+                                value={slot.endTime}
+                                onChange={(e) =>
+                                  updateAvailabilitySlot(
+                                    index,
+                                    "endTime",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeAvailabilitySlot(index)}
                             >
-                              {language}
-                              <button
-                                type="button"
-                                onClick={() => removeLanguage(language)}
-                                className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addAvailabilitySlot}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Time Slot
+                      </Button>
+                    </div>
+
+                    {/* Subjects Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">
+                        Subjects of Interest
+                      </h3>
+                      <div className="flex gap-2">
+                        <Input
+                          type="text"
+                          placeholder="e.g., Mathematics, Physics"
+                          value={subjectInput}
+                          onChange={(e) => setSubjectInput(e.target.value)}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" &&
+                            (e.preventDefault(), addSubject())
+                          }
+                        />
+                        <Button type="button" onClick={addSubject} size="sm">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {selectedStudent &&
+                        selectedStudent.subjects_of_interest &&
+                        selectedStudent.subjects_of_interest.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedStudent.subjects_of_interest.map(
+                              (subject) => (
+                                <Badge
+                                  key={subject}
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  {subject}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSubject(subject)}
+                                    className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Languages Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">
+                        Languages Spoken
+                      </h3>
+                      <div className="flex gap-2">
+                        <Input
+                          type="text"
+                          placeholder="e.g., English, Spanish"
+                          value={languageInput}
+                          onChange={(e) => setLanguageInput(e.target.value)}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" &&
+                            (e.preventDefault(), addLanguage())
+                          }
+                        />
+                        <Button type="button" onClick={addLanguage} size="sm">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {selectedStudent &&
+                        selectedStudent.languages_spoken &&
+                        selectedStudent.languages_spoken.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedStudent.languages_spoken.map(
+                              (language) => (
+                                <Badge
+                                  key={language}
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  {language}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeLanguage(language)}
+                                    className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        )}
+                    </div>
                   </div>
-                </div>
+                </ScrollArea>
               )}
 
               <Button onClick={handleEditStudent}>

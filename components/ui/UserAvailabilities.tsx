@@ -55,13 +55,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Profile } from "@/types";
 
-interface StudentAvailabilitiesProps {
-  student: Profile;
+interface UserAvailabilitiesProps {
+  user: Profile;
 }
 
-export const StudentAvailabilities = ({
-  student,
-}: StudentAvailabilitiesProps) => {
+export const UserAvailabilities = ({ user }: UserAvailabilitiesProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -80,15 +78,14 @@ export const StudentAvailabilities = ({
         </DialogTrigger>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Student Profile & Availability</DialogTitle>
+            <DialogTitle>Profile & Availability</DialogTitle>
           </DialogHeader>
 
           <Card className="p-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-medium">
-                  {student.firstName + " " + student.lastName ||
-                    "Student Profile"}
+                  {user.firstName + " " + user.lastName || "User Profile"}
                 </h3>
                 <Button
                   variant="outline"
@@ -110,9 +107,9 @@ export const StudentAvailabilities = ({
                   <Calendar className="h-4 w-4 mt-1 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Availability</p>
-                    {student.availability && student.availability.length > 0 ? (
+                    {user.availability && user.availability.length > 0 ? (
                       <div className="grid gap-1 mt-1">
-                        {student.availability.map((slot, i) => (
+                        {user.availability.map((slot, i) => (
                           <p key={i} className="text-sm text-muted-foreground">
                             {slot.day}: {slot.startTime} - {slot.endTime}
                           </p>
@@ -131,9 +128,9 @@ export const StudentAvailabilities = ({
                   <div className="flex-1">
                     <p className="text-sm font-medium">Subjects</p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {student.subjects_of_interest &&
-                      student.subjects_of_interest.length > 0 ? (
-                        student.subjects_of_interest.map((subject, i) => (
+                      {user.subjects_of_interest &&
+                      user.subjects_of_interest.length > 0 ? (
+                        user.subjects_of_interest.map((subject, i) => (
                           <Badge key={i} variant="secondary">
                             {subject}
                           </Badge>
@@ -152,9 +149,9 @@ export const StudentAvailabilities = ({
                   <div className="flex-1">
                     <p className="text-sm font-medium">Languages</p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {student.languages_spoken &&
-                      student.languages_spoken.length > 0 ? (
-                        student.languages_spoken.map((language, i) => (
+                      {user.languages_spoken &&
+                      user.languages_spoken.length > 0 ? (
+                        user.languages_spoken.map((language, i) => (
                           <Badge key={i} variant="outline">
                             {language}
                           </Badge>

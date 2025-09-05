@@ -21,6 +21,7 @@ import { Profile } from "@/types";
 import { Combobox } from "@/components/ui/combobox";
 import { Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { UserAvailabilities } from "@/components/ui/UserAvailabilities";
 
 interface EditTutorFormProps {
   isReactivateModalOpen: boolean;
