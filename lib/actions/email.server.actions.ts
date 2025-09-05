@@ -167,7 +167,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 type EmailData = {
   studentName: string;
-  studentGender: string;
+  studentGender: "male" | "female" | "other";
   parentName: string;
 };
 

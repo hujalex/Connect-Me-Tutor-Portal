@@ -355,86 +355,89 @@ const AddTutorForm = ({
                     </Button>
                   </div>
 
-                {/* Subjects Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">
-                    Subjects of Interest
-                  </h3>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="e.g., Mathematics, Physics"
-                      value={newSubject}
-                      onChange={(e) => setNewSubject(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && (e.preventDefault(), addSubject())
-                      }
-                    />
-                    <Button type="button" onClick={addSubject} size="sm">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {subjectsOfInterest.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {subjectsOfInterest.map((subject) => (
-                        <Badge
-                          key={subject}
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                        >
-                          {subject}
-                          <button
-                            type="button"
-                            onClick={() => removeSubject(subject)}
-                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
+                  {/* Subjects Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">
+                      Subjects of Interest
+                    </h3>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="e.g., Mathematics, Physics"
+                        value={newSubject}
+                        onChange={(e) => setNewSubject(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" &&
+                          (e.preventDefault(), addSubject())
+                        }
+                      />
+                      <Button type="button" onClick={addSubject} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                </div>
+                    {subjectsOfInterest.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {subjectsOfInterest.map((subject) => (
+                          <Badge
+                            key={subject}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {subject}
+                            <button
+                              type="button"
+                              onClick={() => removeSubject(subject)}
+                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                {/* Languages Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Languages Spoken</h3>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="e.g., English, Spanish"
-                      value={newLanguage}
-                      onChange={(e) => setNewLanguage(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && (e.preventDefault(), addLanguage())
-                      }
-                    />
-                    <Button type="button" onClick={addLanguage} size="sm">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {languagesSpoken.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {languagesSpoken.map((language) => (
-                        <Badge
-                          key={language}
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                        >
-                          {language}
-                          <button
-                            type="button"
-                            onClick={() => removeLanguage(language)}
-                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
+                  {/* Languages Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Languages Spoken</h3>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="e.g., English, Spanish"
+                        value={newLanguage}
+                        onChange={(e) => setNewLanguage(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" &&
+                          (e.preventDefault(), addLanguage())
+                        }
+                      />
+                      <Button type="button" onClick={addLanguage} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
+                    {languagesSpoken.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {languagesSpoken.map((language) => (
+                          <Badge
+                            key={language}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {language}
+                            <button
+                              type="button"
+                              onClick={() => removeLanguage(language)}
+                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </ScrollArea>
             )}
           </div>
 
