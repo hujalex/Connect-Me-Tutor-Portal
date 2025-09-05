@@ -45,6 +45,7 @@ import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
 import { createUser } from "./auth.actions";
 import { handleCalculateDuration } from "./hours.actions";
 import { language } from "googleapis/build/src/apis/language";
+import { tableToIntefaceProfiles } from "../type-utils";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -509,7 +510,10 @@ export async function getAllSessions(
       is_question_or_concern,
       is_first_session,
       session_exit_form,
-    duration
+      duration,
+      meetings:Meetings!meeting_id(*),
+      student:Profiles!student_id(*),
+      tutor:Profiles!tutor_id(*)
     `);
 
     if (startDate) {
@@ -530,7 +534,6 @@ export async function getAllSessions(
       throw error;
     }
 
-    // Map the result to the Session interface
     const sessions: Session[] = await Promise.all(
       data.map(async (session: any) => ({
         id: session.id,
@@ -540,9 +543,12 @@ export async function getAllSessions(
         date: session.date,
         summary: session.summary,
         // meetingId: session.meeting_id,
-        meeting: await getMeeting(session.meeting_id),
-        student: await getProfileWithProfileId(session.student_id),
-        tutor: await getProfileWithProfileId(session.tutor_id),
+        // meeting: await getMeeting(session.meeting_id),
+        meeting: session.meetings,
+        student: await tableToIntefaceProfiles(session.student),
+        tutor: await tableToIntefaceProfiles(session.tutor),
+        // student: await getProfileWithProfileId(session.student_id),
+        // tutor: await getProfileWithProfileId(session.tutor_id),
         status: session.status,
         session_exit_form: session.session_exit_form,
         isQuestionOrConcern: Boolean(session.is_question_or_concern),
@@ -550,10 +556,11 @@ export async function getAllSessions(
         duration: session.duration,
       }))
     );
+    console.log("Sessions", sessions);
 
     return sessions;
   } catch (error) {
-    console.error("Error fetching sessions");
+    console.error("Error fetching sessions", error);
     return [];
   }
 }
