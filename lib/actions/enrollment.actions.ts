@@ -131,7 +131,7 @@ export const getOverlappingAvailabilites = async (
     startTime: string;
     endTime: string;
   }[]
-) => {
+): Promise<Availability[] | undefined> => {
   try {
     console.log(tutorAvailability);
     console.log(studentAvailability);

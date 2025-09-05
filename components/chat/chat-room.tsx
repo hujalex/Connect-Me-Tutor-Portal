@@ -193,8 +193,6 @@ export function ChatRoom({
           .eq("room_id", roomId)
           .order("created_at", { ascending: true });
 
-        console.log("Data: ", data);
-
         if (error) throw error;
 
         if (data && isMounted) {
@@ -261,8 +259,6 @@ export function ChatRoom({
         user_id: profile.id,
         content: messageInput,
       };
-
-      console.log("trying: ", newMessage);
 
       const { error } = await supabase.from("messages").insert([newMessage]);
 
