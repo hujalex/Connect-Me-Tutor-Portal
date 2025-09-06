@@ -21,7 +21,11 @@ import {
 import { Profile } from "@/types";
 import { Combobox } from "@/components/ui/combobox";
 import { X, Plus } from "lucide-react";
+<<<<<<< HEAD
 import { ScrollArea } from "@/components/ui/scrollarea";
+=======
+import { Switch } from "@/components/ui/switch";
+>>>>>>> connectme-dev/pairings
 
 interface AddTutorFormProps {
   newTutor: Partial<Profile>;
@@ -31,7 +35,10 @@ interface AddTutorFormProps {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => void;
-  handleAddTutor: (value: Partial<Profile>) => void;
+  handleAddTutor: (
+    value: Partial<Profile>,
+    addToPairingQueue?: boolean
+  ) => void;
   handleTimeZone: (value: string) => void;
   setNewTutor: React.Dispatch<React.SetStateAction<Partial<Profile>>>; // 👈 add this
 }
@@ -56,6 +63,8 @@ const AddTutorForm = ({
 }: AddTutorFormProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [addNewProfilesToQueue, setAddNewProfilesToQueue] =
+    useState<boolean>(false);
 
   // Extended profile fields (moved from the original component state)
   const [subjectsOfInterest, setSubjectsOfInterest] = useState<string[]>([]);
@@ -124,7 +133,7 @@ const AddTutorForm = ({
   // };
 
   // Enhanced handleAddTutor to include extended fields
-  const handleEnhancedAddTutor = () => {
+  const handleEnhancedAddTutor = (addToPairingQueue?: boolean) => {
     // You'll need to modify this to include the extended fields
     // This assumes your Profile type and handleAddTutor can accept these fields
 
@@ -143,7 +152,7 @@ const AddTutorForm = ({
 
     // Call original handler - you may need to modify the parent component
     // to handle these additional fields
-    handleAddTutor(tutorWithExtendedFields);
+    handleAddTutor(tutorWithExtendedFields, addToPairingQueue);
   };
 
   return (
@@ -183,6 +192,7 @@ const AddTutorForm = ({
             </button>
           </div>
 
+<<<<<<< HEAD
           <div className="grid gap-4 py-4">
             {/* Basic Info Tab */}
             {activeTab === "basic" && (
@@ -256,6 +266,106 @@ const AddTutorForm = ({
                       Time Zone
                     </Label>
                     <div className="col-span-3">
+=======
+        <div className="grid gap-4 py-4">
+          {/* Basic Info Tab */}
+          {activeTab === "basic" && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="firstName" className="text-right">
+                  First Name
+                </Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={newTutor.firstName}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">
+                  Last Name
+                </Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={newTutor.lastName}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={newTutor.email}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="startDate" className="text-right">
+                  Start Date
+                </Label>
+                <Input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  value={newTutor.startDate}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="timeZone" className="text-right">
+                  Time Zone
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    name="timeZone"
+                    value={newTutor.timeZone}
+                    onValueChange={handleTimeZone}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EST">EST</SelectItem>
+                      <SelectItem value="CST">CST</SelectItem>
+                      <SelectItem value="MT">MT</SelectItem>
+                      <SelectItem value="PST">PST</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="p-4 flex justify-center gap-4 items-center rounded-lg w-full">
+                <Switch
+                  checked={addNewProfilesToQueue}
+                  onCheckedChange={setAddNewProfilesToQueue}
+                />
+                Add To Pairing Queue
+              </div>
+            </div>
+          )}
+
+          {/* Extended Profile Tab */}
+          {activeTab === "extended" && (
+            <div className="space-y-6">
+              {/* Availability Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Availability</h3>
+                {availability.map((slot, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-2 p-3 border rounded-lg bg-gray-50"
+                  >
+                    <div className="flex-1">
+>>>>>>> connectme-dev/pairings
                       <Select
                         name="timeZone"
                         value={newTutor.timeZone}
