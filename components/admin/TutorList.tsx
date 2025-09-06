@@ -230,6 +230,14 @@ const TutorList = () => {
     );
   };
 
+  const handleComplexFieldsForEdit = (name: string, value: any) => {
+    console.log(name);
+    console.log(value);
+    setSelectedTutor((prev) =>
+      prev ? ({ ...prev, [name]: value } as Profile) : null
+    );
+  };
+
   const handleAvailabilityChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
@@ -490,6 +498,7 @@ const TutorList = () => {
                 handleEditTutor={handleEditTutor}
                 handleGetSelectedTutor={handleGetSelectedTutor}
                 handleInputChangeForEdit={handleInputChangeForEdit}
+                handleComplexFieldsForEdit={handleComplexFieldsForEdit}
                 handleTimeZoneForEdit={handleTimeZoneForEdit}
               />
               {/*Edit Page*/}

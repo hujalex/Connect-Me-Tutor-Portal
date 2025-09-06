@@ -364,6 +364,7 @@ export async function editUser(profile: Profile) {
     parentPhone,
     parentEmail,
     timeZone,
+    availability,
     subjects_of_interest,
     languages_spoken,
     studentNumber,
@@ -386,6 +387,7 @@ export async function editUser(profile: Profile) {
         parent_phone: parentPhone,
         timezone: timeZone,
         student_number: studentNumber,
+        availability: availability,
         subjects_of_interest: subjects_of_interest,
         languages_spoken: languages_spoken,
       })
