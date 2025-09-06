@@ -39,6 +39,7 @@ interface EditTutorFormProps {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => void;
+  handleComplexFieldsForEdit: (name: string, value: any) => void;
   handleTimeZoneForEdit: (value: string) => void;
 }
 
@@ -64,6 +65,7 @@ const EditTutorForm = ({
   handleEditTutor,
   handleGetSelectedTutor,
   handleInputChangeForEdit,
+  handleComplexFieldsForEdit,
   handleTimeZoneForEdit,
 }: EditTutorFormProps) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -80,12 +82,7 @@ const EditTutorForm = ({
       { day: "Monday", startTime: "09:00", endTime: "17:00" },
     ];
 
-    handleInputChangeForEdit({
-      target: {
-        name: "availability",
-        value: newAvailability,
-      },
-    } as any);
+    handleComplexFieldsForEdit("availability", newAvailability);
   };
 
   const updateAvailabilitySlot = (
@@ -98,12 +95,7 @@ const EditTutorForm = ({
     const updated = [...(selectedTutor.availability ?? [])];
     updated[index] = { ...updated[index], [field]: value };
 
-    handleInputChangeForEdit({
-      target: {
-        name: "availability",
-        value: updated,
-      },
-    } as any);
+    handleComplexFieldsForEdit("availability", updated);
   };
 
   const removeAvailabilitySlot = (index: number) => {
@@ -111,12 +103,7 @@ const EditTutorForm = ({
 
     const updated = selectedTutor.availability.filter((_, i) => i !== index);
 
-    handleInputChangeForEdit({
-      target: {
-        name: "availability",
-        value: updated,
-      },
-    } as any);
+    handleComplexFieldsForEdit("availability", updated);
   };
 
   const addSubject = () => {
@@ -127,12 +114,7 @@ const EditTutorForm = ({
       subjectInput.trim(),
     ];
 
-    handleInputChangeForEdit({
-      target: {
-        name: "subjects_of_interest",
-        value: updated,
-      },
-    } as any);
+    handleComplexFieldsForEdit("subjects_of_interest", updated);
 
     setSubjectInput("");
   };
@@ -144,12 +126,7 @@ const EditTutorForm = ({
       (s) => s !== subject
     );
 
-    handleInputChangeForEdit({
-      target: {
-        name: "subjects_of_interest",
-        value: updated,
-      },
-    } as any);
+    handleComplexFieldsForEdit("subjects_of_interest", updated);
   };
 
   const addLanguage = () => {
@@ -160,12 +137,7 @@ const EditTutorForm = ({
       languageInput.trim(),
     ];
 
-    handleInputChangeForEdit({
-      target: {
-        name: "languages_spoken",
-        value: updated,
-      },
-    } as any);
+    handleComplexFieldsForEdit("languages_spoken", updated);
 
     setLanguageInput("");
   };
@@ -177,12 +149,7 @@ const EditTutorForm = ({
       (l) => l !== language
     );
 
-    handleInputChangeForEdit({
-      target: {
-        name: "languages_spoken",
-        value: updated,
-      },
-    } as any);
+    handleComplexFieldsForEdit("languages_spoken", updated);
   };
 
   return (

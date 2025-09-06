@@ -3,8 +3,7 @@ import { Profile } from "@/types";
 export async function tableToIntefaceProfiles(data: any) {
   try {
     if (!data) {
-      console.warn("Profile is null");
-      return null;
+      throw new Error("Data is null");
     }
 
     const userProfile: Profile = {
@@ -33,6 +32,6 @@ export async function tableToIntefaceProfiles(data: any) {
     return userProfile;
   } catch (error) {
     console.error("Unable to convert to interface for Profiles", error);
-    throw error;
+    return null;
   }
 }
