@@ -104,11 +104,11 @@ export default function DashboardLayout({
       href: "/dashboard/chats",
       icon: <MessageCircleIcon className="h-5 w-5" />,
     },
-    // {
-    //   title: "Pairings",
-    //   href: "/dashboard/pairings",
-    //   icon: <LinkIcon className="h-5 w-5" />,
-    // },
+    {
+      title: "Pairings",
+      href: "/dashboard/pairings",
+      icon: <LinkIcon className="h-5 w-5" />,
+    },
     {
       title: "Profile",
       href: "/dashboard/profile",

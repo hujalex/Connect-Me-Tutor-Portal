@@ -1652,11 +1652,11 @@ export const addEnrollment = async (
     if (enrollment.duration <= 0)
       throw new Error("Duration should be a positive amount");
 
-    if (enrollment.duration >= 3) {
-      throw new Error(
-        "Please consult an Exec Team member about sessions longer than 3 hours"
-      );
-    }
+    // if (duration >= 3) {
+    //   throw new Error(
+    //     "Please consult an Exec Team member about sessions longer than 3 hours"
+    //   );
+    // }
 
     if (!enrollment.student) throw new Error("Please select a Student");
 
