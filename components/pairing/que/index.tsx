@@ -27,6 +27,7 @@ import toast from "react-hot-toast";
 import { TestingPairingControls } from "../test-controls";
 
 type QueViews = "tutors" | "students";
+
 export default function PriorityQueue() {
   const [pairingRequests, setPairingRequests] = useState<PairingRequest[]>([]);
   const [currentView, setCurrentView] = useState<QueViews>("tutors");
@@ -188,8 +189,8 @@ export default function PriorityQueue() {
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
                               {/* <AvatarImage
-                            src={request.profile.avatar || "/placeholder.svg"}
-                          /> */}
+                                src={request.profile.avatar || "/placeholder.svg"}
+                              /> */}
                               <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-sm">
                                 {initials}
                               </AvatarFallback>
@@ -201,74 +202,12 @@ export default function PriorityQueue() {
                               </p>
                             </div>
                           </div>
-<<<<<<< HEAD
                         </TableCell>
-=======
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`${getStatusColor("pending")} font-semibold capitalize`}
-                        >
-                          {"Pending"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`${getPriorityColor(request.priority)} font-semibold`}
-                        >
-                          Priority {request.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-48">
-                          {request.profile.availability
-                            .slice(0, 2)
-                            .map((time, index) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="text-xs"
-                              >
-                                {`${time.day}, ${to12Hour(time.startTime)} - ${to12Hour(time.endTime)}`}
-                              </Badge>
-                            ))}
-                          {request.profile.availability.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{request.profile.availability.length - 2} more
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-48">
-                          <></>
-                          {request.profile.subjects_of_interest
-                            .slice(0, 2)
-                            .map((subject, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {subject}
-                              </Badge>
-                            ))}
-                          {request.profile.subjects_of_interest.length > 2 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{request.profile.subjects_of_interest.length - 2}{" "}
-                              more
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      {request.profile.languages_spoken && (
->>>>>>> connectme-dev/pairings
                         <TableCell>
                           <Badge
-                            className={`${getStatusColor(request.status)} font-semibold capitalize`}
+                            className={`${getStatusColor(request.status || "pending")} font-semibold capitalize`}
                           >
-                            {request.status}
+                            {request.status || "Pending"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -322,12 +261,11 @@ export default function PriorityQueue() {
                             )}
                           </div>
                         </TableCell>
-                        {request.profile.languages_spoken && (
-                          <TableCell>
+                        <TableCell>
+                          {request.profile.languages_spoken && (
                             <div className="flex flex-wrap gap-1 max-w-32">
                               {request.profile.languages_spoken
-                                ?.slice(0, 2)
-
+                                .slice(0, 2)
                                 .map((language, index) => (
                                   <Badge
                                     key={index}
@@ -346,9 +284,8 @@ export default function PriorityQueue() {
                                 </Badge>
                               )}
                             </div>
-                          </TableCell>
-                        )}
-
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Select

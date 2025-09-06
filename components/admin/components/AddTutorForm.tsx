@@ -21,11 +21,8 @@ import {
 import { Profile } from "@/types";
 import { Combobox } from "@/components/ui/combobox";
 import { X, Plus } from "lucide-react";
-<<<<<<< HEAD
 import { ScrollArea } from "@/components/ui/scrollarea";
-=======
 import { Switch } from "@/components/ui/switch";
->>>>>>> connectme-dev/pairings
 
 interface AddTutorFormProps {
   newTutor: Partial<Profile>;
@@ -192,7 +189,6 @@ const AddTutorForm = ({
             </button>
           </div>
 
-<<<<<<< HEAD
           <div className="grid gap-4 py-4">
             {/* Basic Info Tab */}
             {activeTab === "basic" && (
@@ -266,106 +262,6 @@ const AddTutorForm = ({
                       Time Zone
                     </Label>
                     <div className="col-span-3">
-=======
-        <div className="grid gap-4 py-4">
-          {/* Basic Info Tab */}
-          {activeTab === "basic" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="firstName" className="text-right">
-                  First Name
-                </Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  value={newTutor.firstName}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="lastName" className="text-right">
-                  Last Name
-                </Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={newTutor.lastName}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={newTutor.email}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="startDate" className="text-right">
-                  Start Date
-                </Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={newTutor.startDate}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="timeZone" className="text-right">
-                  Time Zone
-                </Label>
-                <div className="col-span-3">
-                  <Select
-                    name="timeZone"
-                    value={newTutor.timeZone}
-                    onValueChange={handleTimeZone}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EST">EST</SelectItem>
-                      <SelectItem value="CST">CST</SelectItem>
-                      <SelectItem value="MT">MT</SelectItem>
-                      <SelectItem value="PST">PST</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="p-4 flex justify-center gap-4 items-center rounded-lg w-full">
-                <Switch
-                  checked={addNewProfilesToQueue}
-                  onCheckedChange={setAddNewProfilesToQueue}
-                />
-                Add To Pairing Queue
-              </div>
-            </div>
-          )}
-
-          {/* Extended Profile Tab */}
-          {activeTab === "extended" && (
-            <div className="space-y-6">
-              {/* Availability Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Availability</h3>
-                {availability.map((slot, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-2 p-3 border rounded-lg bg-gray-50"
-                  >
-                    <div className="flex-1">
->>>>>>> connectme-dev/pairings
                       <Select
                         name="timeZone"
                         value={newTutor.timeZone}
