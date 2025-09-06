@@ -41,10 +41,10 @@ export function TestingPairingControls() {
       </h3>
       <div className="flex flex-wrap gap-2">
         <Button onClick={handleResolveQueues} variant="outline" size="sm">
-          {" Resolve Que's"}
+          {" Resolve Queue"}
         </Button>
         <Button onClick={handleClearQueues} variant="outline" size="sm">
-          {" Clear Que's"}
+          {" Clear Queue"}
         </Button>
         <Button
           onClick={() => router.push("/dashboard/pairing-que/logs")}
