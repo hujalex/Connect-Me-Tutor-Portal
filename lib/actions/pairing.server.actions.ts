@@ -193,21 +193,21 @@ export const updatePairingMatchStatus = async (
   const { student, tutor } = pairingMatch;
   if (status === "accepted") {
     //create new unique student tutor pairing
-    // const createdPairingResult = await supabase.from("Pairings").insert([
-    //   {
-    //     student_id: student.id,
-    //     tutor_id: tutor.id,
-    //   },
-    // ]);
+    const createdPairingResult = await supabase.from("Pairings").insert([
+      {
+        student_id: student.id,
+        tutor_id: tutor.id,
+      },
+    ]);
 
-    // const createdPairingError = createdPairingResult.error;
-    // if (createdPairingError) {
-    //   if (createdPairingError?.code === "23505") {
-    //     throw new Error("student - tutor pairing already exists");
-    //   }
-    //   console.error(createdPairingResult.error);
-    //   throw new Error("failed to create pairings");
-    // }
+    const createdPairingError = createdPairingResult.error;
+    if (createdPairingError) {
+      if (createdPairingError?.code === "23505") {
+        throw new Error("student - tutor pairing already exists");
+      }
+      console.error(createdPairingResult.error);
+      throw new Error("failed to create pairings");
+    }
 
     const emailData = {
       studentName: `${student.first_name} ${student.last_name}`,
@@ -217,11 +217,14 @@ export const updatePairingMatchStatus = async (
 
     //send respective pairing email to student and tutor
 
-    // await axios.post("/api/email/pairing?type=match-accepted", {
-    //   emailType: "match-accepted",
-    //   data: emailData,
-    // });
+    // if (status == "accepted") {
+    //   await axios.post("/api/email/pairing?type=match-accepted", {
+    //     emailType: "match-accepted",
+    //     data: emailData,
+    //   });
+    // }
 
+    console.log("student", student);
     // Replace the fetch with:
     await sendPairingEmail("match-accepted", emailData);
 

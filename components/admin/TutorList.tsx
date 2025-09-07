@@ -79,6 +79,7 @@ import { Combobox } from "@/components/ui/combobox";
 import AddTutorForm from "./components/AddTutorForm";
 import DeleteTutorForm from "./components/DeleteTutorForm";
 import EditTutorForm from "./components/EditTutorForm";
+import { Turret_Road } from "next/font/google";
 
 const TutorList = () => {
   const supabase = createClientComponentClient();
@@ -229,6 +230,14 @@ const TutorList = () => {
     );
   };
 
+  const handleComplexFieldsForEdit = (name: string, value: any) => {
+    console.log(name);
+    console.log(value);
+    setSelectedTutor((prev) =>
+      prev ? ({ ...prev, [name]: value } as Profile) : null
+    );
+  };
+
   const handleAvailabilityChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
@@ -250,7 +259,7 @@ const TutorList = () => {
     try {
       setAddingTutor(true);
       // Ensure addStudent returns a Profile
-      const addedTutor: Profile = await addUser(tutor, "Tutor");
+      const addedTutor: Profile = await addUser(tutor, "Tutor", true);
 
       // Update local state
       setTutors((prevTutors) => {
@@ -307,7 +316,7 @@ const TutorList = () => {
     try {
       setAddingTutor(true);
       // Ensure addStudent returns a Profile
-      const addedTutor: Profile = await addUser(newTutor, "Tutor");
+      const addedTutor: Profile = await addUser(newTutor, "Tutor", true);
 
       // Update local state
       setTutors((prevTutors) => {
@@ -489,6 +498,7 @@ const TutorList = () => {
                 handleEditTutor={handleEditTutor}
                 handleGetSelectedTutor={handleGetSelectedTutor}
                 handleInputChangeForEdit={handleInputChangeForEdit}
+                handleComplexFieldsForEdit={handleComplexFieldsForEdit}
                 handleTimeZoneForEdit={handleTimeZoneForEdit}
               />
               {/*Edit Page*/}

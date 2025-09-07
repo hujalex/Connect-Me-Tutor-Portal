@@ -109,226 +109,234 @@ export default function PriorityQueue() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Priority Queue Management
-          </h1>
-          <p className="text-gray-600">
-            Manage tutors and students in the priority queue system
-          </p>
-        </div>
-
-        <div>
-          <TestingPairingControls />
-        </div>
-
-        <div className="mb-6">
-          <div className="flex gap-2 p-1 bg-white rounded-lg border shadow-sm w-fit">
-            <Button
-              variant={currentView === "tutors" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setCurrentView("tutors")}
-              className="flex items-center gap-2"
-            >
-              <GraduationCap className="h-4 w-4" />
-              Tutors ({tutors.length})
-            </Button>
-            <Button
-              variant={currentView === "students" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setCurrentView("students")}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Students ({students.length})
-            </Button>
+    <main className="p-8 bg-gray-50">
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Priority Queue Management
+            </h1>
+            <p className="text-gray-600">
+              Manage tutors and students in the priority queue system
+            </p>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg border shadow-sm">
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-2">
-              {currentView === "tutors" ? (
-                <GraduationCap className="h-6 w-6 text-blue-600" />
-              ) : (
-                <Users className="h-6 w-6 text-green-600" />
-              )}
-              <h2 className="text-2xl font-semibold text-gray-900 capitalize">
-                {currentView} ({currentCount})
-              </h2>
+          <div>
+            <TestingPairingControls />
+          </div>
+
+          <div className="mb-6">
+            <div className="flex gap-2 p-1 bg-white rounded-lg border shadow-sm w-fit">
+              <Button
+                variant={currentView === "tutors" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setCurrentView("tutors")}
+                className="flex items-center gap-2"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Tutors ({tutors.length})
+              </Button>
+              <Button
+                variant={currentView === "students" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setCurrentView("students")}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Students ({students.length})
+              </Button>
             </div>
           </div>
 
-          {currentCount > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Profile</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Availability</TableHead>
-                  <TableHead>Subjects</TableHead>
-                  <TableHead>Languages</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentData.map((request) => {
-                  const fullName = `${request.profile.firstName} ${request.profile.lastName}`;
-                  const initials = fullName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("");
-                  return (
-                    <TableRow key={request.id} className="hover:bg-gray-50">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            {/* <AvatarImage
+          <div className="bg-white rounded-lg border shadow-sm">
+            <div className="p-6 border-b">
+              <div className="flex items-center gap-2">
+                {currentView === "tutors" ? (
+                  <GraduationCap className="h-6 w-6 text-blue-600" />
+                ) : (
+                  <Users className="h-6 w-6 text-green-600" />
+                )}
+                <h2 className="text-2xl font-semibold text-gray-900 capitalize">
+                  {currentView} ({currentCount})
+                </h2>
+              </div>
+            </div>
+
+            {currentCount > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Profile</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Availability</TableHead>
+                    <TableHead>Subjects</TableHead>
+                    <TableHead>Languages</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentData.map((request) => {
+                    const fullName = `${request.profile.firstName} ${request.profile.lastName}`;
+                    const initials = fullName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("");
+                    return (
+                      <TableRow key={request.id} className="hover:bg-gray-50">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              {/* <AvatarImage
                             src={request.profile.avatar || "/placeholder.svg"}
                           /> */}
-                            <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-sm">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold">{fullName}</p>
-                            <p className="text-sm text-gray-600">
-                              {request.profile.email}
-                            </p>
+                              <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-sm">
+                                {initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold">{fullName}</p>
+                              <p className="text-sm text-gray-600">
+                                {request.profile.email}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`${getStatusColor(request.status)} font-semibold capitalize`}
-                        >
-                          {request.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`${getPriorityColor(request.priority)} font-semibold`}
-                        >
-                          Priority {request.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-48">
-                          {request.profile.availability
-                            .slice(0, 2)
-                            .map((time, index) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="text-xs"
-                              >
-                                {`${time.day}, ${to12Hour(time.startTime)} - ${to12Hour(time.endTime)}`}
-                              </Badge>
-                            ))}
-                          {request.profile.availability.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{request.profile.availability.length - 2} more
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-48">
-                          {request.profile.subjects_of_interest
-                            .slice(0, 2)
-                            .map((subject, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {subject}
-                              </Badge>
-                            ))}
-                          {request.profile.subjects_of_interest.length > 2 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{request.profile.subjects_of_interest.length - 2}{" "}
-                              more
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      {request.profile.languages_spoken && (
+                        </TableCell>
                         <TableCell>
-                          <div className="flex flex-wrap gap-1 max-w-32">
-                            {request.profile.languages_spoken
-                              ?.slice(0, 2)
-
-                              .map((language, index) => (
+                          <Badge
+                            className={`${getStatusColor(request.status)} font-semibold capitalize`}
+                          >
+                            {request.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`${getPriorityColor(request.priority)} font-semibold`}
+                          >
+                            Priority {request.priority}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-48">
+                            {request.profile.availability
+                              .slice(0, 2)
+                              .map((time, index) => (
                                 <Badge
                                   key={index}
                                   variant="outline"
-                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                  className="text-xs"
                                 >
-                                  {language}
+                                  {`${time.day}, ${to12Hour(time.startTime)} - ${to12Hour(time.endTime)}`}
                                 </Badge>
                               ))}
-                            {request.profile.languages_spoken.length > 2 && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                              >
-                                +{request.profile.languages_spoken.length - 2}
+                            {request.profile.availability.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{request.profile.availability.length - 2} more
                               </Badge>
                             )}
                           </div>
                         </TableCell>
-                      )}
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-48">
+                            {request.profile.subjects_of_interest
+                              .slice(0, 2)
+                              .map((subject, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {subject}
+                                </Badge>
+                              ))}
+                            {request.profile.subjects_of_interest.length >
+                              2 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +
+                                {request.profile.subjects_of_interest.length -
+                                  2}{" "}
+                                more
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        {request.profile.languages_spoken && (
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1 max-w-32">
+                              {request.profile.languages_spoken
+                                ?.slice(0, 2)
 
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Select
-                            value={request.priority.toString()}
-                            onValueChange={(value) =>
-                              updatePriority(request.id, Number.parseInt(value))
-                            }
-                          >
-                            <SelectTrigger className="w-16 h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1">1</SelectItem>
-                              <SelectItem value="2">2</SelectItem>
-                              <SelectItem value="3">3</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeFromQueue(request.id)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-12 text-center">
-              <div className="flex flex-col items-center gap-2">
-                {currentView === "tutors" ? (
-                  <GraduationCap className="h-12 w-12 text-gray-300" />
-                ) : (
-                  <Users className="h-12 w-12 text-gray-300" />
-                )}
-                <p className="text-gray-500">No {currentView} in queue</p>
+                                .map((language, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                  >
+                                    {language}
+                                  </Badge>
+                                ))}
+                              {request.profile.languages_spoken.length > 2 && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  +{request.profile.languages_spoken.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Select
+                              value={request.priority.toString()}
+                              onValueChange={(value) =>
+                                updatePriority(
+                                  request.id,
+                                  Number.parseInt(value)
+                                )
+                              }
+                            >
+                              <SelectTrigger className="w-16 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1</SelectItem>
+                                <SelectItem value="2">2</SelectItem>
+                                <SelectItem value="3">3</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeFromQueue(request.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="p-12 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  {currentView === "tutors" ? (
+                    <GraduationCap className="h-12 w-12 text-gray-300" />
+                  ) : (
+                    <Users className="h-12 w-12 text-gray-300" />
+                  )}
+                  <p className="text-gray-500">No {currentView} in queue</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

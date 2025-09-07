@@ -167,7 +167,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 type EmailData = {
   studentName: string;
-  studentGender: string;
+  studentGender: "male" | "female" | "other";
   parentName: string;
 };
 
@@ -186,9 +186,9 @@ export async function sendPairingEmail(emailType: string, data: EmailData) {
     console.log("email temp: ", emailHtml);
 
     const emailResult = await resend.emails.send({
-      from: "reminder@connectmego.app",
-      to: "aaronmarsh755@gmail.com",
-      subject: "Connect Me Email",
+      from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
+      to: "hual.alexander@gmail.com",
+      subject: "You Have Been Matched!",
       html: emailHtml,
     });
 

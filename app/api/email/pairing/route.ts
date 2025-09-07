@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
       const emailResult = await resend.emails.send({
         from: "reminder@connectmego.app",
-        to: "aaronmarsh755@gmail.com",
+        to: "ahu@connectmego.org",
         subject: "Connect Me Email",
         html: emailHtml,
       });

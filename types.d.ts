@@ -85,7 +85,7 @@ interface Enrollment {
   tutor: Profile | null;
   summary: string;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   availability: { day: string; startTime: string; endTime: string }[]; // Ensure startTime and endTime have AM/PM format
   meetingId: string;
   summerPaused: boolean;
