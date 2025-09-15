@@ -227,6 +227,7 @@ export const updatePairingMatchStatus = async (
             startDate,
             endDate,
             summary: "Automatically Created Enrollment",
+            frequency: "weekly",
           },
           true
         );
