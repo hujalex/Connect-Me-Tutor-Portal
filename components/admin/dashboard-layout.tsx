@@ -110,6 +110,11 @@ export default function DashboardLayout({
       icon: <LinkIcon className="h-5 w-5" />,
     },
     {
+      title: "Pairings",
+      href: "/dashboard/pairings",
+      icon: <LinkIcon className="h-5 w-5" />,
+    },
+    {
       title: "Profile",
       href: "/dashboard/profile",
       icon: <User className="h-5 w-5" />,
@@ -207,7 +212,7 @@ export default function DashboardLayout({
       icon: <Mail className="h-5 w-5" />,
     },
     {
-      title: "Pairing Que",
+      title: "Pairing Queue",
       href: "/dashboard/pairing-que",
       icon: <ListOrdered className="h-5 w-5" />,
     },
