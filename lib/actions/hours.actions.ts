@@ -235,6 +235,7 @@ export const getAllHoursBatch = async () => {
     return hoursJson;
   } catch (error) {
     console.error("Error getting tutor hours:", error);
+    toast.error("Failed to fetch rpc for batch hours");
     throw error;
   }
 };

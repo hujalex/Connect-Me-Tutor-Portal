@@ -284,7 +284,7 @@ const Schedule = () => {
       meetings.forEach((meeting) => {
         updatedMeetingAvailability[meeting.id] = true;
       });
-
+      //
       // const requestedSessionStartTime = parseISO(session.date);\
       const requestedSessionStartTime = requestedDate;
       const requestedSessionEndTime = addHours(
