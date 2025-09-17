@@ -1,6 +1,6 @@
 "use server";
 
-import { Meeting } from "@/types";
+import { Meeting, Profile } from "@/types";
 import { SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
@@ -13,6 +13,8 @@ import { NextResponse } from "next/server";
 import { PairingLogSchemaType } from "../pairing/types";
 import { getSupabase } from "../supabase-server/serverClient";
 import { sendPairingEmail } from "./email.server.actions";
+import { addEnrollment, createEnrollment } from "./admin.actions";
+import { getOverlappingAvailabilites } from "./enrollment.actions";
 
 export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
   try {
@@ -151,116 +153,150 @@ export const resetPairingQueues = async () => {
   }
 };
 
-/**
- * Initiate pairing & sending out emails
- * @param matchId
- * @param status
- */
-export const updatePairingMatchStatus = async (
-  profileId: string,
-  matchId: string,
-  status: "accepted" | "rejected"
-) => {
-  // if (
-  //   !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  //   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  // ) {
-  //   throw new Error("Missing Supabase environment variables");
-  // }
-  // console.log("logs fine here!");
-  // const supabase = await createServerClient();
-  const supabase = await getSupabase();
+// /**
+//  * Initiate pairing & sending out emails
+//  * @param matchId
+//  * @param status
+//  */
+// export const updatePairingMatchStatus = async (
+//   profileId: string,
+//   matchId: string,
+//   status: "accepted" | "rejected"
+// ) => {
+//   // if (
+//   //   !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+//   //   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+//   // ) {
+//   //   throw new Error("Missing Supabase environment variables");
+//   // }
+//   // console.log("logs fine here!");
+//   // const supabase = await createServerClient();
+//   const supabase = await getSupabase();
 
-  //
-  const updateResponse = await supabase
-    .from("pairing_matches")
-    .update({ tutor_status: status })
-    .eq("id", matchId)
-    .eq("tutor_id", profileId);
-  if (updateResponse.error) {
-    console.log("ERROR: ", updateResponse.error);
-  }
+//   //
+//   const updateResponse = await supabase
+//     .from("pairing_matches")
+//     .update({ tutor_status: status })
+//     .eq("id", matchId)
+//     .eq("tutor_id", profileId);
+//   if (updateResponse.error) {
+//     console.log("ERROR: ", updateResponse.error);
+//   }
 
-  const { data, error } = await supabase
-    .rpc("get_pairing_match", {
-      match_id: matchId,
-    })
-    .single();
+//   const { data, error } = await supabase
+//     .rpc("get_pairing_match", {
+//       match_id: matchId,
+//     })
+//     .single();
 
-  if (error) return console.error(error);
-  const pairingMatch = data as IncomingPairingMatch;
-  console.log("data", pairingMatch);
-  const { student, tutor } = pairingMatch;
-  if (status === "accepted") {
-    //create new unique student tutor pairing
-    const createdPairingResult = await supabase.from("Pairings").insert([
-      {
-        student_id: student.id,
-        tutor_id: tutor.id,
-      },
-    ]);
+//   if (error) return console.error(error);
+//   const pairingMatch = data as IncomingPairingMatch;
+//   console.log("data", pairingMatch);
+//   const { student, tutor } = pairingMatch;
+//   if (status === "accepted") {
+//     // create new unique student tutor pairing
+//     const createdPairingResult = await supabase.from("Pairings").insert([
+//       {
+//         student_id: student.id,
+//         tutor_id: tutor.id,
+//       },
+//     ]);
 
-    const createdPairingError = createdPairingResult.error;
-    if (createdPairingError) {
-      if (createdPairingError?.code === "23505") {
-        throw new Error("student - tutor pairing already exists");
-      }
-      console.error(createdPairingResult.error);
-      throw new Error("failed to create pairings");
-    }
+//     if (tutor.availability || student.availability) {
+//       const availabilities = await getOverlappingAvailabilites(
+//         tutor.availability!,
+//         student.availability!
+//       );
 
-    const emailData = {
-      studentName: `${student.first_name} ${student.last_name}`,
-      studentGender: student.gender ?? "male",
-      parentName: `Parent Name`,
-    } as TutorMatchingNotificationEmailProps;
+//       if (availabilities) {
+//         const firstAvailability = availabilities[0];
+//         if (!firstAvailability) return;
 
-    //send respective pairing email to student and tutor
+//         const startDate = "";
+//         const endDate = "";
 
-    // if (status == "accepted") {
-    //   await axios.post("/api/email/pairing?type=match-accepted", {
-    //     emailType: "match-accepted",
-    //     data: emailData,
-    //   });
-    // }
+//         //auto select first availability & create enrollment
+//         const result = await addEnrollment(
+//           {
+//             student: student as unknown as Profile,
+//             tutor: tutor as unknown as Profile,
+//             availability: availabilities,
+//             meetingId: "",
+//             summerPaused: false,
+//             duration: 60,
+//             startDate,
+//             endDate,
+//             summary: "Automatically Created Enrollment",
+//             frequency: "weekly",
+//           },
+//           true
+//         );
+//       }
+//     } else {
+//       console.warn("failed to automatically create enrollment");
+//     }
 
-    console.log("student", student);
-    // Replace the fetch with:
-    await sendPairingEmail("match-accepted", emailData);
+//     const createdPairingError = createdPairingResult.error;
+//     if (createdPairingError) {
+//       if (createdPairingError?.code === "23505") {
+//         throw new Error("student - tutor pairing already exists");
+//       }
+//       console.error(createdPairingResult.error);
+//       throw new Error("failed to create pairings");
+//     }
 
-    const log = await supabase.from("pairing_logs").insert([
-      {
-        type: "pairing-match-accepted",
-        message: `${tutor.first_name} ${tutor.last_name} has accepted ${student.first_name} ${student.last_name} as a student`,
-        error: false,
-        metadata: {
-          profile_id: profileId,
-        },
-      } as PairingLogSchemaType,
-    ]);
+//     const emailData = {
+//       studentName: `${student.first_name} ${student.last_name}`,
+//       studentGender: student.gender ?? "male",
+//       parentName: `Parent Name`,
+//     } as TutorMatchingNotificationEmailProps;
 
-    console.log("LOG ", log);
+//     //send respective pairing email to student and tutor
 
-    //reset tutor and student status to be auto placed in que
-  } else if (status === "rejected") {
-    const { data, error } = await supabase
-      .from("pairing_requests")
-      .update({
-        status: "pending",
-      })
-      .in("user_id", [student.id, tutor.id]);
+//     // if (status == "accepted") {
+//     //   await axios.post("/api/email/pairing?type=match-accepted", {
+//     //     emailType: "match-accepted",
+//     //     data: emailData,
+//     //   });
+//     // }
 
-    console.log(data, error);
-    if (!error)
-      await supabase.from("pairing_logs").insert([
-        {
-          type: "pairing-match-rejected",
-          message: `${tutor.first_name} ${tutor.last_name} has declined ${student.first_name} ${student.last_name} as a student`,
-          error: false,
-          metadata: {
-            profile_id: profileId,
-          },
-        } as PairingLogSchemaType,
-      ]);
-  }
-};
+//     console.log("student", student);
+//     // Replace the fetch with:
+//     await sendPairingEmail("match-accepted", emailData);
+
+//     const log = await supabase.from("pairing_logs").insert([
+//       {
+//         type: "pairing-match-accepted",
+//         message: `${tutor.first_name} ${tutor.last_name} has accepted ${student.first_name} ${student.last_name} as a student`,
+//         error: false,
+//         metadata: {
+//           profile_id: profileId,
+//         },
+//       } as PairingLogSchemaType,
+//     ]);
+
+//     console.log("LOG ", log);
+
+//     //reset tutor and student status to be auto placed in que
+//   } else if (status === "rejected") {
+//     const { data, error } = await supabase
+//       .from("pairing_requests")
+//       .update({
+//         status: "pending",
+//       })
+//       .in("user_id", [student.id, tutor.id]);
+
+//     console.log(data, error);
+//     if (!error)
+//       await supabase.from("pairing_logs").insert([
+//         {
+//           type: "pairing-match-rejected",
+//           message: `${tutor.first_name} ${tutor.last_name} has declined ${student.first_name} ${student.last_name} as a student`,
+//           error: false,
+//           metadata: {
+//             profile_id: profileId,
+//           },
+//         } as PairingLogSchemaType,
+//       ]);
+//   }
+// };

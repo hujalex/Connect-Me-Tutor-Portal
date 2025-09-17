@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { UserAvailabilityList } from "../ui/availability-list";
 import {
   Card,
   CardContent,
@@ -30,7 +31,9 @@ import {
   getIncomingPairingMatches,
   IncomingPairingMatch,
 } from "@/lib/actions/pairing.actions";
-import { updatePairingMatchStatus } from "@/lib/actions/pairing.server.actions";
+import { updatePairingMatchStatus } from "@/lib/actions/pairing.actions";
+// import { updatePairingMatchStatus } from "@/lib/actions/pairing.server.actions";
+
 import toast from "react-hot-toast";
 
 export function PairingInterface() {
@@ -67,8 +70,6 @@ export function PairingInterface() {
       error: (err) =>
         `Failed to ${status.slice(0, -2)} pairing: ${err.message}`,
     });
-
-    
   };
 
   return (
@@ -164,6 +165,17 @@ export function PairingInterface() {
                                   </Badge>
                                 )
                               )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Student Availabilites
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              <UserAvailabilityList
+                                profile={matchedProfile}
+                                isBadge={true}
+                              />
                             </div>
                           </div>
                         </div>
