@@ -7,7 +7,7 @@ import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
 import { PairingLogSchemaType } from "../pairing/types";
 import { Person } from "@/types/enrollment";
-import { Availability, Profile } from "@/types";
+import { Availability, Enrollment, Profile } from "@/types";
 import { ProfilePairingMetadata } from "@/types/profile";
 import axios, { AxiosResponse } from "axios"; // Not used, can be removed
 import { toast } from "react-hot-toast";
@@ -340,17 +340,9 @@ export const getAutoAvailableSessionTimes = async (
 export const updatePairingMatchStatus = async (
   profileId: string,
   matchId: string,
-  status: "accepted" | "rejected"
+  status: "accepted" | "rejected",
+  enrollment: Enrollment | null = null
 ) => {
-  // if (
-  //   !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  //   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  // ) {
-  //   throw new Error("Missing Supabase environment variables");
-  // }
-  // console.log("logs fine here!");
-  // const supabase = await createServerClient();
-  //
   const updateResponse = await supabase
     .from("pairing_matches")
     .update({ tutor_status: status })
@@ -395,7 +387,7 @@ export const updatePairingMatchStatus = async (
           firstAvailability.day
         );
 
-        console.log(autoAvailability);
+        console.log("Details", autoAvailability);
 
         if (autoAvailability) {
           const result = await addEnrollment(
@@ -403,7 +395,7 @@ export const updatePairingMatchStatus = async (
               student: student as unknown as Profile,
               tutor: tutor as unknown as Profile,
               availability: [autoAvailability.availability],
-              meetingId: "",
+              meetingId: autoAvailability.meetingId.meetingId,
               summerPaused: false,
               duration: 1,
               startDate: new Date().toISOString(),

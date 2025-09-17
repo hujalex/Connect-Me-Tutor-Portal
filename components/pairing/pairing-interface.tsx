@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { UserAvailabilityList } from "../ui/availability-list";
 import {
   Card,
   CardContent,
@@ -166,6 +167,15 @@ export function PairingInterface() {
                               )}
                             </div>
                           </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Student Availabilites
+                            </p>
+                            <div>
+                              <UserAvailabilityList profile={matchedProfile} />
+                            </div>
+                          </div>
+                          Suggested Time: {}
                         </div>
                       </CardContent>
                       <CardFooter>
