@@ -171,11 +171,13 @@ export function PairingInterface() {
                             <p className="text-xs text-muted-foreground">
                               Student Availabilites
                             </p>
-                            <div>
-                              <UserAvailabilityList profile={matchedProfile} />
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              <UserAvailabilityList
+                                profile={matchedProfile}
+                                isBadge={true}
+                              />
                             </div>
                           </div>
-                          Suggested Time: {}
                         </div>
                       </CardContent>
                       <CardFooter>

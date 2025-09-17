@@ -134,6 +134,8 @@ export const getPairingLogs = async (
 export type IncomingPairingMatch = {
   tutor: Person & ProfilePairingMetadata;
   student: Person & ProfilePairingMetadata;
+  // tutor: Profile;
+  // student: Profile;
   tutor_id: string;
   pairing_match_id: string;
   created_at: string;
@@ -371,6 +373,16 @@ export const updatePairingMatchStatus = async (
       },
     ]);
 
+    const createdPairingError = createdPairingResult.error;
+    if (createdPairingError) {
+      if (createdPairingError?.code === "23505") {
+        throw new Error("student - tutor pairing already exists");
+      }
+      console.error(createdPairingResult.error);
+      throw new Error("failed to create pairings");
+      return;
+    }
+
     if (tutor.availability || student.availability) {
       const availabilities = await getOverlappingAvailabilites(
         tutor.availability!,
@@ -411,15 +423,6 @@ export const updatePairingMatchStatus = async (
       }
 
       //auto select first availability & create enrollment
-    }
-
-    const createdPairingError = createdPairingResult.error;
-    if (createdPairingError) {
-      if (createdPairingError?.code === "23505") {
-        throw new Error("student - tutor pairing already exists");
-      }
-      console.error(createdPairingResult.error);
-      throw new Error("failed to create pairings");
     }
 
     const emailData = {
