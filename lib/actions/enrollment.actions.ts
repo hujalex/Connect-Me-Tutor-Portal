@@ -149,3 +149,5 @@ export const getOverlappingAvailabilites = async (
     console.error("Failed to get overlapping availabilities");
   }
 };
+
+console.log("server call ");

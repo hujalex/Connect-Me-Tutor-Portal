@@ -213,7 +213,7 @@ export const updatePairingMatchStatus = async (
         const endDate = "";
 
         //auto select first availability & create enrollment
-        const result = await addEnrollment(
+        await addEnrollment(
           {
             student: student as unknown as Profile,
             tutor: tutor as unknown as Profile,
