@@ -26,7 +26,6 @@ import {
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import ResetPassword from "@/app/(public)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
@@ -236,6 +235,7 @@ export const getAllHoursBatch = async () => {
     return hoursJson;
   } catch (error) {
     console.error("Error getting tutor hours:", error);
+    toast.error("Failed to fetch rpc for batch hours");
     throw error;
   }
 };

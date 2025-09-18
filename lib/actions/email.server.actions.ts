@@ -187,7 +187,7 @@ export async function sendPairingEmail(emailType: string, data: EmailData) {
 
     const emailResult = await resend.emails.send({
       from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
-      to: "hual.alexander@gmail.com",
+      to: "ahu@connectmego.org",
       subject: "You Have Been Matched!",
       html: emailHtml,
     });
