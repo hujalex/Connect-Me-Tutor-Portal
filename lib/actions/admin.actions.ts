@@ -39,6 +39,7 @@ import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
 import { createPairingRequest } from "./pairing.actions";
+import { scheduleMultipleSessionReminders } from "../twilio";
 // import { getMeeting } from "./meeting.actions";
 
 const { toZonedTime, fromZonedTime } = DateFNS;
@@ -917,7 +918,7 @@ export async function addSessions(
   weekEndString: string,
   enrollments: Enrollment[],
   sessions: Session[]
-): Promise<Session[]> {
+) {
   try {
     const weekStart: Date = fromZonedTime(
       parseISO(weekStartString),
@@ -1110,6 +1111,10 @@ export async function addSessions(
             duration: session.duration,
           }))
         );
+
+        // if (!sessions) return;
+
+        scheduleMultipleSessionReminders(sessions!);
 
         //Schedule emails
         return sessions;
