@@ -1,6 +1,6 @@
 "use server";
 
-import { Meeting } from "@/types";
+import { Meeting, Profile } from "@/types";
 import { SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
@@ -11,6 +11,8 @@ import { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-m
 import { IncomingPairingMatch } from "./pairing.actions";
 import { NextResponse } from "next/server";
 import { PairingLogSchemaType } from "../pairing/types";
+import { addEnrollment, createEnrollment } from "./admin.actions";
+import { getOverlappingAvailabilites } from "./enrollment.actions";
 
 export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
   try {
@@ -189,22 +191,55 @@ export const updatePairingMatchStatus = async (
   console.log("data", pairingMatch);
   const { student, tutor } = pairingMatch;
   if (status === "accepted") {
-    //create new unique student tutor pairing
-    // const createdPairingResult = await supabase.from("Pairings").insert([
-    //   {
-    //     student_id: student.id,
-    //     tutor_id: tutor.id,
-    //   },
-    // ]);
+    // create new unique student tutor pairing
+    const createdPairingResult = await supabase.from("Pairings").insert([
+      {
+        student_id: student.id,
+        tutor_id: tutor.id,
+      },
+    ]);
 
-    // const createdPairingError = createdPairingResult.error;
-    // if (createdPairingError) {
-    //   if (createdPairingError?.code === "23505") {
-    //     throw new Error("student - tutor pairing already exists");
-    //   }
-    //   console.error(createdPairingResult.error);
-    //   throw new Error("failed to create pairings");
-    // }
+    if (tutor.availability || student.availability) {
+      const availabilities = await getOverlappingAvailabilites(
+        tutor.availability!,
+        student.availability!
+      );
+
+      if (availabilities) {
+        const firstAvailability = availabilities[0];
+        if (!firstAvailability) return;
+
+        const startDate = "";
+        const endDate = "";
+
+        //auto select first availability & create enrollment
+        await addEnrollment(
+          {
+            student: student as unknown as Profile,
+            tutor: tutor as unknown as Profile,
+            availability: availabilities,
+            meetingId: "",
+            summerPaused: false,
+            duration: 60,
+            startDate,
+            endDate,
+            summary: "Automatically Created Enrollment",
+          },
+          true
+        );
+      }
+    } else {
+      console.warn("failed to automatically create enrollment");
+    }
+
+    const createdPairingError = createdPairingResult.error;
+    if (createdPairingError) {
+      if (createdPairingError?.code === "23505") {
+        throw new Error("student - tutor pairing already exists");
+      }
+      console.error(createdPairingResult.error);
+      throw new Error("failed to create pairings");
+    }
 
     const emailData = {
       studentName: `${student.first_name} ${student.last_name}`,
