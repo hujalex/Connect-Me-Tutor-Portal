@@ -49,7 +49,7 @@ import { tableToIntefaceProfiles } from "../type-utils";
 import { createPairingRequest } from "./pairing.actions";
 // import { getMeeting } from "./meeting.actions";
 
-const { toZonedTime, fromZonedTime } = DateFNS;
+const { fromZonedTime } = DateFNS;
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
