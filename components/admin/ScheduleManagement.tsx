@@ -12,7 +12,7 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { utcToZonedTime } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -376,7 +376,7 @@ const Schedule = () => {
       try {
         return (
           format(
-            toZonedTime(parseISO(session.date), "America/New_York"),
+            utcToZonedTime(parseISO(session.date), "America/New_York"),
             "yyyy-MM-dd"
           ) === format(day, "yyyy-MM-dd")
         );
