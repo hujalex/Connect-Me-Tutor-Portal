@@ -431,18 +431,14 @@ export const updatePairingMatchStatus = async (
       parentName: `Parent Name`,
     } as TutorMatchingNotificationEmailProps;
 
-    //send respective pairing email to student and tutor
-
-    // if (status == "accepted") {
-    //   await axios.post("/api/email/pairing?type=match-accepted", {
-    //     emailType: "match-accepted",
-    //     data: emailData,
-    //   });
-    // }
-
     console.log("student", student);
+
+    const { data: studentData, error: getStudentError } = await supabase.from("Profile").select("*").eq("id", student.id).single();
+    if (getStudentError) throw getStudentError;
+    const { data: tutorData, error: getTutorError} = await supabase.from("Profile").select("*").eq("id", tutor.id);
+    if (getTutorError) throw getTutorError
     // Replace the fetch with:
-    await sendPairingEmail("match-accepted", emailData);
+    await sendPairingEmail("match-accepted", emailData, studentData.email);
 
     const log = await supabase.from("pairing_logs").insert([
       {

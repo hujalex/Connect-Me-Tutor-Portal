@@ -171,7 +171,7 @@ type EmailData = {
   parentName: string;
 };
 
-export async function sendPairingEmail(emailType: string, data: EmailData) {
+export async function sendPairingEmail(emailType: string, data: EmailData, emailTo: string) {
   const allowedEmailTypes: string[] = ["match-accepted"];
 
   if (!emailType || !allowedEmailTypes.includes(emailType)) {
@@ -187,7 +187,7 @@ export async function sendPairingEmail(emailType: string, data: EmailData) {
 
     const emailResult = await resend.emails.send({
       from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
-      to: "ahu@connectmego.org",
+      to: emailTo,
       subject: "You Have Been Matched!",
       html: emailHtml,
     });
