@@ -12,7 +12,7 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
-import * as DateFns from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,8 +76,6 @@ import {
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
-
-const { toZonedTime } = DateFns;
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -160,14 +158,6 @@ const Schedule = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSessions();
-    fetchEnrollments();
-    fetchMeetings();
-    fetchStudents();
-    fetchTutors();
-  }, [currentWeek]);
-
   const fetchSessions = async () => {
     setLoading(true);
     try {
@@ -189,6 +179,14 @@ const Schedule = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSessions();
+    fetchEnrollments();
+    fetchMeetings();
+    fetchStudents();
+    fetchTutors();
+  }, [currentWeek]);
 
   const fetchEnrollments = async () => {
     try {

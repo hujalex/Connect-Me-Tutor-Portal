@@ -49,7 +49,7 @@ import { tableToIntefaceProfiles } from "../type-utils";
 import { createPairingRequest } from "./pairing.actions";
 // import { getMeeting } from "./meeting.actions";
 
-const { toZonedTime, fromZonedTime } = DateFNS;
+const { fromZonedTime } = DateFNS;
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -333,11 +333,13 @@ export const addTutor = async (
       startDate: createdProfile.startDate,
       availability: createdProfile.availability,
       email: createdProfile.email,
+      phoneNumber: createdProfile.phone_number,
       parentName: createdProfile.parentName,
       parentPhone: createdProfile.parentPhone,
       parentEmail: createdProfile.parentEmail,
       timeZone: createdProfile.timeZone,
-      subjectsOfInterest: createdProfile.subjectsOfInterest,
+      subjects_of_interest: createdProfile.subjectsOfInterest,
+      languages_spoken: createdProfile.languages_spoken,
       tutorIds: createdProfile.tutorIds,
       status: createdProfile.status,
       studentNumber: createdProfile.student_number,
