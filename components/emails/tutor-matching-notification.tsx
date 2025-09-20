@@ -10,15 +10,23 @@ import {
 
 export interface TutorMatchingNotificationEmailProps {
   studentName: string;
-  studentGender: "male" | "female" | "other";
   parentName: string;
+  tutorName: string;
+  tutorEmail: string;
+  sessionDay: string;
+  sessionStartTime: string;
+  sessionEndTime: string;
   isPreview?: boolean;
 }
 
 export default function TutorMatchingNotificationEmail({
   studentName = "Alex",
-  studentGender = "other",
-  parentName = "Sarah Johnson",
+  parentName = "parent",
+  tutorName = "tutor",
+  tutorEmail = "ahu@connectmego.org",
+  sessionDay = "Monday",
+  sessionStartTime = "3 pm",
+  sessionEndTime = "4 pm",
   isPreview = false,
 }: TutorMatchingNotificationEmailProps) {
   // Helper function to get pronouns based on gender
@@ -33,7 +41,7 @@ export default function TutorMatchingNotificationEmail({
     }
   };
 
-  const pronouns = getPronouns(studentGender);
+  // const pronouns = getPronouns(studentGender);
 
   const EmailContent = () => (
     <Container style={{ maxWidth: "600px", margin: "0 auto", padding: "20px" }}>
@@ -84,9 +92,7 @@ export default function TutorMatchingNotificationEmail({
             }}
           >
             We are excited to let you know that {studentName} has been matched
-            with a tutor! Once the tutor selects a session time, you will
-            receive an email with the date, time, and Zoom link for the first
-            session.
+            with a tutor! Your sessions will occur on <strong>{sessionDay}</strong> from <strong>{sessionStartTime}</strong> to <strong>{sessionEndTime}</strong>. If unable to attend these sessions, please reach out to {tutorEmail} to arrange a differeng time
           </Text>
         </Section>
 

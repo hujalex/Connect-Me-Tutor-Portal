@@ -172,6 +172,8 @@ type EmailData = {
 };
 
 export async function sendPairingEmail(emailType: string, data: EmailData, emailTo: string) {
+
+  console.log("SENDING PAIRING EMAIL");
   const allowedEmailTypes: string[] = ["match-accepted"];
 
   if (!emailType || !allowedEmailTypes.includes(emailType)) {

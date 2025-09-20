@@ -433,9 +433,9 @@ export const updatePairingMatchStatus = async (
 
     console.log("student", student);
 
-    const { data: studentData, error: getStudentError } = await supabase.from("Profile").select("*").eq("id", student.id).single();
+    const { data: studentData, error: getStudentError } = await supabase.from("Profiles").select("*").eq("id", student.id).single();
     if (getStudentError) throw getStudentError;
-    const { data: tutorData, error: getTutorError} = await supabase.from("Profile").select("*").eq("id", tutor.id);
+    const { data: tutorData, error: getTutorError} = await supabase.from("Profiles").select("*").eq("id", tutor.id);
     if (getTutorError) throw getTutorError
     // Replace the fetch with:
     await sendPairingEmail("match-accepted", emailData, studentData.email);
