@@ -12,7 +12,7 @@ import {
   isValid,
   previousDay,
 } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -158,14 +158,6 @@ const Schedule = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSessions();
-    fetchEnrollments();
-    fetchMeetings();
-    fetchStudents();
-    fetchTutors();
-  }, [currentWeek]);
-
   const fetchSessions = async () => {
     setLoading(true);
     try {
@@ -187,6 +179,14 @@ const Schedule = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSessions();
+    fetchEnrollments();
+    fetchMeetings();
+    fetchStudents();
+    fetchTutors();
+  }, [currentWeek]);
 
   const fetchEnrollments = async () => {
     try {
@@ -376,7 +376,7 @@ const Schedule = () => {
       try {
         return (
           format(
-            utcToZonedTime(parseISO(session.date), "America/New_York"),
+            toZonedTime(parseISO(session.date), "America/New_York"),
             "yyyy-MM-dd"
           ) === format(day, "yyyy-MM-dd")
         );
