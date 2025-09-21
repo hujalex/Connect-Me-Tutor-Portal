@@ -1,7 +1,7 @@
 "use server";
 import { Session } from "@/types";
 import { Client } from "@upstash/qstash";
-import TutorMatchingNotificationEmail from "@/components/emails/tutor-matching-notification";
+import TutorMatchingNotificationEmail, { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-matching-notification";
 import { render } from "@react-email/components";
 import React from "react";
 import { Resend } from "resend";
@@ -165,15 +165,10 @@ export async function scheduleEmail({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-type EmailData = {
-  studentName: string;
-  studentGender: "male" | "female" | "other";
-  parentName: string;
-};
 
-export async function sendPairingEmail(emailType: string, data: EmailData, emailTo: string) {
 
-  console.log("SENDING PAIRING EMAIL");
+export async function sendPairingEmail(emailType: string, data: TutorMatchingNotificationEmailProps, emailTo: string) {
+
   const allowedEmailTypes: string[] = ["match-accepted"];
 
   if (!emailType || !allowedEmailTypes.includes(emailType)) {
