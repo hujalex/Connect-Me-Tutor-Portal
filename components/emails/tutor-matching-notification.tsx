@@ -1,3 +1,4 @@
+import { to12Hour } from "@/lib/utils";
 import { Availability, Meeting, Profile } from "@/types";
 import {
   Html,
@@ -87,7 +88,7 @@ export default function TutorMatchingNotificationEmail({
             }}
           >
             We are excited to let you know that {student.firstName} {student.lastName} has been matched
-            with a tutor! Your sessions will occur on <strong>{availability.day}</strong> from <strong>{availability.startTime}</strong> to <strong>{availability.endTime}</strong>. If unable to attend the set time, please reach out to {tutor.email} to arrange a different time
+            with a tutor! Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>. If unable to attend these sessions, please reach out to {tutor.email} to arrange a different time
           </Text>
         </Section>
 
@@ -136,6 +137,74 @@ export default function TutorMatchingNotificationEmail({
             >
               {tutor.email}
             </Link>
+          </Text>
+        </Section>
+
+        {/* Meeting Link */}
+        <Section
+          style={{
+            backgroundColor: "#0E5B94",
+            border: "2px solid #6AB2D7",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#B7E2F2",
+              fontSize: "18px",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            🎯 Join Your Tutoring Session
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            Click the link below to join your scheduled tutoring sessions:
+          </Text>
+          <Text
+            style={{
+              textAlign: "center",
+              margin: "0 0 16px 0",
+            }}
+          >
+            <Link
+              href={meetingId.link}
+              style={{
+                backgroundColor: "#B7E2F2",
+                color: "#0E5B94",
+                padding: "12px 24px",
+                borderRadius: "6px",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "16px",
+                display: "inline-block",
+              }}
+            >
+              Join Meeting
+            </Link>
+          </Text>
+          <Text
+            style={{
+              color: "#B7E2F2",
+              fontSize: "14px",
+              lineHeight: "1.4",
+              margin: "0",
+              textAlign: "center",
+              wordBreak: "break-all",
+            }}
+          >
+            Or copy this link: <Link href={meetingId.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meetingId.link}</Link>
           </Text>
         </Section>
 
