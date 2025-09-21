@@ -1,3 +1,5 @@
+import { to12Hour } from "@/lib/utils";
+import { Availability, Meeting, Profile } from "@/types";
 import {
   Html,
   Head,
@@ -9,16 +11,18 @@ import {
 } from "@react-email/components";
 
 export interface TutorMatchingNotificationEmailProps {
-  studentName: string;
-  studentGender: "male" | "female" | "other";
-  parentName: string;
+  student: Profile;
+  tutor: Profile;
+  availability: Availability;
+  meetingId: Meeting;
   isPreview?: boolean;
 }
 
 export default function TutorMatchingNotificationEmail({
-  studentName = "Alex",
-  studentGender = "other",
-  parentName = "Sarah Johnson",
+  student,
+  tutor,
+  availability,
+  meetingId,
   isPreview = false,
 }: TutorMatchingNotificationEmailProps) {
   // Helper function to get pronouns based on gender
@@ -33,14 +37,14 @@ export default function TutorMatchingNotificationEmail({
     }
   };
 
-  const pronouns = getPronouns(studentGender);
+  // const pronouns = getPronouns(studentGender);
 
   const EmailContent = () => (
     <Container style={{ maxWidth: "600px", margin: "0 auto", padding: "20px" }}>
       {/* Header */}
       <Section
         style={{
-          backgroundColor: "#2563eb",
+          backgroundColor: "#0E5B94",
           color: "#ffffff",
           padding: "24px",
           textAlign: "center",
@@ -56,20 +60,20 @@ export default function TutorMatchingNotificationEmail({
         {/* Greeting */}
         <Text
           style={{
-            color: "#374151",
+            color: "#040405",
             fontSize: "16px",
             lineHeight: "1.6",
             margin: "0 0 24px 0",
           }}
         >
-          Dear {parentName},
+          Dear {student.parentName || student.firstName + " " + student.lastName + "'s parent"},
         </Text>
 
         {/* Main Message */}
         <Section
           style={{
-            backgroundColor: "#f0fdf4",
-            borderLeft: "4px solid #22c55e",
+            backgroundColor: "#B7E2F2",
+            borderLeft: "4px solid #6AB2D7",
             padding: "16px",
             borderRadius: "0 8px 8px 0",
             margin: "0 0 24px 0",
@@ -77,24 +81,22 @@ export default function TutorMatchingNotificationEmail({
         >
           <Text
             style={{
-              color: "#374151",
+              color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
               margin: "0",
             }}
           >
-            We are excited to let you know that {studentName} has been matched
-            with a tutor! Once the tutor selects a session time, you will
-            receive an email with the date, time, and Zoom link for the first
-            session.
+            We are excited to let you know that {student.firstName} {student.lastName} has been matched
+            with a tutor! Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>. If unable to attend these sessions, please reach out to {tutor.email} to arrange a different time
           </Text>
         </Section>
 
-        {/* Portal Instructions */}
+        {/* Tutor Information */}
         <Section
           style={{
-            backgroundColor: "#eff6ff",
-            border: "1px solid #bfdbfe",
+            backgroundColor: "#0B3967",
+            border: "1px solid #0E5B94",
             borderRadius: "8px",
             padding: "16px",
             margin: "0 0 24px 0",
@@ -103,7 +105,123 @@ export default function TutorMatchingNotificationEmail({
           <Text
             style={{
               fontWeight: "bold",
-              color: "#1e40af",
+              color: "#B7E2F2",
+              fontSize: "16px",
+              margin: "0 0 8px 0",
+            }}
+          >
+            Your Tutor
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 8px 0",
+            }}
+          >
+            <strong>Name:</strong> {tutor.firstName} {tutor.lastName}
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0",
+            }}
+          >
+            <strong>Email:</strong>{" "}
+            <Link
+              href={`mailto:${tutor.email}`}
+              style={{ color: "#B7E2F2", textDecoration: "underline" }}
+            >
+              {tutor.email}
+            </Link>
+          </Text>
+        </Section>
+
+        {/* Meeting Link */}
+        <Section
+          style={{
+            backgroundColor: "#0E5B94",
+            border: "2px solid #6AB2D7",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#B7E2F2",
+              fontSize: "18px",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            🎯 Join Your Tutoring Session
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            Click the link below to join your scheduled tutoring sessions:
+          </Text>
+          <Text
+            style={{
+              textAlign: "center",
+              margin: "0 0 16px 0",
+            }}
+          >
+            <Link
+              href={meetingId.link}
+              style={{
+                backgroundColor: "#B7E2F2",
+                color: "#0E5B94",
+                padding: "12px 24px",
+                borderRadius: "6px",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "16px",
+                display: "inline-block",
+              }}
+            >
+              Join Meeting
+            </Link>
+          </Text>
+          <Text
+            style={{
+              color: "#B7E2F2",
+              fontSize: "14px",
+              lineHeight: "1.4",
+              margin: "0",
+              textAlign: "center",
+              wordBreak: "break-all",
+            }}
+          >
+            Or copy this link: <Link href={meetingId.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meetingId.link}</Link>
+          </Text>
+        </Section>
+
+        {/* Portal Instructions */}
+        <Section
+          style={{
+            backgroundColor: "#6AB2D7",
+            border: "1px solid #0E5B94",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#040405",
               fontSize: "16px",
               margin: "0 0 8px 0",
             }}
@@ -112,7 +230,7 @@ export default function TutorMatchingNotificationEmail({
           </Text>
           <Text
             style={{
-              color: "#374151",
+              color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
               margin: "0 0 12px 0",
@@ -124,7 +242,7 @@ export default function TutorMatchingNotificationEmail({
           </Text>
           <Text
             style={{
-              color: "#374151",
+              color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
               margin: "0",
@@ -138,8 +256,8 @@ export default function TutorMatchingNotificationEmail({
         {/* Support Information */}
         <Section
           style={{
-            backgroundColor: "#f9fafb",
-            border: "1px solid #e5e7eb",
+            backgroundColor: "#8494A8",
+            border: "1px solid #495860",
             borderRadius: "8px",
             padding: "16px",
             margin: "0 0 24px 0",
@@ -148,7 +266,7 @@ export default function TutorMatchingNotificationEmail({
           <Text
             style={{
               fontWeight: "bold",
-              color: "#374151",
+              color: "#040405",
               fontSize: "16px",
               margin: "0 0 8px 0",
             }}
@@ -157,7 +275,7 @@ export default function TutorMatchingNotificationEmail({
           </Text>
           <Text
             style={{
-              color: "#374151",
+              color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
               margin: "0",
@@ -166,7 +284,7 @@ export default function TutorMatchingNotificationEmail({
             If you experience any issues, please reach out to{" "}
             <Link
               href="mailto:ykowalczyk@connectmego.org"
-              style={{ color: "#2563eb", textDecoration: "underline" }}
+              style={{ color: "#0E5B94", textDecoration: "underline", fontWeight: "bold" }}
             >
               ykowalczyk@connectmego.org
             </Link>{" "}
@@ -178,7 +296,7 @@ export default function TutorMatchingNotificationEmail({
         <Section style={{ paddingTop: "16px" }}>
           <Text
             style={{
-              color: "#374151",
+              color: "#30302F",
               fontSize: "16px",
               lineHeight: "1.6",
               margin: "0",
@@ -188,7 +306,7 @@ export default function TutorMatchingNotificationEmail({
           </Text>
           <Text
             style={{
-              color: "#374151",
+              color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
               fontWeight: "bold",
@@ -203,13 +321,13 @@ export default function TutorMatchingNotificationEmail({
       {/* Footer */}
       <Section
         style={{
-          backgroundColor: "#f3f4f6",
+          backgroundColor: "#30302F",
           padding: "16px",
           textAlign: "center",
-          borderTop: "1px solid #e5e7eb",
+          borderTop: "1px solid #495860",
         }}
       >
-        <Text style={{ color: "#6b7280", fontSize: "14px", margin: "0" }}>
+        <Text style={{ color: "#8494A8", fontSize: "14px", margin: "0" }}>
           Connect Me Online Tutoring | Connecting Students with Success
         </Text>
       </Section>
