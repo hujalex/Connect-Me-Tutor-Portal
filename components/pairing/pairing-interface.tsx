@@ -32,15 +32,18 @@ import {
   IncomingPairingMatch,
 } from "@/lib/actions/pairing.actions";
 import { updatePairingMatchStatus } from "@/lib/actions/pairing.actions";
+
 // import { updatePairingMatchStatus } from "@/lib/actions/pairing.server.actions";
 
 import toast from "react-hot-toast";
+import { Availability } from "@/types";
 
 export function PairingInterface() {
   const [activeTab, setActiveTab] = useState("find");
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState<string | undefined>();
   const [requestedPairings, setRequestedPairings] = useState<string[]>([]);
+  const [suggestedAvailability, setSuggestedAvailability] = useState<Availability>()
 
   const { profile } = useProfile();
 
@@ -56,6 +59,10 @@ export function PairingInterface() {
       console.log("matches: ", result);
     });
   }, [profile]);
+
+  useEffect(() => {
+
+  })
 
   //handle mutating match state
   const handleAcceptPairingMatch = (

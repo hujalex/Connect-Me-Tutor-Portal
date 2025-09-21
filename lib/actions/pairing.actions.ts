@@ -7,7 +7,7 @@ import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
 import { PairingLogSchemaType } from "../pairing/types";
 import { Person } from "@/types/enrollment";
-import { Availability, Enrollment, Profile } from "@/types";
+import { Availability, Enrollment, Meeting, Profile } from "@/types";
 import { ProfilePairingMetadata } from "@/types/profile";
 import axios, { AxiosResponse } from "axios"; // Not used, can be removed
 import { toast } from "react-hot-toast";
@@ -18,6 +18,8 @@ import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { getSupabase } from "../supabase-server/serverClient";
 import { timeStrToHours } from "../utils";
 import { number } from "zod";
+import { getProfileWithProfileId } from "./user.actions";
+import { getMeeting } from "./meeting.actions";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -333,10 +335,55 @@ export const getAutoAvailableSessionTimes = async (
         autoAvailability.day
       );
       if (meetingId)
-        return { availability: autoAvailability, meetingId: meetingId };
+        return { availability: autoAvailability, meeting: meetingId };
     }
     return null;
   } catch (error) {}
+};
+
+export const getAutomaticEnrollment = async (
+  tutor: Profile,
+  student: Profile
+): Promise<Omit<Enrollment, "id" | "createdAt"> | null | undefined> => {
+  try {
+    const availabilities = await getOverlappingAvailabilites(
+      tutor.availability!,
+      student.availability!
+    );
+
+    if (availabilities) {
+      const firstAvailability = availabilities[0];
+      if (!firstAvailability) throw new Error("No overlapping availabilities");
+
+      const autoAvailability = await getAutoAvailableSessionTimes(
+        firstAvailability.startTime,
+        firstAvailability.endTime,
+        firstAvailability.day
+      );
+
+      if (!autoAvailability)
+        throw new Error("Unable to automatically set availability");
+
+      const autoEnrollment: Omit<Enrollment, "id" | "createdAt"> = {
+        student: student,
+        tutor: tutor,
+        availability: [autoAvailability.availability],
+        meetingId: autoAvailability.meeting.meetingId,
+        summerPaused: false,
+        duration: 1,
+        startDate: new Date().toISOString(),
+        endDate: null,
+        summary: "Automatically Created Enrollment",
+        frequency: "weekly",
+      };
+
+      return autoEnrollment;
+    } else {
+      throw new Error("No overlapping availabilitites");
+    }
+  } catch (error) {
+    console.error("Unable to set automatic enrollment");
+  }
 };
 
 export const updatePairingMatchStatus = async (
@@ -354,6 +401,9 @@ export const updatePairingMatchStatus = async (
     console.log("ERROR: ", updateResponse.error);
   }
 
+  let autoEnrollment: Omit<Enrollment, "id" | "createdAt"> | null | undefined =
+    null;
+
   const { data, error } = await supabase
     .rpc("get_pairing_match", {
       match_id: matchId,
@@ -365,6 +415,13 @@ export const updatePairingMatchStatus = async (
   console.log("data", pairingMatch);
   const { student, tutor } = pairingMatch;
   if (status === "accepted") {
+    const studentData: Profile | null = await getProfileWithProfileId(
+      student.id
+    );
+    const tutorData: Profile | null = await getProfileWithProfileId(tutor.id);
+
+    if (!studentData) throw new Error("Unable to fetch student information");
+    if (!tutorData) throw new Error("Unable to fetch tutorData");
     // create new unique student tutor pairing
     const createdPairingResult = await supabase.from("Pairings").insert([
       {
@@ -384,65 +441,52 @@ export const updatePairingMatchStatus = async (
     }
 
     if (tutor.availability || student.availability) {
-      const availabilities = await getOverlappingAvailabilites(
-        tutor.availability!,
-        student.availability!
-      );
+      autoEnrollment = await getAutomaticEnrollment(tutorData, studentData);
 
-      if (availabilities) {
-        const firstAvailability = availabilities[0];
-        if (!firstAvailability) return;
+      console.log("Details", autoEnrollment);
 
-        const autoAvailability = await getAutoAvailableSessionTimes(
-          firstAvailability.startTime,
-          firstAvailability.endTime,
-          firstAvailability.day
-        );
-
-        console.log("Details", autoAvailability);
-
-        if (autoAvailability) {
-          const result = await addEnrollment(
-            {
-              student: student as unknown as Profile,
-              tutor: tutor as unknown as Profile,
-              availability: [autoAvailability.availability],
-              meetingId: autoAvailability.meetingId.meetingId,
-              summerPaused: false,
-              duration: 1,
-              startDate: new Date().toISOString(),
-              endDate: null,
-              summary: "Automatically Created Enrollment",
-              frequency: "weekly",
-            },
-            true
-          );
-        } else {
-          console.warn("failed to automatically create enrollment");
-        }
+      if (autoEnrollment) {
+        const result = await addEnrollment(autoEnrollment, true);
+      } else {
+        console.warn("failed to automatically create enrollment");
       }
-
-      //auto select first availability & create enrollment
     }
 
-    const emailData = {
-      studentName: `${student.first_name} ${student.last_name}`,
-      studentGender: student.gender ?? "male",
-      parentName: `Parent Name`,
-    } as TutorMatchingNotificationEmailProps;
+    //auto select first availability & create enrollment
+    if (
+      !autoEnrollment ||
+      !autoEnrollment.availability ||
+      autoEnrollment.availability.length <= 0
+    ) {
+      throw new Error("Unable to automatically find availability");
+    }
 
-    //send respective pairing email to student and tutor
+    const meetingData: Meeting | null = await getMeeting(
+      autoEnrollment.meetingId
+    );
 
-    // if (status == "accepted") {
-    //   await axios.post("/api/email/pairing?type=match-accepted", {
-    //     emailType: "match-accepted",
-    //     data: emailData,
-    //   });
-    // }
+    if (!meetingData) throw new Error("Unable to get meeting information");
+
+    const emailData: TutorMatchingNotificationEmailProps = {
+      student: studentData,
+      tutor: tutorData,
+      availability: autoEnrollment.availability[0],
+      meetingId: meetingData,
+    };
 
     console.log("student", student);
+
+    try {
+      await sendPairingEmail("match-accepted", emailData, studentData.email);
+    } catch (error) {
+      //rollback if error
+      await supabase
+        .from("Enrollments")
+        .delete()
+        .eq("tutor_id", tutor.id)
+        .eq("student_id", student.id);
+    }
     // Replace the fetch with:
-    await sendPairingEmail("match-accepted", emailData);
 
     const log = await supabase.from("pairing_logs").insert([
       {
@@ -456,9 +500,10 @@ export const updatePairingMatchStatus = async (
     ]);
 
     console.log("LOG ", log);
+  }
 
-    //reset tutor and student status to be auto placed in que
-  } else if (status === "rejected") {
+  //reset tutor and student status to be auto placed in que
+  else if (status === "rejected") {
     const { data, error } = await supabase
       .from("pairing_requests")
       .update({
