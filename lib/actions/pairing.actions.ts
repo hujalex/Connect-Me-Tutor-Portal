@@ -514,7 +514,7 @@ Tutor: ${tutorData.firstName} ${tutorData.lastName} - Student: ${studentData.fir
 
 **Day:** ${autoEnrollment.availability[0].day}
 **Start Time:** ${autoEnrollment.availability[0].startTime}  
-**End Time:** ${autoEnrollment.availability[0].endTime}`,
+**End Time:** ${autoEnrollment.availability[0].endTime} `,
         }),
       }
     );
