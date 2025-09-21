@@ -6,6 +6,8 @@ import {
   deleteAllPairingRequests,
   resetPairingQueues,
 } from "@/lib/actions/pairing.server.actions";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
 
 export function TestingPairingControls() {
   const router = useRouter();
@@ -53,9 +55,33 @@ export function TestingPairingControls() {
         >
           Logs
         </Button>
-        <Button onClick={handleResetPairings} variant="destructive" size="sm">
+
+        {/* <Button onClick={handleResetPairings} variant="destructive" size="sm">
           Reset all pairing matches
-        </Button>
+        </Button> */}
+
+        <AlertDialog>
+          <AlertDialogTrigger>
+            <Button variant="destructive" size="sm">
+              Reset all pairing matches
+            </Button>
+          </AlertDialogTrigger>
+
+           <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Reset All Pairing Matches</AlertDialogTitle><AlertDialogDescription>
+          Remove tutors and students from pairing queue
+        </AlertDialogDescription></AlertDialogHeader>
+         <AlertDialogFooter>
+            <AlertDialogCancel>
+            <Button variant="outline">Back</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction onClick = {handleResetPairings}>
+              Reset all pairing matches
+            </AlertDialogAction>
+           </AlertDialogFooter>
+           </AlertDialogContent>
+          
+        </AlertDialog>
       </div>
     </div>
   );
