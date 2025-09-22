@@ -3,7 +3,7 @@ import { Profile } from "@/types";
 type PairingStatus = "pending" | "accepted" | "rejected";
 
 export type PairingRequest = {
-  id: string; //uuid;
+  request_id: string; //uuid;
   type: "student" | "tutor";
   userId: string; //uuid
   profile: Profile;
