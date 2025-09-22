@@ -16,10 +16,11 @@ import { sendPairingEmail } from "./email.server.actions";
 import { addEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { getSupabase } from "../supabase-server/serverClient";
-import { timeStrToHours } from "../utils";
+import { formatDateAdmin, timeStrToHours, to12Hour } from "../utils";
 import { number } from "zod";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./meeting.actions";
+import { sendPairingAlertToWebhook } from "./pairing.server.actions";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -499,25 +500,7 @@ export const updatePairingMatchStatus = async (
       } as PairingLogSchemaType,
     ]);
 
-    const response = await fetch(
-      "https://discord.com/api/webhooks/1419439029417545818/cXQYrxz58BIWFFCW73gZK40cATKxLiYBGRdihxAiQeVJ8V95r47EMDpDZFUEW7Fp9E00",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: `**Automatic Pairing**
-Tutor: ${tutorData.firstName} ${tutorData.lastName} - Student: ${studentData.firstName} ${studentData.lastName}
-
-**Enrollment Information**
-
-**Day:** ${autoEnrollment.availability[0].day}
-**Start Time:** ${autoEnrollment.availability[0].startTime}  
-**End Time:** ${autoEnrollment.availability[0].endTime} `,
-        }),
-      }
-    );
+    await sendPairingAlertToWebhook(tutorData, studentData, autoEnrollment);
   }
 
   //reset tutor and student status to be auto placed in que
