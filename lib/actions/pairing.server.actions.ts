@@ -1,6 +1,6 @@
 "use server";
 
-import { Meeting, Profile } from "@/types";
+import { Enrollment, Meeting, Profile } from "@/types";
 import { SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
@@ -15,6 +15,7 @@ import { getSupabase } from "../supabase-server/serverClient";
 import { sendPairingEmail } from "./email.server.actions";
 import { addEnrollment, createEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
+import { formatDateAdmin, to12Hour } from "../utils";
 
 export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
   try {
@@ -150,6 +151,41 @@ export const resetPairingQueues = async () => {
     console.error("Error deleting rows:", error);
   } else {
     console.log("All rows deleted successfully");
+  }
+};
+
+export const sendPairingAlertToWebhook = async (
+  tutorData: Profile,
+  studentData: Profile,
+  autoEnrollment: Enrollment
+) => {
+  const response = await fetch(`${process.env.PAIRING_ALERTS_WEBHOOK}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      content: `**Automatic Pairing**
+
+**Tutor:** ${tutorData.firstName} ${tutorData.lastName}
+Email: ${tutorData.email}
+
+**Student:** ${studentData.firstName} ${studentData.lastName}
+Email: ${studentData.email}
+Parent Email: ${studentData.parentEmail}
+Parent Phone: ${studentData.parentPhone}
+
+**Enrollment Information**
+
+**Day:** ${autoEnrollment.availability[0].day} 
+**Start Time:** ${to12Hour(autoEnrollment.availability[0].startTime)} EST 
+**End Time:** ${to12Hour(autoEnrollment.availability[0].endTime)} EST
+
+**First Session Date:** ${formatDateAdmin(autoEnrollment.startDate, false, true)}`,
+    }),
+  });
+  if (response.status != 200) {
+    console.log(process.env.PAIRING_ALERTS_WEBHOOK);
   }
 };
 

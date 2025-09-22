@@ -16,10 +16,11 @@ import { sendPairingEmail } from "./email.server.actions";
 import { addEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { getSupabase } from "../supabase-server/serverClient";
-import { timeStrToHours } from "../utils";
+import { formatDateAdmin, timeStrToHours, to12Hour } from "../utils";
 import { number } from "zod";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./meeting.actions";
+import { sendPairingAlertToWebhook } from "./pairing.server.actions";
 
 export const getAllPairingRequests = async (
   profileType: "student" | "tutor"
@@ -499,7 +500,7 @@ export const updatePairingMatchStatus = async (
       } as PairingLogSchemaType,
     ]);
 
-    console.log("LOG ", log);
+    await sendPairingAlertToWebhook(tutorData, studentData, autoEnrollment);
   }
 
   //reset tutor and student status to be auto placed in que

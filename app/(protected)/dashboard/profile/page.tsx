@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { updateProfile } from "@/lib/actions/user.actions";
-import { updateProfileDetails } from "@/lib/actions/profile.server.actions";
+import { updateProfileDetails } from "@/lib/actions/profile.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useProfile } from "@/hooks/auth";
 
