@@ -157,7 +157,7 @@ export const resetPairingQueues = async () => {
 export const sendPairingAlertToWebhook = async (
   tutorData: Profile,
   studentData: Profile,
-  autoEnrollment: Enrollment
+  autoEnrollment: Omit<Enrollment, "id" | "createdAt">
 ) => {
   const response = await fetch(`${process.env.PAIRING_ALERTS_WEBHOOK}`, {
     method: "POST",
