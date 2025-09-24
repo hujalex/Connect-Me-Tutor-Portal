@@ -77,6 +77,9 @@ export const runPairingWorkflow = async () => {
           },
         });
         await updatePairingStatus(studentReq.pairing_request_id, "paired");
+
+        // send notification
+        await 
         studentMatches.push(result);
 
         // logs.push({
