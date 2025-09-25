@@ -7,7 +7,10 @@ import PairingRequestNotificationEmail, {
   PairingRequestNotificationEmailProps,
 } from "@/components/emails/pairing-request-notification";
 import { getProfile, getProfileWithProfileId } from "../actions/user.actions";
-import { sendPairingEmail } from "../actions/email.server.actions";
+import {
+  sendPairingEmail,
+  sendPairingRequestEmail,
+} from "../actions/email.server.actions";
 import { Profile } from "@/types";
 
 type QueueItem = {
@@ -21,6 +24,25 @@ type QueueItemMatch = QueueItem & {
   similarity: number;
   match_profile: Person;
   requestor_profile: Person;
+};
+
+const sendPairingRequestNotification = async (
+  tutorId: string,
+  studentId: string
+) => {
+  const tutorData: Profile | null = await getProfileWithProfileId(tutorId);
+
+  const studentData: Profile | null = await getProfileWithProfileId(studentId);
+
+  console.log("Sending pairing request notification");
+
+  if (tutorData && studentData) {
+    const emailData: PairingRequestNotificationEmailProps = {
+      tutor: tutorData,
+      student: studentData,
+    };
+    return sendPairingRequestEmail(emailData, tutorData.email);
+  }
 };
 
 export const runPairingWorkflow = async () => {
@@ -43,6 +65,9 @@ export const runPairingWorkflow = async () => {
     studentQueueResult.data ?? [],
   ] as [QueueItem[], QueueItem[]];
 
+  console.log(tutorQueue.length);
+  console.log(studentQueue.length);
+
   // console.log("tutorQueue:", tutorQueue);
   // console.log("studentQueue:", studentQueue);
 
@@ -58,6 +83,7 @@ export const runPairingWorkflow = async () => {
 
   for (let i = 0; i < maxLength; i++) {
     if (i < studentQueue.length) {
+      console.log("Student Queue");
       const studentReq = studentQueue[i];
       const { data, error } = await supabase
         .rpc("get_best_match", {
@@ -82,6 +108,7 @@ export const runPairingWorkflow = async () => {
             match_profile_id: result.match_profile.id,
           },
         });
+        console.log("Running student pairing");
         await updatePairingStatus(studentReq.pairing_request_id, "paired");
 
         studentMatches.push(result);
@@ -104,6 +131,7 @@ export const runPairingWorkflow = async () => {
     }
 
     if (i < tutorQueue.length) {
+      console.log("Tutor Queue");
       const tutorReq = tutorQueue[i];
       const { data } = await supabase
         .rpc("get_best_match", {
@@ -115,6 +143,11 @@ export const runPairingWorkflow = async () => {
       // console.log("Tutor match:", data);
       if (result as QueueItemMatch) {
         await updatePairingStatus(tutorReq.pairing_request_id, "paired");
+        await sendPairingRequestNotification(
+          result.requestor_profile.id,
+          result.match_profile.id
+        );
+
         tutorMatches.push(result as QueueItemMatch);
         logs.push({
           message: `Matched With ${result.match_profile.first_name} 
@@ -160,32 +193,23 @@ export const runPairingWorkflow = async () => {
       }) as PairingMatch
   );
 
-  console.log(matchedStudents)
+  console.log(matchedStudents);
 
   try {
     const emailPromises = matchedStudents.map(async (match) => {
-      const tutorData: Profile | null = await getProfileWithProfileId(
-        match.tutor_id
-      );
-      const studentData: Profile | null = await getProfileWithProfileId(
-        match.student_id
-      );
-
-      console.log("Sending pairing request notification")
-
-      if (tutorData && studentData) {
-        const emailData: PairingRequestNotificationEmailProps = {
-          tutor: tutorData,
-          student: studentData,
-        };
-        return sendPairingEmail("pairing-request", emailData, tutorData.email);
+      try {
+        return await sendPairingRequestNotification(
+          match.tutor_id,
+          match.student_id
+        );
+      } catch (error) {
+        throw error;
       }
     });
     const results = await Promise.allSettled(emailPromises);
-
     results.forEach((result, index) => {
       if (result.status === "rejected") {
-        console.error(`Failed to process match ${index}:`, result.reason);
+        console.error(`Failed to send match email${index}:`, result.reason);
       }
     });
   } catch (error) {

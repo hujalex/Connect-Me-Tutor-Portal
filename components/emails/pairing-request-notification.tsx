@@ -1,3 +1,4 @@
+import { Profile } from '@/types';
 import React from 'react';
 
 // Mock utility function since we don't have access to the actual one
@@ -10,16 +11,6 @@ const to12Hour = (time: string) => {
 };
 
 // Mock types
-interface Profile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  parentName?: string;
-  availability?: Availability[];
-  languages_spoken?: string[];
-  subjects?: string[];
-}
-
 interface Availability {
   day: string;
   startTime: string;
@@ -43,7 +34,7 @@ export default function PairingRequestNotificationEmail({
 }: PairingRequestNotificationEmailProps) {
   
   // Extract data from student object with fallbacks
-  const subjects = student.subjects || ['TBD'];
+  const subjects = student.subjects_of_interest || ['TBD'];
   const languages = student.languages_spoken || ['English'];
   
   const EmailContent = () => (
@@ -347,7 +338,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            If you have any concerns about tutoring this student or need assistance, please contact <strong>Yulianna, Ashritaa, or Claudia</strong>.
+            If you have any concerns about tutoring this student or need assistance, please contact <strong>Yulianna, Addison, or Claudia</strong>.
           </div>
         </div>
 

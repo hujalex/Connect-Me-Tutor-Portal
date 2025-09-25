@@ -174,6 +174,8 @@ export async function sendTutorMatchingNotificationEmail(
   data: TutorMatchingNotificationEmailProps,
   emailTo: string
 ) {
+
+  console.log("Sending Match confirmation notification")
   console.log("rendering with", data);
   const emailHtml = await render(
     React.createElement(TutorMatchingNotificationEmail, data)
@@ -182,7 +184,7 @@ export async function sendTutorMatchingNotificationEmail(
 
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
-    to: emailTo,
+    to: "ahu@connectmego.org",
     subject: "You Have Been Matched!",
     html: emailHtml,
   });
@@ -195,19 +197,21 @@ export async function sendPairingRequestEmail(
   data: PairingRequestNotificationEmailProps,
   emailTo: string
 ) {
+
+
+  console.log("Sending Pairing Request Email")
   const emailHtml = await render(
     React.createElement(PairingRequestNotificationEmail, data)
   );
 
   console.log("sending emails");
-  const emailResult = null;
 
-  // const emailResult = await resend.emails.send({
-  //   from: "reminder@connectmego.app",
-  //   to: "ahu@connectmego.org", //!
-  //   subject: "Connect Me Email",
-  //   html: emailHtml,
-  // });
+  const emailResult = await resend.emails.send({
+    from: "reminder@connectmego.app",
+    to: "ahu@connectmego.org", //!
+    subject: "Connect Me Email",
+    html: emailHtml,
+  });
   return emailResult
 }
 
@@ -230,6 +234,7 @@ export async function sendPairingEmail(
   if (emailType === "match-accepted") {
     return await sendTutorMatchingNotificationEmail(data, emailTo);
   } else if (emailType == "pairing-request") {
+    console.log("Sending pairing request email")
     return await sendPairingRequestEmail(data, emailTo);
   } else if (emailType == "tutor-match-confirmation") {
     return await sendPairingConfirmationEmail(data, emailTo);
