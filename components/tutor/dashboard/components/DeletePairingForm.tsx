@@ -114,7 +114,7 @@ const DeletePairingForm = ({ tutor, student }: DeletePairingFormProps) => {
               if (tutor)
                 handleDeletePairing(tutor?.id, student.id)
                   .then(() => toast.success("Removed pairing"))
-                  .catch(() => toast.error("Failed to remove pairing"));
+                  .catch(() => toast.error("Please delete any enrollments"));
             }}
           >
             Delete

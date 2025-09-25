@@ -12,7 +12,7 @@ import { ProfilePairingMetadata } from "@/types/profile";
 import axios, { AxiosResponse } from "axios"; // Not used, can be removed
 import { toast } from "react-hot-toast";
 import { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-matching-notification";
-import { sendPairingEmail } from "./email.server.actions";
+import { sendPairingConfirmationEmail, sendPairingEmail, sendTutorMatchingNotificationEmail } from "./email.server.actions";
 import { addEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { getSupabase } from "../supabase-server/serverClient";
@@ -480,7 +480,9 @@ export const updatePairingMatchStatus = async (
     console.log("student", student);
 
     try {
-      await sendPairingEmail("match-accepted", emailData, studentData.email);
+      await sendTutorMatchingNotificationEmail(emailData, studentData.email);
+      // await sendPairingConfirmationEmail(emailData, tutorData.email)
+      console.log("Successfully sent tutor notification email")
     } catch (error) {
       //rollback if error
       await supabase

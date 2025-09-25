@@ -51,7 +51,7 @@ export default function TutorMatchingNotificationEmail({
         }}
       >
         <Text style={{ fontSize: "24px", fontWeight: "bold", margin: "0" }}>
-          Connect Me Online Tutoring
+          Connect Me Free Tutoring & Mentoring
         </Text>
       </Section>
 

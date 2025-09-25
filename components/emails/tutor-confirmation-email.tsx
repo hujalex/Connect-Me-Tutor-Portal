@@ -1,21 +1,41 @@
 import { Profile } from '@/types';
 import React from 'react';
 
-export interface PairingRequestNotificationEmailProps {
+// Mock utility function since we don't have access to the actual one
+const to12Hour = (time: string) => {
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
+
+// Mock types
+interface Availability {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
+interface Meeting {
+  link: string;
+}
+
+export interface TutorPairingConfirmationEmailProps {
   tutor: Profile;
   student: Profile;
   isPreview?: boolean;
 }
 
-export default function PairingRequestNotificationEmail({
+export default function TutorPairingConfirmationEmail({
   tutor,
   student,
   isPreview = false,
-}: PairingRequestNotificationEmailProps) {
+}: TutorPairingConfirmationEmailProps) {
   
   // Extract data from student object with fallbacks
   const subjects = student.subjects_of_interest || ['TBD'];
-  const languages = student.languages_spoken || ['English'];
+  const languages = student.languages_spoken || [''];
   
   const EmailContent = () => (
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px", fontFamily: "Arial, sans-serif" }}>
@@ -65,9 +85,8 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            We have found a potential tutoring match for you! Below is information about a student 
-            who may be a good fit based on your expertise and availability. Please review the student's 
-            information and let us know if you're interested in this pairing opportunity.
+            Congratulations! You have been matched with a new student: <strong>{student.firstName} {student.lastName}</strong>. 
+            Please reach out to the student or their parent to introduce yourself and coordinate your tutoring schedule.
           </div>
         </div>
 
@@ -89,7 +108,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 8px 0",
             }}
           >
-            Potential Student Match
+            Your Student
           </div>
           <div
             style={{
@@ -109,7 +128,13 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 8px 0",
             }}
           >
-            <strong>Grade Level:</strong> {student.grade || 'Not specified'}
+            <strong>Email:</strong>{" "}
+            <a
+              href={`mailto:${student.email}`}
+              style={{ color: "#B7E2F2", textDecoration: "underline" }}
+            >
+              {student.email}
+            </a>
           </div>
           {student.parentName && (
             <div
@@ -117,22 +142,12 @@ export default function PairingRequestNotificationEmail({
                 color: "#ffffff",
                 fontSize: "16px",
                 lineHeight: "1.6",
-                margin: "0 0 8px 0",
+                margin: "0",
               }}
             >
               <strong>Parent/Guardian:</strong> {student.parentName}
             </div>
           )}
-          <div
-            style={{
-              color: "#ffffff",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0",
-            }}
-          >
-            <strong>Preferred Contact:</strong> {student.parentName ? 'Parent/Guardian' : 'Student'}
-          </div>
         </div>
 
         {/* Academic Information */}
@@ -163,87 +178,23 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 8px 0",
             }}
           >
-            <strong>Subjects Needed:</strong> {subjects.join(", ")}
+            <strong>Subjects of Interest:</strong> {subjects.join(", ")}
           </div>
           <div
             style={{
               color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
-              margin: "0 0 8px 0",
+              margin: "0",
             }}
           >
             <strong>Languages Spoken:</strong> {languages.join(", ")}
           </div>
-          
         </div>
 
-        {/* Interest and Response */}
-        <div
-          style={{
-            backgroundColor: "#D4F6D4",
-            border: "1px solid #28A745",
-            borderRadius: "8px",
-            padding: "16px",
-            margin: "0 0 24px 0",
-          }}
-        >
-          <div
-            style={{
-              fontWeight: "bold",
-              color: "#155724",
-              fontSize: "16px",
-              margin: "0 0 12px 0",
-            }}
-          >
-            ✅ Interested in This Match?
-          </div>
-          <div
-            style={{
-              color: "#155724",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0 0 12px 0",
-            }}
-          >
-            If you're interested in tutoring this student:
-          </div>
-          <div
-            style={{
-              color: "#155724",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0 0 8px 0",
-              paddingLeft: "16px",
-            }}
-          >
-            • Please navigate to the tutor portal <a href = 'https://www.connectmego.app/'>https://www.connectmego.app/</a>
-          </div>
-          <div
-            style={{
-              color: "#155724",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0 0 8px 0",
-              paddingLeft: "16px",
-            }}
-          >
-            • Locate the Pairing Dashboard under the "Pairings" tab
-          </div>
-          <div
-            style={{
-              color: "#155724",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0",
-              paddingLeft: "16px",
-            }}
-          >
-            • Accept the pairing request for {student.firstName} {student.lastName}
-          </div>
-        </div>
 
-        {/* What Happens Next */}
+
+        {/* Next Steps */}
         <div
           style={{
             backgroundColor: "#8494A8",
@@ -261,7 +212,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 8px 0",
             }}
           >
-            What Happens Next?
+            Next Steps
           </div>
           <div
             style={{
@@ -271,7 +222,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 12px 0",
             }}
           >
-            <strong>1.</strong> Visit your Pairing Dashboard and accept the pairing request if interested
+            <strong>1.</strong> Contact {student.parentName ? student.parentName : `${student.firstName}'s parent`} to introduce yourself and coordinate your tutoring schedule
           </div>
           <div
             style={{
@@ -281,7 +232,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 12px 0",
             }}
           >
-            <strong>2.</strong> We'll confirm the pairing and provide student contact information
+            <strong>2.</strong> Review the Connect Me Tutor Starter Pack before your first session
           </div>
           <div
             style={{
@@ -291,11 +242,11 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            <strong>3.</strong> You'll receive the Tutor Starter Pack and coordination instructions
+            <strong>3.</strong> Fill out the session exit form after each tutoring session through the tutor portal
           </div>
         </div>
 
-        {/* Important Note */}
+        {/* Important Resources */}
         <div
           style={{
             backgroundColor: "#FFF3CD",
@@ -310,10 +261,26 @@ export default function PairingRequestNotificationEmail({
               fontWeight: "bold",
               color: "#856404",
               fontSize: "16px",
+              margin: "0 0 12px 0",
+            }}
+          >
+            📚 Important Resources
+          </div>
+          <div
+            style={{
+              color: "#856404",
+              fontSize: "16px",
+              lineHeight: "1.6",
               margin: "0 0 8px 0",
             }}
           >
-            📋 Important Note
+            <strong>Tutor Starter Pack:</strong>{" "}
+            <a
+              href="https://docs.google.com/document/d/1eVQPX2Rjx-b5n93070zHjXSMpzBs0twwGpRPAOYmHec/edit?tab=t.0#heading=h.kk1966kbedef"
+              style={{ color: "#0E5B94", textDecoration: "underline" }}
+            >
+              Please read before your first session
+            </a>
           </div>
           <div
             style={{
@@ -323,9 +290,13 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            This is a potential match only. No commitment has been made yet. Please respond 
-            within <strong>48 hours</strong> so we can proceed with pairing arrangements or 
-            find alternative matches for both you and the student.
+            <strong>Tutor Portal:</strong>{" "}
+            <a
+              href="https://www.connectmego.app/"
+              style={{ color: "#0E5B94", textDecoration: "underline" }}
+            >
+              Access zoom link and complete session forms
+            </a>
           </div>
         </div>
 
@@ -347,7 +318,17 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 8px 0",
             }}
           >
-            ❓ Questions or Concerns?
+            ⚠️ Action Required
+          </div>
+          <div
+            style={{
+              color: "#721C24",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 12px 0",
+            }}
+          >
+            Please reply to this email to confirm that you have received this pairing notification and understand your responsibilities as outlined above.
           </div>
           <div
             style={{
@@ -357,8 +338,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            If you have any questions about this potential match or need assistance, 
-            please contact <strong>Yulianna, Addison, or Claudia</strong>s.
+            If you have any concerns about tutoring this student or need assistance, please contact <strong>Yulianna, Addison, or Claudia</strong>.
           </div>
         </div>
 
@@ -369,17 +349,7 @@ export default function PairingRequestNotificationEmail({
               color: "#30302F",
               fontSize: "16px",
               lineHeight: "1.6",
-              margin: "0 0 8px 0",
-            }}
-          >
-            Thank you for your continued dedication to helping students succeed!
-          </div>
-          <div
-            style={{
-              color: "#30302F",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0 0 8px 0",
+              margin: "0",
             }}
           >
             Best regards,
@@ -393,7 +363,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            Connect Me Free Tutoring & Mentoring Team
+            Connect Me Online Tutoring Team
           </div>
         </div>
       </div>

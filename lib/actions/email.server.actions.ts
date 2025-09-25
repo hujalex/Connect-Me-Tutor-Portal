@@ -10,6 +10,8 @@ import { Resend } from "resend";
 import PairingRequestNotificationEmail, {
   PairingRequestNotificationEmailProps,
 } from "@/components/emails/pairing-request-notification";
+import TutoringConfirmationEmail from "@/components/emails/student-confirmation-email";
+import TutorPairingConfirmationEmail, { TutorPairingConfirmationEmailProps } from "@/components/emails/tutor-confirmation-email";
 
 export async function fetchScheduledMessages() {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
@@ -174,8 +176,7 @@ export async function sendTutorMatchingNotificationEmail(
   data: TutorMatchingNotificationEmailProps,
   emailTo: string
 ) {
-
-  console.log("Sending Match confirmation notification")
+  console.log("Sending Match confirmation notification");
   console.log("rendering with", data);
   const emailHtml = await render(
     React.createElement(TutorMatchingNotificationEmail, data)
@@ -197,9 +198,7 @@ export async function sendPairingRequestEmail(
   data: PairingRequestNotificationEmailProps,
   emailTo: string
 ) {
-
-
-  console.log("Sending Pairing Request Email")
+  console.log("Sending Pairing Request Email");
   const emailHtml = await render(
     React.createElement(PairingRequestNotificationEmail, data)
   );
@@ -212,13 +211,21 @@ export async function sendPairingRequestEmail(
     subject: "Connect Me Email",
     html: emailHtml,
   });
-  return emailResult
+  return emailResult;
 }
 
-export async function sendPairingConfirmationEmail(
-  data: any,
-  emailTo: string
-) {}
+export async function sendPairingConfirmationEmail(data: TutorPairingConfirmationEmailProps, emailTo: string) {
+  const emailHtml = await render(
+    React.createElement(TutorPairingConfirmationEmail, data)
+  );
+  const emailResult = await resend.emails.send({
+    from: "reminder@connectemgo.app",
+    to: "ahu@connectmego.org",
+    subject: "Connect Me Email",
+    html: emailHtml,
+  });
+  return emailResult;
+}
 
 export async function sendPairingEmail(
   emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",
@@ -234,7 +241,7 @@ export async function sendPairingEmail(
   if (emailType === "match-accepted") {
     return await sendTutorMatchingNotificationEmail(data, emailTo);
   } else if (emailType == "pairing-request") {
-    console.log("Sending pairing request email")
+    console.log("Sending pairing request email");
     return await sendPairingRequestEmail(data, emailTo);
   } else if (emailType == "tutor-match-confirmation") {
     return await sendPairingConfirmationEmail(data, emailTo);
