@@ -41,6 +41,8 @@ export const getAllPairingRequests = async (
     p_type: profileType,
   });
 
+  console.log("pairing requests data", data)
+
   return { data: data as PairingRequest[], error };
 };
 
