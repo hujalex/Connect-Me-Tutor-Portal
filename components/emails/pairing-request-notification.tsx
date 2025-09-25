@@ -15,6 +15,9 @@ interface Profile {
   lastName: string;
   email: string;
   parentName?: string;
+  availability?: Availability[];
+  languages_spoken?: string[];
+  subjects?: string[];
 }
 
 interface Availability {
@@ -30,37 +33,18 @@ interface Meeting {
 export interface PairingRequestNotificationEmailProps {
   tutor: Profile;
   student: Profile;
-  availability: Availability;
-  meetingId: Meeting;
-  subjects: string[];
-  languages: string[];
   isPreview?: boolean;
 }
 
 export default function PairingRequestNotificationEmail({
-  tutor = {
-    firstName: "Emily",
-    lastName: "Rodriguez", 
-    email: "emily.rodriguez@email.com"
-  },
-  student = {
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@email.com",
-    parentName: "Mrs. Jennifer Johnson"
-  },
-  availability = {
-    day: "Monday",
-    startTime: "18:00",
-    endTime: "19:00"
-  },
-  meetingId = {
-    link: "https://zoom.us/j/1234567890"
-  },
-  subjects = ["Math", "Science"],
-  languages = ["English", "Spanish"],
-  isPreview = true,
+  tutor,
+  student,
+  isPreview = false,
 }: PairingRequestNotificationEmailProps) {
+  
+  // Extract data from student object with fallbacks
+  const subjects = student.subjects || ['TBD'];
+  const languages = student.languages_spoken || ['English'];
   
   const EmailContent = () => (
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px", fontFamily: "Arial, sans-serif" }}>
@@ -111,8 +95,7 @@ export default function PairingRequestNotificationEmail({
             }}
           >
             Congratulations! You have been matched with a new student: <strong>{student.firstName} {student.lastName}</strong>. 
-            Your tutoring sessions are scheduled for <strong>{availability.day}s</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>. 
-            Please reach out to the student or their parent to introduce yourself and confirm the first session.
+            Please reach out to the student or their parent to introduce yourself and coordinate your tutoring schedule.
           </div>
         </div>
 
@@ -211,90 +194,14 @@ export default function PairingRequestNotificationEmail({
               color: "#040405",
               fontSize: "16px",
               lineHeight: "1.6",
-              margin: "0 0 8px 0",
+              margin: "0",
             }}
           >
             <strong>Languages Spoken:</strong> {languages.join(", ")}
           </div>
-          <div
-            style={{
-              color: "#040405",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0",
-            }}
-          >
-            <strong>Session Schedule:</strong> {availability.day}s, {to12Hour(availability.startTime)} - {to12Hour(availability.endTime)} EST
-          </div>
         </div>
 
-        {/* Meeting Link */}
-        <div
-          style={{
-            backgroundColor: "#0E5B94",
-            border: "2px solid #6AB2D7",
-            borderRadius: "8px",
-            padding: "16px",
-            margin: "0 0 24px 0",
-          }}
-        >
-          <div
-            style={{
-              fontWeight: "bold",
-              color: "#B7E2F2",
-              fontSize: "18px",
-              margin: "0 0 12px 0",
-              textAlign: "center",
-            }}
-          >
-            🎓 Your Tutoring Session Link
-          </div>
-          <div
-            style={{
-              color: "#ffffff",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              margin: "0 0 12px 0",
-              textAlign: "center",
-            }}
-          >
-            Use this link for all your tutoring sessions with {student.firstName}:
-          </div>
-          <div
-            style={{
-              textAlign: "center",
-              margin: "0 0 16px 0",
-            }}
-          >
-            <a
-              href={meetingId.link}
-              style={{
-                backgroundColor: "#B7E2F2",
-                color: "#0E5B94",
-                padding: "12px 24px",
-                borderRadius: "6px",
-                textDecoration: "none",
-                fontWeight: "bold",
-                fontSize: "16px",
-                display: "inline-block",
-              }}
-            >
-              Join Meeting
-            </a>
-          </div>
-          <div
-            style={{
-              color: "#B7E2F2",
-              fontSize: "14px",
-              lineHeight: "1.4",
-              margin: "0",
-              textAlign: "center",
-              wordBreak: "break-all",
-            }}
-          >
-            Or copy this link: <a href={meetingId.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meetingId.link}</a>
-          </div>
-        </div>
+
 
         {/* Next Steps */}
         <div
@@ -324,7 +231,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 12px 0",
             }}
           >
-            <strong>1.</strong> Send an introductory email to {student.parentName ? student.parentName : `${student.firstName}'s parent`} 3-4 days before your first session
+            <strong>1.</strong> Contact {student.parentName ? student.parentName : `${student.firstName}'s parent`} to introduce yourself and coordinate your tutoring schedule
           </div>
           <div
             style={{
@@ -406,7 +313,7 @@ export default function PairingRequestNotificationEmail({
         <div
           style={{
             backgroundColor: "#F8D7DA",
-            border: "1px solid "#F5C6CB",
+            border: "1px solid #F5C6CB",
             borderRadius: "8px",
             padding: "16px",
             margin: "0 0 24px 0",

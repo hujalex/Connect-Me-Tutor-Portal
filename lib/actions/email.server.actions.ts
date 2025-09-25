@@ -1,10 +1,15 @@
 "use server";
 import { Session } from "@/types";
 import { Client } from "@upstash/qstash";
-import TutorMatchingNotificationEmail, { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-matching-notification";
+import TutorMatchingNotificationEmail, {
+  TutorMatchingNotificationEmailProps,
+} from "@/components/emails/tutor-matching-notification";
 import { render } from "@react-email/components";
 import React from "react";
 import { Resend } from "resend";
+import PairingRequestNotificationEmail, {
+  PairingRequestNotificationEmailProps,
+} from "@/components/emails/pairing-request-notification";
 
 export async function fetchScheduledMessages() {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
@@ -165,10 +170,57 @@ export async function scheduleEmail({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+export async function sendTutorMatchingNotificationEmail(
+  data: TutorMatchingNotificationEmailProps,
+  emailTo: string
+) {
+  console.log("rendering with", data);
+  const emailHtml = await render(
+    React.createElement(TutorMatchingNotificationEmail, data)
+  );
+  console.log("email temp: ", emailHtml);
 
+  const emailResult = await resend.emails.send({
+    from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
+    to: emailTo,
+    subject: "You Have Been Matched!",
+    html: emailHtml,
+  });
 
-export async function sendPairingEmail(emailType: string, data: TutorMatchingNotificationEmailProps, emailTo: string) {
+  console.log("email result:", emailResult);
+  return emailResult;
+}
 
+export async function sendPairingRequestEmail(
+  data: PairingRequestNotificationEmailProps,
+  emailTo: string
+) {
+  const emailHtml = await render(
+    React.createElement(PairingRequestNotificationEmail, data)
+  );
+
+  console.log("sending emails");
+  const emailResult = null;
+
+  // const emailResult = await resend.emails.send({
+  //   from: "reminder@connectmego.app",
+  //   to: "ahu@connectmego.org", //!
+  //   subject: "Connect Me Email",
+  //   html: emailHtml,
+  // });
+  return emailResult
+}
+
+export async function sendPairingConfirmationEmail(
+  data: any,
+  emailTo: string
+) {}
+
+export async function sendPairingEmail(
+  emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",
+  data: any,
+  emailTo: string
+) {
   const allowedEmailTypes: string[] = ["match-accepted"];
 
   if (!emailType || !allowedEmailTypes.includes(emailType)) {
@@ -176,21 +228,11 @@ export async function sendPairingEmail(emailType: string, data: TutorMatchingNot
   }
 
   if (emailType === "match-accepted") {
-    console.log("rendering with", data);
-    const emailHtml = await render(
-      React.createElement(TutorMatchingNotificationEmail, data)
-    );
-    console.log("email temp: ", emailHtml);
-
-    const emailResult = await resend.emails.send({
-      from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
-      to: emailTo,
-      subject: "You Have Been Matched!",
-      html: emailHtml,
-    });
-
-    console.log("email result:", emailResult);
-    return emailResult;
+    return await sendTutorMatchingNotificationEmail(data, emailTo);
+  } else if (emailType == "pairing-request") {
+    return await sendPairingRequestEmail(data, emailTo);
+  } else if (emailType == "tutor-match-confirmation") {
+    return await sendPairingConfirmationEmail(data, emailTo);
   }
 
   throw new Error("Unsupported email type");
