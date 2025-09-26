@@ -12,7 +12,7 @@ import { ProfilePairingMetadata } from "@/types/profile";
 import axios, { AxiosResponse } from "axios"; // Not used, can be removed
 import { toast } from "react-hot-toast";
 import { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-matching-notification";
-import { sendPairingEmail } from "./email.server.actions";
+import { sendTutorMatchingNotificationEmail, sendTutorPairingConfirmationEmail } from "./email.server.actions";
 import { addEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { getSupabase } from "../supabase-server/serverClient";
@@ -430,7 +430,9 @@ export const updatePairingMatchStatus = async (
   const pairingMatch = data as IncomingPairingMatch;
   console.log("data", pairingMatch);
   const { student, tutor } = pairingMatch;
+
   if (status === "accepted") {
+
     const studentData: Profile | null = await getProfileWithProfileId(
       student.id
     );
@@ -487,13 +489,15 @@ export const updatePairingMatchStatus = async (
       student: studentData,
       tutor: tutorData,
       availability: autoEnrollment.availability[0],
-      meetingId: meetingData,
+      meeting: meetingData,
     };
 
     console.log("student", student);
 
     try {
-      await sendPairingEmail("match-accepted", emailData, studentData.email);
+      await sendTutorMatchingNotificationEmail(emailData, studentData.email);
+      await sendTutorPairingConfirmationEmail(emailData, tutorData.email)
+      console.log("Successfully sent tutor notification email")
     } catch (error) {
       //rollback if error
       await supabase
@@ -501,8 +505,16 @@ export const updatePairingMatchStatus = async (
         .delete()
         .eq("tutor_id", tutor.id)
         .eq("student_id", student.id);
+
+      await supabase
+        .from("Pairings")
+        .delete()
+        .eq("tutor_id", tutor.id)
+        .eq("student_id", student.id)
     }
     // Replace the fetch with:
+
+
 
     const log = await supabase.from("pairing_logs").insert([
       {
@@ -517,7 +529,6 @@ export const updatePairingMatchStatus = async (
 
     await sendPairingAlertToWebhook(tutorData, studentData, autoEnrollment);
   }
-
   //reset tutor and student status to be auto placed in que
   else if (status === "rejected") {
     const { data, error } = await supabase

@@ -90,41 +90,41 @@ export const deleteAllPairingRequests = async () => {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Delete all rows from pairing_requests
-    const { error: pairingRequestsError } = await supabase
-      .from("pairing_requests")
-      .delete()
-      .not("id", "is", null);
+    // // Delete all rows from pairing_requests
+    // const { error: pairingRequestsError } = await supabase
+    //   .from("pairing_requests")
+    //   .delete()
+    //   .not("id", "is", null);
 
-    if (pairingRequestsError) {
-      console.error("Error deleting pairing_requests:", pairingRequestsError);
-    } else {
-      console.log("All rows deleted from pairing_requests successfully");
-    }
+    // if (pairingRequestsError) {
+    //   console.error("Error deleting pairing_requests:", pairingRequestsError);
+    // } else {
+    //   console.log("All rows deleted from pairing_requests successfully");
+    // }
 
-    // Delete all rows from pairing_matches
-    const { error: pairingMatchesError } = await supabase
-      .from("pairing_matches")
-      .delete()
-      .not("id", "is", null);
+    // // Delete all rows from pairing_matches
+    // const { error: pairingMatchesError } = await supabase
+    //   .from("pairing_matches")
+    //   .delete()
+    //   .not("id", "is", null);
 
-    if (pairingMatchesError) {
-      console.error("Error deleting pairing_matches:", pairingMatchesError);
-    } else {
-      console.log("All rows deleted from pairing_matches successfully");
-    }
+    // if (pairingMatchesError) {
+    //   console.error("Error deleting pairing_matches:", pairingMatchesError);
+    // } else {
+    //   console.log("All rows deleted from pairing_matches successfully");
+    // }
 
-    // Delete all rows from pairing_logs
-    const { error: pairingLogsError } = await supabase
-      .from("pairing_logs")
-      .delete()
-      .not("id", "is", null);
+    // // Delete all rows from pairing_logs
+    // const { error: pairingLogsError } = await supabase
+    //   .from("pairing_logs")
+    //   .delete()
+    //   .not("id", "is", null);
 
-    if (pairingLogsError) {
-      console.error("Error deleting pairing_logs:", pairingLogsError);
-    } else {
-      console.log("All rows deleted from pairing_logs successfully");
-    }
+    // if (pairingLogsError) {
+    //   console.error("Error deleting pairing_logs:", pairingLogsError);
+    // } else {
+    //   console.log("All rows deleted from pairing_logs successfully");
+    // }
   } catch (err: any) {
     console.error(err.message);
   }
@@ -189,150 +189,3 @@ Parent Phone: ${studentData.parentPhone}
   }
 };
 
-// /**
-//  * Initiate pairing & sending out emails
-//  * @param matchId
-//  * @param status
-//  */
-// export const updatePairingMatchStatus = async (
-//   profileId: string,
-//   matchId: string,
-//   status: "accepted" | "rejected"
-// ) => {
-//   // if (
-//   //   !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-//   //   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-//   // ) {
-//   //   throw new Error("Missing Supabase environment variables");
-//   // }
-//   // console.log("logs fine here!");
-//   // const supabase = await createServerClient();
-//   const supabase = await getSupabase();
-
-//   //
-//   const updateResponse = await supabase
-//     .from("pairing_matches")
-//     .update({ tutor_status: status })
-//     .eq("id", matchId)
-//     .eq("tutor_id", profileId);
-//   if (updateResponse.error) {
-//     console.log("ERROR: ", updateResponse.error);
-//   }
-
-//   const { data, error } = await supabase
-//     .rpc("get_pairing_match", {
-//       match_id: matchId,
-//     })
-//     .single();
-
-//   if (error) return console.error(error);
-//   const pairingMatch = data as IncomingPairingMatch;
-//   console.log("data", pairingMatch);
-//   const { student, tutor } = pairingMatch;
-//   if (status === "accepted") {
-//     // create new unique student tutor pairing
-//     const createdPairingResult = await supabase.from("Pairings").insert([
-//       {
-//         student_id: student.id,
-//         tutor_id: tutor.id,
-//       },
-//     ]);
-
-//     if (tutor.availability || student.availability) {
-//       const availabilities = await getOverlappingAvailabilites(
-//         tutor.availability!,
-//         student.availability!
-//       );
-
-//       if (availabilities) {
-//         const firstAvailability = availabilities[0];
-//         if (!firstAvailability) return;
-
-//         const startDate = "";
-//         const endDate = "";
-
-//         //auto select first availability & create enrollment
-//         const result = await addEnrollment(
-//           {
-//             student: student as unknown as Profile,
-//             tutor: tutor as unknown as Profile,
-//             availability: availabilities,
-//             meetingId: "",
-//             summerPaused: false,
-//             duration: 60,
-//             startDate,
-//             endDate,
-//             summary: "Automatically Created Enrollment",
-//             frequency: "weekly",
-//           },
-//           true
-//         );
-//       }
-//     } else {
-//       console.warn("failed to automatically create enrollment");
-//     }
-
-//     const createdPairingError = createdPairingResult.error;
-//     if (createdPairingError) {
-//       if (createdPairingError?.code === "23505") {
-//         throw new Error("student - tutor pairing already exists");
-//       }
-//       console.error(createdPairingResult.error);
-//       throw new Error("failed to create pairings");
-//     }
-
-//     const emailData = {
-//       studentName: `${student.first_name} ${student.last_name}`,
-//       studentGender: student.gender ?? "male",
-//       parentName: `Parent Name`,
-//     } as TutorMatchingNotificationEmailProps;
-
-//     //send respective pairing email to student and tutor
-
-//     // if (status == "accepted") {
-//     //   await axios.post("/api/email/pairing?type=match-accepted", {
-//     //     emailType: "match-accepted",
-//     //     data: emailData,
-//     //   });
-//     // }
-
-//     console.log("student", student);
-//     // Replace the fetch with:
-//     await sendPairingEmail("match-accepted", emailData);
-
-//     const log = await supabase.from("pairing_logs").insert([
-//       {
-//         type: "pairing-match-accepted",
-//         message: `${tutor.first_name} ${tutor.last_name} has accepted ${student.first_name} ${student.last_name} as a student`,
-//         error: false,
-//         metadata: {
-//           profile_id: profileId,
-//         },
-//       } as PairingLogSchemaType,
-//     ]);
-
-//     console.log("LOG ", log);
-
-//     //reset tutor and student status to be auto placed in que
-//   } else if (status === "rejected") {
-//     const { data, error } = await supabase
-//       .from("pairing_requests")
-//       .update({
-//         status: "pending",
-//       })
-//       .in("user_id", [student.id, tutor.id]);
-
-//     console.log(data, error);
-//     if (!error)
-//       await supabase.from("pairing_logs").insert([
-//         {
-//           type: "pairing-match-rejected",
-//           message: `${tutor.first_name} ${tutor.last_name} has declined ${student.first_name} ${student.last_name} as a student`,
-//           error: false,
-//           metadata: {
-//             profile_id: profileId,
-//           },
-//         } as PairingLogSchemaType,
-//       ]);
-//   }
-// };
