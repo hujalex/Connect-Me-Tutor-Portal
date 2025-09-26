@@ -66,8 +66,8 @@ export default function PairingRequestNotificationEmail({
             }}
           >
             We have found a potential tutoring match for you! Below is information about a student 
-            who may be a good fit based on your expertise and availability. Please review the student's 
-            information and let us know if you're interested in this pairing opportunity.
+            who may be a good fit based on your expertise and availability. Please review the student`&apos;`s 
+            information and let us know if you`&apos;`re interested in this pairing opportunity.
           </div>
         </div>
 
@@ -206,7 +206,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 12px 0",
             }}
           >
-            If you're interested in tutoring this student:
+            If you`&apos;`re interested in tutoring this student:
           </div>
           <div
             style={{
@@ -228,7 +228,7 @@ export default function PairingRequestNotificationEmail({
               paddingLeft: "16px",
             }}
           >
-            • Locate the Pairing Dashboard under the "Pairings" tab
+            • Locate the Pairing Dashboard under the Pairings tab
           </div>
           <div
             style={{
@@ -281,7 +281,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0 0 12px 0",
             }}
           >
-            <strong>2.</strong> We'll confirm the pairing and provide student contact information
+            <strong>2.</strong> We`&apos;`ll confirm the pairing and provide student contact information
           </div>
           <div
             style={{
@@ -291,7 +291,7 @@ export default function PairingRequestNotificationEmail({
               margin: "0",
             }}
           >
-            <strong>3.</strong> You'll receive the Tutor Starter Pack and coordination instructions
+            <strong>3.</strong> You`&apos;`ll receive the Tutor Starter Pack and coordination instructions
           </div>
         </div>
 

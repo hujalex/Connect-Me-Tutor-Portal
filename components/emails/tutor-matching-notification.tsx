@@ -14,7 +14,7 @@ export interface TutorMatchingNotificationEmailProps {
   student: Profile;
   tutor: Profile;
   availability: Availability;
-  meetingId: Meeting;
+  meeting: Meeting;
   isPreview?: boolean;
 }
 
@@ -22,7 +22,7 @@ export default function TutorMatchingNotificationEmail({
   student,
   tutor,
   availability,
-  meetingId,
+  meeting,
   isPreview = false,
 }: TutorMatchingNotificationEmailProps) {
   // Helper function to get pronouns based on gender
@@ -179,7 +179,7 @@ export default function TutorMatchingNotificationEmail({
             }}
           >
             <Link
-              href={meetingId.link}
+              href={meeting.link}
               style={{
                 backgroundColor: "#B7E2F2",
                 color: "#0E5B94",
@@ -204,7 +204,7 @@ export default function TutorMatchingNotificationEmail({
               wordBreak: "break-all",
             }}
           >
-            Or copy this link: <Link href={meetingId.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meetingId.link}</Link>
+            Or copy this link: <Link href={meeting.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meeting.link}</Link>
           </Text>
         </Section>
 

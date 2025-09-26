@@ -181,8 +181,6 @@ export async function sendTutorMatchingNotificationEmail(
   const emailHtml = await render(
     React.createElement(TutorMatchingNotificationEmail, data)
   );
-  console.log("email temp: ", emailHtml);
-
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
     to: "ahu@connectmego.org",
@@ -190,7 +188,6 @@ export async function sendTutorMatchingNotificationEmail(
     html: emailHtml,
   });
 
-  console.log("email result:", emailResult);
   return emailResult;
 }
 
@@ -214,38 +211,42 @@ export async function sendPairingRequestEmail(
   return emailResult;
 }
 
-export async function sendPairingConfirmationEmail(data: TutorPairingConfirmationEmailProps, emailTo: string) {
+export async function sendTutorPairingConfirmationEmail(data: TutorPairingConfirmationEmailProps, emailTo: string) {
   const emailHtml = await render(
     React.createElement(TutorPairingConfirmationEmail, data)
   );
+  console.log("Sending confirmation for tutor")
   const emailResult = await resend.emails.send({
-    from: "reminder@connectemgo.app",
+    from: "Connect Me Free Tutoring & Mentoring <confirmation@connectmego.app>",
     to: "ahu@connectmego.org",
-    subject: "Connect Me Email",
+    subject: "Confirmed for Tutoring",
     html: emailHtml,
   });
+
+  console.log("Confirmation", emailHtml)
+
   return emailResult;
 }
 
-export async function sendPairingEmail(
-  emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",
-  data: any,
-  emailTo: string
-) {
-  const allowedEmailTypes: string[] = ["match-accepted"];
+// export async function sendPairingEmail(
+//   emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",
+//   data: any,
+//   emailTo: string
+// ) {
+//   const allowedEmailTypes: string[] = ["match-accepted"];
 
-  if (!emailType || !allowedEmailTypes.includes(emailType)) {
-    throw new Error("Must provide valid email type");
-  }
+//   if (!emailType || !allowedEmailTypes.includes(emailType)) {
+//     throw new Error("Must provide valid email type");
+//   }
 
-  if (emailType === "match-accepted") {
-    return await sendTutorMatchingNotificationEmail(data, emailTo);
-  } else if (emailType == "pairing-request") {
-    console.log("Sending pairing request email");
-    return await sendPairingRequestEmail(data, emailTo);
-  } else if (emailType == "tutor-match-confirmation") {
-    return await sendPairingConfirmationEmail(data, emailTo);
-  }
+//   if (emailType === "match-accepted") {
+//     return await sendTutorMatchingNotificationEmail(data, emailTo);
+//   } else if (emailType == "pairing-request") {
+//     console.log("Sending pairing request email");
+//     return await sendPairingRequestEmail(data, emailTo);
+//   } else if (emailType == "tutor-match-confirmation") {
+//     return await sendPairingConfirmationEmail(data, emailTo);
+//   }
 
-  throw new Error("Unsupported email type");
-}
+//   throw new Error("Unsupported email type");
+// }

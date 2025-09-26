@@ -24,12 +24,16 @@ interface Meeting {
 export interface TutorPairingConfirmationEmailProps {
   tutor: Profile;
   student: Profile;
+  availability: Availability;
+  meeting: Meeting 
   isPreview?: boolean;
 }
 
 export default function TutorPairingConfirmationEmail({
   tutor,
   student,
+  availability,
+  meeting,
   isPreview = false,
 }: TutorPairingConfirmationEmailProps) {
   
@@ -86,6 +90,7 @@ export default function TutorPairingConfirmationEmail({
             }}
           >
             Congratulations! You have been matched with a new student: <strong>{student.firstName} {student.lastName}</strong>. 
+            Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>.
             Please reach out to the student or their parent to introduce yourself and coordinate your tutoring schedule.
           </div>
         </div>
@@ -136,6 +141,30 @@ export default function TutorPairingConfirmationEmail({
               {student.email}
             </a>
           </div>
+          {student.parentEmail && (
+            <div
+              style={{
+                color: "#ffffff",
+                fontSize: "16px",
+                lineHeight: "1.6",
+                margin: "0",
+              }}
+            >
+              <strong>Parent Email:</strong> {student.parentEmail}
+            </div>
+          )}
+          {student.parentPhone && (
+            <div
+              style={{
+                color: "#ffffff",
+                fontSize: "16px",
+                lineHeight: "1.6",
+                margin: "0",
+              }}
+            >
+              <strong>Parent Phone:</strong> {student.parentPhone}
+            </div>
+          )}
           {student.parentName && (
             <div
               style={{
@@ -148,6 +177,74 @@ export default function TutorPairingConfirmationEmail({
               <strong>Parent/Guardian:</strong> {student.parentName}
             </div>
           )}
+        </div>
+
+        {/* Meeting Link */} 
+        <div
+          style={{
+            backgroundColor: "#0E5B94",
+            border: "2px solid #6AB2D7",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: "bold",
+              color: "#B7E2F2",
+              fontSize: "18px",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            🎯 Join Your Tutoring Session
+          </div>
+          <div
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            Click the link below to join your scheduled tutoring sessions:
+          </div>
+          <div
+            style={{
+              textAlign: "center",
+              margin: "0 0 16px 0",
+            }}
+          >
+            <a
+              href={meeting.link}
+              style={{
+                backgroundColor: "#B7E2F2",
+                color: "#0E5B94",
+                padding: "12px 24px",
+                borderRadius: "6px",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "16px",
+                display: "inline-block",
+              }}
+            >
+              Join Meeting
+            </a>
+          </div>
+          <div
+            style={{
+              color: "#B7E2F2",
+              fontSize: "14px",
+              lineHeight: "1.4",
+              margin: "0",
+              textAlign: "center",
+              wordBreak: "break-all",
+            }}
+          >
+            Or copy this link: <a href={meeting.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meeting.link}</a>
+          </div>
         </div>
 
         {/* Academic Information */}
@@ -191,8 +288,6 @@ export default function TutorPairingConfirmationEmail({
             <strong>Languages Spoken:</strong> {languages.join(", ")}
           </div>
         </div>
-
-
 
         {/* Next Steps */}
         <div

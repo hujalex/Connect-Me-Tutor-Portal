@@ -90,41 +90,41 @@ export const deleteAllPairingRequests = async () => {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Delete all rows from pairing_requests
-    const { error: pairingRequestsError } = await supabase
-      .from("pairing_requests")
-      .delete()
-      .not("id", "is", null);
+    // // Delete all rows from pairing_requests
+    // const { error: pairingRequestsError } = await supabase
+    //   .from("pairing_requests")
+    //   .delete()
+    //   .not("id", "is", null);
 
-    if (pairingRequestsError) {
-      console.error("Error deleting pairing_requests:", pairingRequestsError);
-    } else {
-      console.log("All rows deleted from pairing_requests successfully");
-    }
+    // if (pairingRequestsError) {
+    //   console.error("Error deleting pairing_requests:", pairingRequestsError);
+    // } else {
+    //   console.log("All rows deleted from pairing_requests successfully");
+    // }
 
-    // Delete all rows from pairing_matches
-    const { error: pairingMatchesError } = await supabase
-      .from("pairing_matches")
-      .delete()
-      .not("id", "is", null);
+    // // Delete all rows from pairing_matches
+    // const { error: pairingMatchesError } = await supabase
+    //   .from("pairing_matches")
+    //   .delete()
+    //   .not("id", "is", null);
 
-    if (pairingMatchesError) {
-      console.error("Error deleting pairing_matches:", pairingMatchesError);
-    } else {
-      console.log("All rows deleted from pairing_matches successfully");
-    }
+    // if (pairingMatchesError) {
+    //   console.error("Error deleting pairing_matches:", pairingMatchesError);
+    // } else {
+    //   console.log("All rows deleted from pairing_matches successfully");
+    // }
 
-    // Delete all rows from pairing_logs
-    const { error: pairingLogsError } = await supabase
-      .from("pairing_logs")
-      .delete()
-      .not("id", "is", null);
+    // // Delete all rows from pairing_logs
+    // const { error: pairingLogsError } = await supabase
+    //   .from("pairing_logs")
+    //   .delete()
+    //   .not("id", "is", null);
 
-    if (pairingLogsError) {
-      console.error("Error deleting pairing_logs:", pairingLogsError);
-    } else {
-      console.log("All rows deleted from pairing_logs successfully");
-    }
+    // if (pairingLogsError) {
+    //   console.error("Error deleting pairing_logs:", pairingLogsError);
+    // } else {
+    //   console.log("All rows deleted from pairing_logs successfully");
+    // }
   } catch (err: any) {
     console.error(err.message);
   }
