@@ -41,7 +41,7 @@ export const getAllPairingRequests = async (
     p_type: profileType,
   });
 
-  console.log("pairing requests data", data)
+  console.log("Pairing requests data", data);
 
   return { data: data as PairingRequest[], error };
 };
@@ -104,6 +104,19 @@ export const createPairingRequest = async (userId: string, notes: string) => {
   }
 
   console.log("creation result: ", result);
+};
+
+export const removePairingRequest = async (id: string) => {
+  try {
+    const { error } = await supabase
+      .from("pairing_requests")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+  } catch (error) {
+    console.error("Unable to remove pairing request", error);
+    throw error;
+  }
 };
 
 export const acceptStudentMatch = () => {};

@@ -21,10 +21,24 @@ import {
 } from "@/components/ui/table";
 import { Trash2, Users, GraduationCap } from "lucide-react";
 import { PairingRequest } from "@/types/pairing";
-import { getAllPairingRequests } from "@/lib/actions/pairing.actions";
+import {
+  getAllPairingRequests,
+  removePairingRequest,
+} from "@/lib/actions/pairing.actions";
 import { to12Hour } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { TestingPairingControls } from "../test-controls";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type QueViews = "tutors" | "students";
 
@@ -32,8 +46,15 @@ export default function PriorityQueue() {
   const [pairingRequests, setPairingRequests] = useState<PairingRequest[]>([]);
   const [currentView, setCurrentView] = useState<QueViews>("tutors");
 
-  const removeFromQueue = (id: string) => {
-    setPairingRequests(pairingRequests.filter((request) => request.id !== id));
+  const removeFromQueue = async (id: string) => {
+    // console.log("Current Data", currentData);
+    // console.log("Pairing Request", pairingRequests);
+    // console.log("Removing", id);
+
+    await removePairingRequest(id);
+    setPairingRequests((pairingRequests) =>
+      pairingRequests.filter((request) => request.request_id !== id)
+    );
   };
 
   const requestsCache = useRef<Partial<Record<QueViews, PairingRequest[]>>>({});
@@ -64,7 +85,7 @@ export default function PriorityQueue() {
   const updatePriority = (id: string, newPriority: number) => {
     setPairingRequests(
       pairingRequests.map((request) =>
-        request.id === id
+        request.request_id === id
           ? {
               ...request,
               priority: newPriority,
@@ -185,7 +206,10 @@ export default function PriorityQueue() {
                       .map((n) => n[0])
                       .join("");
                     return (
-                      <TableRow key={request.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={request.request_id}
+                        className="hover:bg-gray-50"
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
@@ -293,7 +317,7 @@ export default function PriorityQueue() {
                               value={request.priority.toString()}
                               onValueChange={(value) =>
                                 updatePriority(
-                                  request.id,
+                                  request.request_id,
                                   Number.parseInt(value)
                                 )
                               }
@@ -307,14 +331,38 @@ export default function PriorityQueue() {
                                 <SelectItem value="3">3</SelectItem>
                               </SelectContent>
                             </Select>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => removeFromQueue(request.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Remove Pairing Request for{" "}
+                                    {`${request.profile.firstName} ${request.profile.lastName}`}
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription></AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Back</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      removeFromQueue(request.request_id)
+                                    }
+                                  >
+                                    Remove Pairing Request
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
