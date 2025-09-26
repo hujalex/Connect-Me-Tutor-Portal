@@ -3,9 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { getProfileRole } from '@/lib/actions/user.actions';
-import StudentDashboard from '@/components/student/DashboardContent';
-import TutorDashboard from '@/components/tutor/DashboardContent';
-import AdminDashboard from '@/components/admin/DashboardContent';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/admin/dashboard-layout'; // Assuming Sidebar component is available

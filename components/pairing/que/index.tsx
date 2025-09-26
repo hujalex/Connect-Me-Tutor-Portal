@@ -76,6 +76,7 @@ export default function PriorityQueue() {
       }
       if (error) {
         toast.error("Failed to load pairing que");
+        console.error("Failed to load pairing queue", error)
       }
       console.log("data: ", data);
     })();

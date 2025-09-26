@@ -6,10 +6,10 @@ export type PairingRequest = {
   request_id: string; //uuid;
   type: "student" | "tutor";
   userId: string; //uuid
-  profile: Profile;
-  status: PairingStatus;
+  status: string;
   priority: number;
   createdAt: Date;
+  profile: Profile;
 };
 export type PairingMatch = {
   id: string; //uuid
