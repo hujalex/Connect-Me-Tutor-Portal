@@ -76,6 +76,22 @@ export const addUser = async (
     if (!userId) {
       throw new Error("Failed to create user account");
     }
+
+    const userAvailability = userData.availability 
+                            ? userData.availability.length === 0 ?
+                            [
+                              {day: "Monday", startTime: "00:00", endTime: "23:59"},
+                              {day: "Tuesday", startTime: "00:00", endTime: "23:59"},
+                              {day: "Wednesday", startTime: "00:00", endTime: "23:59"},
+                              {day: "Thursday", startTime: "00:00", endTime: "23:59"},
+                              {day: "Friday", startTime: "00:00", endTime: "23:59"},
+                              {day: "Saturday", startTime: "00:00", endTime: "23:59"},
+                              {day: "Sunday", startTime: "00:00", endTime: "23:59"},
+                            ]
+                            : userData.availability
+                            : []
+                            
+
     // Create the student profile without id and createdAt
     const newUserProfile = {
       user_id: userId,
@@ -86,7 +102,7 @@ export const addUser = async (
       grade: userData.grade || "",
       gender: userData.gender || "",
       start_date: userData.startDate || new Date().toISOString(),
-      availability: userData.availability || [],
+      availability: userAvailability,
       email: lowerCaseEmail,
       parent_name: userData.parentName || "",
       parent_phone: userData.parentPhone || "",

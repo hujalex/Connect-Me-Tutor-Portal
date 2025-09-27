@@ -151,7 +151,6 @@ export async function scheduleEmail({
     const qstash = new Client({ token: process.env.QSTASH_TOKEN });
     const result = await qstash.publishJSON({
       url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/email/send-email`,
-      //   url: `${"http://localhost:3000"}/api/email/send-email`,
       notBefore: notBefore,
       body: {
         to: to,
@@ -183,7 +182,7 @@ export async function sendTutorMatchingNotificationEmail(
   );
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
-    to: "ahu@connectmego.org",
+    to: emailTo,
     subject: "You Have Been Matched!",
     html: emailHtml,
   });
@@ -204,7 +203,7 @@ export async function sendPairingRequestEmail(
 
   const emailResult = await resend.emails.send({
     from: "reminder@connectmego.app",
-    to: "ahu@connectmego.org", //!
+    to: emailTo, //!
     subject: "Connect Me Email",
     html: emailHtml,
   });
@@ -218,7 +217,7 @@ export async function sendTutorPairingConfirmationEmail(data: TutorPairingConfir
   console.log("Sending confirmation for tutor")
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <confirmation@connectmego.app>",
-    to: "ahu@connectmego.org",
+    to: emailTo,
     subject: "Confirmed for Tutoring",
     html: emailHtml,
   });
