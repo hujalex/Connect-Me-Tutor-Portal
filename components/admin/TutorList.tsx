@@ -312,63 +312,6 @@ const TutorList = () => {
     }
   };
 
-  const handleAddTutor = async () => {
-    try {
-      setAddingTutor(true);
-      // Ensure addStudent returns a Profile
-      const addedTutor: Profile = await addUser(newTutor, "Tutor", true);
-
-      // Update local state
-      setTutors((prevTutors) => {
-        // Check if addedStudent is valid
-        if (addedTutor) {
-          return [...prevTutors, addedTutor]; // Ensure returning an array of Profile
-        }
-        return prevTutors; // Return previous state if addedStudent is not valid
-      });
-
-      setFilteredTutors((prevFiltered) => {
-        // Check if addedStudent is valid
-        if (addedTutor) {
-          return [...prevFiltered, addedTutor]; // Ensure returning an array of Profile
-        }
-        return prevFiltered; // Return previous state if addedStudent is not valid
-      });
-
-      if (addedTutor) {
-        // Close modal and show success toast
-        setIsModalOpen(false);
-        setTutors((prevTutors) => [...prevTutors, addedTutor]);
-
-        toast.success("Successfully added tutor.");
-
-        // Reset form
-        setNewTutor({
-          role: "Tutor",
-          firstName: "",
-          lastName: "",
-          // dateOfBirth: "",
-          startDate: "",
-          availability: [],
-          email: "",
-          phoneNumber: "",
-          parentName: "",
-          parentPhone: "",
-          parentEmail: "",
-          timeZone: "",
-          subjects_of_interest: [],
-          status: "Active",
-          tutorIds: [],
-        });
-      }
-    } catch (error) {
-      const err = error as Error;
-      console.error("Error adding tutor:", error);
-      toast.error(`Failed to add tutor ${err.message}`);
-    } finally {
-      setAddingTutor(false);
-    }
-  };
 
   const handleResendEmailConfirmation = async () => {
     if (selectedTutor) {
