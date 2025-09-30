@@ -8,7 +8,6 @@ import PairingRequestNotificationEmail, {
 } from "@/components/emails/pairing-request-notification";
 import { getProfile, getProfileWithProfileId } from "../actions/user.actions";
 import {
-  sendPairingEmail,
   sendPairingRequestEmail,
 } from "../actions/email.server.actions";
 import { Profile } from "@/types";
