@@ -75,12 +75,14 @@ export const runPairingWorkflow = async () => {
   // Alternate pairing: student, tutor, student, tutor
   const maxLength = Math.max(studentQueue.length, tutorQueue.length);
 
-  //matches tutors  for students
   const studentMatches: QueueItemMatch[] = [];
-  //matched students for tutors
   const tutorMatches: QueueItemMatch[] = [];
 
+  // Track tutor request IDs that should be updated *after* all matches
+  const tutorsToUpdate: string[] = [];
+
   for (let i = 0; i < maxLength; i++) {
+    // Handle students first (student → tutor)
     if (i < studentQueue.length) {
       console.log("Student Queue");
       const studentReq = studentQueue[i];
@@ -91,15 +93,13 @@ export const runPairingWorkflow = async () => {
         })
         .single();
 
-      // console.log("call error: ", error);
       const result = data as QueueItemMatch;
-      // console.log("r: ", result);
+      if (error) console.error("Student best_match error:", error);
+
       if (result) {
         const { requestor_profile, match_profile } = result;
-        // console.log("r: ", result);
         logs.push({
-          message: `${requestor_profile.first_name} ${requestor_profile.last_name} Matched With ${match_profile?.first_name} 
-          ${match_profile?.first_name}`,
+          message: `${requestor_profile.first_name} ${requestor_profile.last_name} matched with ${match_profile?.first_name} ${match_profile?.last_name}`,
           type: "pairing-match",
           error: false,
           metadata: {
@@ -112,13 +112,13 @@ export const runPairingWorkflow = async () => {
 
         studentMatches.push(result);
 
-        // logs.push({
-        //   message: "Pairing "
-        // })
-        // console.log("pairing request log: ", r);
+        // ✅ Immediately mark student as paired
+        await updatePairingStatus(studentReq.pairing_request_id, "paired");
+
+        studentMatches.push(result);
       } else {
         logs.push({
-          message: "Failed to find pairing",
+          message: "Failed to find pairing for student",
           type: "pairing-selection-failed",
           error: true,
           metadata: {
@@ -126,20 +126,23 @@ export const runPairingWorkflow = async () => {
           },
         });
       }
-      // console.log("Student match:", result);
     }
 
+    // Handle tutors (tutor → student)
     if (i < tutorQueue.length) {
       console.log("Tutor Queue");
       const tutorReq = tutorQueue[i];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .rpc("get_best_match", {
           request_type: "tutor",
           request_id: tutorReq.pairing_request_id,
         })
         .single();
+
       const result = data as QueueItemMatch;
       // console.log("Tutor match:", data);
+      if (error) console.error("Tutor best_match error:", error);
+
       if (result as QueueItemMatch) {
         await updatePairingStatus(tutorReq.pairing_request_id, "paired");
         await sendPairingRequestNotification(
@@ -148,9 +151,9 @@ export const runPairingWorkflow = async () => {
         );
 
         tutorMatches.push(result as QueueItemMatch);
+        tutorsToUpdate.push(tutorReq.pairing_request_id);
         logs.push({
-          message: `Matched With ${result.match_profile.first_name} 
-          ${result.match_profile.first_name}`,
+          message: `Tutor ${result.requestor_profile.first_name} matched with ${result.match_profile.first_name}`,
           type: "pairing-match",
           error: false,
           metadata: {
@@ -160,7 +163,7 @@ export const runPairingWorkflow = async () => {
         });
       } else {
         logs.push({
-          message: "Failed to find pairing",
+          message: "Failed to find pairing for tutor",
           type: "pairing-selection-failed",
           error: true,
           metadata: {
@@ -170,10 +173,8 @@ export const runPairingWorkflow = async () => {
       }
     }
   }
-  // console.log("LOGS: ", logs);
-  // console.log("MATCHES", tutorMatches);
-  // console.log("STUDENT MATCHES: ", studentMatches);
 
+  // Build matches for DB insert
   const matchedStudents: PairingMatch[] = studentMatches.map(
     (match) =>
       ({
@@ -188,7 +189,7 @@ export const runPairingWorkflow = async () => {
       ({
         student_id: match.match_profile.id,
         tutor_id: match.requestor_profile.id,
-        similarity: match.similarity, // or another default/status as appropriate
+        similarity: match.similarity,
       }) as PairingMatch
   );
 
@@ -224,9 +225,19 @@ export const runPairingWorkflow = async () => {
         ({ similarity }) => similarity
       )
     );
+
+  // Insert logs
   const r2 = await supabase
     .from("pairing_logs")
     .insert(logs.filter((log) => !log.error));
-  console.log(r1, r2);
-  console.log("PAIRINGS ENDING");
+
+  // ✅ Now mark tutors as paired (after all matching is done)
+  if (tutorsToUpdate.length > 0) {
+    await supabase
+      .from("pairing_requests")
+      .update({ status: "paired" })
+      .in("id", tutorsToUpdate);
+  }
+
+  console.log("Pairing complete:", { matches: r1, logs: r2 });
 };

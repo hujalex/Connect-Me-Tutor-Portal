@@ -47,6 +47,7 @@ import { handleCalculateDuration } from "./hours.actions";
 import { language } from "googleapis/build/src/apis/language";
 import { tableToIntefaceProfiles } from "../type-utils";
 import { createPairingRequest } from "./pairing.actions";
+import { scheduleMultipleSessionReminders } from "../twilio";
 // import { getMeeting } from "./meeting.actions";
 
 const { fromZonedTime } = DateFNS;
@@ -965,7 +966,7 @@ export async function addSessions(
   weekEndString: string,
   enrollments: Enrollment[],
   sessions: Session[]
-): Promise<Session[]> {
+) {
   try {
     const weekStart: Date = fromZonedTime(
       parseISO(weekStartString),
@@ -1142,6 +1143,10 @@ export async function addSessions(
             duration: session.duration,
           }))
         );
+
+        // if (!sessions) return;
+
+        scheduleMultipleSessionReminders(sessions!);
 
         //Schedule emails
         return sessions;

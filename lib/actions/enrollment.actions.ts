@@ -95,6 +95,7 @@ export async function getEnrollments(
         meetingId: enrollment.meetingId,
         summerPaused: enrollment.summer_paused,
         duration: enrollment.duration,
+        frequency: enrollment.frequency
       }))
     );
 
@@ -149,3 +150,5 @@ export const getOverlappingAvailabilites = async (
     console.error("Failed to get overlapping availabilities");
   }
 };
+
+console.log("server call ");
