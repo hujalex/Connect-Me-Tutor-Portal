@@ -12,7 +12,6 @@ import { IncomingPairingMatch } from "./pairing.actions";
 import { NextResponse } from "next/server";
 import { PairingLogSchemaType } from "../pairing/types";
 import { getSupabase } from "../supabase-server/serverClient";
-import { sendPairingEmail } from "./email.server.actions";
 import { addEnrollment, createEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { formatDateAdmin, to12Hour } from "../utils";
