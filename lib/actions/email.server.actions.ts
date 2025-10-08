@@ -183,6 +183,7 @@ export async function sendTutorMatchingNotificationEmail(
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
     to: emailTo,
+    cc: ["ahu@connectmego.org", "ykowalczyk@connectmego.org "],
     subject: "You Have Been Matched!",
     html: emailHtml,
   });
@@ -203,8 +204,9 @@ export async function sendPairingRequestEmail(
 
   const emailResult = await resend.emails.send({
     from: "reminder@connectmego.app",
-    to: emailTo, //!
-    subject: "Connect Me Email",
+    to: emailTo,
+    cc: ['ykowalczyk@connectmego.org', 'ahu@connectmego.org'],
+    subject: "Connect Me Pairing Request",
     html: emailHtml,
   });
   return emailResult;
@@ -218,6 +220,7 @@ export async function sendTutorPairingConfirmationEmail(data: TutorPairingConfir
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <confirmation@connectmego.app>",
     to: emailTo,
+    cc: ['ykowalczyk@connectmego.org', 'ahu@connectmego.org'],
     subject: "Confirmed for Tutoring",
     html: emailHtml,
   });
