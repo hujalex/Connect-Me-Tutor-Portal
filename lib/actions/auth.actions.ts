@@ -1,5 +1,5 @@
 import { getSupabase } from "@/lib/supabase-server/serverClient";
-import { Profile } from "@/types";
+import { CreatedProfileData, Profile } from "@/types";
 import {
   createPassword,
   deleteUser,
@@ -8,15 +8,17 @@ import {
 import { NextResponse } from "next/server";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createPairingRequest, handleResolveQueues } from "./pairing.actions";
+import { X } from "lucide-react";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 });
 
+
+
 export const createUser = async (
-  email: string,
-  password: string
+  userData: CreatedProfileData
 ): Promise<string | null> => {
   try {
     // Call signUp to create a new user
@@ -25,7 +27,7 @@ export const createUser = async (
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: email, password: password }),
+      body: JSON.stringify(userData),
     });
 
     const data = await response.json();
@@ -41,11 +43,24 @@ export const createUser = async (
   }
 };
 
+const sendInviteEmail = async (userData: CreatedProfileData) => {
+  let retries = 0;
+  try {
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(userData.email)
+    if (error) throw error;
+
+
+  } catch (error) {
+    console.error(error)
+    throw Error;
+  }
+}
+
 export const addUser = async (
   userData: Partial<Profile>,
   userRole: "Tutor" | "Student",
   isAddToPairing: boolean = false
-): Promise<Profile> => {
+) => {
   let userId: string | null = null;
   try {
     if (!userData.email) {
@@ -71,11 +86,7 @@ export const addUser = async (
 
     //-----Moved After Duplicate Check to prevent Sending confimration email-----
     const tempPassword = await createPassword();
-    userId = await createUser(lowerCaseEmail, tempPassword);
 
-    if (!userId) {
-      throw new Error("Failed to create user account");
-    }
 
     const userAvailability = userData.availability 
                             ? userData.availability.length === 0 ?
@@ -90,80 +101,40 @@ export const addUser = async (
                             ]
                             : userData.availability
                             : []
-                            
+        
 
-    // Create the student profile without id and createdAt
-    const newUserProfile = {
-      user_id: userId,
+    const newProfileData: CreatedProfileData = {
+      email: lowerCaseEmail,
+      password: tempPassword,
       role: userRole,
-      first_name: userData.firstName ? userData.firstName.trim() : "",
-      last_name: userData.lastName ? userData.lastName.trim() : "",
+      firstName: userData.firstName || "",
+      lastName: userData.lastName || "",
       age: userData.age || "",
       grade: userData.grade || "",
       gender: userData.gender || "",
-      start_date: userData.startDate || new Date().toISOString(),
+      startDate: userData.startDate || new Date().toISOString(),
       availability: userAvailability,
-      email: lowerCaseEmail,
-      parent_name: userData.parentName || "",
-      parent_phone: userData.parentPhone || "",
-      parent_email: userData.parentEmail || "",
-      phone_number: userData.phoneNumber || "",
+      parentName: userData.parentName || "",
+      parentPhone: userData.parentPhone || "",
+      parentEmail: userData.parentEmail || "",
+      phoneNumber: userData.phoneNumber || "",
       timezone: userData.timeZone || "",
       subjects_of_interest: userData.subjects_of_interest || [],
-      tutor_ids: [], // Changed from tutorIds to tutor_ids
       status: "Active",
-      student_number: userData.studentNumber || null,
-      languages_spoken: userData.languages_spoken,
-    };
-
-    // Add tutor profile to the database
-    const { data: profileData, error: profileError } = await supabase
-      .from("Profiles") // Ensure 'profiles' is correctly cased
-      .insert(newUserProfile)
-      .select("*")
-      .single();
-
-    if (profileError) {
-      // transaction processing - prevents auth user account with no profile
-      await deleteUser(userId);
-      throw profileError;
+      studentNumber: userData.studentNumber || "",
+      languages_spoken: userData.languages_spoken || [],
     }
 
-    // Ensure profileData is defined and cast it to the correct type
-    if (!profileData) {
-      throw new Error("Profile data not returned after insertion");
+    userId = await createUser(newProfileData);
+
+    if (!userId) {
+      throw new Error("Failed to create user account");
     }
 
-    await sendConfirmationEmail(profileData.email);
-    // Type assertion to ensure profileData is of type Profile
-    const createdProfile: Profile = profileData;
+    // await sendInviteEmail(newProfileData)
+    await sendConfirmationEmail(userData.email);
 
-    if (isAddToPairing) createPairingRequest(userId, "");
-
-    // Return the newly created profile data, including autogenerated fields
-    return {
-      id: createdProfile.id, // Assuming 'id' is the generated key
-      createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
-      userId: createdProfile.userId, // Adjust based on your schema
-      role: createdProfile.role,
-      firstName: createdProfile.firstName,
-      lastName: createdProfile.lastName,
-      // dateOfBirth: createdProfile.dateOfBirth,
-      startDate: createdProfile.startDate,
-      availability: createdProfile.availability,
-      email: createdProfile.email,
-      phoneNumber: createdProfile.phoneNumber,
-      parentName: createdProfile.parentName,
-      parentPhone: createdProfile.parentPhone,
-      parentEmail: createdProfile.parentEmail,
-      timeZone: createdProfile.timeZone,
-      subjects_of_interest: createdProfile.subjects_of_interest,
-      languages_spoken: createdProfile.languages_spoken,
-      tutorIds: createdProfile.tutorIds,
-      status: createdProfile.status,
-      studentNumber: createdProfile.studentNumber,
-      settingsId: createdProfile.settingsId,
-    };
+    return {};
   } catch (error) {
     console.error("Error adding tutor:", error);
 
