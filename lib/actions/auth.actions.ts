@@ -19,7 +19,7 @@ const supabase = createClientComponentClient({
 
 export const createUser = async (
   userData: CreatedProfileData
-): Promise<string | null> => {
+): Promise<Profile> => {
   try {
     // Call signUp to create a new user
     const response = await fetch("/api/admin/create-user", {
@@ -36,10 +36,11 @@ export const createUser = async (
       throw new Error(data.message || `Error: ${response.status}`);
     }
 
-    return data.userId || null;
+    return data.profileData || null;
   } catch (error) {
-    console.error("Error creating user:", error);
-    return null; // Return null if there was an error
+    const err = error as Error
+    console.error("Error creating user in API:", err.message);
+    throw err
   }
 };
 
@@ -125,26 +126,20 @@ export const addUser = async (
       languages_spoken: userData.languages_spoken || [],
     }
 
-    userId = await createUser(newProfileData);
-
-    if (!userId) {
-      throw new Error("Failed to create user account");
-    }
+    const profileData: Profile | null = await createUser(newProfileData);
+    // if (!userId) {
+    //   throw new Error("Failed to create user account");
+    // }
 
     // await sendInviteEmail(newProfileData)
     await sendConfirmationEmail(userData.email);
 
-    return {};
+    return profileData;
   } catch (error) {
-    console.error("Error adding tutor:", error);
 
-    if (userId) {
-      try {
-        await deleteUser(userId);
-      } catch (error) {
-        console.error("Unable to execute rollback transaction");
-      }
-    }
-    throw error;
+    const err = error as Error;
+    console.error("Error adding tutor:", err.message);
+    throw err;
   }
 };
+
