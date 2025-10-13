@@ -85,7 +85,8 @@ const Stats = () => {
     { id: "unified", label: "Unified Table" },
   ];
 
-  const totalSessionHours = enrollmentDetails.reduce(
+  console.log("Enrollment Details", enrollmentDetails)
+  const totalSessionHours = Object.values(enrollmentDetails).flat().reduce(
     (sum, e) => sum + e.hours,
     0
   );
@@ -128,26 +129,7 @@ const Stats = () => {
         ]);
 
         // // Process session hours map more efficiently
-        // const sessionMap = allCompletedSessions.reduce((map, session) => {
-        //   const studentName = `${session.student?.firstName || ""} ${
-        //     session.student?.lastName || ""
-        //   }`.trim();
-
-        //   if (studentName) {
-        //     map.set(studentName, (map.get(studentName) || 0) + 1);
-        //   }
-        //   return map;
-        // }, new Map<string, number>());
-
-        // // Calculate event tutoring hours more efficiently
-        // const eventTutoringHours =
-        //   allEvents?.reduce((total, event) => total + event.hours, 0) || 0;
-
-        // // Update all state at once
-        // setSessionHours(sessionMap);
-        // setTotalHours(allCompletedSessions.length + eventTutoringHours);
-        // setAllSessions(allCompletedSessions);
-        // setAllEvents(allEvents);
+       
       } catch (error) {
         console.log("Error counting hours", error);
       } finally {
@@ -214,7 +196,7 @@ const Stats = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrollmentDetails.map((student) => (
+              {Object.values(enrollmentDetails).map((student) => (
                 <TableRow key={student.studentId}>
                   <TableCell>Sessions</TableCell>
                   <TableCell>Tutoring</TableCell>
@@ -291,7 +273,7 @@ const Stats = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {enrollmentDetails.map((student) => (
+                    {Object.values(enrollmentDetails).map((student) => (
                       <TableRow key={student.studentId}>
                         <TableCell>
                           {student.firstName} {student.lastName}
