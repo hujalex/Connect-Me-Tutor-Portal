@@ -86,7 +86,7 @@ interface Enrollment {
   summary: string;
   startDate: string;
   endDate: string | null;
-  availability: { day: string; startTime: string; endTime: string }[]; // Ensure startTime and endTime have AM/PM format
+  availability: Availability[]; // Ensure startTime and endTime have AM/PM format
   meetingId: string;
   summerPaused: boolean;
   duration: number;
@@ -98,4 +98,26 @@ interface Availability {
   day: string;
   startTime: string;
   endTime: string;
+}
+
+interface CreatedProfileData {
+  role: "Student" | "Tutor" | "Admin";
+  firstName: string;
+  lastName: string;
+  age: string;
+  grade: string;
+  gender: string,
+  startDate: string,
+  availability: Availability[],
+  email: string;
+  parentName: string;
+  parentPhone: string;
+  parentEmail: string;
+  phoneNumber: string;
+  timezone: string;
+  subjects_of_interest: string[];
+  status: "Active",
+  studentNumber: string
+  languages_spoken: string[], 
+  password: string;
 }
