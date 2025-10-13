@@ -2,7 +2,6 @@ import { getSupabase } from "@/lib/supabase-server/serverClient";
 import { NextRequest, NextResponse } from "next/server";
 import { Profile, CreatedProfileData, Availability } from "@/types";
 
-
 interface UserMetadata {
   email: string;
   role: "Student" | "Tutor" | "Admin";
@@ -29,13 +28,13 @@ export async function POST(request: NextRequest) {
   try {
     const newProfileData: CreatedProfileData = await request.json();
 
-    const profileData: Profile = await createUser(newProfileData);
+    const profileData: Partial<Profile> = await createUser(newProfileData);
     return NextResponse.json(
       { success: true, profileData: profileData },
       { status: 200 }
     );
   } catch (error) {
-    const err = error as Error
+    const err = error as Error;
     return NextResponse.json(
       {
         error: err,
@@ -46,27 +45,23 @@ export async function POST(request: NextRequest) {
   }
 }
 
-const createUser = async (
-  newProfileData: CreatedProfileData
-) => {
-
-  const supabase = await getSupabase(); 
+const createUser = async (newProfileData: CreatedProfileData) => {
+  const supabase = await getSupabase();
   try {
     // Call signUp to create a new user
     console.log("CREATING USER", newProfileData);
 
+    const { data: authData, error: authError } =
+      await supabase.auth.admin.createUser({
+        email: newProfileData.email,
+        password: newProfileData.password,
+        user_metadata: {
+          first_name: newProfileData.firstName,
+          last_name: newProfileData.lastName,
+        },
+      });
 
-
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: newProfileData.email,
-      password: newProfileData.password,
-      user_metadata: {
-        first_name: newProfileData.firstName,
-        last_name: newProfileData.lastName
-      },
-    });
-    
-    if (authError) throw Error
+    if (authError) throw new Error(authError.message);
 
     const userMetadata: UserMetadata = {
       email: newProfileData.email,
@@ -90,43 +85,47 @@ const createUser = async (
       languages_spoken: newProfileData.languages_spoken,
     };
 
-    const { data: createdProfile, error: profileError} = await supabase.from("Profiles").insert(
-        userMetadata
-    ).select().single()
+    const { data: createdProfile, error: profileError } = await supabase
+      .from("Profiles")
+      .insert(userMetadata)
+      .select()
+      .single();
 
     if (profileError) {
-        console.log("DELETING USER")
-        await supabase.auth.admin.deleteUser(authData.user.id)
-        throw profileError
+      console.log("DELETING USER");
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      throw profileError;
     }
 
-     return {
+    const createdProfileData: Profile = {
       id: createdProfile.id, // Assuming 'id' is the generated key
-      createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
-      userId: createdProfile.userId, // Adjust based on your schema
+      createdAt: createdProfile.created_at, // Assuming 'created_at' is the generated timestamp
+      userId: createdProfile.user_id, // Adjust based on your schema
       role: createdProfile.role,
-      firstName: createdProfile.firstName,
-      lastName: createdProfile.lastName,
+      firstName: createdProfile.first_name,
+      lastName: createdProfile.last_name,
       // dateOfBirth: createdProfile.dateOfBirth,
-      startDate: createdProfile.startDate,
+      startDate: createdProfile.start_date,
       availability: createdProfile.availability,
       email: createdProfile.email,
-      phoneNumber: createdProfile.phoneNumber,
-      parentName: createdProfile.parentName,
-      parentPhone: createdProfile.parentPhone,
-      parentEmail: createdProfile.parentEmail,
-      timeZone: createdProfile.timeZone,
+      phoneNumber: createdProfile.phone_number,
+      parentName: createdProfile.parent_name,
+      parentPhone: createdProfile.parent_phone,
+      parentEmail: createdProfile.parent_email,
+      timeZone: createdProfile.time_zone,
       subjects_of_interest: createdProfile.subjects_of_interest,
       languages_spoken: createdProfile.languages_spoken,
-      tutorIds: createdProfile.tutorIds,
+      tutorIds: createdProfile.tutor_ids,
       status: createdProfile.status,
       studentNumber: createdProfile.studentNumber,
-      settingsId: createdProfile.settingsId,
+      settingsId: createdProfile.settings_id,
     };
 
+    // return createdProfileData;
+    return {}
   } catch (error) {
-    const err = error as Error
-    console.error("Error creating user:", err);
+    const err = error as Error;
+    console.error("Error creating user:", error);
     throw error;
   }
 };
