@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   try {
     const newProfileData: CreatedProfileData = await request.json();
 
-    const profileData: Profile = await createUser(newProfileData);
+    const profileData: Partial<Profile> = await createUser(newProfileData);
     return NextResponse.json(
       { success: true, profileData: profileData },
       { status: 200 }
@@ -61,7 +61,7 @@ const createUser = async (newProfileData: CreatedProfileData) => {
         },
       });
 
-    if (authError) throw Error;
+    if (authError) throw new Error(authError.message);
 
     const userMetadata: UserMetadata = {
       email: newProfileData.email,
@@ -121,10 +121,11 @@ const createUser = async (newProfileData: CreatedProfileData) => {
       settingsId: createdProfile.settings_id,
     };
 
-    return createdProfileData;
+    // return createdProfileData;
+    return {}
   } catch (error) {
     const err = error as Error;
-    console.error("Error creating user:", err);
+    console.error("Error creating user:", error);
     throw error;
   }
 };
