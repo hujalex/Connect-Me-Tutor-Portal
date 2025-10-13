@@ -2,10 +2,13 @@ import { getSupabase } from "@/lib/supabase-server/serverClient";
 import { NextRequest, NextResponse } from "next/server";
 import { Profile, CreatedProfileData, Availability } from "@/types";
 
+
 interface UserMetadata {
+  email: string;
   role: "Student" | "Tutor" | "Admin";
-  first_name: string;
-  last_name: string;
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
   age: string;
   grade: string;
   gender: string;
@@ -26,15 +29,17 @@ export async function POST(request: NextRequest) {
   try {
     const newProfileData: CreatedProfileData = await request.json();
 
-    const userId = await createUser(newProfileData);
+    const profileData: Profile = await createUser(newProfileData);
     return NextResponse.json(
-      { success: true, userId: userId },
+      { success: true, profileData: profileData },
       { status: 200 }
     );
   } catch (error) {
+    const err = error as Error
     return NextResponse.json(
       {
-        error: error,
+        error: err,
+        message: err.message,
       },
       { status: 500 }
     );
@@ -43,14 +48,30 @@ export async function POST(request: NextRequest) {
 
 const createUser = async (
   newProfileData: CreatedProfileData
-): Promise<string | null> => {
+) => {
+
+  const supabase = await getSupabase(); 
   try {
     // Call signUp to create a new user
     console.log("CREATING USER", newProfileData);
-    const supabase = await getSupabase();
+
+
+
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: newProfileData.email,
+      password: newProfileData.password,
+      user_metadata: {
+        first_name: newProfileData.firstName,
+        last_name: newProfileData.lastName
+      },
+    });
+    
+    if (authError) throw Error
 
     const userMetadata: UserMetadata = {
+      email: newProfileData.email,
       role: newProfileData.role,
+      user_id: authData.user.id,
       first_name: newProfileData.firstName,
       last_name: newProfileData.lastName,
       age: newProfileData.age,
@@ -69,20 +90,43 @@ const createUser = async (
       languages_spoken: newProfileData.languages_spoken,
     };
 
-    const { data, error } = await supabase.auth.admin.createUser({
-      email: newProfileData.email,
-      password: newProfileData.password,
-      user_metadata: userMetadata,
-    });
+    const { data: createdProfile, error: profileError} = await supabase.from("Profiles").insert(
+        userMetadata
+    ).select().single()
 
-    if (error) {
-      throw new Error(`Error creating user: ${error.message}`);
+    if (profileError) {
+        console.log("DELETING USER")
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        throw profileError
     }
 
-    // Return the user ID
-    return data?.user?.id || null; // Use optional chaining to safely access id
+     return {
+      id: createdProfile.id, // Assuming 'id' is the generated key
+      createdAt: createdProfile.createdAt, // Assuming 'created_at' is the generated timestamp
+      userId: createdProfile.userId, // Adjust based on your schema
+      role: createdProfile.role,
+      firstName: createdProfile.firstName,
+      lastName: createdProfile.lastName,
+      // dateOfBirth: createdProfile.dateOfBirth,
+      startDate: createdProfile.startDate,
+      availability: createdProfile.availability,
+      email: createdProfile.email,
+      phoneNumber: createdProfile.phoneNumber,
+      parentName: createdProfile.parentName,
+      parentPhone: createdProfile.parentPhone,
+      parentEmail: createdProfile.parentEmail,
+      timeZone: createdProfile.timeZone,
+      subjects_of_interest: createdProfile.subjects_of_interest,
+      languages_spoken: createdProfile.languages_spoken,
+      tutorIds: createdProfile.tutorIds,
+      status: createdProfile.status,
+      studentNumber: createdProfile.studentNumber,
+      settingsId: createdProfile.settingsId,
+    };
+
   } catch (error) {
-    console.error("Error creating user:", error);
-    return null; // Return null if there was an error
+    const err = error as Error
+    console.error("Error creating user:", err);
+    throw error;
   }
 };
