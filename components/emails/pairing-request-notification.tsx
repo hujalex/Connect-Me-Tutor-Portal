@@ -1,11 +1,8 @@
 import { Profile } from '@/types';
+import { PairingRequestNotificationEmailProps } from '@/types/email';
 import React from 'react';
 
-export interface PairingRequestNotificationEmailProps {
-  tutor: Profile;
-  student: Profile;
-  isPreview?: boolean;
-}
+
 
 export default function PairingRequestNotificationEmail({
   tutor,
@@ -29,7 +26,7 @@ export default function PairingRequestNotificationEmail({
         }}
       >
         <div style={{ fontSize: "24px", fontWeight: "bold", margin: "0" }}>
-          Connect Me Online Tutoring
+          Connect Me Free Tutoring & Mentoring
         </div>
       </div>
 
@@ -66,8 +63,8 @@ export default function PairingRequestNotificationEmail({
             }}
           >
             We have found a potential tutoring match for you! Below is information about a student 
-            who may be a good fit based on your expertise and availability. Please review the student`&apos;`s 
-            information and let us know if you`&apos;`re interested in this pairing opportunity.
+            who may be a good fit based on your expertise and availability. Please review the student&apos;s 
+            information and let us know if you&apos;re interested in this pairing opportunity.
           </div>
         </div>
 
@@ -358,7 +355,7 @@ export default function PairingRequestNotificationEmail({
             }}
           >
             If you have any questions about this potential match or need assistance, 
-            please contact <strong>Yulianna, Addison, or Claudia</strong>s.
+            please contact <strong>Yulianna, Addison, or Claudia</strong>.
           </div>
         </div>
 
@@ -408,7 +405,7 @@ export default function PairingRequestNotificationEmail({
         }}
       >
         <div style={{ color: "#8494A8", fontSize: "14px", margin: "0" }}>
-          Connect Me Online Tutoring | Connecting Students with Success
+          Connect Me Free Tutoring & Mentoring
         </div>
       </div>
     </div>
