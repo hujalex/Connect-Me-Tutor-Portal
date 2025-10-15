@@ -1,27 +1,10 @@
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatDateWithOptions, to12HourWithMinutes } from '@/lib/utils';
 import { Profile } from '@/types';
 import { PairingConfirmationEmailProps } from '@/types/email';
 import React from 'react';
 
 // Mock utility function since we don't have access to the actual one
-const to12Hour = (time: string) => {
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${displayHour}:${minutes} ${ampm}`;
-};
 
-// Mock types
-interface Availability {
-  day: string;
-  startTime: string;
-  endTime: string;
-}
-
-interface Meeting {
-  link: string;
-}
 
 
 export default function TutorPairingConfirmationEmail({
@@ -86,7 +69,7 @@ export default function TutorPairingConfirmationEmail({
             }}
           >
             Congratulations! You have been matched with a new student: <strong>{student.firstName} {student.lastName}</strong>. 
-            Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong> starting on <strong>{formatDate(startDate)}</strong>.
+            Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12HourWithMinutes(availability.startTime)} EST</strong> to <strong>{to12HourWithMinutes(availability.endTime)} EST</strong> starting on <strong>{formatDateWithOptions(startDate, {month: true, day: true})}</strong>.
             Please reach out to the student or their parent to introduce yourself and coordinate your tutoring schedule.
           </div>
         </div>

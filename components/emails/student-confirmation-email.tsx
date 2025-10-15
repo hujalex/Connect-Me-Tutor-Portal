@@ -1,4 +1,4 @@
-import { to12Hour } from "@/lib/utils";
+import { formatDateWithOptions, to12HourWithMinutes } from "@/lib/utils";
 import { Availability, Meeting, Profile } from "@/types";
 import { PairingConfirmationEmailProps } from "@/types/email";
 import {
@@ -15,6 +15,7 @@ import {
 export default function StudentPairingConfirmationEmail({
   student,
   tutor,
+  startDate,
   availability,
   meeting,
   isPreview = false,
@@ -82,7 +83,7 @@ export default function StudentPairingConfirmationEmail({
             }}
           >
             We are excited to let you know that {student.firstName} {student.lastName} has been matched
-            with a tutor! Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>. If unable to attend these sessions, please reach out to {tutor.email} to arrange a different time
+            with a tutor! Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12HourWithMinutes(availability.startTime)} EST</strong> to <strong>{to12HourWithMinutes(availability.endTime)} EST</strong> on <strong>{formatDateWithOptions(startDate, {month: true, day: true})}</strong>. If unable to attend these sessions, please reach out to {tutor.email} to arrange a different time
           </Text>
         </Section>
 
@@ -233,7 +234,7 @@ export default function StudentPairingConfirmationEmail({
             In the meantime, we recommend that you create an account on the
             Connect Me Tutor Portal so you can easily access the zoom link and
             communicate with the tutor through the website.
-          </Text>f
+          </Text>
           <Text
             style={{
               color: "#040405",
