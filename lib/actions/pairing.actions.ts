@@ -11,9 +11,9 @@ import { Availability, Enrollment, Meeting, Profile } from "@/types";
 import { ProfilePairingMetadata } from "@/types/profile";
 import axios, { AxiosResponse } from "axios"; // Not used, can be removed
 import { toast } from "react-hot-toast";
-import { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-matching-notification";
+import { PairingConfirmationEmailProps } from "@/types/email";
 import {
-  sendTutorMatchingNotificationEmail,
+  sendStudentPairingConfirmationEmail,
   sendTutorPairingConfirmationEmail,
 } from "./email.server.actions";
 import { addEnrollment } from "./admin.actions";
@@ -487,9 +487,10 @@ export const updatePairingMatchStatus = async (
 
     if (!meetingData) throw new Error("Unable to get meeting information");
 
-    const emailData: TutorMatchingNotificationEmailProps = {
+    const emailData: PairingConfirmationEmailProps = {
       student: studentData,
       tutor: tutorData,
+      startDate: autoEnrollment.startDate,
       availability: autoEnrollment.availability[0],
       meeting: meetingData,
     };
@@ -497,7 +498,7 @@ export const updatePairingMatchStatus = async (
     console.log("student", student);
 
     try {
-      await sendTutorMatchingNotificationEmail(emailData, studentData.email);
+      await sendStudentPairingConfirmationEmail(emailData, studentData.email);
       await sendTutorPairingConfirmationEmail(emailData, tutorData.email);
       console.log("Successfully sent tutor notification email");
     } catch (error) {

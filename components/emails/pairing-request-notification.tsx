@@ -1,11 +1,8 @@
 import { Profile } from '@/types';
+import { PairingRequestNotificationEmailProps } from '@/types/email';
 import React from 'react';
 
-export interface PairingRequestNotificationEmailProps {
-  tutor: Profile;
-  student: Profile;
-  isPreview?: boolean;
-}
+
 
 export default function PairingRequestNotificationEmail({
   tutor,
@@ -66,8 +63,8 @@ export default function PairingRequestNotificationEmail({
             }}
           >
             We have found a potential tutoring match for you! Below is information about a student 
-            who may be a good fit based on your expertise and availability. Please review the student`&apos;`s 
-            information and let us know if you`&apos;`re interested in this pairing opportunity.
+            who may be a good fit based on your expertise and availability. Please review the student&apos;s 
+            information and let us know if you&apos;re interested in this pairing opportunity.
           </div>
         </div>
 

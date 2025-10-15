@@ -4,9 +4,8 @@ import { createClient } from "../supabase/server";
 import { Table } from "../supabase/tables";
 import { Person } from "@/types/enrollment";
 import { PairingLogSchemaType } from "./types";
-import PairingRequestNotificationEmail, {
-  PairingRequestNotificationEmailProps,
-} from "@/components/emails/pairing-request-notification";
+import PairingRequestNotificationEmail from "@/components/emails/pairing-request-notification";
+import { PairingConfirmationEmailProps, PairingRequestNotificationEmailProps } from "@/types/email";
 import { getProfile, getProfileWithProfileId } from "../actions/user.actions";
 import {
   sendPairingRequestEmail,

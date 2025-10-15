@@ -1,150 +1,351 @@
-interface TutoringConfirmationEmailProps {
-  studentName?: string;
-  parentName?: string;
-  gender?: "male" | "female" | "other";
-  subjects?: string[];
-  sessionDay?: string;
-  sessionTime?: string;
-  firstSessionDate?: string;
-  zoomLink?: string;
-  tutorName?: string;
-  tutorEmail?: string;
-}
+import { to12Hour } from "@/lib/utils";
+import { Availability, Meeting, Profile } from "@/types";
+import { PairingConfirmationEmailProps } from "@/types/email";
+import {
+  Html,
+  Head,
+  Body,
+  Container,
+  Text,
+  Link,
+  Section,
+} from "@react-email/components";
 
-export default function TutoringConfirmationEmail({
-  studentName = "Sarah Johnson",
-  parentName = "Jennifer Johnson",
-  gender = "female",
-  subjects = [
-    "Math",
-    "Science",
-    "Social Studies",
-    "English/Reading/Writing",
-    "Time Management/Organization",
-    "Navigating Online Learning Platforms",
-  ],
-  sessionDay = "Saturdays",
-  sessionTime = "12-1 pm EST",
-  firstSessionDate = "Saturday, April 4th",
-  zoomLink = "https://zoom.us/j/1234567890",
-  tutorName = "Ms. Emily Rodriguez",
-  tutorEmail = "emily.rodriguez@connectme.com",
-}: TutoringConfirmationEmailProps) {
-  // Get pronouns based on gender
-  const getPronoun = (type: "subject" | "object" | "possessive") => {
+
+export default function StudentPairingConfirmationEmail({
+  student,
+  tutor,
+  availability,
+  meeting,
+  isPreview = false,
+}: PairingConfirmationEmailProps) {
+  // Helper function to get pronouns based on gender
+  const getPronouns = (gender: string) => {
     switch (gender) {
       case "male":
-        return type === "subject" ? "he" : type === "object" ? "him" : "his";
+        return { subject: "he", object: "him", possessive: "his" };
       case "female":
-        return type === "subject" ? "she" : type === "object" ? "her" : "her";
+        return { subject: "she", object: "her", possessive: "her" };
       default:
-        return type === "subject"
-          ? "they"
-          : type === "object"
-            ? "them"
-            : "their";
+        return { subject: "they", object: "them", possessive: "their" };
     }
   };
 
-  const subjectPronoun = getPronoun("subject");
-  const possessivePronoun = getPronoun("possessive");
+  // const pronouns = getPronouns(studentGender);
+
+  const EmailContent = () => (
+    <Container style={{ maxWidth: "600px", margin: "0 auto", padding: "20px" }}>
+      {/* Header */}
+      <Section
+        style={{
+          backgroundColor: "#0E5B94",
+          color: "#ffffff",
+          padding: "24px",
+          textAlign: "center",
+        }}
+      >
+        <Text style={{ fontSize: "24px", fontWeight: "bold", margin: "0" }}>
+          Connect Me Free Tutoring & Mentoring
+        </Text>
+      </Section>
+
+      {/* Main Content */}
+      <Section style={{ padding: "24px" }}>
+        {/* Greeting */}
+        <Text
+          style={{
+            color: "#040405",
+            fontSize: "16px",
+            lineHeight: "1.6",
+            margin: "0 0 24px 0",
+          }}
+        >
+          Dear {student.parentName || student.firstName + " " + student.lastName + "'s parent"},
+        </Text>
+
+        {/* Main Message */}
+        <Section
+          style={{
+            backgroundColor: "#B7E2F2",
+            borderLeft: "4px solid #6AB2D7",
+            padding: "16px",
+            borderRadius: "0 8px 8px 0",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              color: "#040405",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0",
+            }}
+          >
+            We are excited to let you know that {student.firstName} {student.lastName} has been matched
+            with a tutor! Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>. If unable to attend these sessions, please reach out to {tutor.email} to arrange a different time
+          </Text>
+        </Section>
+
+        {/* Tutor Information */}
+        <Section
+          style={{
+            backgroundColor: "#0B3967",
+            border: "1px solid #0E5B94",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#B7E2F2",
+              fontSize: "16px",
+              margin: "0 0 8px 0",
+            }}
+          >
+            Your Tutor
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 8px 0",
+            }}
+          >
+            <strong>Name:</strong> {tutor.firstName} {tutor.lastName}
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0",
+            }}
+          >
+            <strong>Email:</strong>{" "}
+            <Link
+              href={`mailto:${tutor.email}`}
+              style={{ color: "#B7E2F2", textDecoration: "underline" }}
+            >
+              {tutor.email}
+            </Link>
+          </Text>
+        </Section>
+
+        {/* Meeting Link */}
+        <Section
+          style={{
+            backgroundColor: "#0E5B94",
+            border: "2px solid #6AB2D7",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#B7E2F2",
+              fontSize: "18px",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            🎯 Join Your Tutoring Session
+          </Text>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 12px 0",
+              textAlign: "center",
+            }}
+          >
+            Click the link below to join your scheduled tutoring sessions:
+          </Text>
+          <Text
+            style={{
+              textAlign: "center",
+              margin: "0 0 16px 0",
+            }}
+          >
+            <Link
+              href={meeting.link}
+              style={{
+                backgroundColor: "#B7E2F2",
+                color: "#0E5B94",
+                padding: "12px 24px",
+                borderRadius: "6px",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "16px",
+                display: "inline-block",
+              }}
+            >
+              Join Meeting
+            </Link>
+          </Text>
+          <Text
+            style={{
+              color: "#B7E2F2",
+              fontSize: "14px",
+              lineHeight: "1.4",
+              margin: "0",
+              textAlign: "center",
+              wordBreak: "break-all",
+            }}
+          >
+            Or copy this link: <Link href={meeting.link} style={{ color: "#ffffff", textDecoration: "underline" }}>{meeting.link}</Link>
+          </Text>
+        </Section>
+
+        {/* Portal Instructions */}
+        <Section
+          style={{
+            backgroundColor: "#6AB2D7",
+            border: "1px solid #0E5B94",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#040405",
+              fontSize: "16px",
+              margin: "0 0 8px 0",
+            }}
+          >
+            Next Steps
+          </Text>
+          <Text
+            style={{
+              color: "#040405",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0 0 12px 0",
+            }}
+          >
+            In the meantime, we recommend that you create an account on the
+            Connect Me Tutor Portal so you can easily access the zoom link and
+            communicate with the tutor through the website.
+          </Text>f
+          <Text
+            style={{
+              color: "#040405",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0",
+            }}
+          >
+            Please check your inbox and spam for an email from Connect Me to
+            sign up for our tutor portal.
+          </Text>
+        </Section>
+
+        {/* Support Information */}
+        <Section
+          style={{
+            backgroundColor: "#8494A8",
+            border: "1px solid #495860",
+            borderRadius: "8px",
+            padding: "16px",
+            margin: "0 0 24px 0",
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#040405",
+              fontSize: "16px",
+              margin: "0 0 8px 0",
+            }}
+          >
+            Need Help?
+          </Text>
+          <Text
+            style={{
+              color: "#040405",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0",
+            }}
+          >
+            If you experience any issues, please reach out to{" "}
+            <Link
+              href="mailto:ykowalczyk@connectmego.org"
+              style={{ color: "#0E5B94", textDecoration: "underline", fontWeight: "bold" }}
+            >
+              ykowalczyk@connectmego.org
+            </Link>{" "}
+            for assistance.
+          </Text>
+        </Section>
+
+        {/* Closing */}
+        <Section style={{ paddingTop: "16px" }}>
+          <Text
+            style={{
+              color: "#30302F",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              margin: "0",
+            }}
+          >
+            Best,
+          </Text>
+          <Text
+            style={{
+              color: "#040405",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              fontWeight: "bold",
+              margin: "0",
+            }}
+          >
+            Connect Me Free Tutoring & Mentoring
+          </Text>
+        </Section>
+      </Section>
+
+      {/* Footer */}
+      <Section
+        style={{
+          backgroundColor: "#30302F",
+          padding: "16px",
+          textAlign: "center",
+          borderTop: "1px solid #495860",
+        }}
+      >
+        <Text style={{ color: "#8494A8", fontSize: "14px", margin: "0" }}>
+          Connect Me Free Tutoring & Mentoring
+        </Text>
+      </Section>
+    </Container>
+  );
+
+  if (isPreview) {
+    return (
+      <div
+        style={{ fontFamily: "Arial, sans-serif", backgroundColor: "#ffffff" }}
+      >
+        <EmailContent />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto bg-white font-sans">
-      {/* Email Subject Preview */}
-      <div className="bg-gray-100 p-4 rounded-t-lg border-b">
-        <p className="text-sm text-gray-600 mb-1">Subject:</p>
-        <p className="font-semibold text-gray-900">
-          {studentName}
-          {"'s"} Tutoring Sessions [PLEASE REPLY]
-        </p>
-      </div>
-
-      {/* Email Body */}
-      <div className="p-6">
-        <p className="mb-4 text-gray-900">Hi {parentName},</p>
-
-        <p className="mb-4 text-gray-900 leading-relaxed">
-          Thanks for signing up {studentName} to Connect Me Free Tutoring & Mentoring!
-          {"We've"} reviewed the application, and have matched{" "}
-          {possessivePronoun} with a tutor for the subjects requested:{" "}
-          <strong>{subjects.join(", ")}</strong>, for one session per week.
-        </p>
-
-        <p className="mb-4 text-gray-900 leading-relaxed">
-          {"We've scheduled"} {possessivePronoun} for{" "}
-          <strong>
-            {sessionDay} from {sessionTime}
-          </strong>
-          . We have included the Zoom link below, which will be reusable each
-          week.
-        </p>
-
-        {/* Highlighted Section */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-6">
-          <p className="text-blue-800 font-semibold text-center">
-            {studentName}
-            {"'s"} first session will be on {firstSessionDate} from{" "}
-            {sessionTime}.
-          </p>
-        </div>
-
-        <p className="mb-4 text-gray-900 leading-relaxed">
-          Be sure to set an alarm on your phone so you {"don't"} accidentally
-          miss your first tutoring class.
-        </p>
-
-        <p className="mb-4 text-gray-900 leading-relaxed">
-          <strong>
-            Please reply and confirm with us whether these dates/times work.
-          </strong>{" "}
-          The tutor should contact you a couple of days before the session, and
-          I have included their contact information below.
-        </p>
-
-        <p className="mb-6 text-gray-900 leading-relaxed">
-          {"We're"} looking forward to tutoring {studentName} the Connect Me
-          way!
-        </p>
-
-        {/* Session Details */}
-        <div className="bg-gray-50 rounded-lg p-5 mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            Session Details:
-          </h3>
-          <div className="space-y-2">
-            <p className="text-gray-900">
-              <strong>Zoom Link:</strong>{" "}
-              <a
-                href={zoomLink}
-                className="text-blue-600 underline hover:text-blue-800"
-              >
-                {zoomLink}
-              </a>
-            </p>
-            <p className="text-gray-900">
-              <strong>{"Tutor's Name:"}</strong> {tutorName}
-            </p>
-            <p className="text-gray-900">
-              <strong>Email:</strong>{" "}
-              <a
-                href={`mailto:${tutorEmail}`}
-                className="text-blue-600 underline hover:text-blue-800"
-              >
-                {tutorEmail}
-              </a>
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 pt-4 border-t border-gray-200">
-          <p className="text-gray-900 leading-relaxed">
-            Best,
-            <br />
-            Connect Me Free Tutoring & Mentoring
-          </p>
-        </div>
-      </div>
-    </div>
+    <Html>
+      <Head />
+      <Body
+        style={{ fontFamily: "Arial, sans-serif", backgroundColor: "#ffffff" }}
+      >
+        <EmailContent />
+      </Body>
+    </Html>
   );
 }

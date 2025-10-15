@@ -101,15 +101,19 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 };
 
 export const getProfileByEmail = async (email: string) => {
-  const { data, error } = await supabase
-    .from(Table.Profiles)
-    .select("*")
-    .eq("email", email)
-    .single();
-  if (error) throw new Error(`Profile fetch failed: ${error.message}`);
-  const userProfile: Profile | null = await tableToIntefaceProfiles(data);
+  try {
+    const { data, error } = await supabase
+      .from(Table.Profiles)
+      .select("*")
+      .eq("email", email)
+      .single();
+    if (error) throw new Error(`Profile fetch failed: ${error.message}`);
+    const userProfile: Profile | null = await tableToIntefaceProfiles(data);
 
-  return userProfile;
+    return userProfile;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const getProfileRole = async (
