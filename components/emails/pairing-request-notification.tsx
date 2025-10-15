@@ -29,7 +29,7 @@ export default function PairingRequestNotificationEmail({
         }}
       >
         <div style={{ fontSize: "24px", fontWeight: "bold", margin: "0" }}>
-          Connect Me Online Tutoring
+          Connect Me Free Tutoring & Mentoring
         </div>
       </div>
 
@@ -358,7 +358,7 @@ export default function PairingRequestNotificationEmail({
             }}
           >
             If you have any questions about this potential match or need assistance, 
-            please contact <strong>Yulianna, Addison, or Claudia</strong>s.
+            please contact <strong>Yulianna, Addison, or Claudia</strong>.
           </div>
         </div>
 
@@ -408,7 +408,7 @@ export default function PairingRequestNotificationEmail({
         }}
       >
         <div style={{ color: "#8494A8", fontSize: "14px", margin: "0" }}>
-          Connect Me Online Tutoring | Connecting Students with Success
+          Connect Me Free Tutoring & Mentoring
         </div>
       </div>
     </div>

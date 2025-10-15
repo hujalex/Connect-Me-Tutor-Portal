@@ -53,7 +53,7 @@ export default function TutorPairingConfirmationEmail({
         }}
       >
         <div style={{ fontSize: "24px", fontWeight: "bold", margin: "0" }}>
-          Connect Me Online Tutoring
+          Connect Me Free Tutoring & Mentoring
         </div>
       </div>
 
@@ -458,7 +458,7 @@ export default function TutorPairingConfirmationEmail({
               margin: "0",
             }}
           >
-            Connect Me Online Tutoring Team
+            Connect Me Free Tutoring & Mentoring
           </div>
         </div>
       </div>

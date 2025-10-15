@@ -1,3 +1,4 @@
+"use server"
 import { PairingMatch } from "@/types/pairing";
 import { createClient } from "../supabase/server";
 import { Table } from "../supabase/tables";
@@ -11,6 +12,7 @@ import {
   sendPairingRequestEmail,
 } from "../actions/email.server.actions";
 import { Profile } from "@/types";
+import { getSupabase } from "../supabase-server/serverClient";
 
 type QueueItem = {
   pairing_request_id: string;
@@ -24,6 +26,7 @@ type QueueItemMatch = QueueItem & {
   match_profile: Person;
   requestor_profile: Person;
 };
+
 
 const sendPairingRequestNotification = async (
   tutorId: string,
@@ -44,14 +47,23 @@ const sendPairingRequestNotification = async (
   }
 };
 
-export const runPairingWorkflow = async () => {
-  // console.log("STARTING PAIRING WORKFLOW");
-  const supabase = createClient();
-
-  const updatePairingStatus = (requestId: string, status: "paired") =>
+const updatePairingStatus = (supabase: any, requestId: string, status: "paired") => {
     supabase.from("pairing_requests").update({ status }).eq("id", requestId);
+}
 
+const buildMatches = async (matches: QueueItemMatch[]): Promise<PairingMatch[]> => {
+  return matches.map((match) => ({
+    student_id: match.requestor_profile.id,
+    tutor_id: match.match_profile.id,
+    similarity: match.similarity,
+  }) as PairingMatch)
+}
+
+export const runPairingWorkflow = async () => {
+  console.log("STARTING PAIRING WORKFLOW");
   const logs: PairingLogSchemaType[] = [];
+
+  const supabase = createClient();
 
   // Get top pairing requests for tutors & students
   const [tutorQueueResult, studentQueueResult] = await Promise.all([
@@ -108,12 +120,7 @@ export const runPairingWorkflow = async () => {
           },
         });
         console.log("Running student pairing");
-        await updatePairingStatus(studentReq.pairing_request_id, "paired");
-
-        studentMatches.push(result);
-
-        // ✅ Immediately mark student as paired
-        await updatePairingStatus(studentReq.pairing_request_id, "paired");
+        await updatePairingStatus(supabase, studentReq.pairing_request_id, "paired");
 
         studentMatches.push(result);
       } else {
@@ -144,7 +151,7 @@ export const runPairingWorkflow = async () => {
       if (error) console.error("Tutor best_match error:", error);
 
       if (result as QueueItemMatch) {
-        await updatePairingStatus(tutorReq.pairing_request_id, "paired");
+        await updatePairingStatus(supabase, tutorReq.pairing_request_id, "paired");
         await sendPairingRequestNotification(
           result.requestor_profile.id,
           result.match_profile.id
@@ -175,23 +182,9 @@ export const runPairingWorkflow = async () => {
   }
 
   // Build matches for DB insert
-  const matchedStudents: PairingMatch[] = studentMatches.map(
-    (match) =>
-      ({
-        student_id: match.requestor_profile.id,
-        tutor_id: match.match_profile.id,
-        similarity: match.similarity,
-      }) as PairingMatch
-  );
+  const matchedStudents: PairingMatch[] = await buildMatches(studentMatches)
+  const matchedTutors: PairingMatch[] = await buildMatches(tutorMatches)
 
-  const matchedTutors: PairingMatch[] = tutorMatches.map(
-    (match) =>
-      ({
-        student_id: match.match_profile.id,
-        tutor_id: match.requestor_profile.id,
-        similarity: match.similarity,
-      }) as PairingMatch
-  );
 
   console.log(matchedStudents);
 
@@ -218,13 +211,33 @@ export const runPairingWorkflow = async () => {
 
   // console.log(matchedTutors, matchedStudents);
 
-  const r1 = await supabase
+  const {data: r1, error: r1Error} = await supabase
     .from("pairing_matches")
     .insert(
       [...matchedStudents, ...matchedTutors].filter(
         ({ similarity }) => similarity
       )
     );
+
+  // dummy insert
+  if (r1Error) throw r1Error
+
+
+  const student_id = 'aa21a1c4-c57b-42b7-97ba-084bc0a480a0'
+  const tutor_id = 'f546b169-8ac1-41b3-bbad-5717e44e2564'
+
+  // const {data: dummyData, error: dummyError} = await supabase.from("pairing_matches").insert(
+  //   {student_id: student_id,
+  //     tutor_id: tutor_id,
+  //     similarity: 0.8,
+  //   }
+  // )
+
+  // if (dummyError) {
+  //   console.error("FAILED DUMMY TEST", dummyError)
+  //   throw dummyError
+  // }
+
 
   // Insert logs
   const r2 = await supabase

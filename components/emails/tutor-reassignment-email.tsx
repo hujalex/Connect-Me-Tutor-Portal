@@ -139,7 +139,7 @@ export default function TutorReassignmentEmail({
           <p className="text-gray-900 leading-relaxed">
             Best,
             <br />
-            Connect Me Online Tutoring Team
+            Connect Me Free Tutoring & Mentoring
           </p>
         </div>
       </div>

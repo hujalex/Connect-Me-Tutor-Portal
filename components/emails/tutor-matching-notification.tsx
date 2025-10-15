@@ -313,7 +313,7 @@ export default function TutorMatchingNotificationEmail({
               margin: "0",
             }}
           >
-            Connect Me Online Tutoring Team
+            Connect Me Free Tutoring & Mentoring
           </Text>
         </Section>
       </Section>
@@ -328,7 +328,7 @@ export default function TutorMatchingNotificationEmail({
         }}
       >
         <Text style={{ color: "#8494A8", fontSize: "14px", margin: "0" }}>
-          Connect Me Online Tutoring | Connecting Students with Success
+          Connect Me Free Tutoring & Mentoring
         </Text>
       </Section>
     </Container>

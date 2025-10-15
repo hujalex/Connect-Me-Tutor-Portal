@@ -65,7 +65,7 @@ export default function TutoringConfirmationEmail({
         <p className="mb-4 text-gray-900">Hi {parentName},</p>
 
         <p className="mb-4 text-gray-900 leading-relaxed">
-          Thanks for signing up {studentName} to Connect Me Online Tutoring!
+          Thanks for signing up {studentName} to Connect Me Free Tutoring & Mentoring!
           {"We've"} reviewed the application, and have matched{" "}
           {possessivePronoun} with a tutor for the subjects requested:{" "}
           <strong>{subjects.join(", ")}</strong>, for one session per week.
@@ -141,7 +141,7 @@ export default function TutoringConfirmationEmail({
           <p className="text-gray-900 leading-relaxed">
             Best,
             <br />
-            Connect Me Online Tutoring Team
+            Connect Me Free Tutoring & Mentoring
           </p>
         </div>
       </div>
