@@ -1,41 +1,20 @@
+import { formatDate, formatDateWithOptions, to12HourWithMinutes } from '@/lib/utils';
 import { Profile } from '@/types';
+import { PairingConfirmationEmailProps } from '@/types/email';
 import React from 'react';
 
 // Mock utility function since we don't have access to the actual one
-const to12Hour = (time: string) => {
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${displayHour}:${minutes} ${ampm}`;
-};
 
-// Mock types
-interface Availability {
-  day: string;
-  startTime: string;
-  endTime: string;
-}
 
-interface Meeting {
-  link: string;
-}
-
-export interface TutorPairingConfirmationEmailProps {
-  tutor: Profile;
-  student: Profile;
-  availability: Availability;
-  meeting: Meeting 
-  isPreview?: boolean;
-}
 
 export default function TutorPairingConfirmationEmail({
   tutor,
   student,
   availability,
+  startDate,
   meeting,
   isPreview = false,
-}: TutorPairingConfirmationEmailProps) {
+}: PairingConfirmationEmailProps) {
   
   // Extract data from student object with fallbacks
   const subjects = student.subjects_of_interest || ['TBD'];
@@ -53,7 +32,7 @@ export default function TutorPairingConfirmationEmail({
         }}
       >
         <div style={{ fontSize: "24px", fontWeight: "bold", margin: "0" }}>
-          Connect Me Online Tutoring
+          Connect Me Free Tutoring & Mentoring
         </div>
       </div>
 
@@ -90,7 +69,7 @@ export default function TutorPairingConfirmationEmail({
             }}
           >
             Congratulations! You have been matched with a new student: <strong>{student.firstName} {student.lastName}</strong>. 
-            Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12Hour(availability.startTime)} EST</strong> to <strong>{to12Hour(availability.endTime)} EST</strong>.
+            Your sessions will occur on <strong>{availability.day}</strong> from <strong>{to12HourWithMinutes(availability.startTime)} EST</strong> to <strong>{to12HourWithMinutes(availability.endTime)} EST</strong> starting on <strong>{formatDateWithOptions(startDate, {month: true, day: true})}</strong>.
             Please reach out to the student or their parent to introduce yourself and coordinate your tutoring schedule.
           </div>
         </div>
@@ -458,7 +437,7 @@ export default function TutorPairingConfirmationEmail({
               margin: "0",
             }}
           >
-            Connect Me Online Tutoring Team
+            Connect Me Free Tutoring & Mentoring
           </div>
         </div>
       </div>

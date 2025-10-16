@@ -1,17 +1,14 @@
 "use server";
 import { Session } from "@/types";
 import { Client } from "@upstash/qstash";
-import TutorMatchingNotificationEmail, {
-  TutorMatchingNotificationEmailProps,
-} from "@/components/emails/tutor-matching-notification";
+import StudentPairingConfirmationEmail from "@/components/emails/student-confirmation-email";
 import { render } from "@react-email/components";
 import React from "react";
 import { Resend } from "resend";
-import PairingRequestNotificationEmail, {
-  PairingRequestNotificationEmailProps,
-} from "@/components/emails/pairing-request-notification";
+import PairingRequestNotificationEmail from "@/components/emails/pairing-request-notification";
 import TutoringConfirmationEmail from "@/components/emails/student-confirmation-email";
-import TutorPairingConfirmationEmail, { TutorPairingConfirmationEmailProps } from "@/components/emails/tutor-confirmation-email";
+import TutorPairingConfirmationEmail from "@/components/emails/tutor-confirmation-email";
+import { PairingConfirmationEmailProps, PairingRequestNotificationEmailProps  } from "@/types/email";
 
 export async function fetchScheduledMessages() {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
@@ -171,19 +168,17 @@ export async function scheduleEmail({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function sendTutorMatchingNotificationEmail(
-  data: TutorMatchingNotificationEmailProps,
+export async function sendStudentPairingConfirmationEmail(
+  data: PairingConfirmationEmailProps,
   emailTo: string
 ) {
-  console.log("Sending Match confirmation notification");
-  console.log("rendering with", data);
   const emailHtml = await render(
-    React.createElement(TutorMatchingNotificationEmail, data)
+    React.createElement(StudentPairingConfirmationEmail, data)
   );
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <pairings@connectmego.app>",
-    to: emailTo,
-    cc: ["ahu@connectmego.org", "ykowalczyk@connectmego.org "],
+    to: "ahu@connectmego.org",
+    cc: ["ahu@connectmego.org"],
     subject: "You Have Been Matched!",
     html: emailHtml,
   });
@@ -204,23 +199,23 @@ export async function sendPairingRequestEmail(
 
   const emailResult = await resend.emails.send({
     from: "reminder@connectmego.app",
-    to: emailTo,
-    cc: ['ykowalczyk@connectmego.org', 'ahu@connectmego.org'],
+    to: "ahu@connectmego.org",
+    cc: ['ahu@connectmego.org'],
     subject: "Connect Me Pairing Request",
     html: emailHtml,
   });
   return emailResult;
 }
 
-export async function sendTutorPairingConfirmationEmail(data: TutorPairingConfirmationEmailProps, emailTo: string) {
+export async function sendTutorPairingConfirmationEmail(data: PairingConfirmationEmailProps, emailTo: string) {
   const emailHtml = await render(
     React.createElement(TutorPairingConfirmationEmail, data)
   );
   console.log("Sending confirmation for tutor")
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <confirmation@connectmego.app>",
-    to: emailTo,
-    cc: ['ykowalczyk@connectmego.org', 'ahu@connectmego.org'],
+    to: "ahu@connectmego.org",
+    cc: ['', 'ahu@connectmego.org'],
     subject: "Confirmed for Tutoring",
     html: emailHtml,
   });

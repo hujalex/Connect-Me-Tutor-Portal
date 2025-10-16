@@ -65,6 +65,69 @@ export function formatDate(dateString: string): string {
   return date.toLocaleDateString("en-US", options);
 }
 
+
+/**
+ * Formats a date string with customizable options for display.
+ * 
+ * @param dateString - The date string to format (should be parseable by the Date constructor)
+ * @param options - Configuration options for formatting the date
+ * @param options.includeYear - Whether to include the year in the output
+ * @param options.includeMonth - Whether to include the month in the output
+ * @param options.includeDay - Whether to include the day in the output
+ * @param options.includeHour - Whether to include the hour in the output
+ * @param options.includeMinute - Whether to include the minute in the output
+ * @param options.includeSecond - Whether to include the second in the output
+ * @param options.timeZone - The IANA timezone identifier (defaults to "America/New_York")
+ * @param options.timeZoneName - The format for displaying the timezone name (defaults to "short")
+ * 
+ * @returns The formatted date string
+ * 
+ * @example
+ * ```typescript
+ * formatDateWithOptions("2024-01-15T10:30:00Z", {
+ *   includeYear: true,
+ *   includeMonth: true,
+ *   includeDay: true,
+ *   includeHour: true,
+ *   includeMinute: true
+ * });
+ * ```
+ */
+export function formatDateWithOptions(
+  dateString: string,
+  options: {
+    year?: boolean;
+    month?: boolean;
+    day?: boolean;
+    hour?: boolean;
+    minute?: boolean;
+    second?: boolean;
+    timeZone?: string;
+    timeZoneName?:
+      | "short"
+      | "long"
+      | "shortOffset"
+      | "longOffset"
+      | "shortGeneric"
+      | "longGeneric";
+  }
+): string {
+  const date: Date = new Date(dateString);
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    year: options.year ? "numeric" : undefined,
+    month: options.month ? "long" : undefined,
+    day: options.day ? "numeric" : undefined,
+    hour: options.hour ? "numeric" : undefined,
+    minute: options.minute ? "numeric" : undefined,
+    second: options.second ? "numeric" : undefined,
+    timeZone: options.timeZone ? options.timeZone : "America/New_York",
+    timeZoneName: options.timeZoneName ? options.timeZoneName : undefined,
+  };
+
+  return date.toLocaleDateString("en-US", dateOptions);
+}
+
 export function formatDateAdmin(
   dateString: string,
   includeTime = true,
@@ -226,6 +289,14 @@ export function to12Hour(time24: string) {
   hour = hour % 12 || 12; // convert 0 to 12 for 12am
   return `${hour}${minute === 0 ? "" : `:${minute.toString().padStart(2, "0")}`}${ampm}`;
 }
+
+export const to12HourWithMinutes = (time: string) => {
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
 
 /**
  *

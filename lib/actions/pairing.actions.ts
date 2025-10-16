@@ -11,8 +11,11 @@ import { Availability, Enrollment, Meeting, Profile } from "@/types";
 import { ProfilePairingMetadata } from "@/types/profile";
 import axios, { AxiosResponse } from "axios"; // Not used, can be removed
 import { toast } from "react-hot-toast";
-import { TutorMatchingNotificationEmailProps } from "@/components/emails/tutor-matching-notification";
-import { sendTutorMatchingNotificationEmail, sendTutorPairingConfirmationEmail } from "./email.server.actions";
+import { PairingConfirmationEmailProps } from "@/types/email";
+import {
+  sendStudentPairingConfirmationEmail,
+  sendTutorPairingConfirmationEmail,
+} from "./email.server.actions";
 import { addEnrollment } from "./admin.actions";
 import { getOverlappingAvailabilites } from "./enrollment.actions";
 import { getSupabase } from "../supabase-server/serverClient";
@@ -432,7 +435,6 @@ export const updatePairingMatchStatus = async (
   const { student, tutor } = pairingMatch;
 
   if (status === "accepted") {
-
     const studentData: Profile | null = await getProfileWithProfileId(
       student.id
     );
@@ -485,9 +487,10 @@ export const updatePairingMatchStatus = async (
 
     if (!meetingData) throw new Error("Unable to get meeting information");
 
-    const emailData: TutorMatchingNotificationEmailProps = {
+    const emailData: PairingConfirmationEmailProps = {
       student: studentData,
       tutor: tutorData,
+      startDate: autoEnrollment.startDate,
       availability: autoEnrollment.availability[0],
       meeting: meetingData,
     };
@@ -495,9 +498,9 @@ export const updatePairingMatchStatus = async (
     console.log("student", student);
 
     try {
-      await sendTutorMatchingNotificationEmail(emailData, studentData.email);
-      await sendTutorPairingConfirmationEmail(emailData, tutorData.email)
-      console.log("Successfully sent tutor notification email")
+      await sendStudentPairingConfirmationEmail(emailData, studentData.email);
+      await sendTutorPairingConfirmationEmail(emailData, tutorData.email);
+      console.log("Successfully sent tutor notification email");
     } catch (error) {
       //rollback if error
       await supabase
@@ -510,11 +513,9 @@ export const updatePairingMatchStatus = async (
         .from("Pairings")
         .delete()
         .eq("tutor_id", tutor.id)
-        .eq("student_id", student.id)
+        .eq("student_id", student.id);
     }
     // Replace the fetch with:
-
-
 
     const log = await supabase.from("pairing_logs").insert([
       {
@@ -531,6 +532,8 @@ export const updatePairingMatchStatus = async (
   }
   //reset tutor and student status to be auto placed in que
   else if (status === "rejected") {
+
+    console.log("REJECTING PAIRING")
     const { data, error } = await supabase
       .from("pairing_requests")
       .update({
@@ -538,21 +541,24 @@ export const updatePairingMatchStatus = async (
       })
       .in("user_id", [student.id, tutor.id]);
 
-    console.log(data, error);
-    if (!error)
-      await supabase.from("pairing_logs").insert([
-        {
-          type: "pairing-match-rejected",
-          message: `${tutor.first_name} ${tutor.last_name} has declined ${student.first_name} ${student.last_name} as a student`,
-          error: false,
-          metadata: {
-            profile_id: profileId,
-          },
-        } as PairingLogSchemaType,
-      ]);
+    if (error) throw error;
+
+    const { error: deleteMatchError} = await supabase.from("pairing_matches").delete().eq("id", matchId);
+    
+    if (deleteMatchError) throw deleteMatchError
+
+    await supabase.from("pairing_logs").insert([
+      {
+        type: "pairing-match-rejected",
+        message: `${tutor.first_name} ${tutor.last_name} has declined ${student.first_name} ${student.last_name} as a student`,
+        error: false,
+        metadata: {
+          profile_id: profileId,
+        },
+      } as PairingLogSchemaType,
+    ]);
   }
 };
-
 
 // if (availabilities) {
 //         const firstAvailability = availabilities[0];

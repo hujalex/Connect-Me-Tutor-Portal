@@ -1,3 +1,4 @@
+"use server"
 // zoomLogger.ts
 import { createClient } from "@supabase/supabase-js";
 
