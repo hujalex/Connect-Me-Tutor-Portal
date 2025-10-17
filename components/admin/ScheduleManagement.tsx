@@ -38,7 +38,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -76,6 +78,7 @@ import {
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
+import { checkAvailableMeeting } from "@/lib/actions/meeting.server.actions";
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -266,56 +269,13 @@ const Schedule = () => {
   const isMeetingAvailable = async (session: Session, requestedDate: Date) => {
     try {
       setIsCheckingMeetingAvailability(true);
-      // if (Object.keys(meetingAvailabilityMap).length === 0)
-      //   await fetchAllSessionsFromSchedule();
-
-      const sessionsToSearch: Session[] | undefined =
-        await fetchDaySessionsFromSchedule(requestedDate);
-
-      const updatedMeetingAvailability: { [key: string]: boolean } = {};
-
-      if (!session.date || !isValid(parseISO(session.date))) {
-        toast.error("Invalid session date selected");
-        return;
-      }
-
-      meetings.forEach((meeting) => {
-        updatedMeetingAvailability[meeting.id] = true;
-      });
-      //
-      // const requestedSessionStartTime = parseISO(session.date);\
-      const requestedSessionStartTime = requestedDate;
-      const requestedSessionEndTime = addHours(
-        requestedSessionStartTime,
-        1 * session.duration
+      const updatedMeetingAvailability = await checkAvailableMeeting(
+        session,
+        requestedDate,
+        meetings
       );
-
-      meetings.forEach((meeting) => {
-        const hasConflict = sessionsToSearch
-          ? sessionsToSearch.some((existingSession) => {
-              return (
-                session.id !== existingSession.id &&
-                existingSession.meeting?.id === meeting.id &&
-                areIntervalsOverlapping(
-                  {
-                    start: requestedSessionStartTime,
-                    end: requestedSessionEndTime,
-                  },
-                  {
-                    start: existingSession.date
-                      ? parseISO(existingSession.date)
-                      : new Date(),
-                    end: existingSession.date
-                      ? addHours(parseISO(existingSession.date), 1)
-                      : new Date(),
-                  }
-                )
-              );
-            })
-          : false;
-        updatedMeetingAvailability[meeting.id] = !hasConflict;
-      });
       setMeetingAvailabilityMap(updatedMeetingAvailability);
+      console.log("Meeting Availability Map", updatedMeetingAvailability);
     } catch (error) {
       toast.error("Unable to find available meeting links");
       console.error("Unable to find available meeting links", error);
@@ -585,6 +545,41 @@ const Schedule = () => {
                       disabled={isCheckingMeetingAvailability}
                       className="col-span-3"
                     />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="duration" className="text-right">
+                      Duration
+                    </Label>{" "}
+                    <div className="col-span-3">
+                      {" "}
+                      <Select>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a time duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Duration</SelectLabel>
+                            {Array.from(
+                              { length: 12 },
+                              (_, i) => (i + 1) * 0.25
+                            ).map((duration) => {
+                              const minutes = (duration % 1) * 60;
+                              const hours = Math.floor(duration);
+
+                              return (
+                                <SelectItem
+                                  key={duration}
+                                  value={duration.toString()}
+                                >
+                                  {hours} {hours > 1 ? "hours" : "hour"}{" "}
+                                  {minutes} minutes
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="" className="text-right">
