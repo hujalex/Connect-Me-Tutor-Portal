@@ -39,7 +39,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const recipient: Profile = await getProfileByEmail(to);
+    const recipient: Profile | null = await getProfileByEmail(to);
+
+    if (!recipient) throw new Error("Unable to get recipient details")
+
     const { data: notification_settings, error } = await supabase
       .from("User_Notification_Settings")
       .select("email_tutoring_session_notifications_enabled")

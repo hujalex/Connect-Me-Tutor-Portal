@@ -49,13 +49,6 @@ export type PairingLog = {
 //   metadata?: Record<string, any>;
 // };
 
-interface AvailabilityItem {
-  // Fill in based on the actual structure inside the [Object] array
-  day?: string;
-  start_time?: string;
-  end_time?: string;
-}
-
 interface Person {
   id: string;
   email: string;
