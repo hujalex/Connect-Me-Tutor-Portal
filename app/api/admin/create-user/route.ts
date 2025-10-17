@@ -55,6 +55,7 @@ const createUser = async (newProfileData: CreatedProfileData) => {
       await supabase.auth.admin.createUser({
         email: newProfileData.email,
         password: newProfileData.password,
+        email_confirm: false,
         user_metadata: {
           first_name: newProfileData.firstName,
           last_name: newProfileData.lastName,
