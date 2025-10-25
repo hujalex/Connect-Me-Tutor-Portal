@@ -1,3 +1,4 @@
+"use client"
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { create } from "domain";
 
