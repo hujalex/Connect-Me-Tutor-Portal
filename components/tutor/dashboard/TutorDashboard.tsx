@@ -103,7 +103,7 @@ const TutorDashboard = () => {
         endOfWeek(new Date()).toISOString(),
         undefined,
         "date",
-        true
+        false
       );
 
       setCurrentSessions(currentSessionData);
@@ -114,7 +114,7 @@ const TutorDashboard = () => {
         undefined,
         "Active",
         "date",
-        true
+        false
       );
 
       setSessions(activeSessionData);

@@ -1,7 +1,7 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "../supabase/client";
 import {
   Profile,
   Session,
@@ -39,11 +39,6 @@ import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
 // import { getMeeting } from "./meeting.actions";
-
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
 
 export async function getEnrollments(
   tutorId: string

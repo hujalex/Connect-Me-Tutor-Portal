@@ -1,13 +1,11 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
+import { supabase } from "../supabase/client";
 import { AdminConversation } from "@/types/chat";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
+
 
 export async function fetchAdmins() {
   try {

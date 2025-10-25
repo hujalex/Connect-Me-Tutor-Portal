@@ -2,7 +2,7 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
-import { getSupabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import {
   Profile,
   Session,
@@ -59,7 +59,6 @@ export async function getAllProfiles(
   orderBy?: string | null,
   ascending?: boolean | null
 ): Promise<Profile[] | null> {
-  const supabase = getSupabase()
   try {
     const profileFields = `
       id,
@@ -111,7 +110,7 @@ export async function getAllProfiles(
     }
 
     // Map database fields to camelCase Profile model
-    const userProfiles: Profile[] = data.map((profile) => ({
+    const userProfiles: Profile[] = data.map((profile: any) => ({
       id: profile.id,
       createdAt: profile.created_at,
       role: profile.role,
@@ -173,7 +172,6 @@ export async function deleteUser(profileId: string) {
 
 export async function getUserFromId(profileId: string) {
   try {
-    const supabase = getSupabase()
     const { data: profile, error } = await supabase
       .from(Table.Profiles)
       .select(
@@ -267,7 +265,6 @@ export async function editUser(profile: Profile) {
     studentNumber,
   } = profile;
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase
       .from(Table.Profiles)
       .update({
@@ -301,7 +298,6 @@ export async function editUser(profile: Profile) {
 
 export async function deactivateUser(profileId: string) {
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase
       .from(Table.Profiles)
       .update({ status: "Inactive" })
@@ -318,7 +314,6 @@ export async function deactivateUser(profileId: string) {
 
 export async function reactivateUser(profileId: string) {
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase
       .from(Table.Profiles)
       .update({ status: "Active" })
@@ -350,7 +345,6 @@ export const createConfirmationEmail = async (
   tempPassword: string
 ) => {
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "signup",
       email: email,
@@ -367,7 +361,6 @@ export const createConfirmationEmail = async (
 
 export const resendEmailConfirmation = async (email: string) => {
   try {
-    const supabase = getSupabase()
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: email,
@@ -384,7 +377,6 @@ export const resendEmailConfirmation = async (email: string) => {
 
 /* SESSIONS */
 export async function createSession(sessionData: any) {
-  const supabase = getSupabase()
   const { data, error } = await supabase
     .from(Table.Sessions)
     .insert(sessionData)
@@ -401,7 +393,6 @@ export async function getAllSessions(
   ascending?: boolean
 ): Promise<Session[]> {
   try {
-    const supabase = getSupabase()
     let query = supabase.from(Table.Sessions).select(`
       id,
       enrollment_id,
@@ -462,7 +453,6 @@ export async function getAllSessions(
         duration: session.duration,
       }))
     );
-    console.log("Sessions", sessions);
 
     return sessions;
   } catch (error) {
@@ -540,7 +530,6 @@ export async function getAllSessions(
 // }
 
 export async function rescheduleSession(sessionId: string, newDate: string) {
-  const supabase = getSupabase()
   const { data, error } = await supabase
     .from(Table.Sessions)
     .update({
@@ -555,7 +544,6 @@ export async function rescheduleSession(sessionId: string, newDate: string) {
 
 export async function getSessionKeys(data?: Session[]) {
   const sessionKeys: Set<string> = new Set();
-  const supabase = getSupabase()
 
   if (!data) {
     const { data, error } = await supabase
@@ -691,7 +679,6 @@ export async function addOneSession(
   scheduleEmail: boolean = true
 ): Promise<void> {
   try {
-    const supabase = getSupabase()
 
     const newSession = {
       date: session.date,
@@ -741,7 +728,6 @@ export async function addOneSession(
 }
 
 async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
-  const supabase = getSupabase()
 
   const midLastWeek = subDays(midWeek, 7);
 
@@ -775,7 +761,6 @@ export async function addSessions(
   sessions: Session[]
 ) {
 
-  const supabase = getSupabase()
 
   try {
     const weekStart: Date = fromZonedTime(
@@ -970,144 +955,6 @@ export async function addSessions(
   }
 }
 
-async function logSessionInfo(
-  weekStartString: string,
-  weekStart: Date,
-  weekEnd: Date,
-  currentDate: Date,
-  sessionStartTime: Date,
-  sessionStartTimeEST: Date
-) {
-  console.log("ISO of week start", weekStartString);
-  console.log("date object of week start", weekStart);
-  console.log("Date object of week end,", weekEnd);
-  // console.log("Date Object EST of week Start", weekStartEST);
-  // console.log("Date object EST of Week End", weekEndEST);
-  console.log("Date object of day of session", currentDate);
-  console.log("Date object of day of session + hours", sessionStartTime);
-  console.log("EST, ", sessionStartTimeEST);
-  console.log(`ISOstring UTC, ${sessionStartTime.toISOString()}`);
-  console.log(`ISOstring EST, ${sessionStartTimeEST.toISOString()}`);
-  console.log(`${format(sessionStartTime, "yyyy-MM-dd'T'HH:mm:ss.SSS")}`);
-  console.log("-----------------");
-}
-
-// export async function addSessions(
-//   weekStartString: string,
-//   weekEndString: string,
-//   enrollments: Enrollment[],
-//   sessionsFetched: Session[]
-// ) {
-//   const weekStart = parseISO(weekStartString);
-//   const weekEnd = parseISO(weekEndString);
-//   const sessions: Session[] = [];
-
-//   const scheduledSessions: Set<string> = await getSessionKeys(sessionsFetched);
-
-//   for (const enrollment of enrollments) {
-//     const { student, tutor, availability } = enrollment;
-
-//     if (!student || !tutor) continue;
-
-//     for (const avail of availability) {
-//       const { day, startTime, endTime } = avail;
-
-//       if (!startTime || startTime.includes("-")) {
-//         console.error(`Invalid time format for availability: ${startTime}`);
-//         console.log("Errored Enrollment", enrollment);
-//         continue;
-//       }
-
-//       const [availStart, availEnd] = [startTime, endTime];
-
-//       if (!availStart || !availEnd) {
-//         console.error(
-//           `Invalid start or end time: start=${availStart}, end=${availEnd}`
-//         );
-//         continue;
-//       }
-
-//       let sessionDate = new Date(weekStart);
-//       while (sessionDate <= weekEnd) {
-//         if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
-//           const availStartTime = parse(
-//             availStart.toLowerCase(),
-//             "HH:mm",
-//             sessionDate
-//           );
-//           const availEndTime = parse(
-//             availEnd.toLowerCase(),
-//             "HH:mm",
-//             sessionDate
-//           );
-
-//           if (
-//             isNaN(availStartTime.getTime()) ||
-//             isNaN(availEndTime.getTime())
-//           ) {
-//             console.error(
-//               `Invalid parsed time: start=${availStart}, end=${availEnd}`
-//             );
-//             break;
-//           }
-
-//           const sessionStartTime = setMinutes(
-//             setHours(sessionDate, availStartTime.getHours()),
-//             availStartTime.getMinutes()
-//           );
-//           const sessionEndTime = setMinutes(
-//             setHours(sessionDate, availEndTime.getHours()),
-//             availEndTime.getMinutes()
-//           );
-
-//           if (
-//             isBefore(sessionStartTime, weekStart) ||
-//             isAfter(sessionEndTime, weekEnd)
-//           ) {
-//             sessionDate = addDays(sessionDate, 1);
-//             continue;
-//           }
-
-//           // Check for duplicates
-//           const sessionKey = `${student.id}-${tutor.id}-${format(
-//             sessionStartTime,
-//             "yyyy-MM-dd-HH:mm"
-//           )}`;
-//           if (scheduledSessions.has(sessionKey)) {
-//             console.warn(`Duplicate session detected: ${sessionKey}`);
-//             sessionDate = addDays(sessionDate, 1);
-//             continue;
-//           }
-
-//           console.log(enrollment);
-
-//           const { data: session, error } = await supabase
-//             .from(Table.Sessions)
-//             .insert({
-//               date: sessionStartTime.toISOString(),
-//               student_id: student.id,
-//               tutor_id: tutor.id,
-//               status: "Active",
-//               summary: enrollment.summary,
-//               meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
-//             })
-//             .single();
-
-//           if (error) {
-//             console.error("Error creating session:", error);
-//             continue;
-//           }
-
-//           sessions.push(session);
-//           scheduledSessions.add(sessionKey);
-//         }
-//         sessionDate = addDays(sessionDate, 1);
-//       }
-//     }
-//   }
-
-//   return sessions;
-// }
 
 // Function to update a session
 export async function updateSession(
@@ -1115,7 +962,6 @@ export async function updateSession(
   updateEmail: boolean = true
 ) {
 
-  const supabase = getSupabase()
   try {
     const {
       id,
@@ -1187,7 +1033,6 @@ export async function removeSession(
   updateEmail: boolean = true
 ) {
 
-  const supabase = getSupabase()
   // Create a notification for the admin
   const { error: eventError } = await supabase
     .from(Table.Sessions)
@@ -1206,7 +1051,6 @@ export async function removeSession(
 /* MEETINGS */
 export async function getMeetings(): Promise<Meeting[] | null> {
 
-  const supabase = getSupabase()
 
   try {
     // Fetch meeting details from Supabase
@@ -1219,7 +1063,6 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         name
       `);
 
-    console.log("Data: ", data);
 
     // Check for errors and log them
     if (error) {
@@ -1277,7 +1120,6 @@ export const createEnrollment = async (
 
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
-  const supabase = getSupabase()
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
@@ -1333,7 +1175,6 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
 
 export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
 
-  const supabase = getSupabase()
   try {
     const { data, error } = await supabase
       .from(Table.Enrollments)
@@ -1341,8 +1182,6 @@ export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
       .eq("id", enrollment.id)
       .select()
       .single();
-    console.log("Updated summer");
-    console.log(data);
 
     if (error) throw error;
 
@@ -1355,7 +1194,6 @@ export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
 
 export async function getMeeting(id: string): Promise<Meeting | null> {
 
-  const supabase = getSupabase()
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
@@ -1400,7 +1238,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
 
 export const updateEnrollment = async (enrollment: Enrollment) => {
 
-  const supabase = getSupabase()
 
   try {
     const now = new Date().toISOString();
@@ -1473,16 +1310,13 @@ export const addEnrollment = async (
   sendEmail?: boolean
 ) => {
 
-  const supabase = getSupabase()
 
   try {
-    console.log("Duration", enrollment.availability[0]);
 
     const duration = await handleCalculateDuration(
       enrollment.availability[0].startTime,
       enrollment.availability[0].endTime
     );
-    console.log("Duration", duration);
 
     if (enrollment.duration <= 0)
       throw new Error("Duration should be a positive amount");
@@ -1520,7 +1354,6 @@ export const addEnrollment = async (
       throw error;
     }
 
-    console.log(data);
 
     return {
       createdAt: data.created_at,
@@ -1542,7 +1375,6 @@ export const addEnrollment = async (
 
 export const removeFutureSessions = async (enrollmentId: string) => {
 
-  const supabase = getSupabase()
 
   try {
     const now: string = new Date().toISOString();
@@ -1554,7 +1386,6 @@ export const removeFutureSessions = async (enrollmentId: string) => {
         .eq("status", "Active")
         .gte("date", now);
 
-    console.log("Successfully deleted sessions");
 
     if (deleteSessionsError) {
       throw deleteSessionsError;
@@ -1567,7 +1398,6 @@ export const removeFutureSessions = async (enrollmentId: string) => {
 
 export const removeEnrollment = async (enrollmentId: string) => {
 
-  const supabase = getSupabase()
 
   await removeFutureSessions(enrollmentId);
 
@@ -1583,7 +1413,6 @@ export const removeEnrollment = async (enrollmentId: string) => {
 /* EVENTS */
 export async function getEvents(tutorId: string): Promise<Event[]> {
 
-  const supabase = getSupabase()
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
@@ -1608,7 +1437,6 @@ export async function getEvents(tutorId: string): Promise<Event[]> {
 
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return []; // Valid return
     }
 
@@ -1637,7 +1465,6 @@ export async function getEventsWithTutorMonth(
   selectedMonth: string
 ): Promise<Event[] | null> {
 
-  const supabase = getSupabase()
 
   try {
     // Fetch event details filtered by tutor IDs and selected month
@@ -1672,7 +1499,6 @@ export async function getEventsWithTutorMonth(
 
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return null;
     }
 
@@ -1696,7 +1522,6 @@ export async function getEventsWithTutorMonth(
 
 export async function createEvent(event: Event) {
 
-  const supabase = getSupabase()
 
   // Create a notification for the admin
   const { error: eventError } = await supabase.from("Events").insert({
@@ -1714,7 +1539,6 @@ export async function createEvent(event: Event) {
 
 export async function removeEvent(eventId: string): Promise<boolean> {
 
-  const supabase = getSupabase()
 
   try {
     // Validate eventId format
@@ -1751,7 +1575,6 @@ export async function removeEvent(eventId: string): Promise<boolean> {
 /* NOTIFICATIONS */
 export async function getAllNotifications(): Promise<Notification[] | null> {
 
-  const supabase = getSupabase()
 
   try {
     // Fetch meeting details from Supabase
@@ -1775,7 +1598,6 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
 
     // Check if data exists
     if (!data) {
-      console.log("No notifications found:");
       return null; // Valid return
     }
 
@@ -1806,7 +1628,6 @@ export const updateNotification = async (
   status: "Active" | "Resolved"
 ) => {
 
-  const supabase = getSupabase()
 
   try {
     const { data, error } = await supabase

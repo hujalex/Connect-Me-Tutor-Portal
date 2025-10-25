@@ -1,13 +1,9 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "../supabase/client";
 import { Profile } from "@/types";
 import { Table } from "../supabase/tables";
 import { tableToIntefaceProfiles } from "../type-utils";
 import { table } from "console";
 
-export const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
 
 export const getUser = async () => {
   const {

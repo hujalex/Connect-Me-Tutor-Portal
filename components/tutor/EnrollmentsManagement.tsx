@@ -578,13 +578,12 @@ const EnrollmentList = () => {
           day: string;
           startTime: string;
           endTime: string;
-        }[] = await getOverlappingAvailabilites(
+        }[] | undefined = await getOverlappingAvailabilites(
           tutor.availability,
           student.availability
         );
         if (data) setOverlappingAvailabilites(data);
 
-        console.log(data);
       }
     } catch (error) {
       console.error("Unable to fetch overlapping availabilites");
