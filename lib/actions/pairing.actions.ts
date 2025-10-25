@@ -2,7 +2,8 @@
 
 import { PairingLog, PairingRequest, SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
-import { getProfile, getProfileRole, supabase } from "./user.actions";
+import { getProfile, getProfileRole,  } from "./user.actions";
+import { supabase } from "../supabase/client";
 import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
 import { PairingLogSchemaType } from "../pairing/types";

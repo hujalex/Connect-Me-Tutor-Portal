@@ -1,7 +1,7 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "../supabase/client";
 import {
   Profile,
   Session,
@@ -39,10 +39,6 @@ import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { getAllSessions } from "./admin.actions";
 // import { getMeeting } from "./meeting.actions";
 
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
 
 /**
  * Fetches all sessions within a 24-hour window around the requested date

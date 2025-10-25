@@ -1,20 +1,17 @@
 // lib/tutors.actions.ts
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "../supabase/client";
 import { Profile, Session } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./admin.actions";
 import { Stats } from "fs";
 import { Table } from "../supabase/tables";
 
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
 
 /** 
 @params 
-profileId - profile id of the user
+profileId - profile id of the user 
 startDate - Start Date in ISO String
 endDate - 
 
