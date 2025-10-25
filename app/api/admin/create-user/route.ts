@@ -45,18 +45,32 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Creates a new user through an email invite
+ * @param newProfileData 
+ * @returns 
+ */
+
 const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await getSupabase();
   try {
     // Call signUp to create a new user
     console.log("CREATING USER", newProfileData);
 
+    // const { data: authData, error: authError } =
+    //   await supabase.auth.admin.createUser({
+    //     email: newProfileData.email,
+    //     password: newProfileData.password,
+    //     email_confirm: false,
+    //     user_metadata: {
+    //       first_name: newProfileData.firstName,
+    //       last_name: newProfileData.lastName,
+    //     },
+    //   });
+
     const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
-        email: newProfileData.email,
-        password: newProfileData.password,
-        email_confirm: false,
-        user_metadata: {
+      await supabase.auth.admin.inviteUserByEmail(newProfileData.email, {
+        data: {
           first_name: newProfileData.firstName,
           last_name: newProfileData.lastName,
         },
@@ -123,7 +137,7 @@ const createUser = async (newProfileData: CreatedProfileData) => {
     };
 
     // return createdProfileData;
-    return {}
+    return {};
   } catch (error) {
     const err = error as Error;
     console.error("Error creating user:", error);
