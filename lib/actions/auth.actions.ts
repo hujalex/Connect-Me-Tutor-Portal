@@ -1,4 +1,5 @@
-import { getSupabase } from "@/lib/supabase-server/serverClient";
+"use client"
+import { getSupabase } from "@/lib/supabase/client";
 import { CreatedProfileData, Profile } from "@/types";
 import {
   createPassword,
@@ -9,12 +10,6 @@ import { NextResponse } from "next/server";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createPairingRequest, handleResolveQueues } from "./pairing.actions";
 import { X } from "lucide-react";
-
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
-
 
 
 export const createUser = async (
@@ -44,18 +39,6 @@ export const createUser = async (
   }
 };
 
-const sendInviteEmail = async (userData: CreatedProfileData) => {
-  let retries = 0;
-  try {
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(userData.email)
-    if (error) throw error;
-
-
-  } catch (error) {
-    console.error(error)
-    throw Error;
-  }
-}
 
 export const addUser = async (
   userData: Partial<Profile>,
@@ -63,6 +46,7 @@ export const addUser = async (
   isAddToPairing: boolean = false
 ) => {
   let userId: string | null = null;
+  const supabase = getSupabase()
   try {
     if (!userData.email) {
       throw new Error("Email is required to create a student profile");
@@ -130,9 +114,6 @@ export const addUser = async (
     // if (!userId) {
     //   throw new Error("Failed to create user account");
     // }
-
-    // await sendInviteEmail(newProfileData)
-    await sendConfirmationEmail(userData.email);
 
     return profileData;
   } catch (error) {

@@ -275,22 +275,7 @@ const EnrollmentList = () => {
             end: existingEndTime.getTime(),
           }
         );
-
-        // const isOverlap =
-        //   (newEnrollmentStartTime.getTime() === existingStartTime.getTime() &&
-        //     newEnrollmentEndTime.getTime() === existingEndTime.getTime()) ||
-        //   (newEnrollmentStartTime < existingEndTime &&
-        //     newEnrollmentStartTime > existingStartTime) ||
-        //   (newEnrollmentEndTime < existingEndTime &&
-        //     newEnrollmentEndTime > existingStartTime);
-        //-----Only change to false if true before-----
         if (updatedMeetingAvailability[enrollment.meetingId]) {
-          // if (isOverlap) {
-          //   console.log(newEnrollmentStartTime);
-          //   console.log(newEnrollmentEndTime);
-          //   console.log(existingStartTime);
-          //   console.log(existingEndTime);
-          // }
           updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
         }
       } catch (error) {
