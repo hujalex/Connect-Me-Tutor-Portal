@@ -105,7 +105,7 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
         endOfWeek(new Date()).toISOString(),
         undefined,
         "date",
-        true
+        false
       );
 
       console.log(currentSessionData);
@@ -118,7 +118,7 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
         undefined,
         "Active",
         "date",
-        true
+        false
       );
 
       setSessions(activeSessionData);
