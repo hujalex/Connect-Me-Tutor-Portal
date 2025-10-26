@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import ActiveSessionsTable from "./components/ActiveSessionsTable";
 import CurrentSessionsTable from "./components/CurrentSessionsTable";
 import CompletedSessionsTable from "./components/CompletedSessionsTable";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClientComponentClient, User } from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
 import {
   updateSession,
@@ -33,7 +33,9 @@ import { SelectSeparator } from "@radix-ui/react-select";
 import { Description } from "@radix-ui/react-dialog";
 import { getStudentSessions } from "@/lib/actions/student.actions";
 
-const StudentDashboard = () => {
+
+
+const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
   const supabase = createClientComponentClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -84,12 +86,12 @@ const StudentDashboard = () => {
       setLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      // const {
+      //   data: { user },
+      //   error: userError,
+      // } = await supabase.auth.getUser();
 
-      if (userError) throw new Error(userError.message);
+      // if (userError) throw new Error(userError.message);
       if (!user) throw new Error("No user found");
 
       const profileData = await getProfile(user.id);
@@ -103,7 +105,7 @@ const StudentDashboard = () => {
         endOfWeek(new Date()).toISOString(),
         undefined,
         "date",
-        true
+        false
       );
 
       console.log(currentSessionData);
@@ -116,7 +118,7 @@ const StudentDashboard = () => {
         undefined,
         "Active",
         "date",
-        true
+        false
       );
 
       setSessions(activeSessionData);

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
 import { getProfileRole } from '@/lib/actions/user.actions';
-import StudentDashboard from '@/components/student/DashboardContent';
+import StudentDashboard from '@/components/student/StudentDashboard';
 import TutorDashboard from '@/components/tutor/DashboardContent';
 import AdminDashboard from '@/components/admin/DashboardContent';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ firstName: string; lastName: string } | null>(null); // For displaying profile data
+  const [userData, setUserData] = useState<User | null>(null);
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -28,6 +29,7 @@ const Dashboard = () => {
           }
           // Simulating getting profile information from somewhere
           setProfile({ firstName: 'John', lastName: 'Doe' });
+          setUserData(user)
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -56,7 +58,7 @@ const Dashboard = () => {
   // Layout with Sidebar and Navbar
   return (
     <main>
-      {role === 'Student' && <StudentDashboard />}
+      {role === 'Student' && <StudentDashboard user={userData}/>}
       {role === 'Tutor' && <TutorDashboard />}
       {role === 'Admin' && <AdminDashboard />}
     </main>

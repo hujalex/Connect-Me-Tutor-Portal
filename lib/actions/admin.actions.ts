@@ -2,7 +2,7 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
-import { getSupabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import {
   Profile,
   Session,
@@ -59,7 +59,6 @@ export async function getAllProfiles(
   orderBy?: string | null,
   ascending?: boolean | null
 ): Promise<Profile[] | null> {
-  const supabase = getSupabase()
   try {
     const profileFields = `
       id,
@@ -173,7 +172,6 @@ export async function deleteUser(profileId: string) {
 
 export async function getUserFromId(profileId: string) {
   try {
-    const supabase = getSupabase()
     const { data: profile, error } = await supabase
       .from(Table.Profiles)
       .select(
@@ -267,7 +265,6 @@ export async function editUser(profile: Profile) {
     studentNumber,
   } = profile;
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase
       .from(Table.Profiles)
       .update({
@@ -301,7 +298,6 @@ export async function editUser(profile: Profile) {
 
 export async function deactivateUser(profileId: string) {
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase
       .from(Table.Profiles)
       .update({ status: "Inactive" })
@@ -318,7 +314,6 @@ export async function deactivateUser(profileId: string) {
 
 export async function reactivateUser(profileId: string) {
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase
       .from(Table.Profiles)
       .update({ status: "Active" })
@@ -350,7 +345,6 @@ export const createConfirmationEmail = async (
   tempPassword: string
 ) => {
   try {
-    const supabase = getSupabase()
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "signup",
       email: email,
@@ -367,7 +361,6 @@ export const createConfirmationEmail = async (
 
 export const resendEmailConfirmation = async (email: string) => {
   try {
-    const supabase = getSupabase()
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: email,
@@ -384,7 +377,6 @@ export const resendEmailConfirmation = async (email: string) => {
 
 /* SESSIONS */
 export async function createSession(sessionData: any) {
-  const supabase = getSupabase()
   const { data, error } = await supabase
     .from(Table.Sessions)
     .insert(sessionData)
@@ -401,7 +393,6 @@ export async function getAllSessions(
   ascending?: boolean
 ): Promise<Session[]> {
   try {
-    const supabase = getSupabase()
     let query = supabase.from(Table.Sessions).select(`
       id,
       enrollment_id,
@@ -540,7 +531,6 @@ export async function getAllSessions(
 // }
 
 export async function rescheduleSession(sessionId: string, newDate: string) {
-  const supabase = getSupabase()
   const { data, error } = await supabase
     .from(Table.Sessions)
     .update({
@@ -555,7 +545,6 @@ export async function rescheduleSession(sessionId: string, newDate: string) {
 
 export async function getSessionKeys(data?: Session[]) {
   const sessionKeys: Set<string> = new Set();
-  const supabase = getSupabase()
 
   if (!data) {
     const { data, error } = await supabase
@@ -691,7 +680,6 @@ export async function addOneSession(
   scheduleEmail: boolean = true
 ): Promise<void> {
   try {
-    const supabase = getSupabase()
 
     const newSession = {
       date: session.date,
@@ -741,7 +729,6 @@ export async function addOneSession(
 }
 
 async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
-  const supabase = getSupabase()
 
   const midLastWeek = subDays(midWeek, 7);
 
@@ -775,7 +762,6 @@ export async function addSessions(
   sessions: Session[]
 ) {
 
-  const supabase = getSupabase()
 
   try {
     const weekStart: Date = fromZonedTime(
@@ -1115,7 +1101,6 @@ export async function updateSession(
   updateEmail: boolean = true
 ) {
 
-  const supabase = getSupabase()
   try {
     const {
       id,
@@ -1187,7 +1172,6 @@ export async function removeSession(
   updateEmail: boolean = true
 ) {
 
-  const supabase = getSupabase()
   // Create a notification for the admin
   const { error: eventError } = await supabase
     .from(Table.Sessions)
@@ -1206,7 +1190,6 @@ export async function removeSession(
 /* MEETINGS */
 export async function getMeetings(): Promise<Meeting[] | null> {
 
-  const supabase = getSupabase()
 
   try {
     // Fetch meeting details from Supabase
@@ -1277,7 +1260,6 @@ export const createEnrollment = async (
 
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
-  const supabase = getSupabase()
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
@@ -1333,7 +1315,6 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
 
 export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
 
-  const supabase = getSupabase()
   try {
     const { data, error } = await supabase
       .from(Table.Enrollments)
@@ -1355,7 +1336,6 @@ export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
 
 export async function getMeeting(id: string): Promise<Meeting | null> {
 
-  const supabase = getSupabase()
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
@@ -1400,7 +1380,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
 
 export const updateEnrollment = async (enrollment: Enrollment) => {
 
-  const supabase = getSupabase()
 
   try {
     const now = new Date().toISOString();
@@ -1473,7 +1452,6 @@ export const addEnrollment = async (
   sendEmail?: boolean
 ) => {
 
-  const supabase = getSupabase()
 
   try {
     console.log("Duration", enrollment.availability[0]);
@@ -1542,7 +1520,6 @@ export const addEnrollment = async (
 
 export const removeFutureSessions = async (enrollmentId: string) => {
 
-  const supabase = getSupabase()
 
   try {
     const now: string = new Date().toISOString();
@@ -1567,8 +1544,6 @@ export const removeFutureSessions = async (enrollmentId: string) => {
 
 export const removeEnrollment = async (enrollmentId: string) => {
 
-  const supabase = getSupabase()
-
   await removeFutureSessions(enrollmentId);
 
   const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
@@ -1583,7 +1558,6 @@ export const removeEnrollment = async (enrollmentId: string) => {
 /* EVENTS */
 export async function getEvents(tutorId: string): Promise<Event[]> {
 
-  const supabase = getSupabase()
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
@@ -1636,8 +1610,6 @@ export async function getEventsWithTutorMonth(
   tutorId: string,
   selectedMonth: string
 ): Promise<Event[] | null> {
-
-  const supabase = getSupabase()
 
   try {
     // Fetch event details filtered by tutor IDs and selected month
@@ -1696,8 +1668,6 @@ export async function getEventsWithTutorMonth(
 
 export async function createEvent(event: Event) {
 
-  const supabase = getSupabase()
-
   // Create a notification for the admin
   const { error: eventError } = await supabase.from("Events").insert({
     date: event.date,
@@ -1713,8 +1683,6 @@ export async function createEvent(event: Event) {
 }
 
 export async function removeEvent(eventId: string): Promise<boolean> {
-
-  const supabase = getSupabase()
 
   try {
     // Validate eventId format
@@ -1750,8 +1718,6 @@ export async function removeEvent(eventId: string): Promise<boolean> {
 
 /* NOTIFICATIONS */
 export async function getAllNotifications(): Promise<Notification[] | null> {
-
-  const supabase = getSupabase()
 
   try {
     // Fetch meeting details from Supabase
@@ -1805,8 +1771,6 @@ export const updateNotification = async (
   notificationId: string,
   status: "Active" | "Resolved"
 ) => {
-
-  const supabase = getSupabase()
 
   try {
     const { data, error } = await supabase
