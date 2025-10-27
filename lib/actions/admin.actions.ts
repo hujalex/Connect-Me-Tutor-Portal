@@ -1261,6 +1261,7 @@ export const createEnrollment = async (
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
+    console.log("Fetching Enrollments")
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,
