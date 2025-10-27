@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from "react";
 import TutorCalendar from "../TutorCalendar";
 import { Input } from "@/components/ui/input";
-import SessionsTable from "./components/ActiveSessionsTable";
-import ActiveSessionsTable from "./components/ActiveSessionsTable";
-import CurrentSessionsTable from "./components/CurrentSessionsTable";
-import CompletedSessionsTable from "./components/CompletedSessionsTable";
+import SessionsTable from "../components/ActiveSessionsTable";
+import ActiveSessionsTable from "../components/ActiveSessionsTable";
+import CurrentSessionsTable from "../components/CurrentSessionsTable";
+import CompletedSessionsTable from "../components/CompletedSessionsTable";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
 import {

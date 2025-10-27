@@ -35,7 +35,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import { StudentAnnouncementsRoomId } from "@/constants/chat";
 import { UserAvailabilities } from "../ui/UserAvailabilities";
-import DeletePairingForm from "./dashboard/components/DeletePairingForm";
+import DeletePairingForm from "./components/DeletePairingForm";
 
 const StudentList = () => {
   const supabase = createClientComponentClient();

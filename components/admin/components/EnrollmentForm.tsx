@@ -103,7 +103,7 @@ const EnrollmentForm = ({
           <Plus className="mr-2 h-4 w-4" /> Add Enrollment
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Enrollment</DialogTitle>
         </DialogHeader>

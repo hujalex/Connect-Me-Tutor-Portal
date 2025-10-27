@@ -94,6 +94,7 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { profile } from "console";
 import AvailabilityForm2 from "../ui/availability-form-2";
+// import EnrollmentForm from "./components/EnrollmentForm";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
@@ -583,8 +584,6 @@ const EnrollmentList = () => {
           student.availability
         );
         if (data) setOverlappingAvailabilites(data);
-
-        console.log(data);
       }
     } catch (error) {
       console.error("Unable to fetch overlapping availabilites");
@@ -1090,10 +1089,45 @@ const EnrollmentList = () => {
           </div>
         </div>
       </div>
+{/* 
+      <EnrollmentForm
+        StudentOptions={{
+          openStudentOptions: openStudentOptions, // or your boolean value
+          selectedStudentId: selectedStudentId,
+          studentsMap: studentsMap,
+          studentsSearch: studentSearch,
+          students: students,
+          setOpenStudentOptions: setOpenStudentOptions,
+          setSelectedStudentId: setSelectedStudentId,
+          setStudentsSearch: setStudentSearch,
+        }}
+        TutorOptions={{
+          openTutorOptions: openTutorOptions,
+          selectedTutorId: selectedTutorId,
+          tutors: tutors,
+          tutorSearch: tutorSearch,
+          setOpenTutorOptions: setOpentTutorOptions,
+          setSelectedTutorId: setSelectedTutorId,
+          setTutorSearch: setTutorSearch
+        }}
+        AvailabilityProps = {{
+          availabilityList: availabilityList,
+          isCheckingMeetingAvailability: isCheckingMeetingAvailability,
+          meetings: meetings,
+          meetingAvailability: meetingAvailability,
+          setAvailabilityList: setAvailabilityList,
+          setAvailableMeetingsForEnrollments: 
+        }}
+        EnrollmentProps = {{
+          newEnrollment: newEnrollment,
+          setNewEnrollment: setNewEnrollment,
+          handleAddEnrollment: handleAddEnrollment
+        }}
+      /> */}
 
       {/* Edit Enrollment Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
