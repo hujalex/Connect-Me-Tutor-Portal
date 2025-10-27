@@ -643,7 +643,7 @@ const EnrollmentList = () => {
                     <Plus className="mr-2 h-4 w-4" /> Add Enrollment
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Add New Enrollment</DialogTitle>
                   </DialogHeader>
@@ -1142,7 +1142,7 @@ const EnrollmentList = () => {
 
       {/* Edit Enrollment Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
@@ -1475,7 +1475,7 @@ const EnrollmentList = () => {
 
       {/* Delete Enrollment Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Delete Enrollment</DialogTitle>
           </DialogHeader>

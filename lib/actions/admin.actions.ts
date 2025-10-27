@@ -2,7 +2,7 @@
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase, supabase, supabaseClient } from "@/lib/supabase/client";
 import {
   Profile,
   Session,
@@ -1379,8 +1379,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
 }
 
 export const updateEnrollment = async (enrollment: Enrollment) => {
-
-
   try {
     const now = new Date().toISOString();
 
@@ -1388,6 +1386,9 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       enrollment.availability[0].startTime,
       enrollment.availability[0].endTime
     );
+
+    console.log(enrollment)
+
 
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase

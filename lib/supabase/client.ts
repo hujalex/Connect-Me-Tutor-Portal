@@ -4,7 +4,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { create } from "domain";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-let supabaseInstance: SupabaseClient | null = null;
+let supabaseInstance: any | null = null;
 
 export const getSupabase =  () => {
   if (!supabaseInstance) {
@@ -16,6 +16,11 @@ export const getSupabase =  () => {
 
   return supabaseInstance;
 };
+
+export const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
