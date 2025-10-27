@@ -94,6 +94,9 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { profile } from "console";
 import AvailabilityForm2 from "../ui/availability-form-2";
+import { checkAvailableMeetingForEnrollments } from "@/lib/actions/meeting.server.actions";
+import { isDeepStrictEqual } from "util";
+// import EnrollmentForm from "./components/EnrollmentForm";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const EnrollmentList = () => {
@@ -102,6 +105,7 @@ const EnrollmentList = () => {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [allEnrollments, setAllEnrollments] = useState<Enrollment[]>([]);
   const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>(
     []
   );
@@ -301,6 +305,28 @@ const EnrollmentList = () => {
         );
       }
     );
+  };
+
+  const checkAvailableMeetings = async (
+    enrollment: Omit<Enrollment, "id" | "createdAt">
+  ) => {
+    setIsCheckingMeetingAvailability(true);
+    const otherEnrollments: Enrollment[] | null = allEnrollments.length > 0 
+      ? allEnrollments
+      : await getAllEnrollments();
+    if (otherEnrollments) {
+      console.log("Length of all Enrollments", otherEnrollments.length)
+      console.log("Checking Available Meetings");
+      const updatedMeetingAvailability =
+        await checkAvailableMeetingForEnrollments(
+          enrollment,
+          otherEnrollments,
+          meetings
+        );
+      setMeetingAvailability(updatedMeetingAvailability);
+      setAllEnrollments(otherEnrollments)
+      setIsCheckingMeetingAvailability(false);
+    }
   };
 
   const isMeetingAvailable = (
@@ -583,8 +609,6 @@ const EnrollmentList = () => {
           student.availability
         );
         if (data) setOverlappingAvailabilites(data);
-
-        console.log(data);
       }
     } catch (error) {
       console.error("Unable to fetch overlapping availabilites");
@@ -857,10 +881,11 @@ const EnrollmentList = () => {
                         <Label>Meeting Link</Label>
                         <Select
                           name="meetingId"
+                          disabled={isCheckingMeetingAvailability}
                           value={newEnrollment.meetingId}
                           onOpenChange={(open) => {
                             if (open && newEnrollment) {
-                              areMeetingsAvailable(newEnrollment);
+                              checkAvailableMeetings(newEnrollment);
                             }
                           }}
                           onValueChange={(value) =>
@@ -891,6 +916,7 @@ const EnrollmentList = () => {
                               <SelectItem
                                 key={meeting.id}
                                 value={meeting.id}
+                                disabled={isCheckingMeetingAvailability}
                                 className="flex items-center justify-between"
                               >
                                 <span>
@@ -1090,10 +1116,45 @@ const EnrollmentList = () => {
           </div>
         </div>
       </div>
+      {/* 
+      <EnrollmentForm
+        StudentOptions={{
+          openStudentOptions: openStudentOptions, // or your boolean value
+          selectedStudentId: selectedStudentId,
+          studentsMap: studentsMap,
+          studentsSearch: studentSearch,
+          students: students,
+          setOpenStudentOptions: setOpenStudentOptions,
+          setSelectedStudentId: setSelectedStudentId,
+          setStudentsSearch: setStudentSearch,
+        }}
+        TutorOptions={{
+          openTutorOptions: openTutorOptions,
+          selectedTutorId: selectedTutorId,
+          tutors: tutors,
+          tutorSearch: tutorSearch,
+          setOpenTutorOptions: setOpentTutorOptions,
+          setSelectedTutorId: setSelectedTutorId,
+          setTutorSearch: setTutorSearch
+        }}
+        AvailabilityProps = {{
+          availabilityList: availabilityList,
+          isCheckingMeetingAvailability: isCheckingMeetingAvailability,
+          meetings: meetings,
+          meetingAvailability: meetingAvailability,
+          setAvailabilityList: setAvailabilityList,
+          setAvailableMeetingsForEnrollments: 
+        }}
+        EnrollmentProps = {{
+          newEnrollment: newEnrollment,
+          setNewEnrollment: setNewEnrollment,
+          handleAddEnrollment: handleAddEnrollment
+        }}
+      /> */}
 
       {/* Edit Enrollment Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
@@ -1308,9 +1369,10 @@ const EnrollmentList = () => {
                   <Select
                     name="meetingId"
                     value={selectedEnrollment.meetingId}
+                    disabled={isCheckingMeetingAvailability}
                     onOpenChange={(open) => {
                       if (open && selectedEnrollment) {
-                        areMeetingsAvailable(selectedEnrollment);
+                        checkAvailableMeetings(selectedEnrollment);
                       }
                     }}
                     onValueChange={(value) =>
@@ -1335,6 +1397,7 @@ const EnrollmentList = () => {
                           key={meeting.id}
                           value={meeting.id}
                           className="flex items-center justify-between"
+                          disabled={isCheckingMeetingAvailability}
                         >
                           <span>
                             {meeting.name} - {meeting.id}

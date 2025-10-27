@@ -38,6 +38,7 @@ import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
+import { StdioNull } from "node:child_process";
 // import { getMeeting } from "./meeting.actions";
 
 const supabase = createClientComponentClient({
@@ -132,7 +133,7 @@ export const getOverlappingAvailabilites = async (
     startTime: string;
     endTime: string;
   }[]
-): Promise<Availability[] | undefined> => {
+): Promise<Availability[]> => {
   try {
     console.log(tutorAvailability);
     console.log(studentAvailability);
@@ -145,9 +146,11 @@ export const getOverlappingAvailabilites = async (
       }
     );
     if (error) throw error;
-    return data;
+    return data; 
   } catch (error) {
     console.error("Failed to get overlapping availabilities");
+    throw error
+    return []
   }
 };
 

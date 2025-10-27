@@ -82,6 +82,7 @@ import { areIntervalsOverlapping, previousDay, set } from "date-fns";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { checkAvailableMeetingForEnrollments } from "@/lib/actions/meeting.server.actions";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const durationSchema = z.object({
@@ -246,44 +247,12 @@ const EnrollmentList = () => {
     }
   };
 
-  const setAvailableMeetingsForEnrollments = (
+  const checkMeetingAvailabilities = async (
     enroll: Omit<Enrollment, "id" | "createdAt">
   ) => {
     setIsCheckingMeetingAvailability(true);
-    const updatedMeetingAvailability: { [key: string]: boolean } = {};
-    meetings.forEach((meeting) => {
-      updatedMeetingAvailability[meeting.id] = true;
-    });
-    const [newEnrollmentStartTime, newEnrollmentEndTime] = enroll
-      .availability[0]
-      ? formatAvailabilityAsDate(enroll.availability[0])
-      : [new Date(NaN), new Date(NaN)];
-    for (const enrollment of enrollments) {
-      if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
-      try {
-        const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
-          enrollment.availability[0]
-        );
 
-        const isOverlap = areIntervalsOverlapping(
-          {
-            start: newEnrollmentStartTime.getTime(),
-            end: newEnrollmentEndTime.getTime(),
-          },
-          {
-            start: existingStartTime.getTime(),
-            end: existingEndTime.getTime(),
-          }
-        );
-        if (updatedMeetingAvailability[enrollment.meetingId]) {
-          updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
-        }
-      } catch (error) {
-        console.error("Error processing enrollment date:", error);
-        console.log(enrollment.availability[0]);
-        updatedMeetingAvailability[enrollment.meetingId] = false;
-      }
-    }
+    const updatedMeetingAvailability = await checkAvailableMeetingForEnrollments(enroll, enrollments, meetings)
     setIsCheckingMeetingAvailability(false);
     setMeetingAvailability(updatedMeetingAvailability);
     Object.entries(updatedMeetingAvailability).forEach(
@@ -643,7 +612,7 @@ const EnrollmentList = () => {
                     <Plus className="mr-2 h-4 w-4" /> Add Enrollment
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Add New Enrollment</DialogTitle>
                   </DialogHeader>
@@ -904,7 +873,7 @@ const EnrollmentList = () => {
                           value={newEnrollment.meetingId}
                           onOpenChange={(open) => {
                             if (open && newEnrollment) {
-                              setAvailableMeetingsForEnrollments(newEnrollment);
+                              checkMeetingAvailabilities(newEnrollment);
                             }
                           }}
                           onValueChange={(value) =>
@@ -1142,7 +1111,7 @@ const EnrollmentList = () => {
 
       {/* Edit Enrollment Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
@@ -1424,7 +1393,7 @@ const EnrollmentList = () => {
                     value={selectedEnrollment.meetingId}
                     onOpenChange={(open) => {
                       if (open && selectedEnrollment) {
-                        setAvailableMeetingsForEnrollments(selectedEnrollment);
+                        checkMeetingAvailabilities(selectedEnrollment);
                       }
                     }}
                     onValueChange={(value) =>
@@ -1475,7 +1444,7 @@ const EnrollmentList = () => {
 
       {/* Delete Enrollment Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Delete Enrollment</DialogTitle>
           </DialogHeader>
