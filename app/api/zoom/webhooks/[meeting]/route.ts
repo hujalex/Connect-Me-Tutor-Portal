@@ -21,13 +21,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { meeting: string } }
 ) {
-  console.log("Received Zoom webhook request");
   const body = await req.json();
 
-  console.log("Request body:", body);
 
   const validationSecret = MEETING_ID_TO_SECRET[params.meeting];
-  console.log("secret: ", validationSecret);
   if (!validationSecret)
     return NextResponse.json({
       err: `failed to find credentials for meeting: ${params.meeting}`,

@@ -39,3 +39,13 @@ export function createClient() {
     }
   );
 }
+
+export const supabase = createServerComponentClient(
+  {
+    cookies: () => cookies(),
+  },
+  {
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  }
+)

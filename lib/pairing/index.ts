@@ -35,7 +35,6 @@ const sendPairingRequestNotification = async (
 
   const studentData: Profile | null = await getProfileWithProfileId(studentId);
 
-  console.log("Sending pairing request notification");
 
   if (tutorData && studentData) {
     const emailData: PairingRequestNotificationEmailProps = {
@@ -59,7 +58,6 @@ const buildMatches = async (matches: QueueItemMatch[]): Promise<PairingMatch[]> 
 }
 
 export const runPairingWorkflow = async () => {
-  console.log("STARTING PAIRING WORKFLOW");
   const logs: PairingLogSchemaType[] = [];
 
   const supabase = createClient();
@@ -75,8 +73,6 @@ export const runPairingWorkflow = async () => {
     studentQueueResult.data ?? [],
   ] as [QueueItem[], QueueItem[]];
 
-  console.log(tutorQueue.length);
-  console.log(studentQueue.length);
 
   // console.log("tutorQueue:", tutorQueue);
   // console.log("studentQueue:", studentQueue);
@@ -95,7 +91,6 @@ export const runPairingWorkflow = async () => {
   for (let i = 0; i < maxLength; i++) {
     // Handle students first (student → tutor)
     if (i < studentQueue.length) {
-      console.log("Student Queue");
       const studentReq = studentQueue[i];
       const { data, error } = await supabase
         .rpc("get_best_match", {
@@ -118,7 +113,6 @@ export const runPairingWorkflow = async () => {
             match_profile_id: result.match_profile.id,
           },
         });
-        console.log("Running student pairing");
         await updatePairingStatus(supabase, studentReq.pairing_request_id, "paired");
 
         studentMatches.push(result);
@@ -136,7 +130,6 @@ export const runPairingWorkflow = async () => {
 
     // Handle tutors (tutor → student)
     if (i < tutorQueue.length) {
-      console.log("Tutor Queue");
       const tutorReq = tutorQueue[i];
       const { data, error } = await supabase
         .rpc("get_best_match", {

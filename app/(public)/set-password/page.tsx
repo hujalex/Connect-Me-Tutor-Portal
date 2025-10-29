@@ -45,6 +45,10 @@ export default function ResetPassword() {
   const supabase = createClientComponentClient();
   const router = useRouter();
 
+  // const [isVerifying, setIsVerifying ] = useState(true)
+  // const [verificationError, setVerificationError ] = useState<string | null>(null);
+
+
   const [data, setData] = useState<{
     password: string;
     confirmPassword: string;
@@ -52,6 +56,35 @@ export default function ResetPassword() {
     password: "",
     confirmPassword: "",
   });
+
+  // useEffect(() => {
+  //   const verifyToken = async () => {
+  //     try {
+  //       const token_hash = searchParams.get('token_hash')
+  //       const type = searchParams.get('type')
+
+  //       if (!token_hash || type !== 'recovery') {
+  //         setVerificationError('Invalid or missing recovery token')
+  //         setIsVerifying(false)
+  //         return;
+  //       }
+  //       const { error } = await supabase.auth.verifyOtp({
+  //         token_hash,
+  //         type: 'recovery',
+  //       })
+
+  //       if (error) {
+  //         setVerificationError(error.message)
+  //       }
+
+  //     } catch (error) {
+  //       setVerificationError('Failed to verify recovery token');
+  //       console.error('Token verification error:', error)
+  //     } finally {
+  //       setIsVerifying(false)
+  //     }
+  //   }
+  // }, [searchParams, supabase.auth])
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const confirmPasswords = async () => {

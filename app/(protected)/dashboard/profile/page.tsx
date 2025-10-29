@@ -153,8 +153,6 @@ export default function ProfileUpdateForm() {
     };
 
     // Log the exact output format
-    console.log("Profile data being sent:", profileData);
-    console.log("Availability format:", profileData.availability);
 
     try {
       const result = await updateProfileDetails(profileData);
