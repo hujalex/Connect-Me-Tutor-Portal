@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 import { Button } from "@/components/ui/button";
@@ -40,16 +40,34 @@ export default function ForgotPasswordPage() {
     try {
       const email = form.getValues("email");
 
-      const { data: resetData, error } =
-        await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}`,
-        });
+      // const { data: resetData, error } =
+      //   await supabase.auth.resetPasswordForEmail(email, {
+      //     redirectTo: `${window.location.origin}`,
+      //   });
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email)
+      
       if (error) {
         throw error;
       }
-      if (!resetData) {
+      if (!data) {
         throw new Error();
       }
+
+      // useEffect(() => {
+      //   supabase.auth.onAuthStateChange(async (event, session) => {
+      //     if (event == "PASSWORD_RECOVERY") {
+      //       const newPassword = prompt("What would you like your password to be?");
+      //       const { data, error } = await supabase.auth.updateUser({password: newPassword || ""})
+
+      //       if (data) alert("Password updated successfully!")
+      //       if (error) alert("There was an error updating your password")
+      //     }
+      //   })
+      // })
+
+
+
       toast.success("Password reset email sent successfully");
     } catch (error) {
       console.error("Unable to reset password");
