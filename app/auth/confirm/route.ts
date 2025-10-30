@@ -21,9 +21,14 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       return NextResponse.redirect(redirectTo);
+    } else {
+      console.log("Auth Error", error)
     }
   }
 
+
+  // ! REMOVE
+  console.log(type, token_hash)
 
   // return the user to an error page with some instructions
   redirectTo.pathname = "/auth/auth-code-error";
