@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { setDefaultAutoSelectFamily } from "net";
 
-const formSchema = z.object({
+const emailSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
@@ -79,8 +79,8 @@ export default function ForgotPasswordPage() {
       toast.error(`Unable to send reset password link ${error}`);
     }
   };
-  const emailForm = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const emailForm = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
     defaultValues: {
       email: "",
     },
@@ -94,9 +94,8 @@ export default function ForgotPasswordPage() {
     }
   })
 
-  const handleSendToken = async (values: z.infer<typeof tokenSchema>) => {
+  const handleSendToken = async (values: z.infer<typeof emailSchema>) => {
     setEmailForReset(values.email)
-
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: values.email,
@@ -141,7 +140,6 @@ export default function ForgotPasswordPage() {
       }
 
       if (session) {
-        toast.success("Logged in successfully!");
         router.push("/set-password"); // Redirect to dashboard or home
         router.refresh(); // Refresh server components
       } else {
@@ -187,8 +185,7 @@ export default function ForgotPasswordPage() {
                           <FormItem>
                             <FormDescription>
                               No worries! Just enter the email associated with
-                              your account and we will send you a link to reset
-                              your password!
+                              your account to reset your password
                             </FormDescription>
                             <FormControl>
                               <Input
@@ -212,9 +209,9 @@ export default function ForgotPasswordPage() {
               ) : (
                 <>
                   <div className="flex flex-col gap-3 text-center">
-                    <h1 className="text-xl sm:text-2xl font-bold">Enter OTP</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold">Enter Verification Code</h1>
                     <p className="text-sm text-gray-600">
-                      An OTP has been sent to {emailForReset}. Please enter it
+                      A verification code has been sent to {emailForReset}. Please enter it
                       below.
                     </p>
                   </div>
@@ -232,7 +229,7 @@ export default function ForgotPasswordPage() {
                             <FormControl>
                               <Input
                                 type="text"
-                                placeholder="Enter your 6-digit OTP"
+                                placeholder="Enter your 6-digit code"
                                 maxLength={6}
                                 {...field}
                               />
@@ -246,7 +243,7 @@ export default function ForgotPasswordPage() {
                         className="w-full bg-green-500 hover:bg-green-600 text-white"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Verifying..." : "Verify OTP & Login"}
+                        {isLoading ? "Verifying..." : "Verify code"}
                       </Button>
                     </form>
                   </Form>
