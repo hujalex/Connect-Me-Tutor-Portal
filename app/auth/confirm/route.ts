@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   if (token_hash && type) {
     const supabase = await createRouteHandlerClient({ cookies });
 
+    console.log(token_hash, type)
+
     const { error } = await supabase.auth.verifyOtp({
       type,
       token_hash,
@@ -21,11 +23,15 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       return NextResponse.redirect(redirectTo);
+    } else {
+      console.log("Auth Error", error)
     }
   }
 
+  // ! REMOVE
+  console.log(type, token_hash)
 
   // return the user to an error page with some instructions
-  redirectTo.pathname = "/auth/auth-code-error";
-  return NextResponse.redirect(redirectTo);
+  // redirectTo.pathname = "/auth/auth-code-error";
+  // return NextResponse.redirect(redirectTo);
 }
