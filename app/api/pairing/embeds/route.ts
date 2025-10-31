@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 //used to create subject embeddings
 export async function POST(request: NextRequest) {
-  console.log("hit ");
   try {
     const { subjects } = await request.json();
     if (!subjects)

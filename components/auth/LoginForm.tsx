@@ -33,29 +33,10 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
-  const [resetPassword, setResetPassword] = useState<boolean>(false);
-
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClientComponentClient();
 
-  const sendResetPassword = async () => {
-    try {
-      const email = form.getValues("email");
-      const { data: resetData, error } =
-        await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}`,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      toast.success("Password reset email sent successfully");
-    } catch (error) {
-      toast.error("Failed to send password reset email");
-    }
-  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

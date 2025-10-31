@@ -40,9 +40,6 @@ export default async function ChatPage() {
     getProfileRole(userId),
   ]);
 
-  console.log("ADMIN: ", adminConversationID);
-
-  console.log("Pairings:", pairings);
   return (
     <div className="flex flex-col h-screen">
       <div>

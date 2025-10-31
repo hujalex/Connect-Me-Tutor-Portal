@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
     );
 
     if (authError) {
-      console.log("Unable to delete user", authError)
       return NextResponse.json({ error: authError.message }, { status: 500 });
     }
 
