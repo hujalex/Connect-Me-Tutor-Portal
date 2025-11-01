@@ -103,7 +103,7 @@ export default function ResetPassword() {
       }
 
       if (resetData.user) {
-        toast.success("Yay");
+        toast.success("Login information updated");
         router.push("/");
       }
     } catch (error) {
