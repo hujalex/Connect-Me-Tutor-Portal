@@ -4,6 +4,10 @@
     {
       "path": "/api/email/before-sessions/schedule-reminders-weekly",
       "schedule": "30 23 * * 6"
+    },
+    {
+      "path" : "/api/pairing",
+      "schedule":  "0 5 * * *" 
     }
   ],
   "functions": {

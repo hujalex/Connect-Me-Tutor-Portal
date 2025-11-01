@@ -108,7 +108,7 @@ export default function OTPLogin() {
 
       if (session) {
         toast.success("Logged in successfully!");
-        router.push("/set-password"); // Redirect to dashboard or home
+        router.push("/dashboard"); // Redirect to dashboard or home
         router.refresh(); // Refresh server components
       } else {
         toast.error("Failed to verify OTP. Please try again.");
