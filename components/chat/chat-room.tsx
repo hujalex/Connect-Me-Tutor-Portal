@@ -147,7 +147,7 @@ export function ChatRoom({
               },
               {} as Record<string, User>
             ) || {};
-          alert();
+
           if (isMounted) {
             setUsers({
               ...adminUsers,
