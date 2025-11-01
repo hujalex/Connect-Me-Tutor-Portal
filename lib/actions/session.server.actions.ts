@@ -237,10 +237,7 @@ export async function addSessionsServer(
             scheduledSessions.add(sessionKey);
           } ////
         } catch (err) {
-          console.error(
-            `Error processing time for ${day} ${startTime}-${endTime}:`,
-            err
-          );
+          console.error("Error processing time for %s %s-%s:", day, startTime, endTime, err)
         }
 
         // Move to next day
