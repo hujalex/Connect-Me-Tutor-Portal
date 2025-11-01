@@ -140,7 +140,7 @@ const EnrollmentList = () => {
     endDate: null,
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
-    summerPaused: false,
+    paused: false,
     duration: 1,
     frequency: "weekly",
   });
@@ -506,7 +506,7 @@ const EnrollmentList = () => {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
-          { ...addedEnrollment, summerPaused: false, duration: 1 },
+          { ...addedEnrollment, paused: false, duration: 1 },
           ...enrollments,
         ]);
         setIsAddModalOpen(false);
@@ -570,7 +570,7 @@ const EnrollmentList = () => {
       endDate: null,
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
-      summerPaused: false,
+      paused: false,
       duration: 1,
       frequency: "weekly",
     });
@@ -1020,12 +1020,12 @@ const EnrollmentList = () => {
                       onClick={() => {
                         const updatedEnrollment = {
                           ...enrollment,
-                          summerPaused: !enrollment.summerPaused,
+                          summerPaused: !enrollment.paused,
                         };
                         handlePausePairingOverSummer(updatedEnrollment);
                       }}
                     >
-                      {enrollment.summerPaused ? (
+                      {enrollment.paused ? (
                         <span className="px-3 py-1 inline-flex items-center rounded-full bg-red-100 text-red-800 border border-red-200">
                           <TimerOff size={14} className="mr-1" />
                           Paused
