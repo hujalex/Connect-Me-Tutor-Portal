@@ -877,8 +877,6 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         name
       `);
 
-    console.log("Data: ", data);
-
     // Check for errors and log them
     if (error) {
       console.error("Error fetching event details:", error.message);
@@ -976,7 +974,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         endDate: enrollment.end_date,
         availability: enrollment.availability,
         meetingId: enrollment.meetingId,
-        summerPaused: enrollment.paused,
+        paused: enrollment.paused,
         duration: enrollment.duration,
         frequency: enrollment.frequency,
       }))
