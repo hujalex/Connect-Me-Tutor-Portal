@@ -88,7 +88,7 @@ interface Enrollment {
   endDate: string | null;
   availability: Availability[]; // Ensure startTime and endTime have AM/PM format
   meetingId: string;
-  summerPaused: boolean;
+  paused: boolean;
   duration: number;
   frequency: string;
 }

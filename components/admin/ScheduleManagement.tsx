@@ -51,7 +51,6 @@ import {
   getAllSessions,
   rescheduleSession,
   getAllEnrollments,
-  addSessions,
   updateSession,
   getMeetings,
   getAllProfiles,
@@ -65,6 +64,7 @@ import {
 import { addHours, areIntervalsOverlapping } from "date-fns";
 
 import { fetchDaySessionsFromSchedule } from "@/lib/actions/session.actions";
+import { addSessions } from "@/lib/actions/session.actions";
 import { getProfileWithProfileId } from "@/lib/actions/user.actions";
 import { toast, Toaster } from "react-hot-toast";
 import { Session, Enrollment, Meeting, Profile } from "@/types";
@@ -79,9 +79,12 @@ import {
 import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
 import { checkAvailableMeeting } from "@/lib/actions/meeting.server.actions";
+import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [weekEnd, setWeekEnd] = useState("");
+  const [weekStart, setWeekStart] = useState("");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
@@ -161,16 +164,12 @@ const Schedule = () => {
     }
   };
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (weekStart: string, weekEnd: string) => {
     setLoading(true);
     try {
-      const weekStart = startOfWeek(currentWeek);
-      const weekEnd = endOfWeek(currentWeek);
-      const weekStartString = weekStart.toISOString();
-      const weekEndString = weekEnd.toISOString();
       const fetchedSessions = await getAllSessions(
-        weekStartString,
-        weekEndString,
+        weekStart,
+        weekEnd,
         "date",
         true
       );
@@ -184,23 +183,30 @@ const Schedule = () => {
   };
 
   useEffect(() => {
-    fetchSessions();
-    fetchEnrollments();
-    fetchMeetings();
-    fetchStudents();
-    fetchTutors();
+    const currWeekStart = startOfWeek(currentWeek).toISOString();
+    const currWeekEnd = endOfWeek(currentWeek).toISOString();
+
+    Promise.all([
+      fetchSessions(currWeekStart, currWeekEnd),
+      fetchEnrollments(currWeekEnd),
+      fetchMeetings(),
+      fetchStudents(),
+      fetchTutors(),
+    ]).catch((error) => {
+      console.error("Failed to fetch data:", error);
+      // Optional: Add error handling (toast notification, error state, etc.)
+    });
+
+    setWeekStart(currWeekStart);
+    setWeekEnd(currWeekEnd);
   }, [currentWeek]);
 
-  const fetchEnrollments = async () => {
+  const fetchEnrollments = async (endOfWeek: string) => {
     try {
-      const fetchedEnrollments = await getAllEnrollments();
-      const validEnrollments = fetchedEnrollments?.filter((enrollment) => {
-        if (!enrollment.endDate) return true;
-        return isAfter(parseISO(enrollment.endDate), new Date());
-      });
-      if (validEnrollments) {
-        setEnrollments(validEnrollments);
-      }
+      // const fetchedEnrollments = await getAllEnrollments();
+      const fetchedEnrollments = await getAllActiveEnrollments(endOfWeek);
+
+      setEnrollments(fetchedEnrollments);
     } catch (error) {
       console.error("Failed to fetch enrollments:", error);
       toast.error("Failed to load enrollments");
@@ -243,17 +249,6 @@ const Schedule = () => {
     }
   };
 
-  const handleReschedule = async (sessionId: string, newDate: Date) => {
-    try {
-      const newDateString = newDate.toISOString();
-      await rescheduleSession(sessionId, newDateString);
-      toast.success("Session rescheduled successfully");
-      fetchSessions();
-    } catch (error) {
-      console.error("Failed to reschedule session:", error);
-      toast.error("Failed to reschedule session");
-    }
-  };
 
   const fetchAllSessionsFromSchedule = async () => {
     try {
@@ -289,13 +284,11 @@ const Schedule = () => {
       //------Set Loading-------
       setLoading(true);
 
-      const weekStart = startOfWeek(currentWeek);
-      const weekEnd = endOfWeek(currentWeek);
 
       // Create sessions for all enrollments without checking meeting availability
       const newSessions = await addSessions(
-        weekStart.toISOString(),
-        weekEnd.toISOString(),
+        weekStart,
+        weekEnd,
         enrollments,
         sessions
       );
@@ -304,26 +297,14 @@ const Schedule = () => {
         throw new Error("No sessions were created");
       }
 
-      const existingSessionMap = new Map();
-      sessions.forEach((session) => {
-        if (session?.date) {
-          // Add null check for date
-          const sessionDate = new Date(session.date);
-          const key = `${session.student?.id}-${session.tutor?.id}-${
-            isValid(sessionDate)
-              ? format(sessionDate, "yyyy-MM-dd-HH:mm")
-              : "invalid-date"
-          }`;
-          existingSessionMap.set(key, session);
-        }
-      });
-
       setSessions((prevSessions) => [...prevSessions, ...newSessions]);
-      fetchSessions(); // Reloads only sessions
+      fetchSessions(weekStart, weekEnd); // Reloads only sessions
       toast.success(`${newSessions.length} new sessions added successfully`);
     } catch (error: any) {
       console.error("Failed to add sessions:", error);
-      toast.error(`Failed to add sessions. ${error.message}`);
+      error.digest === "4161161223"
+        ? toast.error("Please wait until adding new sessions")
+        : toast.error(`Failed to add sessions. ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -353,7 +334,7 @@ const Schedule = () => {
       setSessions((prevSessions) =>
         prevSessions.filter((session) => session.id !== sessionId)
       );
-      fetchSessions();
+      fetchSessions(weekStart, weekEnd);
       toast.success("Session removed successfully");
     } catch (error) {
       console.error("Failed to remove session", error);
@@ -366,7 +347,7 @@ const Schedule = () => {
       await updateSession(updatedSession);
       toast.success("Session updated successfully");
       setIsModalOpen(false);
-      fetchSessions();
+      fetchSessions(weekStart, weekEnd);
     } catch (error) {
       console.error("Failed to update session:", error);
       toast.error("Failed to update session");
@@ -378,7 +359,7 @@ const Schedule = () => {
       if (newSession) {
         await addOneSession(newSession as Session);
       }
-      fetchSessions();
+      fetchSessions(weekStart, weekEnd);
       toast.success("Added Session");
     } catch (error) {
       toast.error("Unable to add session");
