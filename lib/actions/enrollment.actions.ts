@@ -1,7 +1,7 @@
-// lib/admins.actions.ts
-
+"use client"
 // lib/student.actions.ts
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/lib/supabase/client"
 import {
   Profile,
   Session,
@@ -41,10 +41,7 @@ import { Table } from "../supabase/tables";
 import { StdioNull } from "node:child_process";
 // import { getMeeting } from "./meeting.actions";
 
-const supabase = createClientComponentClient({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-});
+
 
 export async function getEnrollments(
   tutorId: string
@@ -64,7 +61,7 @@ export async function getEnrollments(
         end_date,
         availability,
         meetingId,
-        summer_paused,
+        paused,
         duration
       `
       )
@@ -94,7 +91,7 @@ export async function getEnrollments(
         endDate: enrollment.end_date,
         availability: enrollment.availability,
         meetingId: enrollment.meetingId,
-        summerPaused: enrollment.summer_paused,
+        paused: enrollment.paused,
         duration: enrollment.duration,
         frequency: enrollment.frequency
       }))
@@ -106,6 +103,8 @@ export async function getEnrollments(
     return null;
   }
 }
+
+
 
 export const getHourInterval = async (availabilityList: Availability[]) => {
   try {
@@ -154,4 +153,63 @@ export const getOverlappingAvailabilites = async (
   }
 };
 
-console.log("server call ");
+
+export async function getAllActiveEnrollments(endOfWeek: string): Promise<Enrollment[]> {
+  try {
+    console.log("Fetching Enrollments")
+    // Fetch meeting details from Supabase
+    const { data, error } = await supabase.from(Table.Enrollments).select(`
+        id,
+        created_at,
+        summary,
+        student_id,
+        tutor_id,
+        start_date,
+        end_date,
+        availability,
+        meetingId,
+        paused,
+        duration,
+        frequency,
+        student:Profiles!student_id(*),
+        tutor:Profiles!tutor_id(*)
+      `)
+      .eq('paused', false)
+      .lte('start_date', endOfWeek);
+
+    // Check for errors and log them
+    if (error) {
+      console.error("Error fetching event details:", error.message);
+      throw error;
+    }
+
+    // Check if data exists
+    if (!data) {
+      throw new Error("No data fetched")
+    }
+
+    // Mapping the fetched data to the Notification object
+    const enrollments: Enrollment[] = await Promise.all(
+      data.map(async (enrollment: any) => ({
+        createdAt: enrollment.created_at,
+        id: enrollment.id,
+        summary: enrollment.summary,
+        student: enrollment.student,
+        tutor: enrollment.tutor,
+        startDate: enrollment.start_date,
+        endDate: enrollment.end_date,
+        availability: enrollment.availability,
+        meetingId: enrollment.meetingId,
+        paused: enrollment.paused,
+        duration: enrollment.duration,
+        frequency: enrollment.frequency,
+      }))
+    );
+
+    return enrollments; // Return the array of enrollments
+  } catch (error) {
+    console.error("Error getting needed enrollment information:", error);
+    throw error;
+  }
+}
+

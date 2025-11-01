@@ -11,13 +11,5 @@ export const metadata = {
 };
 
 export default async function Layout({ children }:{children:React.ReactNode}) {
-  // const data = await getSessionUserProfile();
-
-  // const role = data?.role;
-
-  /*if (role === "Tutor") {
-    return redirect("/dashboard");
-  }*/
-
   return <>{children}</>;
 }

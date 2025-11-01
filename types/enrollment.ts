@@ -22,7 +22,7 @@ export interface SharedEnrollment {
   end_date: string; // ISO date string (YYYY-MM-DD)
   availability: AvailabilityItem[];
   meetingid: string;
-  summer_paused: boolean;
+  paused: boolean;
   duration: number;
   student: Person;
   tutor: Person;
