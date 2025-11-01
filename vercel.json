@@ -6,7 +6,7 @@
       "schedule": "30 23 * * 6"
     },
     {
-      "path" : "/api/sessions/update-week",
+      "path" : "/api/pairing",
       "schedule":  "0 5 * * *" 
     }
   ],
