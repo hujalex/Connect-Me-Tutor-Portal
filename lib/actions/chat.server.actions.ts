@@ -14,7 +14,7 @@ export const createAdminConversation = async (user_id: string) => {
   ) {
     throw new Error("Missing Supabase environment variables");
   }
-  const supabase = createClient();
+  const supabase = await createClient();
 
   console.log(user_id);
 
@@ -72,7 +72,7 @@ export async function fetchUserAdminConversation(
   ) {
     throw new Error("Missing Supabase environment variables");
   }
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: profile, error } = await supabase
     .from("Profiles")

@@ -60,7 +60,7 @@ const buildMatches = async (matches: QueueItemMatch[]): Promise<PairingMatch[]> 
 export const runPairingWorkflow = async () => {
   const logs: PairingLogSchemaType[] = [];
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Get top pairing requests for tutors & students
   const [tutorQueueResult, studentQueueResult] = await Promise.all([

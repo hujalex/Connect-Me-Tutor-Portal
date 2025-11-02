@@ -11,7 +11,7 @@ export default async function ChatRoomPage({ params }: Props) {
   // In a real app, these would come from your authentication system and API
 
   const mockMessages: Message[] = [];
-  const supabase = createClient();
+  const supabase = await createClient();
   const user = await supabase.auth.getUser();
   const userId = user.data.user?.id;
 
