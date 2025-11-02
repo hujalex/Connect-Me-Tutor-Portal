@@ -3,19 +3,26 @@ import { addSessionsServer } from "@/lib/actions/session.server.actions";
 import { endOfWeek, startOfWeek } from "date-fns";
 import { NextResponse, NextRequest } from "next/server";
 import { getAllSessionsServer } from "@/lib/actions/session.server.actions";
+import { Session } from "@/types";
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+
+export async function GET() {
   try {
-    await handleUpdateWeek();
+    const newSessions = await handleUpdateWeek();
 
-    return NextResponse.json({ status: 200 });
+    return NextResponse.json({ "newSessions": newSessions }, { status: 200 });
   } catch (error) {
     const err = error as Error;
-    return NextResponse.json({error: `Update Week error ${err.message}`}, { status: 500 });
+    return NextResponse.json(
+      { error: `Update Week error ${err.message}` },
+      { status: 500 }
+    );
   }
 }
 
-const handleUpdateWeek = async () => {
+const handleUpdateWeek = async (): Promise<Session[]> => {
   try {
     //------Set Loading-------
 
@@ -25,7 +32,7 @@ const handleUpdateWeek = async () => {
     const weekEnd = endOfWeek(today).toDateString();
 
     const enrollments = await getAllActiveEnrollmentsServer(weekEnd);
-    const sessions = await getAllSessionsServer(
+    const sessions: Session[] = await getAllSessionsServer(
       weekStart,
       weekEnd,
       "date",
@@ -40,9 +47,12 @@ const handleUpdateWeek = async () => {
       sessions
     );
 
+    console.log("New Sessions", newSessions)
+
     if (!newSessions) {
       throw new Error("No sessions were created");
     }
+    return newSessions;
   } catch (error: any) {
     console.error("Failed to add sessions:", error);
     throw error;

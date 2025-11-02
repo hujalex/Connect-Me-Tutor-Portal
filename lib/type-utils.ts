@@ -1,6 +1,6 @@
 import { Profile } from "@/types";
 
-export async function tableToIntefaceProfiles(data: any) {
+export async function tableToInterfaceProfiles(data: any) {
   try {
     if (!data) {
       throw new Error("Data is null");
