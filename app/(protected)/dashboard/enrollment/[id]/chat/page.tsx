@@ -28,8 +28,8 @@ export default async function ChatRoomPage({ params }: Props) {
         roomId={pairingId}
         supabaseUrl={supabaseConfig.url}
         supabaseKey={supabaseConfig.key}
-        initialMessages={mockMessages}
-        // onSendMessage={(message) => console.log("Message sent:", message)}
+        initialMessages={mockMessages} 
+        type={"pairing"}        // onSendMessage={(message) => console.log("Message sent:", message)}
         // onFileUpload={(file) => console.log("File uploaded:", file.name)}
       />
     </main>

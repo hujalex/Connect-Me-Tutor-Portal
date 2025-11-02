@@ -1,7 +1,7 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import { Table } from "../supabase/tables";
-import { tableToIntefaceProfiles } from "../type-utils";
+import { tableToInterfaceProfiles } from "../type-utils";
 import { table } from "console";
 
 export const supabase = createClientComponentClient({
@@ -108,7 +108,7 @@ export const getProfileByEmail = async (email: string) => {
       .eq("email", email)
       .single();
     if (error) throw new Error(`Profile fetch failed: ${error.message}`);
-    const userProfile: Profile | null = await tableToIntefaceProfiles(data);
+    const userProfile: Profile | null = await tableToInterfaceProfiles(data);
 
     return userProfile;
   } catch (error) {
@@ -194,7 +194,7 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
       return null;
     }
 
-    const userProfile: Profile | null = await tableToIntefaceProfiles(data);
+    const userProfile: Profile | null = await tableToInterfaceProfiles(data);
 
     return userProfile;
   } catch (error) {
@@ -246,7 +246,7 @@ export async function getProfileWithProfileId(
     }
 
     // Mapping the fetched data to the Profile object
-    const userProfile: Profile | null = await tableToIntefaceProfiles(data);
+    const userProfile: Profile | null = await tableToInterfaceProfiles(data);
 
     return userProfile;
   } catch (error) {
