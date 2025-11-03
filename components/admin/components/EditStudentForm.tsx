@@ -22,6 +22,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scrollarea";
 import { Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import TimeZoneSelector from "./components/TimezoneSelector";
 
 interface EditStudentFormProps {
   students: Profile[];
@@ -400,21 +401,8 @@ const EditStudentForm = ({
                         Time Zone
                       </Label>
                       <div className="col-span-3">
-                        <Select
-                          name="timeZone"
-                          value={selectedStudent?.timeZone}
-                          onValueChange={handleTimeZoneForEdit}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="EST">EST</SelectItem>
-                            <SelectItem value="CST">CST</SelectItem>
-                            <SelectItem value="MT">MT</SelectItem>
-                            <SelectItem value="PST">PST</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        
+                        <TimeZoneSelector profile={selectedStudent} handleTimeZone={handleTimeZoneForEdit} />
                       </div>
                     </div>
                     {/* <div className="grid grid-cols-4 items-center gap-4">
