@@ -23,6 +23,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { X, Plus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scrollarea";
 import { Switch } from "@/components/ui/switch";
+import TimeZoneSelector from "./components/TimezoneSelector";
 
 interface AddTutorFormProps {
   newTutor: Partial<Profile>;
@@ -262,21 +263,10 @@ const AddTutorForm = ({
                       Time Zone
                     </Label>
                     <div className="col-span-3">
-                      <Select
-                        name="timeZone"
-                        value={newTutor.timeZone}
-                        onValueChange={handleTimeZone}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EST">EST</SelectItem>
-                          <SelectItem value="CST">CST</SelectItem>
-                          <SelectItem value="MT">MT</SelectItem>
-                          <SelectItem value="PST">PST</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <TimeZoneSelector
+                        newProfile={newTutor}
+                        handleTimeZone={handleTimeZone}
+                      />
                     </div>
                   </div>
                 </div>
@@ -447,7 +437,10 @@ const AddTutorForm = ({
             )}
           </div>
 
-          <Button onClick={handleEnhancedAddTutor} disabled={addingTutor}>
+          <Button
+            onClick={() => handleEnhancedAddTutor(true)}
+            disabled={addingTutor}
+          >
             {addingTutor ? "Adding Tutor..." : "Add Tutor"}
           </Button>
         </DialogContent>

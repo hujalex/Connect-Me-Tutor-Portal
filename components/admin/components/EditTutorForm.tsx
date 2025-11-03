@@ -22,6 +22,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserAvailabilities } from "@/components/ui/UserAvailabilities";
+import TimeZoneSelector from "./components/TimezoneSelector";
 
 interface EditTutorFormProps {
   isReactivateModalOpen: boolean;
@@ -279,21 +280,7 @@ const EditTutorForm = ({
                       Time Zone
                     </Label>
                     <div className="col-span-3">
-                      <Select
-                        name="timeZone"
-                        value={selectedTutor?.timeZone || ""}
-                        onValueChange={handleTimeZoneForEdit}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select timezone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EST">EST</SelectItem>
-                          <SelectItem value="CST">CST</SelectItem>
-                          <SelectItem value="MT">MT</SelectItem>
-                          <SelectItem value="PST">PST</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <TimeZoneSelector profile = {selectedTutor} handleTimeZone={handleTimeZoneForEdit} />
                     </div>
                   </div>
                 </div>
