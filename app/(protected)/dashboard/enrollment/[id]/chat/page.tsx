@@ -11,7 +11,7 @@ export default async function ChatRoomPage({ params }: Props) {
   // In a real app, these would come from your authentication system and API
 
   const mockMessages: Message[] = [];
-  const supabase = createClient();
+  const supabase = await createClient();
   const user = await supabase.auth.getUser();
   const userId = user.data.user?.id;
 
@@ -28,8 +28,8 @@ export default async function ChatRoomPage({ params }: Props) {
         roomId={pairingId}
         supabaseUrl={supabaseConfig.url}
         supabaseKey={supabaseConfig.key}
-        initialMessages={mockMessages}
-        // onSendMessage={(message) => console.log("Message sent:", message)}
+        initialMessages={mockMessages} 
+        type={"pairing"}        // onSendMessage={(message) => console.log("Message sent:", message)}
         // onFileUpload={(file) => console.log("File uploaded:", file.name)}
       />
     </main>

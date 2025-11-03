@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req:any, res:any) {
   const body = await req.json();
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const data = { email: body.userEmail, password: body.userPassword };
 

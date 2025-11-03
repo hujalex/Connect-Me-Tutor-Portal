@@ -1,9 +1,8 @@
 "use server";
-import { supabase } from "../supabase/server";
+import { createClient } from "../supabase/server";
 import { Enrollment, Session } from "@/types";
 import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
-import { createClient } from "@supabase/supabase-js";
 import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./meeting.server.actions";
@@ -30,8 +29,8 @@ import {
 import * as DateFNS from "date-fns-tz";
 const { fromZonedTime } = DateFNS;
 
-
 async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
+  const supabase = await createClient();
 
   const midLastWeek = subDays(midWeek, 7);
 
@@ -50,10 +49,8 @@ async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
   return Object.keys(data).length > 0;
 }
 
-
-
-
 export async function getSessionKeys(data?: Session[]) {
+  const supabase = await createClient();
   const sessionKeys: Set<string> = new Set();
 
   if (!data) {
@@ -83,8 +80,6 @@ export async function getSessionKeys(data?: Session[]) {
   return sessionKeys;
 }
 
-
-
 /**
  * Add sessions for enrollments within the specified week range
  * @param weekStartString - ISO string of week start in Eastern Time
@@ -99,7 +94,7 @@ export async function addSessionsServer(
   enrollments: Enrollment[],
   sessions: Session[]
 ) {
-
+  const supabase = await createClient();
 
   try {
     const weekStart: Date = fromZonedTime(
@@ -237,7 +232,13 @@ export async function addSessionsServer(
             scheduledSessions.add(sessionKey);
           } ////
         } catch (err) {
-          console.error("Error processing time for %s %s-%s:", day, startTime, endTime, err)
+          console.error(
+            "Error processing time for %s %s-%s:",
+            day,
+            startTime,
+            endTime,
+            err
+          );
         }
 
         // Move to next day
@@ -249,8 +250,7 @@ export async function addSessionsServer(
     if (sessionsToCreate.length > 0) {
       const { data, error } = await supabase
         .from(Table.Sessions)
-        .insert(sessionsToCreate)
-        .select(`
+        .insert(sessionsToCreate).select(`
           *,
           student:Profiles!student_id(*),
           tutor:Profiles!tutor_id(*),
@@ -296,7 +296,6 @@ export async function addSessionsServer(
   }
 }
 
-
 export async function getActiveSessionFromMeetingID(meetingID: string) {
   const supabase = await createServerClient();
 
@@ -316,7 +315,7 @@ export async function getActiveSessionFromMeetingID(meetingID: string) {
 }
 import { getSupabase } from "../supabase-server/serverClient";
 import { scheduleMultipleSessionReminders } from "../twilio";
-import { tableToIntefaceProfiles } from "../type-utils";
+import { tableToInterfaceProfiles } from "../type-utils";
 
 export async function getSessions(
   start: string,
@@ -360,14 +359,13 @@ export async function getSessions(
   }
 }
 
-
-
 export async function getAllSessionsServer(
   startDate?: string,
   endDate?: string,
   orderBy?: string,
   ascending?: boolean
-): Promise<Session[]> {
+) {
+  const supabase = await createClient();
   try {
     let query = supabase.from(Table.Sessions).select(`
       id,
@@ -402,34 +400,38 @@ export async function getAllSessionsServer(
 
     const { data, error } = await query;
 
+    // console.log(data);
+
     if (error) {
       console.error("Error fetching student sessions:", error.message);
       throw error;
     }
 
     const sessions: Session[] = await Promise.all(
-      data.map(async (session: any) => ({
-        id: session.id,
-        enrollmentId: session.enrollment_id,
-        createdAt: session.created_at,
-        environment: session.environment,
-        date: session.date,
-        summary: session.summary,
-        // meetingId: session.meeting_id,
-        // meeting: await getMeeting(session.meeting_id),
-        meeting: session.meetings,
-        student: await tableToIntefaceProfiles(session.student),
-        tutor: await tableToIntefaceProfiles(session.tutor),
-        // student: await getProfileWithProfileId(session.student_id),
-        // tutor: await getProfileWithProfileId(session.tutor_id),
-        status: session.status,
-        session_exit_form: session.session_exit_form,
-        isQuestionOrConcern: Boolean(session.is_question_or_concern),
-        isFirstSession: Boolean(session.is_first_session),
-        duration: session.duration,
-      }))
+      data
+        .filter((session: any) => session.student & session.tutor)
+        .map(async (session: any) => {
+          // Check if tutor and student exist first
+          return {
+            id: session.id,
+            enrollmentId: session.enrollment_id,
+            createdAt: session.created_at,
+            environment: session.environment,
+            date: session.date,
+            summary: session.summary,
+            meeting: session.meetings,
+            student: await tableToInterfaceProfiles(session.student),
+            tutor: await tableToInterfaceProfiles(session.tutor),
+            status: session.status,
+            session_exit_form: session.session_exit_form,
+            isQuestionOrConcern: Boolean(session.is_question_or_concern),
+            isFirstSession: Boolean(session.is_first_session),
+            duration: session.duration,
+          };
+        })
     );
-    console.log("Sessions", sessions);
+
+    return sessions;
 
     return sessions;
   } catch (error) {

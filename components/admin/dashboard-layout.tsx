@@ -41,6 +41,7 @@ import {
   BellIcon,
   BellPlus,
   Book,
+  ChartColumn,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -226,6 +227,11 @@ export default function DashboardLayout({
       href: "/dashboard/admin-conversations",
       icon: <Book className="h-5 w-5" />,
     },
+    {
+      title: "Analytics",
+      href: "/dashboard/data-analytics",
+      icon: <ChartColumn className = "h-5 w-5"/>
+    }
     // {
     //   title: "Migrate Profiles",
     //   href: "/dashboard/migrate",

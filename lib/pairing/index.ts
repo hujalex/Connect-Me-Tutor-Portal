@@ -60,7 +60,7 @@ const buildMatches = async (matches: QueueItemMatch[]): Promise<PairingMatch[]> 
 export const runPairingWorkflow = async () => {
   const logs: PairingLogSchemaType[] = [];
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Get top pairing requests for tutors & students
   const [tutorQueueResult, studentQueueResult] = await Promise.all([
@@ -213,11 +213,6 @@ export const runPairingWorkflow = async () => {
 
   // dummy insert
   if (r1Error) throw r1Error
-
-
-  const student_id = 'aa21a1c4-c57b-42b7-97ba-084bc0a480a0'
-  const tutor_id = 'f546b169-8ac1-41b3-bbad-5717e44e2564'
-
   // const {data: dummyData, error: dummyError} = await supabase.from("pairing_matches").insert(
   //   {student_id: student_id,
   //     tutor_id: tutor_id,
