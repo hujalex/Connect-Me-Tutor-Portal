@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getParticipationData } from "@/lib/actions/session.server.actions";
 
 interface ParticipantEvent {
   id: string;
@@ -74,17 +75,11 @@ export default function MeetingParticipation() {
         setLoading(true);
       }
 
-      const response = await fetch(`/api/sessions/${sessionId}/participation`);
+      const data = await getParticipationData(sessionId);
 
-      if (!response.ok) {
-        throw new Error(
-          response.status === 404
-            ? "Session not found"
-            : "Failed to fetch participation data"
-        );
+      if (!data) {
+        throw new Error("Session not found");
       }
-
-      const data = await response.json();
 
       // Transform session data
       setMeetingData({
@@ -97,7 +92,7 @@ export default function MeetingParticipation() {
 
       // Transform events
       const transformedEvents: ParticipantEvent[] = data.events.map(
-        (event: any) => ({
+        (event) => ({
           id: event.id,
           participantId: event.participantId,
           name: event.name,
@@ -110,7 +105,7 @@ export default function MeetingParticipation() {
 
       // Transform participant summaries
       const transformedSummaries: ParticipantSummary[] =
-        data.participantSummaries.map((summary: any) => ({
+        data.participantSummaries.map((summary) => ({
           id: summary.id,
           name: summary.name,
           email: summary.email,
