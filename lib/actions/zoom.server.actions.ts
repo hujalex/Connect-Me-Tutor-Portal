@@ -11,45 +11,41 @@ const supabase = createClient(
 // Typescript type (optional)
 interface ZoomParticipantData {
   session_id: string; // UUID of the session (Zoom meeting UUID)
-  user_id?: string; // Optional internal user ID
-  user_name: string;
-  participant_uuid: string;
+  participant_id: string;
+  name: string;
   email?: string;
-  date_time: string; // ISO format datetime of join
-  leave_time?: string; // ISO format datetime of leave
-  leave_reason?: string;
+  action: "joined" | "left";
+  timestamp: string; // ISO format datetime
 }
 
 export interface ParticipationRecord {
   id: string;
+  participant_id: string;
+  name: string;
+  email: string;
+  action: string;
+  timestamp: string;
   session_id: string;
-  user_id: string | null;
-  user_name: string;
-  participant_uuid: string;
-  email: string | null;
-  date_time: string;
-  leave_time: string | null;
-  leave_reason: string | null;
 }
 
 /**
- * Log Zoom Account Activity (participant joined)
+ * Log Zoom Account Activity (participant joined or left)
  * @param participant
  * @returns
  */
 export async function logZoomMetadata(participant: ZoomParticipantData) {
-  const { data, error } = await supabase.from("session_participation").insert([
-    {
-      session_id: participant.session_id,
-      user_id: participant.user_id || null,
-      user_name: participant.user_name,
-      participant_uuid: participant.participant_uuid,
-      email: participant.email || null,
-      date_time: participant.date_time,
-      leave_time: participant.leave_time || null,
-      leave_reason: participant.leave_reason || null,
-    },
-  ]);
+  const { data, error } = await supabase
+    .from("zoom_participant_events")
+    .insert([
+      {
+        session_id: participant.session_id,
+        participant_id: participant.participant_id,
+        name: participant.name,
+        email: participant.email || null,
+        action: participant.action,
+        timestamp: participant.timestamp,
+      },
+    ]);
 
   if (error) {
     console.error("Error logging Zoom metadata:", error);
@@ -60,31 +56,36 @@ export async function logZoomMetadata(participant: ZoomParticipantData) {
 }
 
 /**
- * Update participant leave time when they exit the meeting
+ * Log participant leave event when they exit the meeting
  * @param zoomMeetingId - Zoom meeting UUID
- * @param participantUuid - Zoom participant UUID
+ * @param participantId - Zoom participant UUID
+ * @param name - Participant name
+ * @param email - Participant email (optional)
  * @param leaveTime - ISO format datetime of leave
- * @param leaveReason - Reason for leaving (optional)
  */
 export async function updateParticipantLeaveTime(
   zoomMeetingId: string,
-  participantUuid: string,
-  leaveTime: string,
-  leaveReason?: string
+  participantId: string,
+  name: string,
+  email: string | null,
+  leaveTime: string
 ) {
   const { data, error } = await supabase
-    .from("session_participation")
-    .update({
-      leave_time: leaveTime,
-      leave_reason: leaveReason || null,
-    })
-    .eq("session_id", zoomMeetingId)
-    .eq("participant_uuid", participantUuid)
-    .is("leave_time", null) // Only update if leave_time is null (participant still in meeting)
+    .from("zoom_participant_events")
+    .insert([
+      {
+        session_id: zoomMeetingId,
+        participant_id: participantId,
+        name: name,
+        email: email,
+        action: "left",
+        timestamp: leaveTime,
+      },
+    ])
     .select();
 
   if (error) {
-    console.error("Error updating participant leave time:", error);
+    console.error("Error logging participant leave event:", error);
     throw error;
   }
 
@@ -100,10 +101,10 @@ export async function getParticipationByZoomMeetingId(
   zoomMeetingId: string
 ): Promise<ParticipationRecord[]> {
   const { data, error } = await supabase
-    .from("session_participation")
+    .from("zoom_participant_events")
     .select("*")
     .eq("session_id", zoomMeetingId)
-    .order("date_time", { ascending: true });
+    .order("timestamp", { ascending: true });
 
   if (error) {
     console.error("Error fetching participation data:", error);

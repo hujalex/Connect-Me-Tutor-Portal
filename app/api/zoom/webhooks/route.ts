@@ -132,11 +132,12 @@ export async function POST(req: NextRequest) {
         try {
           await logZoomMetadata({
             session_id: zoomMeetingId,
-            user_name: participant?.user_name || "Unknown",
-            participant_uuid:
+            participant_id:
               participant?.user_id || participant?.participant_user_id || "",
+            name: participant?.user_name || "Unknown",
             email: participant?.email || null,
-            date_time: participant?.join_time || new Date().toISOString(),
+            action: "joined",
+            timestamp: participant?.join_time || new Date().toISOString(),
           });
           console.log(
             `✅ Logged join for ${participant?.user_name} in meeting ${zoomMeetingId} (account: ${accountId})`
@@ -170,37 +171,19 @@ export async function POST(req: NextRequest) {
             break;
           }
 
-          const result = await updateParticipantLeaveTime(
+          await updateParticipantLeaveTime(
             zoomMeetingId,
             participantUuid,
-            leaveTime,
-            leaveReason
+            participant?.user_name || "Unknown",
+            participant?.email || null,
+            leaveTime
           );
 
-          if (result && result.length > 0) {
-            console.log(
-              `✅ Updated leave time for ${participant?.user_name} in meeting ${zoomMeetingId} (account: ${accountId})`
-            );
-          } else {
-            // If no record was updated, the participant might not have a join record
-            // Log this as a warning and optionally insert a record
-            console.warn(
-              `⚠️ No join record found to update for participant ${participant?.user_name}. Inserting new record.`
-            );
-
-            // Insert a record with both join and leave times if needed
-            await logZoomMetadata({
-              session_id: zoomMeetingId,
-              user_name: participant?.user_name || "Unknown",
-              participant_uuid: participantUuid,
-              email: participant?.email || null,
-              date_time: participant?.join_time || leaveTime, // Use join_time if available, otherwise leave_time
-              leave_time: leaveTime,
-              leave_reason: leaveReason,
-            });
-          }
+          console.log(
+            `✅ Logged leave event for ${participant?.user_name} in meeting ${zoomMeetingId} (account: ${accountId})`
+          );
         } catch (error) {
-          console.error("Error updating participant leave:", error);
+          console.error("Error logging participant leave:", error);
         }
       }
       break;
