@@ -133,7 +133,6 @@ async function sendDiscordNotification(rowIdx: number, formData: FormData) {
       }
     )
       .then((res) => res.text())
-      .then(console.log);
   } catch (error) {
     throw error;
   }

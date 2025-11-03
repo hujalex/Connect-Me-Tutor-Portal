@@ -988,8 +988,6 @@ export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
       .eq("id", enrollment.id)
       .select()
       .single();
-    console.log("Updated summer");
-    console.log(data);
 
     if (error) throw error;
 
@@ -1052,7 +1050,6 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       enrollment.availability[0].endTime
     );
 
-    console.log(enrollment);
 
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase
@@ -1117,7 +1114,6 @@ export const addEnrollment = async (
   sendEmail?: boolean
 ) => {
   try {
-    console.log("Duration", enrollment.availability[0]);
 
     const duration = await handleCalculateDuration(
       enrollment.availability[0].startTime,
@@ -1161,7 +1157,6 @@ export const addEnrollment = async (
       throw error;
     }
 
-    console.log(data);
 
     return {
       createdAt: data.created_at,

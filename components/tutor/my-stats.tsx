@@ -85,7 +85,6 @@ const Stats = () => {
     { id: "unified", label: "Unified Table" },
   ];
 
-  console.log("Enrollment Details", enrollmentDetails)
   const totalSessionHours = Object.values(enrollmentDetails).flat().reduce(
     (sum, e) => sum + e.hours,
     0
@@ -143,7 +142,6 @@ const Stats = () => {
   const fetchEnrollmentDetails = async (tutorId: string) => {
     try {
       const data: EnrollmentDetails[] = await getSessionHoursByStudent(tutorId);
-      console.log(data[0]);
 
       setEnrollmentDetails(data);
     } catch (error) {
@@ -155,7 +153,6 @@ const Stats = () => {
     try {
       const data: { [key: string]: EventDetails[] } =
         await getAllEventDetailsForTutor(tutorId);
-      console.log(data);
       setEventDetails(data);
     } catch (error) {
       toast.error("Unable to fetch event details");

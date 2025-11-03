@@ -24,7 +24,6 @@ export const useProfile = () => {
       if (!user) throw new Error("No user found");
 
       const profileData = await getProfile(user.id);
-      console.log("Profile data fetched:", profileData);
       setProfile(profileData);
     })();
 
