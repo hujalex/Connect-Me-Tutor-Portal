@@ -2,7 +2,7 @@ import { getProfileByEmail } from "@/lib/actions/user.actions";
 import { Profile } from "@/types";
 import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient";
 import { request } from "http";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { ideahub } from "googleapis/build/src/apis/ideahub";
@@ -15,7 +15,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     const { to, subject, body, sessionId } = await request.json();
 

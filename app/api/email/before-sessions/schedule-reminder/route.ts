@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Session } from "@/types";
 import { Profile } from "@/types";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server"
 import { addMinutes, subMinutes, parseISO } from "date-fns";
 import { scheduleEmail } from "@/lib/actions/email.server.actions";
 import { getSupabase } from "@/lib/supabase-server/serverClient";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     const data = await request.json();
     const session: Session = data.session;

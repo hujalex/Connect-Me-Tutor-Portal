@@ -2,7 +2,7 @@
 import { Session } from "@/types";
 import { toast } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { Profile } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./meeting.server.actions";
@@ -34,7 +34,7 @@ export async function getSessions(
   end: string
 ): Promise<Session[]> {
   try {
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     const { data: sessionData, error: sessionError } = await supabase
       .from(Table.Sessions)
@@ -260,7 +260,7 @@ export async function getSessionById(
   sessionId: string
 ): Promise<Session | null> {
   try {
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     const { data: sessionData, error: sessionError } = await supabase
       .from(Table.Sessions)
