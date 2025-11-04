@@ -1,4 +1,4 @@
-"use client"
+"use client";
 // lib/admins.actions.ts
 
 // lib/student.actions.ts
@@ -46,7 +46,7 @@ import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
 import { createUser } from "./auth.actions";
 import { handleCalculateDuration } from "./hours.actions";
 import { language } from "googleapis/build/src/apis/language";
-import { tableToIntefaceProfiles } from "../type-utils";
+import { tableToInterfaceProfiles } from "../type-utils";
 import { createPairingRequest } from "./pairing.actions";
 import { scheduleMultipleSessionReminders } from "../twilio";
 // import { getMeeting } from "./meeting.actions";
@@ -432,28 +432,29 @@ export async function getAllSessions(
     }
 
     const sessions: Session[] = await Promise.all(
-      data.map(async (session: any) => ({
-        id: session.id,
-        enrollmentId: session.enrollment_id,
-        createdAt: session.created_at,
-        environment: session.environment,
-        date: session.date,
-        summary: session.summary,
-        // meetingId: session.meeting_id,
-        // meeting: await getMeeting(session.meeting_id),
-        meeting: session.meetings,
-        student: await tableToIntefaceProfiles(session.student),
-        tutor: await tableToIntefaceProfiles(session.tutor),
-        // student: await getProfileWithProfileId(session.student_id),
-        // tutor: await getProfileWithProfileId(session.tutor_id),
-        status: session.status,
-        session_exit_form: session.session_exit_form,
-        isQuestionOrConcern: Boolean(session.is_question_or_concern),
-        isFirstSession: Boolean(session.is_first_session),
-        duration: session.duration,
-      }))
+      data
+        .filter((session: any) => session.student && session.tutor)
+        .map(async (session: any) => ({
+          id: session.id,
+          enrollmentId: session.enrollment_id,
+          createdAt: session.created_at,
+          environment: session.environment,
+          date: session.date,
+          summary: session.summary,
+          // meetingId: session.meeting_id,
+          // meeting: await getMeeting(session.meeting_id),
+          meeting: session.meetings,
+          student: await tableToInterfaceProfiles(session.student),
+          tutor: await tableToInterfaceProfiles(session.tutor),
+          // student: await getProfileWithProfileId(session.student_id),
+          // tutor: await getProfileWithProfileId(session.tutor_id),
+          status: session.status,
+          session_exit_form: session.session_exit_form,
+          isQuestionOrConcern: Boolean(session.is_question_or_concern),
+          isFirstSession: Boolean(session.is_first_session),
+          duration: session.duration,
+        }))
     );
-    console.log("Sessions", sessions);
 
     return sessions;
   } catch (error) {
@@ -680,7 +681,6 @@ export async function addOneSession(
   scheduleEmail: boolean = true
 ): Promise<void> {
   try {
-
     const newSession = {
       date: session.date,
       enrollment_id: null, //omdependent of enrollment date
@@ -729,7 +729,6 @@ export async function addOneSession(
 }
 
 async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
-
   const midLastWeek = subDays(midWeek, 7);
 
   const startOfLastWeek: Date = startOfWeek(midLastWeek);
@@ -745,215 +744,6 @@ async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
   if (error) throw error;
 
   return Object.keys(data).length > 0;
-}
-
-/**
- * Add sessions for enrollments within the specified week range
- * @param weekStartString - ISO string of week start in Eastern Time
- * @param weekEndString - ISO string of week end in Eastern Time
- * @param enrollments - List of enrollments to create sessions for
- * @param sessions - Existing sessions to avoid duplicates
- * @returns Newly created sessions
- */
-export async function addSessions(
-  weekStartString: string,
-  weekEndString: string,
-  enrollments: Enrollment[],
-  sessions: Session[]
-) {
-
-
-  try {
-    const weekStart: Date = fromZonedTime(
-      parseISO(weekStartString),
-      "America/New_York"
-    );
-    const weekEnd: Date = fromZonedTime(
-      parseISO(weekEndString),
-      "America/New_York"
-    );
-
-    const now: string = new Date().toISOString();
-
-    //Set created to avoid duplicates
-    const scheduledSessions: Set<string> = await getSessionKeys(sessions);
-    // Prepare bulk insert data
-    const sessionsToCreate: any[] = [];
-
-    // Process all enrollments
-    for (const enrollment of enrollments) {
-      const {
-        id,
-        student,
-        tutor,
-        availability,
-        meetingId,
-        summary,
-        startDate,
-        duration,
-        frequency,
-      } = enrollment;
-
-      if (frequency === "biweekly") {
-        if (await isSessioninPastWeek(id, addDays(weekStart, 3))) continue;
-      }
-
-      const startDate_asDate = new Date(startDate); //UTC
-
-      //Check if paused over the summer
-      if (enrollment.summerPaused) {
-        continue;
-      }
-
-      // Skip invalid enrollments
-      if (!student?.id || !tutor?.id || !availability?.length) {
-        continue;
-      }
-
-      // Process each availability slot
-      let { day, startTime, endTime } = availability[0];
-
-      // Skip invalid time formats
-      if (
-        !startTime ||
-        !endTime
-        // startTime.includes("-") ||
-        // endTime.includes("-")
-      ) {
-        console.error(`Invalid time format in availability:`, availability[0]);
-        continue;
-      }
-
-      // Find matching day in the week range
-      let currentDate = new Date(weekStart);
-      const dayLower = day.toLowerCase();
-
-      while (currentDate <= weekEnd) {
-        const currentDay = format(currentDate, "EEEE").toLowerCase();
-
-        // Skip days that don't match
-        if (currentDay !== dayLower) {
-          currentDate = addDays(currentDate, 1);
-          continue;
-        }
-
-        //Add Seven Days if CurrentDate is last week (Acts as a Modulus to ensure updating current week only)
-        if (currentDate < parseISO(weekStartString)) {
-          currentDate = addDays(currentDate, 7);
-        }
-
-        //Remove Seven Days if CurrentDate is next week (Acts as a Modulus to ensure updating current week only)
-        if (currentDate > parseISO(weekEndString)) {
-          currentDate = addDays(currentDate, -7);
-        }
-
-        try {
-          // Parse times correctly
-          const [startHour, startMinute] = startTime.split(":").map(Number);
-          const [endHour, endMinute] = endTime.split(":").map(Number);
-
-          if (
-            isNaN(startHour) ||
-            isNaN(startMinute) ||
-            isNaN(endHour) ||
-            isNaN(endMinute)
-          ) {
-            throw new Error(
-              `Invalid time format: start=${startTime}, end=${endTime}`
-            );
-          }
-
-          // Create session date with correct time
-          // * SetHours and SetMinutes are dependent on local timezone
-
-          const dateString = `${format(currentDate, "yyyy-MM-dd")}T${startTime}:00`;
-          const sessionStartTime = fromZonedTime(
-            dateString,
-            "America/New_York"
-          ); // Automatically handles DST
-
-          if (sessionStartTime < startDate_asDate) {
-            throw new Error("Session occurs before start date");
-          }
-
-          // Check for duplicate session
-          const sessionKey = `${student.id}-${tutor.id}-${format(
-            sessionStartTime,
-            "yyyy-MM-dd-HH:mm"
-          )}`;
-
-          if (!scheduledSessions.has(sessionKey)) {
-            // Add to batch insert
-            sessionsToCreate.push({
-              enrollment_id: id,
-              date: sessionStartTime.toISOString(),
-              student_id: student.id,
-              tutor_id: tutor.id,
-              status: "Active",
-              summary: summary || "",
-              meeting_id: meetingId || null,
-              duration: duration,
-            });
-
-            // Track this session to avoid duplicates
-            scheduledSessions.add(sessionKey);
-          } ////
-        } catch (err) {
-          console.error(
-            `Error processing time for ${day} ${startTime}-${endTime}:`,
-            err
-          );
-        }
-
-        // Move to next day
-        currentDate = addDays(currentDate, 1);
-      }
-    }
-
-    // Perform batch insert if we have sessions to create
-    if (sessionsToCreate.length > 0) {
-      const { data, error } = await supabase
-        .from(Table.Sessions)
-        .insert(sessionsToCreate)
-        .select();
-
-      if (error) throw error;
-
-      if (data) {
-        // Transform returned data to Session objects
-        const sessions: Session[] = await Promise.all(
-          data.map(async (session: any) => ({
-            id: session.id,
-            enrollmentId: session.enrollment_id,
-            createdAt: session.created_at,
-            environment: session.environment,
-            date: session.date,
-            summary: session.summary,
-            meeting: await getMeeting(session.meeting_id),
-            student: await getProfileWithProfileId(session.student_id),
-            tutor: await getProfileWithProfileId(session.tutor_id),
-            status: session.status,
-            session_exit_form: session.session_exit_form || null,
-            isQuestionOrConcern: session.isQuestionOrConcern,
-            isFirstSession: session.isFirstSession,
-            duration: session.duration,
-          }))
-        );
-
-        // if (!sessions) return;
-
-        scheduleMultipleSessionReminders(sessions!);
-
-        //Schedule emails
-        return sessions;
-      }
-    }
-
-    return [];
-  } catch (error) {
-    console.error("Error creating sessions:", error);
-    throw error;
-  }
 }
 
 async function logSessionInfo(
@@ -978,129 +768,10 @@ async function logSessionInfo(
   console.log("-----------------");
 }
 
-// export async function addSessions(
-//   weekStartString: string,
-//   weekEndString: string,
-//   enrollments: Enrollment[],
-//   sessionsFetched: Session[]
-// ) {
-//   const weekStart = parseISO(weekStartString);
-//   const weekEnd = parseISO(weekEndString);
-//   const sessions: Session[] = [];
-
-//   const scheduledSessions: Set<string> = await getSessionKeys(sessionsFetched);
-
-//   for (const enrollment of enrollments) {
-//     const { student, tutor, availability } = enrollment;
-
-//     if (!student || !tutor) continue;
-
-//     for (const avail of availability) {
-//       const { day, startTime, endTime } = avail;
-
-//       if (!startTime || startTime.includes("-")) {
-//         console.error(`Invalid time format for availability: ${startTime}`);
-//         console.log("Errored Enrollment", enrollment);
-//         continue;
-//       }
-
-//       const [availStart, availEnd] = [startTime, endTime];
-
-//       if (!availStart || !availEnd) {
-//         console.error(
-//           `Invalid start or end time: start=${availStart}, end=${availEnd}`
-//         );
-//         continue;
-//       }
-
-//       let sessionDate = new Date(weekStart);
-//       while (sessionDate <= weekEnd) {
-//         if (format(sessionDate, "EEEE").toLowerCase() === day.toLowerCase()) {
-//           const availStartTime = parse(
-//             availStart.toLowerCase(),
-//             "HH:mm",
-//             sessionDate
-//           );
-//           const availEndTime = parse(
-//             availEnd.toLowerCase(),
-//             "HH:mm",
-//             sessionDate
-//           );
-
-//           if (
-//             isNaN(availStartTime.getTime()) ||
-//             isNaN(availEndTime.getTime())
-//           ) {
-//             console.error(
-//               `Invalid parsed time: start=${availStart}, end=${availEnd}`
-//             );
-//             break;
-//           }
-
-//           const sessionStartTime = setMinutes(
-//             setHours(sessionDate, availStartTime.getHours()),
-//             availStartTime.getMinutes()
-//           );
-//           const sessionEndTime = setMinutes(
-//             setHours(sessionDate, availEndTime.getHours()),
-//             availEndTime.getMinutes()
-//           );
-
-//           if (
-//             isBefore(sessionStartTime, weekStart) ||
-//             isAfter(sessionEndTime, weekEnd)
-//           ) {
-//             sessionDate = addDays(sessionDate, 1);
-//             continue;
-//           }
-
-//           // Check for duplicates
-//           const sessionKey = `${student.id}-${tutor.id}-${format(
-//             sessionStartTime,
-//             "yyyy-MM-dd-HH:mm"
-//           )}`;
-//           if (scheduledSessions.has(sessionKey)) {
-//             console.warn(`Duplicate session detected: ${sessionKey}`);
-//             sessionDate = addDays(sessionDate, 1);
-//             continue;
-//           }
-
-//           console.log(enrollment);
-
-//           const { data: session, error } = await supabase
-//             .from(Table.Sessions)
-//             .insert({
-//               date: sessionStartTime.toISOString(),
-//               student_id: student.id,
-//               tutor_id: tutor.id,
-//               status: "Active",
-//               summary: enrollment.summary,
-//               meeting_id: enrollment.meetingId || null, //TODO: invalid uuid input syntax, uuid doesn't take ""
-//             })
-//             .single();
-
-//           if (error) {
-//             console.error("Error creating session:", error);
-//             continue;
-//           }
-
-//           sessions.push(session);
-//           scheduledSessions.add(sessionKey);
-//         }
-//         sessionDate = addDays(sessionDate, 1);
-//       }
-//     }
-//   }
-
-//   return sessions;
-// }
-
-// Function to update a session
 export async function updateSession(
   updatedSession: Session,
   updateEmail: boolean = true
 ) {
-
   try {
     const {
       id,
@@ -1171,7 +842,6 @@ export async function removeSession(
   sessionId: string,
   updateEmail: boolean = true
 ) {
-
   // Create a notification for the admin
   const { error: eventError } = await supabase
     .from(Table.Sessions)
@@ -1189,8 +859,6 @@ export async function removeSession(
 
 /* MEETINGS */
 export async function getMeetings(): Promise<Meeting[] | null> {
-
-
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Meetings).select(`
@@ -1201,8 +869,6 @@ export async function getMeetings(): Promise<Meeting[] | null> {
         created_at,
         name
       `);
-
-    console.log("Data: ", data);
 
     // Check for errors and log them
     if (error) {
@@ -1261,7 +927,7 @@ export const createEnrollment = async (
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
-    console.log("Fetching Enrollments")
+    console.log("Fetching Enrollments");
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,
@@ -1273,7 +939,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         end_date,
         availability,
         meetingId,
-        summer_paused,
+        paused,
         duration,
         frequency
       `);
@@ -1301,7 +967,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         endDate: enrollment.end_date,
         availability: enrollment.availability,
         meetingId: enrollment.meetingId,
-        summerPaused: enrollment.summer_paused,
+        paused: enrollment.paused,
         duration: enrollment.duration,
         frequency: enrollment.frequency,
       }))
@@ -1315,16 +981,13 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
 }
 
 export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
-
   try {
     const { data, error } = await supabase
       .from(Table.Enrollments)
-      .update({ summer_paused: enrollment.summerPaused })
+      .update({ paused: enrollment.paused })
       .eq("id", enrollment.id)
       .select()
       .single();
-    console.log("Updated summer");
-    console.log(data);
 
     if (error) throw error;
 
@@ -1336,7 +999,6 @@ export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
 }
 
 export async function getMeeting(id: string): Promise<Meeting | null> {
-
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
@@ -1387,8 +1049,6 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       enrollment.availability[0].startTime,
       enrollment.availability[0].endTime
     );
-
-    console.log(enrollment)
 
 
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
@@ -1453,10 +1113,7 @@ export const addEnrollment = async (
   enrollment: Omit<Enrollment, "id" | "createdAt">,
   sendEmail?: boolean
 ) => {
-
-
   try {
-    console.log("Duration", enrollment.availability[0]);
 
     const duration = await handleCalculateDuration(
       enrollment.availability[0].startTime,
@@ -1500,7 +1157,6 @@ export const addEnrollment = async (
       throw error;
     }
 
-    console.log(data);
 
     return {
       createdAt: data.created_at,
@@ -1521,8 +1177,6 @@ export const addEnrollment = async (
 };
 
 export const removeFutureSessions = async (enrollmentId: string) => {
-
-
   try {
     const now: string = new Date().toISOString();
     const { data: deleteSessionsData, error: deleteSessionsError } =
@@ -1545,7 +1199,6 @@ export const removeFutureSessions = async (enrollmentId: string) => {
 };
 
 export const removeEnrollment = async (enrollmentId: string) => {
-
   await removeFutureSessions(enrollmentId);
 
   const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
@@ -1559,7 +1212,6 @@ export const removeEnrollment = async (enrollmentId: string) => {
 
 /* EVENTS */
 export async function getEvents(tutorId: string): Promise<Event[]> {
-
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase
@@ -1612,7 +1264,6 @@ export async function getEventsWithTutorMonth(
   tutorId: string,
   selectedMonth: string
 ): Promise<Event[] | null> {
-
   try {
     // Fetch event details filtered by tutor IDs and selected month
     const { data, error } = await supabase
@@ -1669,7 +1320,6 @@ export async function getEventsWithTutorMonth(
 }
 
 export async function createEvent(event: Event) {
-
   // Create a notification for the admin
   const { error: eventError } = await supabase.from("Events").insert({
     date: event.date,
@@ -1685,7 +1335,6 @@ export async function createEvent(event: Event) {
 }
 
 export async function removeEvent(eventId: string): Promise<boolean> {
-
   try {
     // Validate eventId format
     if (!eventId || typeof eventId !== "string") {
@@ -1720,7 +1369,6 @@ export async function removeEvent(eventId: string): Promise<boolean> {
 
 /* NOTIFICATIONS */
 export async function getAllNotifications(): Promise<Notification[] | null> {
-
   try {
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from("Notifications").select(`
@@ -1773,7 +1421,6 @@ export const updateNotification = async (
   notificationId: string,
   status: "Active" | "Resolved"
 ) => {
-
   try {
     const { data, error } = await supabase
       .from("Notifications") // Adjust this table name to match your database

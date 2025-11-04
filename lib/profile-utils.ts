@@ -22,7 +22,6 @@ export async function updateProfileData(data: ProfilePairingMetadata): Promise<P
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   // In a real app, this would send data to your API
-  console.log("Updating profile data:", data)
 
   return data
 }

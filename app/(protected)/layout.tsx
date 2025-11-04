@@ -1,4 +1,6 @@
 import { Inter } from "next/font/google";
+// import { supabase } from "@/lib/supabase/server"
+import { supabase } from "@/lib/supabase/client";
 
 import { redirect } from "next/navigation";
 
@@ -17,18 +19,18 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClientComponentClient();
-  const {
-    data: { user },
+  // const supabase = createClientComponentClient();
+  // const {
+  //   data: { user },
 
-    error,
-  } = await supabase.auth.getUser();
+  //   error,
+  // } = await supabase.auth.getUser();
 
-  console.log("USER", error);
+  // console.log("USER", error);
 
-  const userId = user ? user.id : "";
-  console.log("USER ID", user, "Layout");
-  const data = await getProfile(userId);
+  // const userId = user ? user.id : "";
+  // console.log("USER ID", user, "Layout");
+  // const data = await getProfile(userId);
 
   return <div className="flex-col h-full w-full m-auto">{children}</div>;
 }

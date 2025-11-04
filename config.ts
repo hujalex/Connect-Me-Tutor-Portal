@@ -38,7 +38,6 @@ export const config = {
   },
 } as z.infer<typeof ConfigSchema>;
 
-console.log("config: ", config);
 
 // let validatedConfig: z.infer<typeof ConfigSchema>;
 

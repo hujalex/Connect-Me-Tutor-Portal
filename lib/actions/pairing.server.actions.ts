@@ -184,7 +184,6 @@ Parent Phone: ${studentData.parentPhone}
     }),
   });
   if (response.status != 200) {
-    console.log(process.env.PAIRING_ALERTS_WEBHOOK);
   }
 };
 

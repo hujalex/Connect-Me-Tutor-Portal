@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default async function ChatPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -40,9 +40,6 @@ export default async function ChatPage() {
     getProfileRole(userId),
   ]);
 
-  console.log("ADMIN: ", adminConversationID);
-
-  console.log("Pairings:", pairings);
   return (
     <div className="flex flex-col h-screen">
       <div>

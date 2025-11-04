@@ -304,7 +304,6 @@ export const to12HourWithMinutes = (time: string) => {
  */
 
 export function timeStrToHours(timeStr: string) {
-  console.log("TIme string", timeStr);
   const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
   const isValid = timeRegex.test(timeStr);

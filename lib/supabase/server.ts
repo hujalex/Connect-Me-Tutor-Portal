@@ -1,5 +1,5 @@
 "use server"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerComponentClient, SupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { createServerClient as makeServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 
@@ -27,7 +27,8 @@ export async function createServerClient() {
   );
 }
 
-export function createClient() {
+// Supabase Instances are singleton
+export async function createClient() {
   const cookieStore = cookies();
 
   return createServerComponentClient(
@@ -40,3 +41,32 @@ export function createClient() {
     }
   );
 }
+
+// export const supabase = createServerComponentClient(
+//   {
+//     cookies: () => cookies(),
+//   },
+//   {
+//     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+//     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+//   }
+// )
+
+
+// let supabaseInstance: SupabaseClient | null = null;
+
+// export const getSupabase = () => {
+//   if (!supabaseInstance) {
+//     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+//     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+//     if (!supabaseUrl || !supabaseKey) {
+//       throw new Error("Missing Environments");
+//     }
+
+//     supabaseInstance = createClient(supabaseUrl, supabaseKey);
+//   }
+//   return supabaseInstance;
+// };
+
+

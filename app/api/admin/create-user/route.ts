@@ -55,7 +55,6 @@ const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   try {
     // Call signUp to create a new user
-    console.log("CREATING USER", newProfileData);
 
     // const { data: authData, error: authError } =
     //   await supabase.auth.admin.createUser({
@@ -107,7 +106,6 @@ const createUser = async (newProfileData: CreatedProfileData) => {
       .single();
 
     if (profileError) {
-      console.log("DELETING USER");
       await supabase.auth.admin.deleteUser(authData.user.id);
       throw profileError;
     }

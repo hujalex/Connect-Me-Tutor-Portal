@@ -132,7 +132,7 @@ const EnrollmentList = () => {
     endDate: null,
     availability: [{ day: "", startTime: "", endTime: "" }],
     meetingId: "",
-    summerPaused: false,
+    paused: false,
     duration: 1,
     frequency: "weekly",
   });
@@ -255,14 +255,7 @@ const EnrollmentList = () => {
     const updatedMeetingAvailability = await checkAvailableMeetingForEnrollments(enroll, enrollments, meetings)
     setIsCheckingMeetingAvailability(false);
     setMeetingAvailability(updatedMeetingAvailability);
-    Object.entries(updatedMeetingAvailability).forEach(
-      ([meetingId, isAvailable]) => {
-        const meetingName = meetings.find((m) => m.id === meetingId)?.name;
-        console.log(
-          `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
-        );
-      }
-    );
+    
   };
 
   const isMeetingAvailable = (
@@ -274,7 +267,6 @@ const EnrollmentList = () => {
       const new_enrollment_date = new Date(
         `${enroll.availability[0].day} ${enroll.availability[0].endTime}`
       );
-      console.log(now);
       return !enrollments.some((enrollment) => {
         // Skip sessions without dates or meeting IDs
         if (!enrollment?.endDate || !enrollment?.meetingId) return false;
@@ -503,7 +495,7 @@ const EnrollmentList = () => {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([
-          { ...addedEnrollment, summerPaused: false },
+          { ...addedEnrollment, paused: false },
           ...enrollments,
         ]);
         setIsAddModalOpen(false);
@@ -567,7 +559,7 @@ const EnrollmentList = () => {
       endDate: null,
       availability: [{ day: "", startTime: "", endTime: "" }],
       meetingId: "",
-      summerPaused: false,
+      paused: false,
       duration: 1,
       frequency: "weekly",
     });
@@ -1012,12 +1004,12 @@ const EnrollmentList = () => {
                       onClick={() => {
                         const updatedEnrollment = {
                           ...enrollment,
-                          summerPaused: !enrollment.summerPaused,
+                          summerPaused: !enrollment.paused,
                         };
                         handlePausePairingOverSummer(updatedEnrollment);
                       }}
                     >
-                      {enrollment.summerPaused ? (
+                      {enrollment.paused ? (
                         <span className="px-3 py-1 inline-flex items-center rounded-full bg-red-100 text-red-800 border border-red-200">
                           <TimerOff size={14} className="mr-1" />
                           Paused

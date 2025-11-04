@@ -35,7 +35,6 @@ const sendPairingRequestNotification = async (
 
   const studentData: Profile | null = await getProfileWithProfileId(studentId);
 
-  console.log("Sending pairing request notification");
 
   if (tutorData && studentData) {
     const emailData: PairingRequestNotificationEmailProps = {
@@ -59,10 +58,9 @@ const buildMatches = async (matches: QueueItemMatch[]): Promise<PairingMatch[]> 
 }
 
 export const runPairingWorkflow = async () => {
-  console.log("STARTING PAIRING WORKFLOW");
   const logs: PairingLogSchemaType[] = [];
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Get top pairing requests for tutors & students
   const [tutorQueueResult, studentQueueResult] = await Promise.all([
@@ -75,8 +73,6 @@ export const runPairingWorkflow = async () => {
     studentQueueResult.data ?? [],
   ] as [QueueItem[], QueueItem[]];
 
-  console.log(tutorQueue.length);
-  console.log(studentQueue.length);
 
   // console.log("tutorQueue:", tutorQueue);
   // console.log("studentQueue:", studentQueue);
@@ -95,7 +91,6 @@ export const runPairingWorkflow = async () => {
   for (let i = 0; i < maxLength; i++) {
     // Handle students first (student → tutor)
     if (i < studentQueue.length) {
-      console.log("Student Queue");
       const studentReq = studentQueue[i];
       const { data, error } = await supabase
         .rpc("get_best_match", {
@@ -118,7 +113,6 @@ export const runPairingWorkflow = async () => {
             match_profile_id: result.match_profile.id,
           },
         });
-        console.log("Running student pairing");
         await updatePairingStatus(supabase, studentReq.pairing_request_id, "paired");
 
         studentMatches.push(result);
@@ -136,7 +130,6 @@ export const runPairingWorkflow = async () => {
 
     // Handle tutors (tutor → student)
     if (i < tutorQueue.length) {
-      console.log("Tutor Queue");
       const tutorReq = tutorQueue[i];
       const { data, error } = await supabase
         .rpc("get_best_match", {
@@ -185,7 +178,7 @@ export const runPairingWorkflow = async () => {
   const matchedTutors: PairingMatch[] = await buildMatches(tutorMatches)
 
 
-  console.log(matchedStudents);
+  // console.log(matchedStudents);
 
   try {
     const emailPromises = matchedStudents.map(async (match) => {
@@ -220,11 +213,6 @@ export const runPairingWorkflow = async () => {
 
   // dummy insert
   if (r1Error) throw r1Error
-
-
-  const student_id = 'aa21a1c4-c57b-42b7-97ba-084bc0a480a0'
-  const tutor_id = 'f546b169-8ac1-41b3-bbad-5717e44e2564'
-
   // const {data: dummyData, error: dummyError} = await supabase.from("pairing_matches").insert(
   //   {student_id: student_id,
   //     tutor_id: tutor_id,
@@ -251,5 +239,4 @@ export const runPairingWorkflow = async () => {
       .in("id", tutorsToUpdate);
   }
 
-  console.log("Pairing complete:", { matches: r1, logs: r2 });
 };

@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scrollarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import { Profile } from "@/types";
+import TimeZoneSelector from "./components/TimezoneSelector";
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -410,27 +411,7 @@ const AddStudentForm = ({
                     >
                       Time Zone
                     </Label>
-                    <Select
-                      name="timeZone"
-                      value={newStudent.timeZone}
-                      onValueChange={handleTimeZone}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select time zone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="EST">
-                          Eastern Standard Time (EST)
-                        </SelectItem>
-                        <SelectItem value="CST">
-                          Central Standard Time (CST)
-                        </SelectItem>
-                        <SelectItem value="MT">Mountain Time (MT)</SelectItem>
-                        <SelectItem value="PST">
-                          Pacific Standard Time (PST)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                   <TimeZoneSelector newProfile={newStudent} handleTimeZone={handleTimeZone} />
                   </div>
                 </div>
               </div>

@@ -43,7 +43,7 @@ export default async function ChatRoomPage({ params }: Props) {
   ];
 
   const mockMessages: Message[] = [];
-  const supabase = createClient();
+  const supabase = await createClient();
   const user = await supabase.auth.getUser();
   const userId = user.data.user?.id;
 

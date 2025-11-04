@@ -161,20 +161,16 @@ export const checkAvailableMeetingForEnrollments = async (
   enrollments: Enrollment[],
   meetings: Meeting[]
 ) => {
-  console.log(enroll)
-  console.log("Checking")
   const updatedMeetingAvailability: { [key: string]: boolean } = {};
   meetings.forEach((meeting) => {
     updatedMeetingAvailability[meeting.id] = true;
   });
-  console.log("Availability", enroll.availability[0])
   const [newEnrollmentStartTime, newEnrollmentEndTime] = enroll.availability[0]
     ? formatAvailabilityAsDate(enroll.availability[0])
     : [new Date(NaN), new Date(NaN)];
   for (const enrollment of enrollments) {
     if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
     try {
-      console.log("Enrollment Availability", enrollment.availability[0])
       const [existingStartTime, existingEndTime] = formatAvailabilityAsDate(
         enrollment.availability[0]
       );
@@ -191,15 +187,11 @@ export const checkAvailableMeetingForEnrollments = async (
       if (updatedMeetingAvailability[enrollment.meetingId]) {
         updatedMeetingAvailability[enrollment.meetingId] = !isOverlap;
         if (isOverlap) {
-          console.log("FALSE", enrollment.availability[0], enrollment.meetingId)
         }
       }
     } catch (error) {
-      console.error("Error processing enrollment date:", error);
-      console.log(enrollment.availability[0]);
       updatedMeetingAvailability[enrollment.meetingId] = false;
     }
   }
-  console.log(updatedMeetingAvailability)
   return updatedMeetingAvailability;
 };
