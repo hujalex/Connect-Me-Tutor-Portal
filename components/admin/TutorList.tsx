@@ -80,6 +80,7 @@ import AddTutorForm from "./components/AddTutorForm";
 import DeleteTutorForm from "./components/DeleteTutorForm";
 import EditTutorForm from "./components/EditTutorForm";
 import { Turret_Road } from "next/font/google";
+import { capitalizeFirstLetter } from "@/lib/utils";
 
 const TutorList = () => {
   const supabase = createClientComponentClient();
@@ -411,7 +412,7 @@ const TutorList = () => {
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
               />
-              {/*Add Student*/}
+              {/*Add Tutor*/}
               <AddTutorForm
                 newTutor={newTutor}
                 setNewTutor={setNewTutor}
@@ -437,6 +438,7 @@ const TutorList = () => {
                 tutors={tutors}
                 selectedTutor={selectedTutor}
                 selectedTutorId={selectedTutorId}
+                setSelectedTutor={setSelectedTutor}
                 setSelectedTutorId={setSelectedTutorId}
                 handleEditTutor={handleEditTutor}
                 handleGetSelectedTutor={handleGetSelectedTutor}
@@ -458,6 +460,7 @@ const TutorList = () => {
                 <TableHead>Subjects Teaching </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone Number</TableHead>
+                <TableHead>Gender</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -479,6 +482,7 @@ const TutorList = () => {
                   </TableCell>
                   <TableCell>{tutor.email}</TableCell>
                   <TableCell>{tutor.phoneNumber}</TableCell>
+                  <TableCell>{capitalizeFirstLetter(tutor.gender)}</TableCell>
                   <TableCell>
                     <AlertDialog>
                       <AlertDialogTrigger>
