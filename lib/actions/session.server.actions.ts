@@ -446,7 +446,7 @@ export async function getSessionById(
   sessionId: string
 ): Promise<Session | null> {
   try {
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     const { data: sessionData, error: sessionError } = await supabase
       .from(Table.Sessions)

@@ -4,7 +4,6 @@ import { supabase } from "./user.actions";
 import { SharedEnrollment } from "@/types/enrollment";
 
 export async function getAccountEnrollments(userId: string) {
-  console.log(userId);
 
   const { data, error } = await supabase.rpc(
     "get_user_enrollments_with_profiles",

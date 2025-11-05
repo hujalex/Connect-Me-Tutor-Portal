@@ -17,7 +17,6 @@ export const useEnrollment = (enrollmentId: string) => {
         setEnrollment(data as SharedEnrollment);
       }
 
-      console.log(data, error);
     })();
   }, [supabase, enrollmentId]);
   return { enrollment };

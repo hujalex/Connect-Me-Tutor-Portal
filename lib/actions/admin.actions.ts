@@ -67,6 +67,7 @@ export async function getAllProfiles(
       user_id,
       age,
       grade,
+      gender,
       first_name,
       last_name,
       date_of_birth,
@@ -117,6 +118,7 @@ export async function getAllProfiles(
       userId: profile.user_id,
       age: profile.age,
       grade: profile.grade,
+      gender: profile.gender,
       firstName: profile.first_name,
       lastName: profile.last_name,
       dateOfBirth: profile.date_of_birth,
@@ -988,8 +990,6 @@ export async function pauseEnrollmentOverSummer(enrollment: Enrollment) {
       .eq("id", enrollment.id)
       .select()
       .single();
-    console.log("Updated summer");
-    console.log(data);
 
     if (error) throw error;
 
@@ -1052,7 +1052,6 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       enrollment.availability[0].endTime
     );
 
-    console.log(enrollment);
 
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase
@@ -1117,7 +1116,6 @@ export const addEnrollment = async (
   sendEmail?: boolean
 ) => {
   try {
-    console.log("Duration", enrollment.availability[0]);
 
     const duration = await handleCalculateDuration(
       enrollment.availability[0].startTime,
@@ -1161,7 +1159,6 @@ export const addEnrollment = async (
       throw error;
     }
 
-    console.log(data);
 
     return {
       createdAt: data.created_at,

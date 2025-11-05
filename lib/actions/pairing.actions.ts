@@ -44,7 +44,6 @@ export const getAllPairingRequests = async (
     p_type: profileType,
   });
 
-  console.log("Pairing requests data", data);
 
   return { data: data as PairingRequest[], error };
 };
@@ -69,7 +68,6 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     getAccountEnrollments(userId),
   ]);
 
-  console.log(enrollments);
 
   if (!enrollments) throw new Error("cannot locate account enrollments");
   if (!profile) throw new Error("failed to validate profile role");
@@ -106,7 +104,6 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     ]);
   }
 
-  console.log("creation result: ", result);
 };
 
 export const removePairingRequest = async (id: string) => {
@@ -145,7 +142,6 @@ export const getPairingLogs = async (
     end_time,
   });
 
-  console.log("logs ", error);
 
   console.log("selected pairing logs: ", logs, "from ", start_time, end_time);
 
@@ -174,7 +170,6 @@ export const getIncomingPairingMatches = async (profileId: string) => {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
-  console.log("PROFILE ID: ", profileId);
   const { data, error } = await supabase.rpc(
     "get_pairing_matches_with_profiles",
     {
@@ -182,7 +177,6 @@ export const getIncomingPairingMatches = async (profileId: string) => {
     }
   );
 
-  console.log("returned matches: ", data);
 
   return data;
 };
@@ -199,7 +193,6 @@ export const deletePairing = async (tutorId: string, studentId: string) => {
       .eq("student_id", studentId);
 
     if (error) throw error;
-    console.log(data);
 
     console.log("Deleted");
   } catch (error) {
@@ -297,7 +290,6 @@ export const getAvailableMeetingLink = async (
 
     if (error) throw error;
 
-    console.log("All enrollments:", allEnrollments?.length);
 
     // Filter in JavaScript for arrays
     const availableMeetings =
@@ -431,7 +423,6 @@ export const updatePairingMatchStatus = async (
 
   if (error) return console.error(error);
   const pairingMatch = data as IncomingPairingMatch;
-  console.log("data", pairingMatch);
   const { student, tutor } = pairingMatch;
 
   if (status === "accepted") {
@@ -463,7 +454,6 @@ export const updatePairingMatchStatus = async (
     if (tutor.availability || student.availability) {
       autoEnrollment = await getAutomaticEnrollment(tutorData, studentData);
 
-      console.log("Details", autoEnrollment);
 
       if (autoEnrollment) {
         const result = await addEnrollment(autoEnrollment, true);
@@ -495,7 +485,6 @@ export const updatePairingMatchStatus = async (
       meeting: meetingData,
     };
 
-    console.log("student", student);
 
     try {
       await sendStudentPairingConfirmationEmail(emailData, studentData.email);

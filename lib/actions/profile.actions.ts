@@ -110,14 +110,12 @@ export async function updateProfileDetails({
 
   const updatedSubjects = updates["subjects_of_interest"] as string[];
   if (updatedSubjects) {
-    console.log(updatedSubjects);
     const { data } = await axios.post("/api/pairing/embeds", {
       subjects: updatedSubjects,
     });
     if (data.embed) updates["subject_embed"] = data.embed;
   }
 
-  console.log(updates);
 
   const { error } = await supabase
     .from(Table.Profiles)

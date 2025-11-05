@@ -304,7 +304,6 @@ export const to12HourWithMinutes = (time: string) => {
  */
 
 export function timeStrToHours(timeStr: string) {
-  console.log("TIme string", timeStr);
   const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
   const isValid = timeRegex.test(timeStr);
@@ -315,4 +314,11 @@ export function timeStrToHours(timeStr: string) {
   } else {
     throw new Error("time string not in HH:MM format");
   }
+}
+
+export function capitalizeFirstLetter(word: string | undefined) {
+  if (typeof word !== 'string' || word.length == 0) {
+    return word;
+  }
+  return word.charAt(0).toUpperCase() + word.slice(1)
 }

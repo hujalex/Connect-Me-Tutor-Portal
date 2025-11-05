@@ -17,7 +17,6 @@ export const usePairing = (pairingId: string) => {
         setPairing(data as SharedPairing);
       }
 
-      console.log(data, error);
     })();
   }, [supabase, pairingId]);
   return { pairing };

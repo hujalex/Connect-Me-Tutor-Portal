@@ -178,7 +178,7 @@ export const runPairingWorkflow = async () => {
   const matchedTutors: PairingMatch[] = await buildMatches(tutorMatches)
 
 
-  console.log(matchedStudents);
+  // console.log(matchedStudents);
 
   try {
     const emailPromises = matchedStudents.map(async (match) => {
@@ -239,5 +239,4 @@ export const runPairingWorkflow = async () => {
       .in("id", tutorsToUpdate);
   }
 
-  console.log("Pairing complete:", { matches: r1, logs: r2 });
 };

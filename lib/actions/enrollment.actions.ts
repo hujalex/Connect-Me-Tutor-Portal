@@ -134,8 +134,6 @@ export const getOverlappingAvailabilites = async (
   }[]
 ): Promise<Availability[]> => {
   try {
-    console.log(tutorAvailability);
-    console.log(studentAvailability);
 
     const { data, error } = await supabase.rpc(
       "get_overlapping_availabilities_array",
