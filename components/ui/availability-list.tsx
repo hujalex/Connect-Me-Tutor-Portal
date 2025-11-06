@@ -22,7 +22,7 @@ export const UserAvailabilityList: React.FC<UserAvailabilityListProps> = ({
   isBadge = true,
 }) => {
   useEffect(() => {
-    console.log("Matched Profile", profile);
+    // console.log("Matched Profile", profile);
     // console.log("Availability", profile.availability);
   });
 

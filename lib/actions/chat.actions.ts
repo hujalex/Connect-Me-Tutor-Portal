@@ -16,7 +16,6 @@ export async function fetchAdmins() {
       .select("*")
       .eq("role", "Admin");
     if (error) throw error;
-    console.log(data);
     return data;
   } catch (error) {
     console.error("unable to fetch admin information");

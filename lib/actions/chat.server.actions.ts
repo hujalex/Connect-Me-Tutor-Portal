@@ -16,7 +16,6 @@ export const createAdminConversation = async (user_id: string) => {
   }
   const supabase = await createClient();
 
-  console.log(user_id);
 
   const createdConversationID = await fetchUserAdminConversation(
     user_id,
