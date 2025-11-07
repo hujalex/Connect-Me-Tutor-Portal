@@ -38,7 +38,6 @@ import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { getAllSessions } from "./admin.actions";
 import { fromZonedTime } from "date-fns-tz";
-import { getSessionKeys } from "./session.server.actions";
 import { Table } from "../supabase/tables";
 // import { getMeeting } from "./meeting.actions";
 
@@ -66,6 +65,37 @@ export const fetchDaySessionsFromSchedule = async (requestedDate: Date) => {
     }
   }
 };
+
+
+export async function getSessionKeys(data?: Session[]) {
+  const sessionKeys: Set<string> = new Set();
+
+  if (!data) {
+    const { data, error } = await supabase
+      .from(Table.Sessions)
+      .select("student_id, tutor_id, date");
+
+    if (error) {
+      console.error("Error fetching sessions:", error);
+      throw error;
+    }
+  }
+
+  if (!data) return sessionKeys;
+
+  data.forEach((session) => {
+    if (session.date) {
+      const sessionDate = new Date(session.date);
+      const key = `${session.student?.id}-${session.tutor?.id}-${format(
+        sessionDate,
+        "yyyy-MM-dd-HH:mm"
+      )}`;
+      sessionKeys.add(key);
+    }
+  });
+
+  return sessionKeys;
+}
 
 
 
