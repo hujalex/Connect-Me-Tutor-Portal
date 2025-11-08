@@ -4,6 +4,8 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 import HoursPDFDocument from "@/components/admin/HoursReport";
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
