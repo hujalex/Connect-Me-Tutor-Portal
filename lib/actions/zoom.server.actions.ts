@@ -125,9 +125,11 @@ export async function getParticipationBySessionId(
 ): Promise<ParticipationRecord[] | null> {
   try {
     // First get the session with its meeting
+    // The join should be: Sessions.meeting_id -> Meetings.id (primary key)
+    // Then we select meeting_id (Zoom UUID) from Meetings
     const { data: session, error: sessionError } = await supabase
       .from("Sessions")
-      .select("meeting_id, meetings:Meetings!meeting_id(meeting_id)")
+      .select("meeting_id, meetings:Meetings!meeting_id(id, meeting_id)")
       .eq("id", sessionId)
       .single();
 
@@ -142,8 +144,18 @@ export async function getParticipationBySessionId(
       console.error("No meeting found for session or missing meeting_id");
       return null;
     }
+    const zoomMeetingId = meeting.id;
 
-    const zoomMeetingId = meeting.meeting_id;
+    // Validate that zoomMeetingId is a valid UUID format
+    // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12 hex digits)
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(zoomMeetingId)) {
+      console.error(
+        `Invalid Zoom meeting UUID format: "${zoomMeetingId}". Expected UUID format but got what appears to be a phone number or other invalid value.`
+      );
+      return null;
+    }
 
     // Get participation records using Zoom meeting UUID
     return await getParticipationByZoomMeetingId(zoomMeetingId);
