@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   format,
   startOfWeek,
@@ -75,6 +76,7 @@ import {
   Calendar,
   GraduationCap,
   CircleUserRound,
+  Users,
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
@@ -249,7 +251,6 @@ const Schedule = () => {
     }
   };
 
-
   const fetchAllSessionsFromSchedule = async () => {
     try {
       const data = await getAllSessions();
@@ -283,7 +284,6 @@ const Schedule = () => {
     try {
       //------Set Loading-------
       setLoading(true);
-
 
       // Create sessions for all enrollments without checking meeting availability
       const newSessions = await addSessions(
@@ -922,26 +922,37 @@ const Schedule = () => {
                     }
                   ></Textarea>
                 </div>
-                <div className="flex flex-row justify-between">
-                  <Button
-                    disabled={isCheckingMeetingAvailability}
-                    onClick={() => handleUpdateSession(selectedSession)}
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href={`/dashboard/session/${selectedSession.id}/participation`}
+                    className="w-full"
                   >
-                    {isCheckingMeetingAvailability ? (
-                      <>
-                        Checking Available Meeting Links
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      </>
-                    ) : (
-                      "Update Session"
-                    )}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleRemoveSession(selectedSession.id)}
-                  >
-                    Delete Session
-                  </Button>
+                    <Button variant="outline" className="w-full">
+                      <Users className="mr-2 h-4 w-4" />
+                      View Session Participation
+                    </Button>
+                  </Link>
+                  <div className="flex flex-row justify-between">
+                    <Button
+                      disabled={isCheckingMeetingAvailability}
+                      onClick={() => handleUpdateSession(selectedSession)}
+                    >
+                      {isCheckingMeetingAvailability ? (
+                        <>
+                          Checking Available Meeting Links
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        </>
+                      ) : (
+                        "Update Session"
+                      )}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleRemoveSession(selectedSession.id)}
+                    >
+                      Delete Session
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

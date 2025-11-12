@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase-server/serverClient";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { Profile, CreatedProfileData, Availability } from "@/types";
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
  */
 
 const createUser = async (newProfileData: CreatedProfileData) => {
-  const supabase = await getSupabase();
+  const supabase = await createClient();
   try {
     // Call signUp to create a new user
 

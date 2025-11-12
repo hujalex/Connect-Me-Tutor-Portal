@@ -34,40 +34,14 @@ export async function GET(
     }
 
     // Transform participation records into events format
-    const events = participationRecords.flatMap((record) => {
-      const events: Array<{
-        id: string;
-        participantId: string;
-        name: string;
-        email: string;
-        action: "joined" | "left";
-        timestamp: string;
-      }> = [];
-
-      // Add join event
-      events.push({
-        id: `${record.id}-join`,
-        participantId: record.participant_uuid,
-        name: record.user_name,
-        email: record.email || "",
-        action: "joined",
-        timestamp: record.date_time,
-      });
-
-      // Add leave event if exists
-      if (record.leave_time) {
-        events.push({
-          id: `${record.id}-leave`,
-          participantId: record.participant_uuid,
-          name: record.user_name,
-          email: record.email || "",
-          action: "left",
-          timestamp: record.leave_time,
-        });
-      }
-
-      return events;
-    });
+    const events = participationRecords.map((record) => ({
+      id: record.id,
+      participantId: record.participant_id,
+      name: record.name,
+      email: record.email || "",
+      action: record.action as "joined" | "left",
+      timestamp: record.timestamp,
+    }));
 
     // Sort events by timestamp
     events.sort(
@@ -122,24 +96,30 @@ export async function GET(
 
     // Calculate durations for each participant
     participantMap.forEach((summary) => {
-      const userEvents = events.filter((e) => e.participantId === summary.id);
+      const userEvents = events
+        .filter((e) => e.participantId === summary.id)
+        .sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
       let totalDuration = 0;
       let joinTime: Date | null = null;
 
-      userEvents.forEach((event) => {
+      for (const event of userEvents) {
         if (event.action === "joined") {
           joinTime = new Date(event.timestamp);
-        } else if (event.action === "left" && joinTime) {
+        } else if (event.action === "left" && joinTime !== null) {
           const leaveTime = new Date(event.timestamp);
           totalDuration +=
             (leaveTime.getTime() - joinTime.getTime()) / (1000 * 60);
           joinTime = null;
         }
-      });
+      }
 
       // If still in meeting, calculate duration until session end or now
-      if (joinTime && summary.currentlyInMeeting) {
-        const endTime = sessionEndTime || new Date();
+      if (joinTime !== null && summary.currentlyInMeeting) {
+        const endTime: Date =
+          sessionEndTime !== null ? sessionEndTime : new Date();
         totalDuration += (endTime.getTime() - joinTime.getTime()) / (1000 * 60);
       }
 
