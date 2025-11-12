@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!recipient) throw new Error("Unable to get recipient details")
 
     const { data: notification_settings, error } = await supabase
-      .from("User_Notification_Settings")
+      .from("user_notification_settings")
       .select("email_tutoring_session_notifications_enabled")
       .eq("id", recipient.settingsId)
       .single();
