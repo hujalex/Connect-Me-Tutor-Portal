@@ -286,18 +286,18 @@ const Schedule = () => {
       setLoading(true);
 
       // Create sessions for all enrollments without checking meeting availability
-      // const newSessions = await addSessions(
-      //   weekStart,
-      //   weekEnd,
-      //   enrollments,
-      //   sessions
-      // );
+      const newSessions = await addSessions(
+        weekStart,
+        weekEnd,
+        enrollments,
+        sessions
+      );
 
-      const response = await fetch("/api/sessions/update-week");
-      if (!response.ok) throw new Error(response.statusText);
-      const data = await response.json();
-
-      const newSessions = data.newSessions;
+      // const response = await fetch('/api/sessions/update-week');
+      // if (!response.ok) throw new Error(response.statusText)
+      // const data = await response.json();
+      
+      // const newSessions = data.newSessions;
 
       if (!newSessions) {
         throw new Error("No sessions were created");

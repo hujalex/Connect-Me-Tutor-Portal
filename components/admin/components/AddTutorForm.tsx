@@ -73,6 +73,7 @@ const AddTutorForm = ({
 
   const [newSubject, setNewSubject] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
+  const [newGender, setNewGender] = useState("");
 
   const addAvailabilitySlot = () => {
     setAvailability([
@@ -135,9 +136,8 @@ const AddTutorForm = ({
     // You'll need to modify this to include the extended fields
     // This assumes your Profile type and handleAddTutor can accept these fields
 
-    console.log(availability);
-    console.log(subjectsOfInterest);
-    console.log(languagesSpoken);
+
+    console.log(newTutor);
 
     const tutorWithExtendedFields = {
       ...newTutor,
@@ -264,7 +264,7 @@ const AddTutorForm = ({
                     </Label>
                     <div className="col-span-3">
                       <TimeZoneSelector
-                        newProfile={newTutor}
+                        profile={newTutor}
                         handleTimeZone={handleTimeZone}
                       />
                     </div>
@@ -410,6 +410,48 @@ const AddTutorForm = ({
                       <Button type="button" onClick={addLanguage} size="sm">
                         <Plus className="h-4 w-4" />
                       </Button>
+                    </div>
+                    {languagesSpoken.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {languagesSpoken.map((language) => (
+                          <Badge
+                            key={language}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {language}
+                            <button
+                              type="button"
+                              onClick={() => removeLanguage(language)}
+                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Gender</h3>
+                    <div className="flex gap-2">
+                      <Select
+                        name="timeZone"
+                        value={newTutor.gender}
+                        onValueChange={(value) =>
+                          setNewTutor((prev) => ({ ...prev, gender: value }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     {languagesSpoken.length > 0 && (
                       <div className="flex flex-wrap gap-2">

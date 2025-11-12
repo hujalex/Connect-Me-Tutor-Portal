@@ -32,6 +32,7 @@ interface EditTutorFormProps {
   tutors: Profile[];
   selectedTutor: Profile | null;
   selectedTutorId: string | null;
+  setSelectedTutor: (value: Profile | null) => void;
   setSelectedTutorId: (value: string) => void;
   handleEditTutor: () => void;
   handleGetSelectedTutor: (value: string | null) => void;
@@ -62,6 +63,7 @@ const EditTutorForm = ({
   tutors,
   selectedTutor,
   selectedTutorId,
+  setSelectedTutor,
   setSelectedTutorId,
   handleEditTutor,
   handleGetSelectedTutor,
@@ -280,7 +282,10 @@ const EditTutorForm = ({
                       Time Zone
                     </Label>
                     <div className="col-span-3">
-                      <TimeZoneSelector profile = {selectedTutor} handleTimeZone={handleTimeZoneForEdit} />
+                      <TimeZoneSelector
+                        profile={selectedTutor}
+                        handleTimeZone={handleTimeZoneForEdit}
+                      />
                     </div>
                   </div>
                 </div>
@@ -450,7 +455,35 @@ const EditTutorForm = ({
                         </div>
                       )}
                   </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Gender</h3>
+                    <div className="flex gap-2">
+                      <Select
+                        name="timeZone"
+                        value={selectedTutor?.gender}
+                        onValueChange={(value) => {
+                          if (selectedTutor) {
+                            setSelectedTutor({
+                              ...selectedTutor,
+                              gender: value,
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
+                // </div>
               )}
             </div>
 
