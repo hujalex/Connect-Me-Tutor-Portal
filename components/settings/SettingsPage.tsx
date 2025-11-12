@@ -58,7 +58,7 @@ export default function SettingsPage() {
     try {
       if (profile) {
         const { data, error } = await supabase
-          .from("User_Notification_Settings")
+          .from("user_notification_settings")
           .select("*")
           .eq("id", profile.settingsId)
           .single();
@@ -101,7 +101,7 @@ export default function SettingsPage() {
       // You could show a success toast here
 
       const { data, error } = await supabase
-        .from("User_Notification_Settings")
+        .from("user_notification_settings")
         .update({
           email_tutoring_session_notifications_enabled:
             sessionEmailNotifications,

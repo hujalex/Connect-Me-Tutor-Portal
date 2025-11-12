@@ -131,7 +131,7 @@ When you save the webhook configuration, Zoom will send a validation request:
 3. Check your application logs for:
    - `✅ Logged join for [name] in meeting [id]`
    - `✅ Updated leave time for [name] in meeting [id]`
-4. Verify data in `session_participation` table:
+4. Verify data in `zoom_participant_events` table:
    - Each join creates a record with `leave_time = null`
    - Each leave updates the corresponding record with `leave_time`
 
@@ -171,7 +171,7 @@ After setting up webhooks, verify that participant data is being tracked:
 
 ### No Data Showing
 
-- Check that `session_participation` records are being created
+- Check that `zoom_participant_events` records are being created
 - Verify the session ID in the URL matches a session in your database
 - Ensure the session has an associated meeting with a Zoom UUID
 - Check database connection and permissions

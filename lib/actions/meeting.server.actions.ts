@@ -1,8 +1,8 @@
 "use server";
 import { Availability, Enrollment, Meeting, Profile, Session } from "@/types";
 // import { createClient } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/server"
 import { getSupabase } from "../supabase-server/serverClient";
+import { createClient } from "@/lib/supabase/server"
 import { fetchDaySessionsFromSchedule } from "./session.actions";
 import { addHours, areIntervalsOverlapping, isValid, parseISO } from "date-fns";
 

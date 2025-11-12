@@ -1,6 +1,7 @@
 "use client"
 import { getSupabase } from "@/lib/supabase/client";
 import { CreatedProfileData, Profile } from "@/types";
+import { createClient } from "@/lib/supabase/server"
 import {
   createPassword,
   deleteUser,
@@ -46,7 +47,7 @@ export const addUser = async (
   isAddToPairing: boolean = false
 ) => {
   let userId: string | null = null;
-  const supabase = getSupabase()
+  const supabase = await createClient()
   try {
     if (!userData.email) {
       throw new Error("Email is required to create a student profile");

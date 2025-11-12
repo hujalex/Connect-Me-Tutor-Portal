@@ -69,12 +69,12 @@ export async function POST(
         console.log("JOINED: ", participant);
 
         await logZoomMetadata({
-          // id: uuidv4(),
           session_id: payload?.object?.id,
-          user_name: participant?.user_name,
-          participant_uuid: participant?.user_id,
-          email: participant?.email,
-          date_time: participant?.join_time ?? new Date().toISOString(),
+          participant_id: participant?.user_id || "",
+          name: participant?.user_name || "Unknown",
+          email: participant?.email || null,
+          action: "joined",
+          timestamp: participant?.join_time ?? new Date().toISOString(),
         });
       }
       break;
@@ -84,12 +84,12 @@ export async function POST(
         const participant = payload?.object?.participant;
 
         await logZoomMetadata({
-          // id: uuidv4(),
           session_id: payload?.object?.id,
-          user_name: participant?.user_name,
-          participant_uuid: participant?.user_id,
-          email: participant?.email,
-          date_time: participant?.join_time ?? new Date().toISOString(),
+          participant_id: participant?.user_id || "",
+          name: participant?.user_name || "Unknown",
+          email: participant?.email || null,
+          action: "left",
+          timestamp: participant?.leave_time ?? new Date().toISOString(),
         });
 
         console.log("Participant left:", participant?.user_name);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client"
 import { useParams } from "next/navigation";
 import {
   Card,
@@ -24,6 +25,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getParticipationData } from "@/lib/actions/session.server.actions";
 
 interface ParticipantEvent {
   id: string;
@@ -74,17 +76,11 @@ export default function MeetingParticipation() {
         setLoading(true);
       }
 
-      const response = await fetch(`/api/sessions/${sessionId}/participation`);
+      const data = await getParticipationData(sessionId);
 
-      if (!response.ok) {
-        throw new Error(
-          response.status === 404
-            ? "Session not found"
-            : "Failed to fetch participation data"
-        );
+      if (!data) {
+        throw new Error("Session not found");
       }
-
-      const data = await response.json();
 
       // Transform session data
       setMeetingData({
@@ -97,7 +93,7 @@ export default function MeetingParticipation() {
 
       // Transform events
       const transformedEvents: ParticipantEvent[] = data.events.map(
-        (event: any) => ({
+        (event) => ({
           id: event.id,
           participantId: event.participantId,
           name: event.name,
@@ -110,7 +106,7 @@ export default function MeetingParticipation() {
 
       // Transform participant summaries
       const transformedSummaries: ParticipantSummary[] =
-        data.participantSummaries.map((summary: any) => ({
+        data.participantSummaries.map((summary) => ({
           id: summary.id,
           name: summary.name,
           email: summary.email,
@@ -141,6 +137,77 @@ export default function MeetingParticipation() {
   const handleRefresh = () => {
     fetchParticipationData();
   };
+
+  const handleExport = () => {
+    console.log("Handle Export")
+  }
+
+  // const handleExport = () => {
+  //   if (!meetingData) return;
+
+  //   // Calculate average duration
+  //   const calculatedAvgDuration =
+  //     participantSummaries.length > 0
+  //       ? Math.round(
+  //           participantSummaries.reduce((acc, p) => acc + p.totalDuration, 0) /
+  //             participantSummaries.length
+  //         )
+  //       : 0;
+
+  //   // Create workbook
+  //   const workbook = XLSX.utils.book_new();
+
+  //   // Sheet 1: Meeting Information
+  //   const meetingInfo = [
+  //     ["Meeting Title", meetingData.meetingTitle],
+  //     ["Meeting ID", meetingData.meetingId],
+  //     ["Start Time", meetingData.startTime.toLocaleString()],
+  //     ["End Time", meetingData.endTime?.toLocaleString() || "Ongoing"],
+  //     ["Total Duration (minutes)", meetingData.totalDuration],
+  //     ["Total Duration (formatted)", formatDuration(meetingData.totalDuration)],
+  //     ["Total Participants", participantSummaries.length],
+  //     [
+  //       "Currently Active",
+  //       participantSummaries.filter((p) => p.currentlyInMeeting).length,
+  //     ],
+  //     ["Average Duration (minutes)", calculatedAvgDuration],
+  //     ["Average Duration (formatted)", formatDuration(calculatedAvgDuration)],
+  //   ];
+  //   const meetingSheet = XLSX.utils.aoa_to_sheet(meetingInfo);
+  //   XLSX.utils.book_append_sheet(workbook, meetingSheet, "Meeting Info");
+
+  //   // Sheet 2: Participant Summary
+  //   const participantData = participantSummaries.map((p) => ({
+  //     Name: p.name,
+  //     Email: p.email,
+  //     "Total Duration (minutes)": p.totalDuration,
+  //     "Total Duration (formatted)": formatDuration(p.totalDuration),
+  //     "Join Count": p.joinCount,
+  //     Status: p.currentlyInMeeting ? "Active" : "Left",
+  //     "First Joined": p.firstJoined.toLocaleString(),
+  //     "Last Activity": p.lastActivity.toLocaleString(),
+  //   }));
+  //   const participantSheet = XLSX.utils.json_to_sheet(participantData);
+  //   XLSX.utils.book_append_sheet(workbook, participantSheet, "Participants");
+
+  //   // Sheet 3: Activity Timeline
+  //   const activityData = events.map((event) => ({
+  //     Timestamp: event.timestamp.toLocaleString(),
+  //     Time: formatTime(event.timestamp),
+  //     Name: event.name,
+  //     Email: event.email,
+  //     Action: event.action === "joined" ? "Joined" : "Left",
+  //   }));
+  //   const activitySheet = XLSX.utils.json_to_sheet(activityData);
+  //   XLSX.utils.book_append_sheet(workbook, activitySheet, "Activity Log");
+
+  //   // Generate filename with meeting title and date
+  //   const dateStr = meetingData.startTime.toISOString().split("T")[0];
+  //   const filename = `Participation_Report_${meetingData.meetingTitle.replace(/[^a-z0-9]/gi, "_")}_${dateStr}.xlsx`;
+
+  //   // Write and download
+  //   XLSX.writeFile(workbook, filename);
+  // };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
@@ -226,7 +293,12 @@ export default function MeetingParticipation() {
             />
             Refresh
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleExport}
+            disabled={!meetingData || events.length === 0}
+          >
             <Download className="w-4 h-4" />
             Export Report
           </Button>
