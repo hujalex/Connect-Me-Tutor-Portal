@@ -80,7 +80,7 @@ import {
 } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
-import { checkAvailableMeeting } from "@/lib/actions/meeting.server.actions";
+import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 
 const Schedule = () => {
@@ -262,12 +262,11 @@ const Schedule = () => {
     }
   };
 
-  const isMeetingAvailable = async (session: Session, requestedDate: Date) => {
+  const checkMeetingAvailabilites = async (session: Session) => {
     try {
       setIsCheckingMeetingAvailability(true);
       const updatedMeetingAvailability = await checkAvailableMeeting(
         session,
-        requestedDate,
         meetings
       );
       setMeetingAvailabilityMap(updatedMeetingAvailability);
@@ -296,7 +295,7 @@ const Schedule = () => {
       // const response = await fetch('/api/sessions/update-week');
       // if (!response.ok) throw new Error(response.statusText)
       // const data = await response.json();
-      
+
       // const newSessions = data.newSessions;
 
       if (!newSessions) {
@@ -520,14 +519,9 @@ const Schedule = () => {
                       defaultValue={formatDateForInput(newSession.date)}
                       onBlur={async (e) => {
                         const scheduledDate = new Date(e.target.value);
-                        setNewSession({
-                          ...newSession,
-                          date: scheduledDate.toISOString(),
-                        });
-                        await isMeetingAvailable(
-                          newSession as Session,
-                          scheduledDate
-                        );
+                        const updatedSession: Partial<Session> = {...newSession, date: scheduledDate.toISOString()}
+                        await checkMeetingAvailabilites(updatedSession as Session);
+                        setNewSession(updatedSession);
                       }}
                       disabled={isCheckingMeetingAvailability}
                       className="col-span-3"
@@ -539,7 +533,15 @@ const Schedule = () => {
                     </Label>{" "}
                     <div className="col-span-3">
                       {" "}
-                      <Select>
+                      <Select
+                        onValueChange={(value) => {
+                          const duration = parseFloat(value);
+                          const updatedSession: Partial<Session> = {...newSession, duration: duration}
+                          checkMeetingAvailabilites(updatedSession as Session);
+                          setNewSession(updatedSession);
+ 
+                        }}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select a time duration" />
                         </SelectTrigger>
@@ -862,9 +864,9 @@ const Schedule = () => {
                         ...selectedSession,
                         date: scheduledDate.toISOString(),
                       });
-                      isMeetingAvailable(
-                        selectedSession as Session,
-                        scheduledDate
+                      checkMeetingAvailabilites(
+                        selectedSession as Session
+                        // scheduledDate
                       );
                     }}
                   />

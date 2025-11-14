@@ -51,62 +51,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
   }
 }
 
-export const checkAvailableMeeting = async (
-  session: Session,
-  requestedDate: Date,
-  meetings: Meeting[]
-): Promise<{ [key: string]: boolean }> => {
-  try {
-    const sessionsToSearch: Session[] | undefined =
-      await fetchDaySessionsFromSchedule(requestedDate);
-    const updatedMeetingAvailability: { [key: string]: boolean } = {};
-    if (!session.date || !isValid(parseISO(session.date))) {
-      throw new Error("Invalid session date selected");
-    }
-    meetings.forEach((meeting) => {
-      updatedMeetingAvailability[meeting.id] = true;
-    });
-    //
-    // const requestedSessionStartTime = parseISO(session.date);\
-    const requestedSessionStartTime = requestedDate;
-    const requestedSessionEndTime = addHours(
-      requestedSessionStartTime,
-      session.duration
-    );
-    meetings.forEach((meeting) => {
-      const hasConflict = sessionsToSearch
-        ? sessionsToSearch.some((existingSession) => {
-            // console.log("Comparison", {existingSession, session})
-            return (
-              session.id !== existingSession.id &&
-              existingSession.meeting?.id === meeting.id &&
-              areIntervalsOverlapping(
-                {
-                  start: requestedSessionStartTime,
-                  end: requestedSessionEndTime,
-                },
-                {
-                  start: existingSession.date
-                    ? parseISO(existingSession.date)
-                    : new Date(),
-                  end: existingSession.date
-                    ? addHours(
-                        parseISO(existingSession.date),
-                        existingSession.duration
-                      )
-                    : new Date(),
-                }
-              )
-            );
-          })
-        : false;
-      updatedMeetingAvailability[meeting.id] = !hasConflict;
-    });
-    return updatedMeetingAvailability;
-  } catch (error) {
-    throw error;
-  }
-};
 
 const toDateTime = (time: string, day: Number) => {
   if (!time) {
