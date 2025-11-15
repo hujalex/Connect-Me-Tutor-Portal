@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase-server/serverClient";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { Profile, CreatedProfileData, Availability } from "@/types";
 
@@ -52,20 +52,9 @@ export async function POST(request: NextRequest) {
  */
 
 const createUser = async (newProfileData: CreatedProfileData) => {
-  const supabase = await getSupabase();
+  const supabase = await createClient();
   try {
     // Call signUp to create a new user
-
-    // const { data: authData, error: authError } =
-    //   await supabase.auth.admin.createUser({
-    //     email: newProfileData.email,
-    //     password: newProfileData.password,
-    //     email_confirm: false,
-    //     user_metadata: {
-    //       first_name: newProfileData.firstName,
-    //       last_name: newProfileData.lastName,
-    //     },
-    //   });
 
     const { data: authData, error: authError } =
       await supabase.auth.admin.inviteUserByEmail(newProfileData.email, {
@@ -134,8 +123,7 @@ const createUser = async (newProfileData: CreatedProfileData) => {
       settingsId: createdProfile.settings_id,
     };
 
-    // return createdProfileData;
-    return {};
+    return createdProfileData;
   } catch (error) {
     const err = error as Error;
     console.error("Error creating user:", error);

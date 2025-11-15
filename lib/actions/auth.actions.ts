@@ -1,6 +1,7 @@
 "use client"
-import { getSupabase } from "@/lib/supabase/client";
+import { supabase } from "../supabase/client";
 import { CreatedProfileData, Profile } from "@/types";
+import { createClient } from "@/lib/supabase/server"
 import {
   createPassword,
   deleteUser,
@@ -31,7 +32,10 @@ export const createUser = async (
       throw new Error(data.message || `Error: ${response.status}`);
     }
 
-    return data.profileData || null;
+    console.log("Created Tutor", data)
+    console.log("Created Tutor Data", data.profileData)
+
+    return data.profileData;
   } catch (error) {
     const err = error as Error
     console.error("Error creating user in API:", err.message);
@@ -46,7 +50,6 @@ export const addUser = async (
   isAddToPairing: boolean = false
 ) => {
   let userId: string | null = null;
-  const supabase = getSupabase()
   try {
     if (!userData.email) {
       throw new Error("Email is required to create a student profile");
@@ -69,7 +72,7 @@ export const addUser = async (
       throw new Error("A user with this email already exists");
     }
 
-    //-----Moved After Duplicate Check to prevent Sending confimration email-----
+    // -----Moved After Duplicate Check to prevent Sending confimration email-----
     const tempPassword = await createPassword();
 
 
@@ -110,10 +113,7 @@ export const addUser = async (
       languages_spoken: userData.languages_spoken || [],
     }
 
-    const profileData: Profile | null = await createUser(newProfileData);
-    // if (!userId) {
-    //   throw new Error("Failed to create user account");
-    // }
+    const profileData: Profile = await createUser(newProfileData);
 
     return profileData;
   } catch (error) {

@@ -262,6 +262,8 @@ const TutorList = () => {
       // Ensure addStudent returns a Profile
       const addedTutor: Profile = await addUser(tutor, "Tutor", true);
 
+      // const addedTutor: Profile = () => {return new Tutor()}
+
       // Update local state
       setTutors((prevTutors) => {
         // Check if addedStudent is valid

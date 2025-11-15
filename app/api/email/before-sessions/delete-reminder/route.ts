@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+// import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server"
 import { deleteMsg } from "@/lib/actions/email.server.actions";
 import { getSupabase } from "@/lib/supabase-server/serverClient";
 
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     const data = await request.json();
     const sessionId = data.sessionId;

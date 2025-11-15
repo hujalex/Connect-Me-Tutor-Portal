@@ -8,7 +8,7 @@ export enum Table {
   Notifications = "Notifications",
   Sessions = "Sessions",
   Pairings = "Pairings",
-  UserAvailabilities = "User_availabilities",
+  UserAvailabilities = "User_Availabilities",
   UserNotificationSettings = "user_notification_settings",
   PairingRequests = "pairing_requests",
 }

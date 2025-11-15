@@ -3,6 +3,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile, Session, Meeting } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { string } from "zod";
+import { fetchDaySessionsFromSchedule } from "./session.actions";
+import { addHours, areIntervalsOverlapping, isValid, parseISO } from "date-fns";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -78,3 +80,69 @@ export async function getMeeting(meetingId: string): Promise<Meeting | null> {
     return null;
   }
 }
+
+export const checkAvailableMeeting = async (
+  session: Session,
+  // requestedDate: Date,
+  meetings: Meeting[]
+): Promise<{ [key: string]: boolean }> => {
+  try {
+
+    console.log("Session", session);
+
+    const requestedDate: Date = parseISO(session.date)
+
+    console.log("Session", session);
+    console.log(requestedDate)
+
+    const sessionsToSearch: Session[] | undefined =
+      await fetchDaySessionsFromSchedule(requestedDate);
+    const updatedMeetingAvailability: { [key: string]: boolean } = {};
+    if (!session.date || !isValid(parseISO(session.date))) {
+      throw new Error("Invalid session date selected");
+    }
+    meetings.forEach((meeting) => {
+      updatedMeetingAvailability[meeting.id] = true;
+    });
+    //
+    // const requestedSessionStartTime = parseISO(session.date);\
+    const requestedSessionStartTime = requestedDate;
+    const requestedSessionEndTime = addHours(
+      requestedSessionStartTime,
+      session.duration
+    );
+
+    meetings.forEach((meeting) => {
+      const hasConflict = sessionsToSearch
+        ? sessionsToSearch.some((existingSession) => {
+            console.log("Comparison", {existingSession, session})
+            return (
+              session.id !== existingSession.id &&
+              existingSession.meeting?.id === meeting.id &&
+              areIntervalsOverlapping(
+                {
+                  start: requestedSessionStartTime,
+                  end: requestedSessionEndTime,
+                },
+                {
+                  start: existingSession.date
+                    ? parseISO(existingSession.date)
+                    : new Date(),
+                  end: existingSession.date
+                    ? addHours(
+                        parseISO(existingSession.date),
+                        existingSession.duration
+                      )
+                    : new Date(),
+                }
+              )
+            );
+          })
+        : false;
+      updatedMeetingAvailability[meeting.id] = !hasConflict;
+    });
+    return updatedMeetingAvailability;
+  } catch (error) {
+    throw error;
+  }
+};
