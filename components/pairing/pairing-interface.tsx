@@ -56,7 +56,6 @@ export function PairingInterface() {
     getIncomingPairingMatches(profile.id).then((result) => {
       if (result) setMatchedPairings(result);
 
-      console.log("matches: ", result);
     });
   }, [profile]);
 
