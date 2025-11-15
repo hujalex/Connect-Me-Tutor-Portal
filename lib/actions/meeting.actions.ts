@@ -83,7 +83,6 @@ export async function getMeeting(meetingId: string): Promise<Meeting | null> {
 
 export const checkAvailableMeeting = async (
   session: Session,
-  // requestedDate: Date,
   meetings: Meeting[]
 ): Promise<{ [key: string]: boolean }> => {
   try {

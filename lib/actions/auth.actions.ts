@@ -1,5 +1,5 @@
 "use client"
-import { supabase } from "../supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { CreatedProfileData, Profile } from "@/types";
 import { createClient } from "@/lib/supabase/server"
 import {
