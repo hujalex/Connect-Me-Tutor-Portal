@@ -131,10 +131,6 @@ export async function scheduleReminderSMS(
 
     const scheduledMessage = await twilioClient.messages.create(messageOptions);
 
-    console.log(
-      `SMS scheduled successfully for ${phoneNumber} at ${sendAt}. SID: ${scheduledMessage.sid}`
-    );
-
     return {
       sid: scheduledMessage.sid,
       messagingServiceSid: scheduledMessage.messagingServiceSid || undefined,
@@ -209,7 +205,6 @@ export async function scheduleSessionReminders(
             messagingServiceSid
           );
           scheduledMessages.push(scheduledStudentMessage);
-          console.log(`Student reminder scheduled for session ${session.id}`);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error";
@@ -220,14 +215,10 @@ export async function scheduleSessionReminders(
           );
         }
       } else {
-        console.log(
-          `Invalid phone number for student ${session.student.firstName} in session ${session.id}`
-        );
+       
       }
     } else {
-      console.log(
-        `No phone number provided for student ${session.student.firstName} in session ${session.id}`
-      );
+     
     }
 
     // Schedule reminder for tutor
@@ -243,7 +234,6 @@ export async function scheduleSessionReminders(
             messagingServiceSid
           );
           scheduledMessages.push(scheduledTutorMessage);
-          console.log(`Tutor reminder scheduled for session ${session.id}`);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error";
@@ -254,14 +244,10 @@ export async function scheduleSessionReminders(
           );
         }
       } else {
-        console.log(
-          `Invalid phone number for tutor ${session.tutor.firstName} in session ${session.id}`
-        );
+      
       }
     } else {
-      console.log(
-        `No phone number provided for tutor ${session.tutor.firstName} in session ${session.id}`
-      );
+      
     }
 
     if (errors.length > 0) {
@@ -271,9 +257,7 @@ export async function scheduleSessionReminders(
       );
     }
 
-    console.log(
-      `Scheduled ${scheduledMessages.length} reminders for session ${session.id}`
-    );
+   
     return scheduledMessages;
   } catch (error) {
     const errorMessage =
@@ -306,7 +290,6 @@ export async function scheduleMultipleSessionReminders(
   const errors: string[] = [];
   const allScheduledMessages: ScheduledMessage[] = [];
 
-  console.log(`Starting to schedule reminders for ${sessions.length} sessions`);
 
   for (const session of sessions) {
     try {
@@ -355,12 +338,7 @@ export async function scheduleMultipleSessionReminders(
     skipped: skippedCount,
   };
 
-  console.log(`Reminder scheduling complete:`, {
-    totalSessions: sessions.length,
-    scheduled: scheduledCount,
-    skipped: skippedCount,
-    errors: errors.length,
-  });
+ 
 
   return summary;
 }
@@ -375,7 +353,6 @@ export async function cancelScheduledReminder(
 ): Promise<boolean> {
   try {
     await twilioClient.messages(messageSid).update({ status: "canceled" });
-    console.log(`Canceled scheduled message: ${messageSid}`);
     return true;
   } catch (error) {
     const errorMessage =

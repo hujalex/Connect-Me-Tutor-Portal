@@ -101,8 +101,6 @@ const AddTutorForm = ({
       setSubjectsOfInterest([...subjectsOfInterest, newSubject.trim()]);
       setNewSubject("");
     }
-    console.log(newSubject);
-    console.log(subjectsOfInterest);
   };
 
   const removeSubject = (subject: string) => {
@@ -114,8 +112,6 @@ const AddTutorForm = ({
       setLanguagesSpoken([...languagesSpoken, newLanguage.trim()]);
       setNewLanguage("");
     }
-    console.log(newLanguage);
-    console.log(languagesSpoken);
   };
 
   const removeLanguage = (language: string) => {
@@ -135,9 +131,6 @@ const AddTutorForm = ({
   const handleEnhancedAddTutor = (addToPairingQueue?: boolean) => {
     // You'll need to modify this to include the extended fields
     // This assumes your Profile type and handleAddTutor can accept these fields
-
-
-    console.log(newTutor);
 
     const tutorWithExtendedFields = {
       ...newTutor,

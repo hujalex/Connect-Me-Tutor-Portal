@@ -270,7 +270,6 @@ const Schedule = () => {
         meetings
       );
       setMeetingAvailabilityMap(updatedMeetingAvailability);
-      console.log("Meeting Availability Map", updatedMeetingAvailability);
     } catch (error) {
       toast.error("Unable to find available meeting links");
       console.error("Unable to find available meeting links", error);

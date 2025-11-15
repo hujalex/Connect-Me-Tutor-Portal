@@ -19,7 +19,6 @@ import { useProfile } from "@/hooks/auth";
 export function ProfilePreview() {
   const { profile, loading } = useProfile();
 
-  console.log("profile ", profile);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {

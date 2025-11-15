@@ -48,12 +48,6 @@ export function PairingRequestCard({ userId }: PairingRequestCardProps) {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    console.log("Pairing request submitted:", {
-      type: requestType,
-      notes,
-      timestamp: new Date(),
-    });
-
     const promise = createPairingRequest(userId, notes);
 
     toast.promise(promise, {

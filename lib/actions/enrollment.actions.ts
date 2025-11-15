@@ -74,11 +74,7 @@ export async function getEnrollments(
     }
 
     // Check if data exists
-    if (!data) {
-      console.log("No events found:");
-      return null; // Valid return
-    }
-
+  
     // Mapping the fetched data to the Notification object
     const enrollments: Enrollment[] = await Promise.all(
       data.map(async (enrollment: any) => ({
@@ -154,7 +150,6 @@ export const getOverlappingAvailabilites = async (
 
 export async function getAllActiveEnrollments(endOfWeek: string): Promise<Enrollment[]> {
   try {
-    console.log("Fetching Enrollments")
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,

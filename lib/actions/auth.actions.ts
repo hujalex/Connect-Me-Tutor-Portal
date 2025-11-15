@@ -1,5 +1,5 @@
 "use client"
-import { supabase } from "../supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { CreatedProfileData, Profile } from "@/types";
 import { createClient } from "@/lib/supabase/server"
 import {
@@ -31,10 +31,6 @@ export const createUser = async (
     if (!response.ok) {
       throw new Error(data.message || `Error: ${response.status}`);
     }
-
-    console.log("Created Tutor", data)
-    console.log("Created Tutor Data", data.profileData)
-
     return data.profileData;
   } catch (error) {
     const err = error as Error
