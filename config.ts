@@ -7,6 +7,7 @@ const ConfigSchema = z.object({
     key: z.string(),
   }),
   zoom: z.object({
+    ZOOM_WEBHOOK_SECRET: z.string(),
     ZOOM_LINK_A_WH_SECRET: z.string(),
     ZOOM_LINK_B_WH_SECRET: z.string(),
     ZOOM_LINK_C_WH_SECRET: z.string(),
@@ -26,6 +27,7 @@ export const config = {
     key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   zoom: {
+    ZOOM_WEBHOOK_SECRET: process.env.ZOOM_WEBHOOK_SECRET,
     ZOOM_LINK_A_WH_SECRET: process.env.ZOOM_LINK_A_WH_SECRET,
     ZOOM_LINK_B_WH_SECRET: process.env.ZOOM_LINK_B_WH_SECRET,
     ZOOM_LINK_C_WH_SECRET: process.env.ZOOM_LINK_C_WH_SECRET,
@@ -37,7 +39,6 @@ export const config = {
     ZOOM_LINK_I_WH_SECRET: process.env.ZOOM_LINK_I_WH_SECRET,
   },
 } as z.infer<typeof ConfigSchema>;
-
 
 // let validatedConfig: z.infer<typeof ConfigSchema>;
 
