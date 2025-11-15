@@ -56,7 +56,6 @@ export const createPairingRequest = async (userId: string, notes: string) => {
     throw new Error("Missing Supabase environment variables");
   }
 
-  console.log(userId);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,13 +73,6 @@ export const createPairingRequest = async (userId: string, notes: string) => {
 
   const priority = enrollments.length < 1 ? 1 : 2;
 
-  //Check for current enrollments here to determine assigned priority ranking
-  console.log("f -> ", {
-    user_id: profile.id,
-    type: profile.role.toLowerCase(),
-    priority,
-    notes,
-  });
 
   const result = await supabase.from(Table.PairingRequests).insert([
     {
@@ -143,7 +135,6 @@ export const getPairingLogs = async (
   });
 
 
-  console.log("selected pairing logs: ", logs, "from ", start_time, end_time);
 
   return logs;
 };
@@ -183,8 +174,6 @@ export const getIncomingPairingMatches = async (profileId: string) => {
 
 export const deletePairing = async (tutorId: string, studentId: string) => {
   try {
-    console.log(tutorId);
-    console.log(studentId);
 
     const { data, error } = await supabase
       .from("Pairings")
@@ -194,7 +183,6 @@ export const deletePairing = async (tutorId: string, studentId: string) => {
 
     if (error) throw error;
 
-    console.log("Deleted");
   } catch (error) {
     console.error("Failed to delete pairing", error);
     throw error;
@@ -281,7 +269,6 @@ export const getAvailableMeetingLink = async (
   day: string
 ) => {
   try {
-    console.log("Input:", { start, end, day });
 
     // Get all enrollments since we can't easily filter JSON arrays in Supabase
     const { data: allEnrollments, error } = await supabase
@@ -317,11 +304,7 @@ export const getAvailableMeetingLink = async (
         return !hasConflict;
       }) || [];
 
-    console.log(
-      "Available meetings:",
-      availableMeetings.map((m) => m.meetingId)
-    );
-    console.log(availableMeetings);
+   
     return availableMeetings.length > 0 ? availableMeetings[0] : null;
   } catch (error) {
     console.error("Full error:", error);
@@ -409,7 +392,6 @@ export const updatePairingMatchStatus = async (
     .eq("id", matchId)
     .eq("tutor_id", profileId);
   if (updateResponse.error) {
-    console.log("ERROR: ", updateResponse.error);
   }
 
   let autoEnrollment: Omit<Enrollment, "id" | "createdAt"> | null | undefined =
@@ -489,7 +471,6 @@ export const updatePairingMatchStatus = async (
     try {
       await sendStudentPairingConfirmationEmail(emailData, studentData.email);
       await sendTutorPairingConfirmationEmail(emailData, tutorData.email);
-      console.log("Successfully sent tutor notification email");
     } catch (error) {
       //rollback if error
       await supabase
@@ -522,7 +503,6 @@ export const updatePairingMatchStatus = async (
   //reset tutor and student status to be auto placed in que
   else if (status === "rejected") {
 
-    console.log("REJECTING PAIRING")
     const { data, error } = await supabase
       .from("pairing_requests")
       .update({

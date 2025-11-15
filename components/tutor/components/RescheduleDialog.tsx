@@ -133,7 +133,7 @@ const RescheduleForm: React.FC<RescheduleProps> = ({
       const requestedSessionEndTime = addHours(
         requestedSessionStartTime,
         session.duration
-      );
+      ); 
 
       meetings.forEach((meeting) => {
         const hasConflict = sessionsToSearch

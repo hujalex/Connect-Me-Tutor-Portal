@@ -130,7 +130,6 @@ const Stats = () => {
         // // Process session hours map more efficiently
        
       } catch (error) {
-        console.log("Error counting hours", error);
       } finally {
         setLoading(false);
       }

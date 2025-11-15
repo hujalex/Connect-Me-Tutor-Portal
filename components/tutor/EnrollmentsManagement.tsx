@@ -265,7 +265,6 @@ const EnrollmentList = () => {
       .availability[0]
       ? formatAvailabilityAsDate(enroll.availability[0])
       : [new Date(NaN), new Date(NaN)];
-    console.log(newEnrollmentStartTime);
     for (const enrollment of enrollments) {
       if (!enrollment?.availability[0] || !enrollment?.meetingId) continue;
       try {
@@ -291,7 +290,6 @@ const EnrollmentList = () => {
         }
       } catch (error) {
         console.error("Error processing enrollment date:", error);
-        console.log(enrollment.availability[0]);
         updatedMeetingAvailability[enrollment.meetingId] = false;
       }
     }
@@ -300,9 +298,7 @@ const EnrollmentList = () => {
     Object.entries(updatedMeetingAvailability).forEach(
       ([meetingId, isAvailable]) => {
         const meetingName = meetings.find((m) => m.id === meetingId)?.name;
-        console.log(
-          `Meeting: ${meetingName} (${meetingId}) - Available: ${isAvailable}`
-        );
+    
       }
     );
   };
@@ -315,8 +311,6 @@ const EnrollmentList = () => {
       ? allEnrollments
       : await getAllEnrollments();
     if (otherEnrollments) {
-      console.log("Length of all Enrollments", otherEnrollments.length)
-      console.log("Checking Available Meetings");
       const updatedMeetingAvailability =
         await checkAvailableMeetingForEnrollments(
           enrollment,
@@ -338,7 +332,6 @@ const EnrollmentList = () => {
       const new_enrollment_date = new Date(
         `${enroll.availability[0].day} ${enroll.availability[0].endTime}`
       );
-      console.log(now);
       return !enrollments.some((enrollment) => {
         // Skip sessions without dates or meeting IDs
         if (!enrollment?.endDate || !enrollment?.meetingId) return false;
@@ -502,7 +495,6 @@ const EnrollmentList = () => {
 
   const handleAddEnrollment = async () => {
     try {
-      console.log("Enrollment", newEnrollment);
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
         setEnrollments([

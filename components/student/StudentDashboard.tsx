@@ -108,7 +108,6 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
         false
       );
 
-      console.log(currentSessionData);
 
       setCurrentSessions(currentSessionData);
 

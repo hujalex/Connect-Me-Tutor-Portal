@@ -6,7 +6,6 @@ import { render } from "@react-email/components";
 import React from "react";
 import { Resend } from "resend";
 import PairingRequestNotificationEmail from "@/components/emails/pairing-request-notification";
-import TutoringConfirmationEmail from "@/components/emails/student-confirmation-email";
 import TutorPairingConfirmationEmail from "@/components/emails/tutor-confirmation-email";
 import { PairingConfirmationEmailProps, PairingRequestNotificationEmailProps  } from "@/types/email";
 
