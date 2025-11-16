@@ -232,8 +232,6 @@ const TutorList = () => {
   };
 
   const handleComplexFieldsForEdit = (name: string, value: any) => {
-    console.log(name);
-    console.log(value);
     setSelectedTutor((prev) =>
       prev ? ({ ...prev, [name]: value } as Profile) : null
     );
@@ -297,6 +295,7 @@ const TutorList = () => {
           startDate: "",
           availability: [],
           email: "",
+          phoneNumber: "",
           parentName: "",
           parentPhone: "",
           parentEmail: "",

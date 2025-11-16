@@ -59,64 +59,9 @@ const AdminDashboard = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Set Timezone to EST
-  // useEffect(() => {
-  //   // Override the Intl.DateTimeFormat().resolvedOptions().timeZone
-  //   const originalResolvedOptions =
-  //     Intl.DateTimeFormat.prototype.resolvedOptions;
-  //   Intl.DateTimeFormat.prototype.resolvedOptions = function () {
-  //     const options = originalResolvedOptions.call(this);
-  //     return { ...options, timeZone: "America/New_York" };
-  //   };
-
-  //   // Override Date.prototype.getTimezoneOffset
-  //   Date.prototype.getTimezoneOffset = function () {
-  //     const nyFormatter = new Intl.DateTimeFormat("en-US", {
-  //       timeZone: "America/New_York",
-  //       timeZoneName: "short",
-  //     });
-
-  //     const timeZoneName = nyFormatter
-  //       .formatToParts(this)
-  //       .find((part) => part.type === "timeZoneName")?.value;
-
-  //     return timeZoneName === "EDT" ? 240 : 300; // EST is UTC-5, so 300 minutes offset (240 for EDT)
-  //   };
-
-  //   console.log(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  // }, []);
 
   useEffect(() => {
-    // const getUserData = async () => {
-    //   try {
-    //     setLoading(true);
-    //     setError(null);
-    //     const {
-    //       data: { user },
-    //       error: userError,
-    //     } = await supabase.auth.getUser();
-    //     if (userError) throw new Error(userError.message);
-    //     if (!user) throw new Error("No user found");
-    //     const profileData = await getProfile(user.id);
-    //     if (!profileData) throw new Error("No profile found");
-    //     setProfile(profileData);
-    //     let sessionsData = await getAllSessions();
-    //     if (!sessionsData) throw new Error("No sessions found");
-    //     sessionsData = sessionsData.sort(
-    //       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    //     );
-    //     setSessions(sessionsData);
-    //     setFilteredSessions(sessionsData);
-    //   } catch (error) {
-    //     console.error("Error fetching user data:", error);
-    //     setError(
-    //       error instanceof Error ? error.message : "An unknown error occurred"
-    //     );
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // getUserData();
+  
   }, [supabase.auth]);
 
   useEffect(() => {

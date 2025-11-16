@@ -1,6 +1,6 @@
 import { Enrollment } from "@/types";
 import { Table } from "../supabase/tables";
-import { supabase } from "./user.actions";
+import { supabase } from "@/lib/supabase/client";
 import { SharedEnrollment } from "@/types/enrollment";
 
 export async function getAccountEnrollments(userId: string) {

@@ -106,11 +106,6 @@ export async function getTutorStudents(tutorId: string) {
       return null;
     }
 
-    if (!pairings) {
-      console.log("No profile found for tutor ID:", tutorId);
-      return null;
-    }
-
     const studentIds = pairings.map((pairing) => pairing.student_id);
 
     const { data: studentProfiles, error: profileError } = await supabase

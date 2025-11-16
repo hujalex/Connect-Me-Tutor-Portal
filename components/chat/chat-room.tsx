@@ -313,7 +313,6 @@ export function ChatRoom({
         },
       };
 
-      console.log("inserting new message: ", newMessage);
       const { error: msgError } = await supabase
         .from("messages")
         .insert([newMessage]);
@@ -365,8 +364,6 @@ export function ChatRoom({
   };
 
   if (!profile) return <></>;
-
-  console.log("result", users);
 
   return (
     <div

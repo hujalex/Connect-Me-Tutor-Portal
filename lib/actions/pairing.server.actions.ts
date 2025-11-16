@@ -35,7 +35,6 @@ export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
       .eq("id", enrollmentId)
       .single();
     if (error) throw error;
-    console.log(data);
     return data.pairing_id;
   } catch (error) {
     console.error("Unable to get pairing from enrollment", error);
@@ -149,7 +148,6 @@ export const resetPairingQueues = async () => {
   if (error) {
     console.error("Error deleting rows:", error);
   } else {
-    console.log("All rows deleted successfully");
   }
 };
 

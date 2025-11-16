@@ -112,7 +112,6 @@ export function AdminConversationManager() {
       const conversations = await fetchAdminConversations();
       if (!conversations) return;
       setExistingConversations(conversations);
-      console.log("retrieved conversations ", conversations);
     })();
   }, []);
 
@@ -126,13 +125,6 @@ export function AdminConversationManager() {
     });
 
     promise.then(() => router.refresh());
-
-    // Handle conversation creation logic here
-    console.log("Creating conversation:", {
-      profileId: selectedProfileUserId,
-      title: conversationTitle,
-      description: conversationDescription,
-    });
 
     // Reset form
     setSelectedProfileUserId("");
