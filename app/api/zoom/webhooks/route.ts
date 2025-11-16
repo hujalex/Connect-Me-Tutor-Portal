@@ -6,17 +6,8 @@ import {
   updateParticipantLeaveTime,
 } from "@/lib/actions/zoom.server.actions";
 
-const MEETING_ID_TO_SECRET: Record<string, string> = {
-  "89d13433-04c3-48d6-9e94-f02103336554": config.zoom.ZOOM_LINK_A_WH_SECRET,
-  "72a87729-ae87-468c-9444-5ff9b073f691": config.zoom.ZOOM_LINK_B_WH_SECRET,
-  "26576a69-afe8-46c3-bc15-dec992989cdf": config.zoom.ZOOM_LINK_C_WH_SECRET,
-  "83cd43b6-ca22-411c-a75b-4fb9c685295b": config.zoom.ZOOM_LINK_D_WH_SECRET,
-  "8d61e044-135c-4ef6-83e8-9df30dc152f2": config.zoom.ZOOM_LINK_E_WH_SECRET,
-  "fc4f7e3a-bb0f-4fc4-9f78-01ca022caf33": config.zoom.ZOOM_LINK_F_WH_SECRET,
-  "132360dc-cad9-4d4c-88f8-3347585dfcf1": config.zoom.ZOOM_LINK_G_WH_SECRET,
-  "f87f8d74-6dc4-4a6c-89b7-717df776715f": config.zoom.ZOOM_LINK_H_WH_SECRET,
-  "c8e6fe57-59e5-4bbf-8648-ed6cac2df1ea": config.zoom.ZOOM_LINK_I_WH_SECRET,
-};
+// Use a single signing secret for all Zoom webhooks
+const validationSecret = config.zoom.ZOOM_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
   console.log("Received Zoom webhook request");
@@ -41,37 +32,13 @@ export async function POST(req: NextRequest) {
     event,
   });
 
-  // Find the validation secret using the meeting UUID from the payload
-  const validationSecret = zoomMeetingId
-    ? MEETING_ID_TO_SECRET[zoomMeetingId]
-    : null;
-
   if (!validationSecret) {
-    console.error("⚠️ No secret found for meeting ID:", zoomMeetingId);
-    // Log all available identifiers for debugging
-    console.error("Available payload keys:", Object.keys(payload || {}));
-    console.error(
-      "Full payload object:",
-      JSON.stringify(payload?.object || {}, null, 2)
-    );
-
-    // For URL validation, we still need to respond even without secret
-    if (body.event === "endpoint.url_validation") {
-      return NextResponse.json(
-        {
-          error: `No webhook secret configured for meeting: ${zoomMeetingId}`,
-        },
-        { status: 400 }
-      );
-    }
-
+    console.error("⚠️ Zoom webhook secret not configured");
     return NextResponse.json(
       {
-        error: `No webhook secret configured for meeting: ${zoomMeetingId}`,
-        accountId,
-        meetingNumber,
+        error: "Webhook secret not configured",
       },
-      { status: 401 }
+      { status: 500 }
     );
   }
 

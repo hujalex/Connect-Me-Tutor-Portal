@@ -45,6 +45,7 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "dompurify": "^3.3.0",
+    "exceljs": "^4.4.0",
     "googleapis": "^148.0.0",
     "http-proxy-middleware": ">=2.0.9",
     "ioredis": "^5.6.1",

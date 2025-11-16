@@ -5,17 +5,8 @@ import { logZoomMetadata } from "@/lib/actions/zoom.server.actions";
 // import { logZoomMetadata } from "@/lib/actions/zoom.server.actions";
 // import { getActiveSessionFromMeetingID } from "@/lib/actions/session.server.actions";
 
-const MEETING_ID_TO_SECRET: Record<string, string> = {
-  "89d13433-04c3-48d6-9e94-f02103336554": config.zoom.ZOOM_LINK_A_WH_SECRET,
-  "72a87729-ae87-468c-9444-5ff9b073f691": config.zoom.ZOOM_LINK_B_WH_SECRET,
-  "26576a69-afe8-46c3-bc15-dec992989cdf": config.zoom.ZOOM_LINK_C_WH_SECRET,
-  "83cd43b6-ca22-411c-a75b-4fb9c685295b": config.zoom.ZOOM_LINK_D_WH_SECRET,
-  "8d61e044-135c-4ef6-83e8-9df30dc152f2": config.zoom.ZOOM_LINK_E_WH_SECRET,
-  "fc4f7e3a-bb0f-4fc4-9f78-01ca022caf33": config.zoom.ZOOM_LINK_F_WH_SECRET,
-  "132360dc-cad9-4d4c-88f8-3347585dfcf1": config.zoom.ZOOM_LINK_G_WH_SECRET,
-  "f87f8d74-6dc4-4a6c-89b7-717df776715f": config.zoom.ZOOM_LINK_H_WH_SECRET,
-  "c8e6fe57-59e5-4bbf-8648-ed6cac2df1ea": config.zoom.ZOOM_LINK_I_WH_SECRET,
-};
+// Use a single signing secret for all Zoom webhooks
+const validationSecret = config.zoom.ZOOM_WEBHOOK_SECRET;
 
 export async function POST(
   req: NextRequest,
@@ -23,12 +14,14 @@ export async function POST(
 ) {
   const body = await req.json();
 
-
-  const validationSecret = MEETING_ID_TO_SECRET[params.meeting];
-  if (!validationSecret)
-    return NextResponse.json({
-      err: `failed to find credentials for meeting: ${params.meeting}`,
-    });
+  if (!validationSecret) {
+    return NextResponse.json(
+      {
+        err: "Webhook secret not configured",
+      },
+      { status: 500 }
+    );
+  }
 
   //  Handle Zoom's URL validation challenge
   if (body.event === "endpoint.url_validation") {
