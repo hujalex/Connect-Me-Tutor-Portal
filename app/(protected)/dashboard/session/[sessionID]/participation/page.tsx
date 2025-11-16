@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
 import {
   Card,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getParticipationData } from "@/lib/actions/session.server.actions";
+import ExcelJS from "exceljs";
 
 interface ParticipantEvent {
   id: string;
@@ -138,76 +139,139 @@ export default function MeetingParticipation() {
     fetchParticipationData();
   };
 
-  const handleExport = () => {
-    console.log("Handle Export")
-  }
-
   // const handleExport = () => {
-  //   if (!meetingData) return;
+  //   console.log("Handle Export")
+  // }
 
-  //   // Calculate average duration
-  //   const calculatedAvgDuration =
-  //     participantSummaries.length > 0
-  //       ? Math.round(
-  //           participantSummaries.reduce((acc, p) => acc + p.totalDuration, 0) /
-  //             participantSummaries.length
-  //         )
-  //       : 0;
+  const handleExport = async () => {
+    if (!meetingData) return;
 
-  //   // Create workbook
-  //   const workbook = XLSX.utils.book_new();
+    // Calculate average duration
+    const calculatedAvgDuration =
+      participantSummaries.length > 0
+        ? Math.round(
+            participantSummaries.reduce((acc, p) => acc + p.totalDuration, 0) /
+              participantSummaries.length
+          )
+        : 0;
 
-  //   // Sheet 1: Meeting Information
-  //   const meetingInfo = [
-  //     ["Meeting Title", meetingData.meetingTitle],
-  //     ["Meeting ID", meetingData.meetingId],
-  //     ["Start Time", meetingData.startTime.toLocaleString()],
-  //     ["End Time", meetingData.endTime?.toLocaleString() || "Ongoing"],
-  //     ["Total Duration (minutes)", meetingData.totalDuration],
-  //     ["Total Duration (formatted)", formatDuration(meetingData.totalDuration)],
-  //     ["Total Participants", participantSummaries.length],
-  //     [
-  //       "Currently Active",
-  //       participantSummaries.filter((p) => p.currentlyInMeeting).length,
-  //     ],
-  //     ["Average Duration (minutes)", calculatedAvgDuration],
-  //     ["Average Duration (formatted)", formatDuration(calculatedAvgDuration)],
-  //   ];
-  //   const meetingSheet = XLSX.utils.aoa_to_sheet(meetingInfo);
-  //   XLSX.utils.book_append_sheet(workbook, meetingSheet, "Meeting Info");
+    const workbook = new ExcelJS.Workbook();
 
-  //   // Sheet 2: Participant Summary
-  //   const participantData = participantSummaries.map((p) => ({
-  //     Name: p.name,
-  //     Email: p.email,
-  //     "Total Duration (minutes)": p.totalDuration,
-  //     "Total Duration (formatted)": formatDuration(p.totalDuration),
-  //     "Join Count": p.joinCount,
-  //     Status: p.currentlyInMeeting ? "Active" : "Left",
-  //     "First Joined": p.firstJoined.toLocaleString(),
-  //     "Last Activity": p.lastActivity.toLocaleString(),
-  //   }));
-  //   const participantSheet = XLSX.utils.json_to_sheet(participantData);
-  //   XLSX.utils.book_append_sheet(workbook, participantSheet, "Participants");
+    // Sheet 1: Meeting Information
+    const meetingSheet = workbook.addWorksheet("Meeting Info");
+    const meetingInfo = [
+      ["Meeting Title", meetingData.meetingTitle],
+      ["Meeting ID", meetingData.meetingId],
+      ["Start Time", meetingData.startTime.toLocaleString()],
+      ["End Time", meetingData.endTime?.toLocaleString() || "Ongoing"],
+      ["Total Duration (minutes)", meetingData.totalDuration],
+      ["Total Duration (formatted)", formatDuration(meetingData.totalDuration)],
+      ["Total Participants", participantSummaries.length],
+      [
+        "Currently Active",
+        participantSummaries.filter((p) => p.currentlyInMeeting).length,
+      ],
+      ["Average Duration (minutes)", calculatedAvgDuration],
+      ["Average Duration (formatted)", formatDuration(calculatedAvgDuration)],
+    ];
+    meetingSheet.addRows(meetingInfo);
 
-  //   // Sheet 3: Activity Timeline
-  //   const activityData = events.map((event) => ({
-  //     Timestamp: event.timestamp.toLocaleString(),
-  //     Time: formatTime(event.timestamp),
-  //     Name: event.name,
-  //     Email: event.email,
-  //     Action: event.action === "joined" ? "Joined" : "Left",
-  //   }));
-  //   const activitySheet = XLSX.utils.json_to_sheet(activityData);
-  //   XLSX.utils.book_append_sheet(workbook, activitySheet, "Activity Log");
+    // Optional: Style the meeting info sheet
+    meetingSheet.getColumn(1).width = 30;
+    meetingSheet.getColumn(2).width = 40;
+    meetingSheet.getColumn(1).font = { bold: true };
 
-  //   // Generate filename with meeting title and date
-  //   const dateStr = meetingData.startTime.toISOString().split("T")[0];
-  //   const filename = `Participation_Report_${meetingData.meetingTitle.replace(/[^a-z0-9]/gi, "_")}_${dateStr}.xlsx`;
+    // Sheet 2: Participant Summary
+    const participantSheet = workbook.addWorksheet("Participants");
+    const participantData = participantSummaries.map((p) => ({
+      Name: p.name,
+      Email: p.email,
+      "Total Duration (minutes)": p.totalDuration,
+      "Total Duration (formatted)": formatDuration(p.totalDuration),
+      "Join Count": p.joinCount,
+      Status: p.currentlyInMeeting ? "Active" : "Left",
+      "First Joined": p.firstJoined.toLocaleString(),
+      "Last Activity": p.lastActivity.toLocaleString(),
+    }));
 
-  //   // Write and download
-  //   XLSX.writeFile(workbook, filename);
-  // };
+    // Add headers
+    participantSheet.columns = [
+      { header: "Name", key: "Name", width: 20 },
+      { header: "Email", key: "Email", width: 30 },
+      {
+        header: "Total Duration (minutes)",
+        key: "Total Duration (minutes)",
+        width: 25,
+      },
+      {
+        header: "Total Duration (formatted)",
+        key: "Total Duration (formatted)",
+        width: 25,
+      },
+      { header: "Join Count", key: "Join Count", width: 15 },
+      { header: "Status", key: "Status", width: 15 },
+      { header: "First Joined", key: "First Joined", width: 20 },
+      { header: "Last Activity", key: "Last Activity", width: 20 },
+    ];
+
+    // Add data rows
+    participantSheet.addRows(participantData);
+
+    // Style header row
+    participantSheet.getRow(1).font = { bold: true };
+    participantSheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE0E0E0" },
+    };
+
+    // Sheet 3: Activity Timeline
+    const activitySheet = workbook.addWorksheet("Activity Log");
+    const activityData = events.map((event) => ({
+      Timestamp: event.timestamp.toLocaleString(),
+      Time: formatTime(event.timestamp),
+      Name: event.name,
+      Email: event.email,
+      Action: event.action === "joined" ? "Joined" : "Left",
+    }));
+
+    // Add headers
+    activitySheet.columns = [
+      { header: "Timestamp", key: "Timestamp", width: 20 },
+      { header: "Time", key: "Time", width: 15 },
+      { header: "Name", key: "Name", width: 20 },
+      { header: "Email", key: "Email", width: 30 },
+      { header: "Action", key: "Action", width: 15 },
+    ];
+
+    // Add data rows
+    activitySheet.addRows(activityData);
+
+    // Style header row
+    activitySheet.getRow(1).font = { bold: true };
+    activitySheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE0E0E0" },
+    };
+
+    // Generate filename with meeting title and date
+    const dateStr = meetingData.startTime.toISOString().split("T")[0];
+    const filename = `Participation_Report_${meetingData.meetingTitle.replace(/[^a-z0-9]/gi, "_")}_${dateStr}.xlsx`;
+
+    // Write and download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    //   // Create workbook
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {

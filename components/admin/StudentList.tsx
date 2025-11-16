@@ -116,6 +116,7 @@ const StudentList = () =>
       startDate: "",
       availability: [],
       email: "",
+      phoneNumber: "",
       parentName: "",
       parentPhone: "",
       parentEmail: "",
