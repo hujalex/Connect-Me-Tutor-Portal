@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { setDefaultAutoSelectFamily } from "net";
+import { getProfileRole } from "@/lib/actions/user.actions";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -57,10 +58,16 @@ export default function LoginForm() {
         throw error;
       }
 
+      const userRole = await getProfileRole(data.user.id);
+      // if (userRole == 'Admin') {
+      //   await supabase.auth.signOut();
+      //   router.push("/auth/otp-login?autoSend=true&email=" + encodeURIComponent(values.email));
+      // }
+
       if (data.user) {
         toast.success("Logged in successfully");
         // showForms();
-        router.push("/dashboard");
+        // router.push("/dashboard");
         router.refresh();
       } else {
         toast.error("Something went wrong. Please try again.");

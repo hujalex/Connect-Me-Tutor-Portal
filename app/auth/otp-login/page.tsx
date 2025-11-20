@@ -5,8 +5,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSearchParams } from "next/navigation";
 
 import Logo from "@/components/ui/logo"; // Import Logo
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-// Removed unused import: import { setDefaultAutoSelectFamily } from "net";
-// Removed unused imports: Link, X, ExternalLink, ValueFunction
 
 // Define your Zod schema for OTP login
 const emailSchema = z.object({
@@ -35,6 +34,7 @@ const otpSchema = z.object({
 
 export default function OTPLogin() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -47,7 +47,7 @@ export default function OTPLogin() {
     },
   });
 
-  const otpForm = useForm<z.infer<typeof otpSchema>>({
+    const otpForm = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
     defaultValues: {
       email: "",
@@ -55,7 +55,24 @@ export default function OTPLogin() {
     },
   });
 
-  // In your handleSendOtp function, properly reset and update the OTP form:
+
+  useEffect(() => {
+
+    const isAutoSendOTP = searchParams.get("autoSend");
+
+    if (isAutoSendOTP === 'true') {
+      const email = searchParams.get('email');
+
+      if (email) {
+          emailForm.setValue('email', email);
+          emailForm.handleSubmit(handleSendOtp);
+      }
+    }
+
+  }, [searchParams])
+
+
+
   const handleSendOtp = async (values: z.infer<typeof emailSchema>) => {
     setIsLoading(true);
     setEmailForOtp(values.email);
