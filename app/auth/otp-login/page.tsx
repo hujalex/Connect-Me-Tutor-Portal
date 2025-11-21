@@ -5,9 +5,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-
+import { useSearchParams } from "next/navigation";
 import Logo from "@/components/ui/logo"; // Import Logo
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +20,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-// Removed unused import: import { setDefaultAutoSelectFamily } from "net";
-// Removed unused imports: Link, X, ExternalLink, ValueFunction
 
 // Define your Zod schema for OTP login
 const emailSchema = z.object({
@@ -33,12 +31,14 @@ const otpSchema = z.object({
   token: z.string().min(6, { message: "OTP must be 6 digits." }).max(6),
 });
 
-export default function OTPLogin() {
+function OTPLogin() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [emailForOtp, setEmailForOtp] = useState("");
+  const sentOtp = useRef(false);
 
   const emailForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -55,7 +55,26 @@ export default function OTPLogin() {
     },
   });
 
-  // In your handleSendOtp function, properly reset and update the OTP form:
+  useEffect(() => {
+    const autoSendOtp = async () => {
+      if (sentOtp.current) return;
+
+      const isAutoSendOTP = searchParams.get("autoSend");
+
+      if (isAutoSendOTP === "true") {
+        const email = searchParams.get("email");
+
+        if (email) {
+          emailForm.setValue("email", email);
+          sentOtp.current = true;
+          await handleSendOtp({ email });
+          setOtpSent(true);
+        }
+      }
+    };
+    autoSendOtp();
+  }, [searchParams]);
+
   const handleSendOtp = async (values: z.infer<typeof emailSchema>) => {
     setIsLoading(true);
     setEmailForOtp(values.email);
@@ -236,3 +255,15 @@ export default function OTPLogin() {
     </>
   );
 }
+
+const OTPForm = () => {
+  return (
+    <>
+      <Suspense>
+        <OTPLogin />
+      </Suspense>
+    </>
+  );
+};
+
+export default OTPForm;
