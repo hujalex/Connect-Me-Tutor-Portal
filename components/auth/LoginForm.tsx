@@ -59,7 +59,7 @@ export default function LoginForm() {
 
       const userRole = await getProfileRole(data.user.id);
 
-      const adminEmails = process.env.ADMIN_EMAILS;
+      const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS;
       const adminEmailsList = adminEmails ? adminEmails.split(",") : [];
 
       if (
