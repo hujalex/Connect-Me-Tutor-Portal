@@ -5,10 +5,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSearchParams } from "next/navigation";
-
 import Logo from "@/components/ui/logo"; // Import Logo
 import { Button } from "@/components/ui/button";
 import {
@@ -32,14 +31,14 @@ const otpSchema = z.object({
   token: z.string().min(6, { message: "OTP must be 6 digits." }).max(6),
 });
 
-export default function OTPLogin() {
+function OTPLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [emailForOtp, setEmailForOtp] = useState("");
-  const sentOtp = useRef(false)
+  const sentOtp = useRef(false);
 
   const emailForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -58,9 +57,7 @@ export default function OTPLogin() {
 
   useEffect(() => {
     const autoSendOtp = async () => {
-
       if (sentOtp.current) return;
-
 
       const isAutoSendOTP = searchParams.get("autoSend");
 
@@ -258,3 +255,15 @@ export default function OTPLogin() {
     </>
   );
 }
+
+const OTPForm = () => {
+  return (
+    <>
+      <Suspense>
+        <OTPLogin />
+      </Suspense>
+    </>
+  );
+};
+
+export default OTPForm;
