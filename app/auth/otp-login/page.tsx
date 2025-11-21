@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSearchParams } from "next/navigation";
 
@@ -39,6 +39,7 @@ export default function OTPLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [emailForOtp, setEmailForOtp] = useState("");
+  const sentOtp = useRef(false)
 
   const emailForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -47,7 +48,7 @@ export default function OTPLogin() {
     },
   });
 
-    const otpForm = useForm<z.infer<typeof otpSchema>>({
+  const otpForm = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
     defaultValues: {
       email: "",
@@ -55,23 +56,27 @@ export default function OTPLogin() {
     },
   });
 
-
   useEffect(() => {
+    const autoSendOtp = async () => {
 
-    const isAutoSendOTP = searchParams.get("autoSend");
+      if (sentOtp.current) return;
 
-    if (isAutoSendOTP === 'true') {
-      const email = searchParams.get('email');
 
-      if (email) {
-          emailForm.setValue('email', email);
-          emailForm.handleSubmit(handleSendOtp);
+      const isAutoSendOTP = searchParams.get("autoSend");
+
+      if (isAutoSendOTP === "true") {
+        const email = searchParams.get("email");
+
+        if (email) {
+          emailForm.setValue("email", email);
+          sentOtp.current = true;
+          await handleSendOtp({ email });
+          setOtpSent(true);
+        }
       }
-    }
-
-  }, [searchParams])
-
-
+    };
+    autoSendOtp();
+  }, [searchParams]);
 
   const handleSendOtp = async (values: z.infer<typeof emailSchema>) => {
     setIsLoading(true);

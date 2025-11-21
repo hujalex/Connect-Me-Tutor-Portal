@@ -38,7 +38,6 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClientComponentClient();
 
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,15 +58,24 @@ export default function LoginForm() {
       }
 
       const userRole = await getProfileRole(data.user.id);
-      // if (userRole == 'Admin') {
-      //   await supabase.auth.signOut();
-      //   router.push("/auth/otp-login?autoSend=true&email=" + encodeURIComponent(values.email));
-      // }
 
-      if (data.user) {
+      const adminEmails = process.env.ADMIN_EMAILS;
+      const adminEmailsList = adminEmails ? adminEmails.split(",") : [];
+
+      if (
+        userRole == "Admin" &&
+        data.user.email &&
+        !adminEmailsList.includes(data.user.email)
+      ) {
+        await supabase.auth.signOut();
+        router.push(
+          "/auth/otp-login?autoSend=true&email=" +
+            encodeURIComponent(values.email)
+        );
+      } else if (data.user) {
         toast.success("Logged in successfully");
         // showForms();
-        // router.push("/dashboard");
+        router.push("/dashboard");
         router.refresh();
       } else {
         toast.error("Something went wrong. Please try again.");
