@@ -6,7 +6,7 @@ import * as z from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast, { Toaster, ValueFunction } from "react-hot-toast";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { X, ExternalLink } from "lucide-react";
 
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { setDefaultAutoSelectFamily } from "net";
+import { getProfileRole } from "@/lib/actions/user.actions";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -36,7 +37,6 @@ export default function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClientComponentClient();
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,7 +57,22 @@ export default function LoginForm() {
         throw error;
       }
 
-      if (data.user) {
+      const userRole = await getProfileRole(data.user.id);
+
+      const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS;
+      const adminEmailsList = adminEmails ? adminEmails.split(",") : [];
+
+      if (
+        userRole == "Admin" &&
+        data.user.email &&
+        !adminEmailsList.includes(data.user.email)
+      ) {
+        await supabase.auth.signOut();
+        router.push(
+          "/auth/otp-login?autoSend=true&email=" +
+            encodeURIComponent(values.email)
+        );
+      } else if (data.user) {
         toast.success("Logged in successfully");
         // showForms();
         router.push("/dashboard");
@@ -127,73 +142,76 @@ export default function LoginForm() {
   return (
     <>
       <Toaster />
-      <Form {...form} key="login-form">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full space-y-4 p-0 rounded-md"
-        >
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your email address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex justify-between items-center w-full">
-                  <FormLabel>Password</FormLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm font-medium hover:text-blue-800 underline" // Added styling for the link
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Enter your password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button
-            disabled={isLoading}
-            type="submit"
-            className="w-full bg-blue-400"
+      <Suspense>
+        {" "}
+        <Form {...form} key="login-form">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="w-full space-y-4 p-0 rounded-md"
           >
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-          <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-            <span className="bg-background text-muted-foreground relative z-10 px-2">
-              Or continue with
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2"
-            onClick={() => router.push("/auth/otp-login")}
-            type="button"
-          >
-            Login with OTP
-          </Button>
-        </form>
-      </Form>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your email address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex justify-between items-center w-full">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm font-medium hover:text-blue-800 underline" // Added styling for the link
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Enter your password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              disabled={isLoading}
+              type="submit"
+              className="w-full bg-blue-400"
+            >
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+              <span className="bg-background text-muted-foreground relative z-10 px-2">
+                Or continue with
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2"
+              onClick={() => router.push("/auth/otp-login")}
+              type="button"
+            >
+              Login with OTP
+            </Button>
+          </form>
+        </Form>
+      </Suspense>
     </>
   );
 }
