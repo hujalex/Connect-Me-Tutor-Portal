@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 };
 
 //
+
+// new comment
 export default function RootLayout({
   children,
 }: Readonly<{
