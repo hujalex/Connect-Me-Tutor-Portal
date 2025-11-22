@@ -29,11 +29,11 @@ import { Router } from "lucide-react";
 
 const formSchema = z
   .object({
-    password: z.string().min(6, {
-      message: "Please enter a valid email address.",
+    password: z.string().min(8, {
+      message: "Password must be at least 8 characters",
     }),
-    confirmPassword: z.string().min(6, {
-      message: "Password must be at least 6 characters.",
+    confirmPassword: z.string().min(8, {
+      message: "Password must be at least 8 characters",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -56,35 +56,6 @@ export default function ResetPassword() {
     password: "",
     confirmPassword: "",
   });
-
-  // useEffect(() => {
-  //   const verifyToken = async () => {
-  //     try {
-  //       const token_hash = searchParams.get('token_hash')
-  //       const type = searchParams.get('type')
-
-  //       if (!token_hash || type !== 'recovery') {
-  //         setVerificationError('Invalid or missing recovery token')
-  //         setIsVerifying(false)
-  //         return;
-  //       }
-  //       const { error } = await supabase.auth.verifyOtp({
-  //         token_hash,
-  //         type: 'recovery',
-  //       })
-
-  //       if (error) {
-  //         setVerificationError(error.message)
-  //       }
-
-  //     } catch (error) {
-  //       setVerificationError('Failed to verify recovery token');
-  //       console.error('Token verification error:', error)
-  //     } finally {
-  //       setIsVerifying(false)
-  //     }
-  //   }
-  // }, [searchParams, supabase.auth])
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const confirmPasswords = async () => {
