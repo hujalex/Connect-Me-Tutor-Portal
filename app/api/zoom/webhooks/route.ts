@@ -56,12 +56,48 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Verify authorization header from Zoom
+  // Verify authorization from Zoom
+  // Zoom may send the token with or without "Bearer " prefix
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${validationSecret}`) {
+  const signature = req.headers.get("x-zm-signature");
+  const timestamp = req.headers.get("x-zm-request-timestamp");
+  
+  let isAuthorized = false;
+  
+  //Check Authorization header (flexible format)
+  if (authHeader) {
+    // Remove "Bearer " prefix if present and compare
+    const authToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+    // Check if it matches the secret (with or without Bearer prefix)
+    if (authToken === validationSecret || authHeader === `Bearer ${validationSecret}`) {
+      isAuthorized = true;
+    }
+  }
+  
+  // Method 2: Verify HMAC signature (recommended by Zoom, more secure)
+  if (!isAuthorized && signature && timestamp) {
+    try {
+      const bodyString = JSON.stringify(body);
+      const message = `v0:${timestamp}:${bodyString}`;
+      const expectedSignature = `v0=${crypto
+        .createHmac("sha256", validationSecret)
+        .update(message)
+        .digest("hex")}`;
+      
+      if (signature === expectedSignature) {
+        isAuthorized = true;
+      }
+    } catch (error) {
+      console.error("Error verifying HMAC signature:", error);
+    }
+  }
+  
+  if (!isAuthorized) {
     console.error("❌ Authorization failed", {
-      expected: `Bearer ${validationSecret.substring(0, 10)}...`,
-      received: authHeader ? `${authHeader.substring(0, 20)}...` : "none",
+      expected: validationSecret.substring(0, 10) + "...",
+      receivedAuth: authHeader ? `${authHeader.replace(/^Bearer\s+/i, "").trim().substring(0, 20)}...` : "none",
+      receivedSignature: signature ? `${signature.substring(0, 20)}...` : "none",
+      hasTimestamp: !!timestamp,
       zoomMeetingId,
       accountId,
     });
