@@ -125,26 +125,31 @@ export const getProfileRole = async (
   }
 
   try {
-    const { data, error } = await supabase
-      .from(Table.Profiles)
-      .select("role")
+    const { data } = await supabase
+      .from("user_settings")
+      .select(
+        `
+        profile:Profiles!last_active_profile_id(role)
+      `
+      )
       .eq("user_id", userId)
-      .single();
+      .single()
+      .throwOnError();
 
-    if (error) {
-      console.error(
-        "Error fetching profile role in getProfileRole:",
-        error.message
-      );
-      console.error("Error details:", error);
+    const profileRole: { profile: { role: string } } = data as any;
+
+    console.log("Profile Data", profileRole.profile.role);
+
+    if (!profileRole || !profileRole.profile || !profileRole.profile.role) {
+      console.error("No role identified");
       return null;
     }
 
-    if (!data) {
-      return null;
-    }
+    const result = profileRole?.profile.role || null;
+    console.log(result);
 
-    return data.role || null;
+    return result;
+
   } catch (error) {
     console.error("Unexpected error in getProfileRole:", error);
     return null;

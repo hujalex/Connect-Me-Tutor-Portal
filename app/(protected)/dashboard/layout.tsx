@@ -10,7 +10,6 @@ import DashboardLayout from '@/components/admin/dashboard-layout'; // Assuming S
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{ firstName: string; lastName: string } | null>(null); // For displaying profile data
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -24,8 +23,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           if (profileRole) {
             setRole(profileRole);
           }
-          // Simulating getting profile information from somewhere
-          setProfile({ firstName: 'John', lastName: 'Doe' });
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -55,8 +52,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <DashboardLayout>
       <main>
-          {children}
-        </main>
+        {children}
+      </main>
     </DashboardLayout>
   );
 }
