@@ -74,26 +74,25 @@ export default function SettingsPage() {
   const fetchUserProfiles = async (userId: string) => {
     try {
       const { data } = await supabase
-        .from("user_settings")
+        .from("Profiles")
         .select(
-          `profiles:Profiles!last_active_profile_id(
-              id, first_name, last_name
-            )
+          `
+          id,
+          first_name,
+          last_name,
+          email
           `
         )
         .eq("user_id", userId)
-        .single()
         .throwOnError();
 
-      console.log(data)
 
-      const profiles: Partial<Profile>[] = Array.isArray(data.profiles).map((profile) => ({
+      const profiles: Partial<Profile>[] = data.map((profile) => ({
         id: profile.id,
         firstName: profile.first_name,
         lastName: profile.last_name,
       }));
 
-      console.log(profiles)
 
       setUserProfiles(profiles);
     } catch (error) {
@@ -169,6 +168,10 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSwitchAccount = async () => {
+    
+  }
+
   return (
     <>
       <Toaster />{" "}
@@ -202,7 +205,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Session Reminders */}
-              <div>
+              {/* <div>
                 <div className="flex items-center justify-between pb-3 border-b">
                   <div>
                     <h3 className="text-lg font-semibold">Session Reminders</h3>
@@ -254,7 +257,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Webinar Reminders */}
               {/* <div>
@@ -310,7 +313,7 @@ export default function SettingsPage() {
               onClick={handleSaveNotifications}
               className="mt-6 w-full sm:w-auto"
             >
-              Save Notification Settings
+              Switch Account
             </Button>
           </section>
           {/* Notifications Section */}
