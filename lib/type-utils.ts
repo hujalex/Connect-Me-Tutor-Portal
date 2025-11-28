@@ -32,6 +32,6 @@ export async function tableToInterfaceProfiles(data: any) {
     return userProfile;
   } catch (error) {
     console.error("Unable to convert to interface for Profiles", error);
-    return null;
+    throw error
   }
 }

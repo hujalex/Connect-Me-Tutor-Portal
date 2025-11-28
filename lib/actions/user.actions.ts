@@ -20,39 +20,35 @@ export const getUser = async () => {
   return user;
 };
 
-//Fetches profile through userId
-export const getProfile = async (userId: string): Promise<Profile | null> => {
-  if (!userId) {
-    console.error("User ID is required to fetch profile data");
-    return null;
-  }
-
+export const getProfileFromUserSettings = async (userId: string) => {
   try {
     const { data, error } = await supabase
-      .from("Profiles")
+      .from("user_settings")
       .select(
         `
-        id,
-        created_at,
-        role,
-        user_id,
-        first_name,
-        last_name,
-        date_of_birth,
-        start_date,
-        availability,
-        email,
-        phone_number,
-        parent_name,
-        parent_phone,
-        parent_email,
-        tutor_ids,
-        timezone,
-        subjects_of_interest,
-        status,
-        student_number,
-        settings_id,
-        languages_spoken
+        profile:Profiles!last_active_profile_id(
+          id,
+          created_at,
+          role,
+          user_id,
+          first_name,
+          last_name,
+          date_of_birth,
+          start_date,
+          availability,
+          email,
+          phone_number,
+          parent_name,
+          parent_phone,
+          parent_email,
+          tutor_ids,
+          timezone,
+          subjects_of_interest,
+          status,
+          student_number,
+          settings_id,
+          languages_spoken
+        )
       `
       )
       .eq("user_id", userId)
@@ -68,32 +64,20 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       return null;
     }
 
-    // Mapping the fetched data to the UserProfile object
-    const userProfile: Profile = {
-      id: data.id,
-      createdAt: data.created_at,
-      role: data.role,
-      userId: data.user_id,
-      firstName: data.first_name,
-      lastName: data.last_name,
-      dateOfBirth: data.date_of_birth,
-      startDate: data.start_date,
-      availability: data.availability, // Assuming the data is stored as JSON
-      email: data.email,
-      phoneNumber: data.phone_number,
-      parentName: data.parent_name,
-      parentPhone: data.parent_phone,
-      parentEmail: data.parent_email,
-      tutorIds: data.tutor_ids,
-      timeZone: data.timezone,
-      subjects_of_interest: data.subjects_of_interest,
-      status: data.status,
-      studentNumber: data.student_number,
-      settingsId: data.settings_id,
-      languages_spoken: data.languages_spoken,
-    };
+    return tableToInterfaceProfiles(data.profile as any);
+  } catch (error) {
+    throw error;
+  }
+};
 
-    return userProfile;
+//Fetches profile through userId
+export const getProfile = async (userId: string): Promise<Profile | null> => {
+  if (!userId) {
+    console.error("User ID is required to fetch profile data");
+    return null;
+  }
+  try {
+    return getProfileFromUserSettings(userId);
   } catch (error) {
     console.error("Unexpected error in getProfile:", error);
     return null;
@@ -103,13 +87,16 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 export const getProfileByEmail = async (email: string) => {
   try {
     const { data, error } = await supabase
-      .from(Table.Profiles)
-      .select("*")
+      .from("user_settings")
+      .select(
+        `
+      profile:Profiles!last_active_profile_id(*)  
+        `
+      )
       .eq("email", email)
       .single();
     if (error) throw new Error(`Profile fetch failed: ${error.message}`);
-    const userProfile: Profile | null = await tableToInterfaceProfiles(data);
-
+    const userProfile: Profile | null = await tableToInterfaceProfiles(data.profile);
     return userProfile;
   } catch (error) {
     throw error;
@@ -149,7 +136,6 @@ export const getProfileRole = async (
     console.log(result);
 
     return result;
-
   } catch (error) {
     console.error("Unexpected error in getProfileRole:", error);
     return null;
@@ -161,47 +147,7 @@ export const getSessionUserProfile = async (): Promise<Profile | null> => {
   const userId = user?.id;
 
   try {
-    const { data, error } = await supabase
-      .from(Table.Profiles)
-      .select(
-        `
-        id,
-        created_at,
-        role,
-        user_id,
-        first_name,
-        last_name,
-        date_of_birth,
-        start_date,
-        availability,
-        email,
-        phone_number,
-        parent_name,
-        parent_phone,
-        parent_email,
-        tutor_ids,
-        timezone,
-        subjects_of_interest,
-        status,
-        student_number,
-        settings_id
-      `
-      )
-      .eq("user_id", userId)
-      .single();
-
-    if (error) {
-      console.error(
-        "Error fetching profile in getSessionUserProfile:",
-        error.message
-      );
-      console.error("Error details:", error);
-      return null;
-    }
-
-    const userProfile: Profile | null = await tableToInterfaceProfiles(data);
-
-    return userProfile;
+    return userId ? await getProfileFromUserSettings(userId) : null;
   } catch (error) {
     console.error("Unexpected error in getProfile:", error);
     return null;

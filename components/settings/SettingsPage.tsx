@@ -6,6 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getProfile, updateProfile } from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
@@ -15,6 +24,7 @@ import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 export default function SettingsPage() {
   const supabase = createClientComponentClient();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const [sessionReminders, setSessionReminders] = useState(false);
   const [sessionEmailNotifications, setSessionEmailNotifications] =
     useState(false);
@@ -28,8 +38,14 @@ export default function SettingsPage() {
   const [settingsId, setSettingsId] = useState("");
 
   useEffect(() => {
-    fetchUser();
+    const fetchUserInfo = async () => {
+      const userId = await fetchUser();
+      if (userId) await fetchUserProfiles(userId);
+    };
+    fetchUserInfo();
   }, []);
+
+  useEffect(() => {});
 
   useEffect(() => {
     fetchNotificationSettings();
@@ -49,8 +65,40 @@ export default function SettingsPage() {
       if (!profileData) throw new Error("No profile found");
 
       setProfile(profileData);
+      return user.id;
     } catch (error) {
       console.error("Error fetching user:", error);
+    }
+  };
+
+  const fetchUserProfiles = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from("user_settings")
+        .select(
+          `profiles:Profiles!last_active_profile_id(
+              id, first_name, last_name
+            )
+          `
+        )
+        .eq("user_id", userId)
+        .single()
+        .throwOnError();
+
+      console.log(data)
+
+      const profiles: Partial<Profile>[] = Array.isArray(data.profiles).map((profile) => ({
+        id: profile.id,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+      }));
+
+      console.log(profiles)
+
+      setUserProfiles(profiles);
+    } catch (error) {
+      toast.error("Error fetching profiles")
+      console.error("Error fetching other profiles", error);
     }
   };
 
@@ -126,6 +174,145 @@ export default function SettingsPage() {
       <Toaster />{" "}
       <main className="p-8 max-w-4xl mx-auto">
         <div className="space-y-12">
+          {/* Switch Profiles Section */}
+          <section className="bg-white rounded-lg border p-6">
+            <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
+            <div className="space-y-8">
+              {/* Profiles */}
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <h3 className="text-lg font-semibold">Your Accounts</h3>
+                </div>
+                <Select>
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Profiles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Profiles</SelectLabel>
+                      {userProfiles.map((profile) => (
+                        <SelectItem value={profile.id || ""}>
+                          {profile.firstName} {profile.lastName}
+                        </SelectItem>
+                      ))}
+                      {/* <SelectItem value="all">All</SelectItem> */}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Session Reminders */}
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <div>
+                    <h3 className="text-lg font-semibold">Session Reminders</h3>
+                    <p className="text-sm text-gray-600">
+                      Get notified about upcoming tutoring sessions
+                    </p>
+                  </div>
+                  <Switch
+                    id="session-reminders"
+                    checked={sessionReminders}
+                    onCheckedChange={setSessionReminders}
+                  />
+                </div>
+
+                {sessionReminders && (
+                  <div className="mt-4 ml-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="session-email" className="text-base">
+                          Email notifications
+                        </Label>
+                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full border border-green-200">
+                          Beginning June 29th
+                        </span>
+                      </div>
+
+                      <Switch
+                        id="session-email"
+                        checked={sessionEmailNotifications}
+                        onCheckedChange={setSessionEmailNotifications}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="session-text" className="text-base">
+                          Text notifications
+                        </Label>
+                        <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
+                          In Development
+                        </span>
+                      </div>
+                      <Switch
+                        id="session-text"
+                        checked={sessionTextNotifications}
+                        onCheckedChange={setSessionTextNotifications}
+                        disabled
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Webinar Reminders */}
+              {/* <div>
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <div>
+                    <h3 className="text-lg font-semibold">Webinar Reminders</h3>
+                    <p className="text-sm text-gray-600">
+                      Get notified about upcoming webinars and events
+                    </p>
+                  </div>
+                  <Switch
+                    id="webinar-reminders"
+                    checked={webinarReminders}
+                    onCheckedChange={setWebinarReminders}
+                  />
+                </div>
+
+                {webinarReminders && (
+                  <div className="mt-4 ml-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="webinar-email" className="text-base">
+                        Email notifications
+                      </Label>
+                      <Switch
+                        id="webinar-email"
+                        checked={webinarEmailNotifications}
+                        onCheckedChange={setWebinarEmailNotifications}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="webinar-text" className="text-base">
+                          Text notifications
+                        </Label>
+                        <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
+                          In Development
+                        </span>
+                      </div>
+                      <Switch
+                        id="webinar-text"
+                        checked={webinarTextNotifications}
+                        onCheckedChange={setWebinarTextNotifications}
+                        disabled
+                      />
+                    </div>
+                  </div>
+                )}
+              </div> */}
+            </div>
+
+            <Button
+              onClick={handleSaveNotifications}
+              className="mt-6 w-full sm:w-auto"
+            >
+              Save Notification Settings
+            </Button>
+          </section>
           {/* Notifications Section */}
           <section className="bg-white rounded-lg border p-6">
             <h1 className="text-2xl font-bold mb-6">Notification Settings</h1>
