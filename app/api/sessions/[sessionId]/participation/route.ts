@@ -26,13 +26,6 @@ export async function GET(
     // Get participation records
     const participationRecords = await getParticipationBySessionId(sessionId);
 
-    if (!participationRecords) {
-      return NextResponse.json(
-        { error: "Failed to fetch participation data" },
-        { status: 500 }
-      );
-    }
-
     // Transform participation records into events format
     const events = participationRecords.map((record) => ({
       id: record.id,
