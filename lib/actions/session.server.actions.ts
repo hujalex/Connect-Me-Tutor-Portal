@@ -494,38 +494,18 @@ export async function getParticipationData(
     // Get participation records
     const participationRecords = await getParticipationBySessionId(sessionId);
 
-    if (!participationRecords) {
-      return null;
-    }
+    console.log("participationRecords: ", participationRecords);
 
     // Transform participation records into events format
-    const events = participationRecords.flatMap((record) => {
-      const events: ParticipationEvent[] = [];
-
-      // Add join event
-      events.push({
-        id: `${record.id}-join`,
-        participantId: record.participant_uuid,
-        name: record.user_name,
-        email: record.email || "",
-        action: "joined",
-        timestamp: record.date_time,
-      });
-
-      // Add leave event if exists
-      if (record.leave_time) {
-        events.push({
-          id: `${record.id}-leave`,
-          participantId: record.participant_uuid,
-          name: record.user_name,
-          email: record.email || "",
-          action: "left",
-          timestamp: record.leave_time,
-        });
-      }
-
-      return events;
-    });
+    // Each record in zoom_participant_events already represents a single action (joined or left)
+    const events: ParticipationEvent[] = participationRecords.map((record) => ({
+      id: record.id,
+      participantId: record.participant_id,
+      name: record.name,
+      email: record.email || "",
+      action: record.action as "joined" | "left",
+      timestamp: record.timestamp,
+    }));
 
     // Sort events by timestamp
     events.sort(
@@ -596,9 +576,11 @@ export async function getParticipationData(
       });
 
       // If still in meeting, calculate duration until session end or now
-      if (joinTime && summary.currentlyInMeeting) {
+      if (joinTime !== null && summary.currentlyInMeeting) {
         const endTime = sessionEndTime || new Date();
-        totalDuration += (endTime.getTime() - joinTime.getTime()) / (1000 * 60);
+        const joinTimeDate = joinTime as Date;
+        totalDuration +=
+          (endTime.getTime() - joinTimeDate.getTime()) / (1000 * 60);
       }
 
       summary.totalDuration = Math.round(totalDuration);
@@ -673,9 +655,10 @@ export async function getSessionById(
       environment: sessionData.environment,
       date: sessionData.date,
       summary: sessionData.summary,
-      meeting: sessionData.meetings
-        ? await getMeeting(sessionData.meetings.id)
-        : null,
+      meeting:
+        sessionData.meetings && !Array.isArray(sessionData.meetings)
+          ? await getMeeting((sessionData.meetings as any).id)
+          : null,
       student,
       tutor,
       status: sessionData.status,

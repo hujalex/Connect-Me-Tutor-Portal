@@ -27,14 +27,7 @@ export async function POST(request: NextRequest) {
 
     const scheduledTime = subMinutes(sessionDate, 15);
 
-    const tutorName: string = tutor
-      ? ` ${tutor.firstName} ${tutor.lastName}`
-      : "";
-    const studentName: string = student
-      ? `${student.firstName} ${student.lastName}`
-      : "your student";
-
-    const message = `Hi${tutorName}, your tutoring session with ${studentName} starts soon in 15 minutes!`;
+    const message = createMessage(session, tutor, student);
 
     const result = await scheduleEmail({
       notBefore: Math.floor(scheduledTime.getTime() / 1000),
@@ -76,4 +69,27 @@ export async function POST(request: NextRequest) {
       message: "Unable to reschedule email",
     });
   }
+}
+
+/**
+ * TODO: Provide more details regarding upcoming tutoring sessions
+ * @param session Session Details
+ * @param tutor Details about the tutor
+ * @param student Details about the student
+ * 
+ * 
+ * @returns email notification message
+ */
+
+const createMessage = (session: Session, tutor: Profile, student: Profile) => {
+   const tutorName: string = tutor
+      ? ` ${tutor.firstName} ${tutor.lastName}`
+      : "";
+    const studentName: string = student
+      ? `${student.firstName} ${student.lastName}`
+      : "your student";
+
+
+
+  return `Hi${tutorName}, your tutoring session with ${studentName} starts soon in 15 minutes!`;
 }
