@@ -296,6 +296,59 @@ export async function addSessionsServer(
   }
 }
 
+/**
+ * Normalize meeting ID by removing spaces for comparison
+ * @param meetingId - Meeting ID with or without spaces (e.g., "96691315547" or "966 913 15547")
+ * @returns Normalized meeting ID without spaces
+ */
+function normalizeMeetingId(meetingId: string): string {
+  return meetingId.replace(/\s+/g, "");
+}
+
+/**
+ * Find a meeting by normalized meeting_id (handles spaces in stored format)
+ * @param zoomMeetingNumber - Zoom meeting number (e.g., "96691315547")
+ * @returns Meeting record or null if not found
+ */
+export async function findMeetingByNormalizedId(
+  zoomMeetingNumber: string
+): Promise<{ id: string; meeting_id: string } | null> {
+  try {
+    const supabase = await createClient();
+    const normalizedSearch = normalizeMeetingId(zoomMeetingNumber);
+
+    // Fetch all meetings and filter by normalized meeting_id
+    const { data: meetings, error } = await supabase
+      .from(Table.Meetings)
+      .select("id, meeting_id");
+
+    if (error) {
+      console.error("Error fetching meetings:", error);
+      return null;
+    }
+
+    if (!meetings || meetings.length === 0) {
+      return null;
+    }
+
+    // Find meeting where normalized meeting_id matches
+    const matchingMeeting = meetings.find((meeting) => {
+      const normalizedStored = normalizeMeetingId(meeting.meeting_id || "");
+      return normalizedStored === normalizedSearch;
+    });
+
+    return matchingMeeting || null;
+  } catch (error) {
+    console.error("Error finding meeting by normalized ID:", error);
+    return null;
+  }
+}
+
+/**
+ * Get active session by meeting ID (UUID from Meetings table)
+ * @param meetingID - Meeting UUID (from Meetings.id)
+ * @returns Active session or null if not found
+ */
 export async function getActiveSessionFromMeetingID(meetingID: string) {
   const supabase = await createServerClient();
 
@@ -303,7 +356,7 @@ export async function getActiveSessionFromMeetingID(meetingID: string) {
     .from(Table.Sessions)
     .select("*")
     .eq("meeting_id", meetingID)
-    .eq("is_active", true) // adjust this column name as per your schema
+    .eq("status", "Active")
     .single();
 
   if (error) {
@@ -313,7 +366,6 @@ export async function getActiveSessionFromMeetingID(meetingID: string) {
 
   return data;
 }
-import { getSupabase } from "../supabase-server/serverClient";
 import { getParticipationBySessionId } from "./zoom.server.actions";
 import { scheduleMultipleSessionReminders } from "../twilio";
 import { tableToInterfaceProfiles } from "../type-utils";
