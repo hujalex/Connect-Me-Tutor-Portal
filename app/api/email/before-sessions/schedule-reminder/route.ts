@@ -89,7 +89,20 @@ const createMessage = (session: Session, tutor: Profile, student: Profile) => {
       ? `${student.firstName} ${student.lastName}`
       : "your student";
 
-
-
-  return `Hi${tutorName}, your tutoring session with ${studentName} starts soon in 15 minutes!`;
+  return `Hi ${tutorName}, reminder that your tutoring session with ${studentName} starts soon in 15 minutes!
+          Remember to visit https://www.connectmego.app/ and fill in a Session Exist Form (SEF) once the 
+          session is complete.
+          
+          Here's the Zoom link to the meeting: ${session.meeting?.link}
+          
+          If you are planning to cancel, reschedule, or add additional session, everything can be done through
+          the portal (https://www.connectmego.app/). 
+          
+          For additional information, please first reference the ConnectMe Guidebook 
+          (https://drive.google.com/file/d/1vk9neT5FzDfk2ICpW6aeP5B_OL06te8i/view)
+          
+          Otherwise don't hesitate to shoot us a message on Discord!
+          
+          Best, 
+          The ConnectMe Team`;
 }
