@@ -306,7 +306,7 @@ export default function DashboardLayout({
             {/* Logo */}
             <div className="h-16 p-4 flex items-center">
               <Link
-                href="/"
+                href="/dashboard"
                 className="flex items-center px-1 text-sm font-medium rounded-md transition-colors"
               >
                 <div className="text-white p-1 rounded">
