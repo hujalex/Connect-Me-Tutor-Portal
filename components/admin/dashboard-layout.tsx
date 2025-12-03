@@ -42,6 +42,7 @@ import {
   BellPlus,
   Book,
   ChartColumn,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -152,6 +153,11 @@ export default function DashboardLayout({
       title: "Resources",
       href: "/dashboard/resources",
       icon: <Layers className="h-5 w-5" />,
+    },
+    {
+      title: "Worksheets",
+      href: "/dashboard/worksheets",
+      icon: <FileSpreadsheet className = "h-5 w-5"/>
     },
     {
       title: "Pairings",

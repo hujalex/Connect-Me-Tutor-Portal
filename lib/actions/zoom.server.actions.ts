@@ -1,6 +1,8 @@
 "use server";
 // zoomLogger.ts
 import { createClient } from "@supabase/supabase-js";
+import { logEvent, logError } from "@/lib/posthog";
+import crypto from "crypto";
 
 // Init Supabase client
 const supabase = createClient(
@@ -34,6 +36,21 @@ export interface ParticipationRecord {
  * @returns
  */
 export async function logZoomMetadata(participant: ZoomParticipantData) {
+  const logId = crypto.randomUUID();
+
+  await logEvent("zoom_metadata_insert_start", {
+    log_id: logId,
+    session_id: participant.session_id,
+    participant_id: participant.participant_id,
+    participant_name: participant.name,
+    participant_email: participant.email,
+    action: participant.action,
+    timestamp: participant.timestamp,
+    has_session_id: !!participant.session_id,
+    has_participant_id: !!participant.participant_id,
+    has_name: !!participant.name,
+  });
+
   const { data, error } = await supabase
     .from("zoom_participant_events")
     .insert([
@@ -49,8 +66,30 @@ export async function logZoomMetadata(participant: ZoomParticipantData) {
 
   if (error) {
     console.error("Error logging Zoom metadata:", error);
+    await logError(error, {
+      log_id: logId,
+      step: "zoom_metadata_insert",
+      session_id: participant.session_id,
+      participant_id: participant.participant_id,
+      participant_name: participant.name,
+      action: participant.action,
+      error_code: error.code,
+      error_message: error.message,
+      error_details: error.details,
+    });
     throw error;
   }
+
+  // Supabase insert without .select() returns null, so we assume 1 row was inserted on success
+  const insertedRows = error ? 0 : 1;
+  await logEvent("zoom_metadata_insert_success", {
+    log_id: logId,
+    session_id: participant.session_id,
+    participant_id: participant.participant_id,
+    participant_name: participant.name,
+    action: participant.action,
+    inserted_rows: insertedRows,
+  });
 
   return data;
 }
@@ -70,6 +109,20 @@ export async function updateParticipantLeaveTime(
   email: string | null,
   leaveTime: string
 ) {
+  const logId = crypto.randomUUID();
+
+  await logEvent("zoom_participant_leave_insert_start", {
+    log_id: logId,
+    zoom_meeting_id: zoomMeetingId,
+    participant_id: participantId,
+    participant_name: name,
+    participant_email: email,
+    leave_time: leaveTime,
+    has_zoom_meeting_id: !!zoomMeetingId,
+    has_participant_id: !!participantId,
+    has_name: !!name,
+  });
+
   const { data, error } = await supabase
     .from("zoom_participant_events")
     .insert([
@@ -86,8 +139,27 @@ export async function updateParticipantLeaveTime(
 
   if (error) {
     console.error("Error logging participant leave event:", error);
+    await logError(error, {
+      log_id: logId,
+      step: "zoom_participant_leave_insert",
+      zoom_meeting_id: zoomMeetingId,
+      participant_id: participantId,
+      participant_name: name,
+      leave_time: leaveTime,
+      error_code: error.code,
+      error_message: error.message,
+      error_details: error.details,
+    });
     throw error;
   }
+
+  await logEvent("zoom_participant_leave_insert_success", {
+    log_id: logId,
+    zoom_meeting_id: zoomMeetingId,
+    participant_id: participantId,
+    participant_name: name,
+    inserted_rows: Array.isArray(data) ? data.length : data ? 1 : 0,
+  });
 
   return data;
 }
@@ -116,51 +188,23 @@ export async function getParticipationByZoomMeetingId(
 
 /**
  * Get participation records by internal session ID
- * Looks up the Zoom meeting UUID from the session -> meeting relationship
+ * Queries zoom_participant_events directly by session_id column
  * @param sessionId - Internal session UUID
- * @returns Array of participation records or null if session/meeting not found
+ * @returns Array of participation records or empty array if none found
  */
 export async function getParticipationBySessionId(
   sessionId: string
-): Promise<ParticipationRecord[] | null> {
-  try {
-    // First get the session with its meeting
-    // The join should be: Sessions.meeting_id -> Meetings.id (primary key)
-    // Then we select meeting_id (Zoom UUID) from Meetings
-    const { data: session, error: sessionError } = await supabase
-      .from("Sessions")
-      .select("meeting_id, meetings:Meetings!meeting_id(id, meeting_id)")
-      .eq("id", sessionId)
-      .single();
+): Promise<ParticipationRecord[]> {
+  const { data, error } = await supabase
+    .from("zoom_participant_events")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("timestamp", { ascending: true });
 
-    if (sessionError || !session) {
-      console.error("Error fetching session:", sessionError);
-      return null;
-    }
-
-    // Extract Zoom meeting UUID from the meeting
-    const meeting = (session as any).meetings;
-    if (!meeting || !meeting.meeting_id) {
-      console.error("No meeting found for session or missing meeting_id");
-      return null;
-    }
-    const zoomMeetingId = meeting.id;
-
-    // Validate that zoomMeetingId is a valid UUID format
-    // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12 hex digits)
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(zoomMeetingId)) {
-      console.error(
-        `Invalid Zoom meeting UUID format: "${zoomMeetingId}". Expected UUID format but got what appears to be a phone number or other invalid value.`
-      );
-      return null;
-    }
-
-    // Get participation records using Zoom meeting UUID
-    return await getParticipationByZoomMeetingId(zoomMeetingId);
-  } catch (error) {
-    console.error("Error in getParticipationBySessionId:", error);
-    return null;
+  if (error) {
+    console.error("Error fetching participation data:", error);
+    throw error;
   }
+
+  return (data || []) as ParticipationRecord[];
 }
