@@ -45,18 +45,28 @@ export async function POST(req: NextRequest) {
   const event = body?.event;
 
   // Extract identifying information from the payload
-  const zoomMeetingId = payload?.object?.id; // Meeting UUID (primary identifier)
-  const accountId = payload?.account_id; // Account ID
-  const accountEmail = payload?.account_email; // Account email
-  const meetingNumber = payload?.object?.meeting_number; // Zoom meeting number
-  const hostId = payload?.object?.host_id; // Host user ID
+  // Meeting UUID (primary identifier) - this is the Zoom meeting UUID
+  const zoomMeetingId = payload?.object?.uuid;
+  // Meeting number - the id field contains the meeting number (e.g., "77608067183")
+  const meetingNumberRaw =
+    payload?.object?.id || payload?.object?.meeting_number;
+  const meetingNumber = meetingNumberRaw ? String(meetingNumberRaw) : undefined;
+  // Account information at payload level
+  const accountId = payload?.account_id;
+  const accountEmail = payload?.account_email;
+  // Host information
+  const hostId = payload?.object?.host_id;
+  const hostEmail = payload?.object?.host_email;
 
+  console.log("Webhook payload:", JSON.stringify(payload, null, 2));
   console.log("Webhook identifiers:", {
     zoomMeetingId,
     accountId,
     accountEmail,
     meetingNumber,
+    meetingNumberRaw,
     hostId,
+    hostEmail,
     event,
   });
 
@@ -64,6 +74,7 @@ export async function POST(req: NextRequest) {
   let sessionId: string | null = null;
   let meetingRecord: { id: string; meeting_id: string } | null = null;
 
+  console.log("meetingNumber", meetingNumber);
   if (meetingNumber) {
     try {
       await logEvent("zoom_webhook_finding_meeting_start", {
@@ -81,11 +92,13 @@ export async function POST(req: NextRequest) {
           stored_meeting_id: meetingRecord.meeting_id,
         });
 
-        // Find active session with this meeting ID
-        const activeSession = await getActiveSessionFromMeetingID(
+        // Find active session with this meeting ID (closest to current time, in the past)
+        const activeSessions = await getActiveSessionFromMeetingID(
           meetingRecord.id
         );
-
+        // Get the first (most recent) session that is in the past
+        const activeSession = activeSessions?.[0];
+        console.log("activeSession", activeSession);
         if (activeSession) {
           sessionId = activeSession.id;
           await logEvent("zoom_webhook_active_session_found", {
@@ -123,10 +136,13 @@ export async function POST(req: NextRequest) {
     account_id: accountId,
     account_email: accountEmail,
     meeting_number: meetingNumber,
+    meeting_number_raw: meetingNumberRaw,
     host_id: hostId,
+    host_email: hostEmail,
     event_type: event,
     has_zoom_meeting_id: !!zoomMeetingId,
     has_account_id: !!accountId,
+    has_meeting_number: !!meetingNumber,
     has_session_id: !!sessionId,
     session_id: sessionId,
   });
@@ -146,26 +162,46 @@ export async function POST(req: NextRequest) {
   }
 
   // Handle Zoom's URL validation challenge
-  if (body.event === "endpoint.url_validation") {
-    console.log("Validating webhook URL for meeting:", zoomMeetingId);
+  if (event === "endpoint.url_validation") {
+    console.log("Validating webhook URL", {
+      zoom_meeting_id: zoomMeetingId,
+      meeting_number: meetingNumber,
+      account_id: accountId,
+    });
     await logEvent("zoom_webhook_url_validation", {
       request_id: requestId,
       zoom_meeting_id: zoomMeetingId,
-      has_plain_token: !!body.payload?.plainToken,
+      meeting_number: meetingNumber,
+      account_id: accountId,
+      has_plain_token: !!payload?.plainToken,
     });
+
+    const plainToken = payload?.plainToken;
+    if (!plainToken) {
+      await logError(new Error("Missing plainToken in validation request"), {
+        request_id: requestId,
+        step: "url_validation",
+      });
+      return NextResponse.json(
+        { error: "Missing plainToken" },
+        { status: 400 }
+      );
+    }
 
     const hashForValidate = crypto
       .createHmac("sha256", validationSecret)
-      .update(body.payload.plainToken)
+      .update(plainToken)
       .digest("hex");
 
     await logEvent("zoom_webhook_url_validation_complete", {
       request_id: requestId,
       zoom_meeting_id: zoomMeetingId,
+      meeting_number: meetingNumber,
+      account_id: accountId,
     });
 
     return NextResponse.json({
-      plainToken: body.payload.plainToken,
+      plainToken: plainToken,
       encryptedToken: hashForValidate,
     });
   }
@@ -515,7 +551,9 @@ export async function POST(req: NextRequest) {
     request_id: requestId,
     event_type: event,
     zoom_meeting_id: zoomMeetingId,
+    meeting_number: meetingNumber,
     account_id: accountId,
+    session_id: sessionId,
     processing_time_ms: processingTime,
   });
 
