@@ -5,6 +5,7 @@ import { createClient } from "../supabase/server";
 import { AdminConversation } from "@/types/chat";
 import { getUserFromAction } from "./user.server.actions";
 import { getUserFromId } from "./admin.actions";
+import { getProfileFromUserSettings } from "./user.actions";
 
 export const createAdminConversation = async (user_id: string) => {
   if (
@@ -73,13 +74,16 @@ export async function fetchUserAdminConversation(
   }
   const supabase = await createClient();
 
-  const { data: profile, error } = await supabase
-    .from("Profiles")
-    .select("id")
-    .eq("user_id", userId)
-    .single();
+  // const { data: profile, error } = await supabase
+  //   .from("Profiles")
+  //   .select("id")
+  //   .eq("user_id", userId)
+  //   .single();
 
-  if (error) throw error;
+
+  // if (error) throw error;
+
+  const profile = await getProfileFromUserSettings(userId)
 
   const profileId = profile.id;
 

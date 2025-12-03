@@ -57,11 +57,11 @@ export const getProfileFromUserSettings = async (userId: string) => {
     if (error) {
       console.error("Error fetching profile in getProfile:", error.message);
       console.error("Error details:", error);
-      return null;
+      throw error;
     }
 
     if (!data) {
-      return null;
+      throw new Error("No profile associated with user id")
     }
 
     return tableToInterfaceProfiles(data.profile as any);
