@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * TODO: Provide more details regarding upcoming tutoring sessions
  * @param session Session Details
  * @param tutor Details about the tutor
  * @param student Details about the student
@@ -90,7 +89,7 @@ const createMessage = (session: Session, tutor: Profile, student: Profile) => {
       : "your student";
 
 return `
-    Hi ${tutorName},<br><br>
+    <p>Hi ${tutorName},<br><br>
 
     This is a reminder that your tutoring session with ${studentName} starts in **15 minutes**!<br><br>
 
@@ -110,6 +109,7 @@ return `
     If you have any questions, feel free to reach out to us on Discord!<br><br>
 
     Best,<br>
-    The ConnectMe Team
+    The Connect Me Free Tutoring & Mentoring Team
+    </p>
     `;
 };
