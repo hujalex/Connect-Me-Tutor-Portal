@@ -89,22 +89,27 @@ const createMessage = (session: Session, tutor: Profile, student: Profile) => {
       ? `${student.firstName} ${student.lastName}`
       : "your student";
 
-  return `
-    Hi ${tutorName}, reminder that your tutoring session with ${studentName} starts soon in 15 minutes!
+return `
+    Hi ${tutorName},<br><br>
 
-    Remember to visit <a href="https://www.connectmego.app/">ConnectMeGo</a> and fill in a Session Exist Form (SEF) once the session is complete.
+    This is a reminder that your tutoring session with ${studentName} starts in **15 minutes**!<br><br>
 
-    Here's the Zoom link to the meeting: <a href="${session.meeting?.link}">Join Zoom Meeting</a>
+    Remember to visit <a href="https://www.connectmego.app/">ConnectMeGo</a> and fill out a Session Exist Form (SEF) once the session is complete.<br><br>
 
-    If you are planning to cancel, reschedule, or add additional session, everything can be done through the portal:
-    <a href="https://www.connectmego.app/">https://www.connectmego.app/</a>
+    Here's the Zoom link to the meeting:<br>
+    <a href="${session.meeting?.link}">Join Zoom Meeting</a><br><br>
 
-    For additional information, please reference the ConnectMe Guidebook:
-    <a href="https://drive.google.com/file/d/1vk9neT5FzDfk2ICpW6aeP5B_OL06te8i/view">ConnectMe Guidebook</a>
+    If you need to cancel, reschedule, or add additional sessions, you can do everything through the portal:<br>
+    <a href="https://www.connectmego.app/">https://www.connectmego.app/</a><br><br>
 
-    Otherwise, don't hesitate to shoot us a message on Discord!
+    For more details, you can reference the ConnectMe Guidebook:<br>
+    <a href="https://drive.google.com/file/d/1vk9neT5FzDfk2ICpW6aeP5B_OL06te8i/view">
+        ConnectMe Guidebook
+    </a><br><br>
 
-    Best,  
+    If you have any questions, feel free to reach out to us on Discord!<br><br>
+
+    Best,<br>
     The ConnectMe Team
     `;
 };
