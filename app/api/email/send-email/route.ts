@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         from: "Connect Me Free Tutoring & Mentoring <reminder@connectmego.app>",
         to: to,
         subject: subject,
-        text: body,
+        html: body,
       });
       return NextResponse.json({
         status: 200,
