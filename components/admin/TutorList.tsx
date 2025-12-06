@@ -476,7 +476,7 @@ const TutorList = () => {
                     {tutor.firstName} {tutor.lastName}
                   </TableCell>
                   <TableCell>
-                    <UserAvailabilities user={student} />
+                    <UserAvailabilities user={tutor} />
                   </TableCell>
                   <TableCell className="flex flex-col">
                     {tutor.subjects_of_interest?.map((item, index) => (
