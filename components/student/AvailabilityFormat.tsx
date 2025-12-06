@@ -7,7 +7,7 @@ const Availability = ({
   availability: { day: string; startTime: string; endTime: string }[];
 }) => (
   <div>
-    <ul className="text-xs">
+    <ul className="text-sm text-muted-foreground">
       {availability?.map((entry, index) => (
         <li key={index}>
           <span className="font-semibold">{entry.day}s:</span>{" "}

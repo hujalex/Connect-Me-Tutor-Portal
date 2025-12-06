@@ -54,6 +54,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Profile } from "@/types";
+import AvailabiltyFormat from "@/components/student/AvailabilityFormat"
 
 interface UserAvailabilitiesProps {
   user: Profile;
@@ -109,11 +110,12 @@ export const UserAvailabilities = ({ user }: UserAvailabilitiesProps) => {
                     <p className="text-sm font-medium">Availability</p>
                     {user.availability && user.availability.length > 0 ? (
                       <div className="grid gap-1 mt-1">
-                        {user.availability.map((slot, i) => (
+                        {/* {user.availability.map((slot, i) => (
                           <p key={i} className="text-sm text-muted-foreground">
                             {slot.day}: {slot.startTime} - {slot.endTime}
                           </p>
-                        ))}
+                        ))} */}
+                        <AvailabiltyFormat availability={user.availability} />
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">
