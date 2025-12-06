@@ -22,6 +22,7 @@ import {
   Check,
   Circle,
   Loader2,
+  Copy
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -583,6 +584,29 @@ const EnrollmentList = () => {
       console.error("Unable to pause pairing over summer", error);
     }
   };
+  const handleCopyMeetingLink = (meetingId: string) => {
+    const meeting = meetings.find(
+      (m) => String(m.id) === String(meetingId)
+    );
+
+    if (!meeting) {
+      toast.error("Meeting not found");
+      return;
+    }
+
+    const url = meeting.link; 
+
+    if (!url) {
+      toast.error("No Zoom link available");
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(url)
+      .then(() => toast.success("Meeting link copied!"))
+    .catch(() => toast.error("Failed to copy link"));
+};
+
 
   return (
     <main className="p-8">
@@ -964,12 +988,40 @@ const EnrollmentList = () => {
                     {formatDateAdmin(enrollment.endDate, false, true)}
                   </TableCell> */}
                   <TableCell>
-                    {enrollment.meetingId
-                      ? meetings.find(
-                          (meeting) =>
-                            String(meeting.id) === String(enrollment.meetingId)
-                        )?.name || "No Meeting"
-                      : "No Meeting Link"}
+                     {(() => {
+                      const meeting = meetings.find(
+                        (m) => String(m.id) === String(enrollment.meetingId)
+                      );
+
+                      if (!meeting) return "No Meeting Link";
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => handleCopyMeetingLink(meeting.id)}
+                          className="relative inline-flex items-center group cursor-pointer"
+                        >
+                          {/* Text – left aligned, normal state */}
+                          <span className="underline text-black-600 transition-opacity duration-150 group-hover:opacity-0">
+                            {meeting.name}
+                          </span>
+
+                          {/* Icon – centered over the text, only visible on hover */}
+                          <Copy
+                            className="
+                              absolute
+                              left-1/2 -translate-x-1/2
+                              w-4 h-4
+                              text-gray-700
+                              opacity-0
+                              transition-opacity duration-150
+                              group-hover:opacity-100
+                              pointer-events-none
+                            "
+                          />
+                        </button>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     {formatSessionDuration(enrollment.duration)} hr(s)
