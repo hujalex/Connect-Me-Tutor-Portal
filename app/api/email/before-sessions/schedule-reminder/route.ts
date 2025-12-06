@@ -91,7 +91,7 @@ const createMessage = (session: Session, tutor: Profile, student: Profile) => {
 return `
     <p>Hi ${tutorName},<br><br>
 
-    This is a reminder that your tutoring session with ${studentName} starts in **15 minutes**!<br><br>
+    This is a reminder that your tutoring session with ${studentName} starts in <strong>15 minutes</strong>!<br><br>
 
     Remember to visit <a href="https://www.connectmego.app/">ConnectMeGo</a> and fill out a Session Exist Form (SEF) once the session is complete.<br><br>
 
