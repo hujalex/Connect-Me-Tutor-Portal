@@ -43,6 +43,7 @@ import {
   Book,
   ChartColumn,
   FileSpreadsheet,
+  FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,7 @@ export default function DashboardLayout({
     {
       title: "Worksheets",
       href: "/dashboard/worksheets",
-      icon: <FileSpreadsheet className = "h-5 w-5"/>
+      icon: <FileText className = "h-5 w-5"/>
     },
     {
       title: "Pairings",

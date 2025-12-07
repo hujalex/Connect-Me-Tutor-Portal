@@ -82,6 +82,7 @@ import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
 import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
+import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollments.action";
 
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -424,6 +425,18 @@ const Schedule = () => {
     return { totalStudents, studentsThisWeek };
   };
 
+  const handleGetMissingSEF = async () => {
+    try {
+      await getEnrollmentsWithMissingSEF()
+      toast.success("Printed to console")
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Please view Dev Console for error")
+    }
+
+  }
+
   return (
     <>
       <Toaster />
@@ -633,6 +646,7 @@ const Schedule = () => {
               </ScrollArea>
             </DialogContent>
           </Dialog>
+          <Button onClick = {() => handleGetMissingSEF()}>Function Tester</Button>
 
           {loading ? (
             <div className="text-center py-10">
