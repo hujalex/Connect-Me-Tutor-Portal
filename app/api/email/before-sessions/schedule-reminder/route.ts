@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * TODO: Provide more details regarding upcoming tutoring sessions
  * @param session Session Details
  * @param tutor Details about the tutor
  * @param student Details about the student
@@ -89,7 +88,28 @@ const createMessage = (session: Session, tutor: Profile, student: Profile) => {
       ? `${student.firstName} ${student.lastName}`
       : "your student";
 
+return `
+    <p>Hi ${tutorName},<br><br>
 
+    This is a reminder that your tutoring session with ${studentName} starts in <strong>15 minutes</strong>!<br><br>
 
-  return `Hi${tutorName}, your tutoring session with ${studentName} starts soon in 15 minutes!`;
-}
+    Remember to visit <a href="https://www.connectmego.app/">ConnectMeGo</a> and fill out a Session Exist Form (SEF) once the session is complete.<br><br>
+
+    Here's the Zoom link to the meeting:<br>
+    <a href="${session.meeting?.link}">Join Zoom Meeting</a><br><br>
+
+    If you need to cancel, reschedule, or add additional sessions, you can do everything through the portal:<br>
+    <a href="https://www.connectmego.app/">https://www.connectmego.app/</a><br><br>
+
+    For more details, you can reference the ConnectMe Guidebook:<br>
+    <a href="https://drive.google.com/file/d/1vk9neT5FzDfk2ICpW6aeP5B_OL06te8i/view">
+        ConnectMe Guidebook
+    </a><br><br>
+
+    If you have any questions, feel free to reach out to us on Discord!<br><br>
+
+    Best,<br>
+    The Connect Me Free Tutoring & Mentoring Team
+    </p>
+    `;
+};

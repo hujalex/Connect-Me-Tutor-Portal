@@ -81,6 +81,7 @@ import DeleteTutorForm from "./components/DeleteTutorForm";
 import EditTutorForm from "./components/EditTutorForm";
 import { Turret_Road } from "next/font/google";
 import { capitalizeFirstLetter } from "@/lib/utils";
+import { UserAvailabilities } from "../ui/UserAvailabilities";
 
 const TutorList = () => {
   const supabase = createClientComponentClient();
@@ -110,6 +111,7 @@ const TutorList = () => {
     status: "Active",
     tutorIds: [],
   });
+  
   const [selectedTutor, setSelectedTutor] = useState<Profile | null>(null);
 
   //---Modals
@@ -474,7 +476,7 @@ const TutorList = () => {
                     {tutor.firstName} {tutor.lastName}
                   </TableCell>
                   <TableCell>
-                    <AvailabilityFormat availability={tutor.availability} />
+                    <UserAvailabilities user={tutor} />
                   </TableCell>
                   <TableCell className="flex flex-col">
                     {tutor.subjects_of_interest?.map((item, index) => (
