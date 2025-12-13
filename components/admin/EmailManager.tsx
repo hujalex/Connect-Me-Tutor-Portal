@@ -4,36 +4,46 @@ import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
 import { Client } from "@upstash/qstash";
 import { fetchScheduledMessages } from "@/lib/actions/email.server.actions";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const EmailManager = () => {
-  const sendEmail = async () => {
-    try {
-      const now = new Date();
 
-      const response = await fetch(
-        "/api/email/before-sessions/schedule-reminders-weekly",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
 
-      const data = await response.json();
+  // const sendEmail = async () => {
+  //   try {
+  //     const now = new Date();
 
-      if (!response.ok) {
-        throw new Error(data.message || `Error: ${response.status}`);
-      }
+  //     const response = await fetch(
+  //       "/api/email/before-sessions/schedule-reminders-weekly",
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
 
-      toast.success("Email sent");
-    } catch (error) {
-      toast.error(
-        `${error instanceof Error ? error.message : "Unknown error"}`
-      );
-      console.error("Unable to send email", error);
-    }
-  };
+  //     const data = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new Error(data.message || `Error: ${response.status}`);
+  //     }
+
+  //     toast.success("Email sent");
+  //   } catch (error) {
+  //     toast.error(
+  //       `${error instanceof Error ? error.message : "Unknown error"}`
+  //     );
+  //     console.error("Unable to send email", error);
+  //   }
+  // };
 
   const listScheduledMessages = async () => {
     try {
@@ -51,8 +61,16 @@ const EmailManager = () => {
 
       <main className="p-8">
         <h1 className="text-3xl font-bold mb-6">Email Manager</h1>
-        <Button onClick={() => sendEmail()}>Send Email</Button>
-        <Button onClick={() => listScheduledMessages()}>Show schedules</Button>
+        <div className="flex space-x-6">
+        <div className="flex-grow bg-white rounded-lg shadow p-6">
+          {/* Begin Table */ }
+          <Table>
+
+
+
+          </Table>
+          </div>
+        </div>
       </main>
     </>
   );

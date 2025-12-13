@@ -32,7 +32,6 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
     }
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return null; // Valid return
     }
     // Mapping the fetched data to the Notification object

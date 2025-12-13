@@ -748,28 +748,6 @@ async function isSessioninPastWeek(enrollmentId: string, midWeek: Date) {
   return Object.keys(data).length > 0;
 }
 
-async function logSessionInfo(
-  weekStartString: string,
-  weekStart: Date,
-  weekEnd: Date,
-  currentDate: Date,
-  sessionStartTime: Date,
-  sessionStartTimeEST: Date
-) {
-  console.log("ISO of week start", weekStartString);
-  console.log("date object of week start", weekStart);
-  console.log("Date object of week end,", weekEnd);
-  // console.log("Date Object EST of week Start", weekStartEST);
-  // console.log("Date object EST of Week End", weekEndEST);
-  console.log("Date object of day of session", currentDate);
-  console.log("Date object of day of session + hours", sessionStartTime);
-  console.log("EST, ", sessionStartTimeEST);
-  console.log(`ISOstring UTC, ${sessionStartTime.toISOString()}`);
-  console.log(`ISOstring EST, ${sessionStartTimeEST.toISOString()}`);
-  console.log(`${format(sessionStartTime, "yyyy-MM-dd'T'HH:mm:ss.SSS")}`);
-  console.log("-----------------");
-}
-
 export async function updateSession(
   updatedSession: Session,
   updateEmail: boolean = true
@@ -929,7 +907,6 @@ export const createEnrollment = async (
 /* ENROLLMENTS */
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
   try {
-    console.log("Fetching Enrollments");
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,
@@ -1121,7 +1098,6 @@ export const addEnrollment = async (
       enrollment.availability[0].startTime,
       enrollment.availability[0].endTime
     );
-    console.log("Duration", duration);
 
     if (enrollment.duration <= 0)
       throw new Error("Duration should be a positive amount");
@@ -1189,7 +1165,6 @@ export const removeFutureSessions = async (enrollmentId: string) => {
         .eq("status", "Active")
         .gte("date", now);
 
-    console.log("Successfully deleted sessions");
 
     if (deleteSessionsError) {
       throw deleteSessionsError;
@@ -1238,7 +1213,6 @@ export async function getEvents(tutorId: string): Promise<Event[]> {
 
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return []; // Valid return
     }
 
@@ -1299,7 +1273,6 @@ export async function getEventsWithTutorMonth(
 
     // Check if data exists
     if (!data) {
-      console.log("No events found:");
       return null;
     }
 
@@ -1393,7 +1366,6 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
 
     // Check if data exists
     if (!data) {
-      console.log("No notifications found:");
       return null; // Valid return
     }
 

@@ -176,8 +176,6 @@ export const runPairingWorkflow = async () => {
   // Build matches for DB insert
   const matchedStudents: PairingMatch[] = await buildMatches(studentMatches)
   const matchedTutors: PairingMatch[] = await buildMatches(tutorMatches)
-
-
   // console.log(matchedStudents);
 
   try {

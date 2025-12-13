@@ -170,9 +170,6 @@ export async function scheduleSessionReminders(
 
   // Skip if session is cancelled or completed
   if (session.status === "Cancelled" || session.status === "Complete") {
-    console.log(
-      `Skipping reminders for ${session.status} session ${session.id}`
-    );
     return scheduledMessages;
   }
 
@@ -183,9 +180,6 @@ export async function scheduleSessionReminders(
   // Don't schedule if reminder time is in the past
   const now = new Date();
   if (reminderTime <= now) {
-    console.log(
-      `Skipping reminder for session ${session.id} - reminder time has passed`
-    );
     return scheduledMessages;
   }
 
