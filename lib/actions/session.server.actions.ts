@@ -327,8 +327,6 @@ export async function findMeetingByNormalizedId(
       return null;
     }
 
-    console.log("meetings", meetings, error);
-
     if (!meetings || meetings.length === 0) {
       return null;
     }
@@ -356,8 +354,6 @@ export async function getActiveSessionFromMeetingID(meetingID: string) {
   const supabase = await createServerClient();
   const now = new Date().toISOString();
 
-  console.log("meetingID in session", meetingID);
-
   const { data, error } = await supabase
     .from(Table.Sessions)
     .select("*")
@@ -366,8 +362,6 @@ export async function getActiveSessionFromMeetingID(meetingID: string) {
     .lte("date", now) // Only sessions in the past (date <= current time)
     .order("date", { ascending: false }) // Most recent first
     .limit(1); // Get the closest one to now
-
-  console.log("data", data, error);
 
   if (error) {
     console.error("Error fetching session:", error);
@@ -555,8 +549,6 @@ export async function getParticipationData(
 
     // Get participation records
     const participationRecords = await getParticipationBySessionId(sessionId);
-
-    console.log("participationRecords: ", participationRecords);
 
     // Transform participation records into events format
     // Each record in zoom_participant_events already represents a single action (joined or left)

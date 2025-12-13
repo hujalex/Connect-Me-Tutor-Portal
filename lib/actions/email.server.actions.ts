@@ -189,12 +189,9 @@ export async function sendPairingRequestEmail(
   data: PairingRequestNotificationEmailProps,
   emailTo: string
 ) {
-  console.log("Sending Pairing Request Email");
   const emailHtml = await render(
     React.createElement(PairingRequestNotificationEmail, data)
   );
-
-  console.log("sending emails");
 
   const emailResult = await resend.emails.send({
     from: "reminder@connectmego.app",
@@ -210,7 +207,6 @@ export async function sendTutorPairingConfirmationEmail(data: PairingConfirmatio
   const emailHtml = await render(
     React.createElement(TutorPairingConfirmationEmail, data)
   );
-  console.log("Sending confirmation for tutor")
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <confirmation@connectmego.app>",
     to: "ahu@connectmego.org",
@@ -218,8 +214,6 @@ export async function sendTutorPairingConfirmationEmail(data: PairingConfirmatio
     subject: "Confirmed for Tutoring",
     html: emailHtml,
   });
-
-  console.log("Confirmation", emailHtml)
 
   return emailResult;
 }

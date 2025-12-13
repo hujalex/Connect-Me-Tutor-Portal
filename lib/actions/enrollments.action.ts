@@ -49,12 +49,6 @@ export const getEnrollmentsWithMissingSEF = async () => {
 
     const { data: enrollments, error: fetchEnrollmentsError} = await supabase.from("Enrollments").select()
 
-
-    console.log(sessions)
-    console.log(enrollments)
-
-
-    console.log("Enrollments that are missing SEF for the past two sessions", "REPLACE THIS")
   } catch (error) {
     console.error("Unable to filter ", error)
     throw error
