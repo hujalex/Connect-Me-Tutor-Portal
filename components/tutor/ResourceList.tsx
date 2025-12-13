@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {tutorResources} from '@/constants/tutor'; // Importing the resources JSON array
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, }  from "@/components/ui/card";
 
 interface Resource {
     title: string;
@@ -45,7 +46,65 @@ const ResourceList = () => {
   );
 
   return (
-    <main className="p-8">
+    <main className="relative p-8">
+     <div className="lg:flex lg:top-8 h-fit">
+  <div className="flex gap-4"> {/* Flex container for horizontal layout */}
+    <Card className="w-[300px] aspect-square flex flex-col justify-between">
+      <CardHeader>
+        <CardTitle>Tutor Handbook</CardTitle>
+        <CardDescription>Read before your first tutoring session!</CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <p className="mb-4">
+          This handbook covers the expectations, policy, attendance, and other necessary information
+        </p>
+      </CardContent>
+
+      <CardFooter>
+        <Button
+          className="w-full"
+          onClick={() =>
+            window.open(
+              'https://drive.google.com/file/d/13567c0r06Yp881dGcx5E5LT_miFay9Ep/view?ths=true',
+              '_blank'
+            )
+          }
+        >
+          Open Tutor Handbook
+        </Button>
+      </CardFooter>
+    </Card>
+
+    <Card className="w-[300px] aspect-square flex flex-col justify-between">
+      <CardHeader>
+        <CardTitle>Tutor Manual</CardTitle>
+        <CardDescription>Manual that tutors can refer to</CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <p className="mb-4">
+          This manual contains helpful information for tutors.
+        </p>
+      </CardContent>
+
+      <CardFooter>
+        <Button
+          className="w-full"
+          onClick={() =>
+            window.open(
+              'https://docs.google.com/document/d/1Tzc0JA90Ghy76UdBPCRFrUcT27jOxTvqh4yxq1_xVXY/edit?tab=t.0',
+              '_blank'
+            )
+          }
+        >
+          Open Tutor Manual
+        </Button>
+      </CardFooter>
+    </Card>
+  </div>
+</div>
+
       <h1 className="text-3xl font-bold mb-6">Tutor Resources</h1>
       
       <div className="flex space-x-6">
