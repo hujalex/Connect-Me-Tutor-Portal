@@ -48,7 +48,7 @@ const ResourceList = () => {
   return (
     <main className="relative p-8">
      <div className="lg:flex lg:top-8 h-fit">
-  <div className="flex gap-4"> {/* Flex container for horizontal layout */}
+  <div className="flex gap-4"> 
     <Card className="w-[300px] aspect-square flex flex-col justify-between">
       <CardHeader>
         <CardTitle>Tutor Handbook</CardTitle>
