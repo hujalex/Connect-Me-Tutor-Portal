@@ -57,7 +57,7 @@ const ResourceList = () => {
 
       <CardContent>
         <p className="mb-4">
-          This handbook covers the expectations, policy, attendance, and other necessary information
+          This handbook covers the expectations, policy, attendance, and other necessary information for the tutors
         </p>
       </CardContent>
 
