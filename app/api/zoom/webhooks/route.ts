@@ -345,9 +345,9 @@ export async function POST(req: NextRequest) {
           participant?.user_id || participant?.participant_user_id || "";
         const participantName = participant?.user_name;
         const participantEmail = participant?.email;
-        const joinTime = participant?.join_time || new Date().toISOString();
+          const joinTime = participant?.join_time || new Date().toISOString();
 
-        console.log("JOINED:", {
+        console.warn("JOINED:", {
           meetingId: zoomMeetingId,
           accountId,
           participantName,
@@ -428,7 +428,7 @@ export async function POST(req: NextRequest) {
         const participantName = participant?.user_name;
         const participantEmail = participant?.email;
 
-        console.log("Participant left:", {
+        console.warn("Participant left:", {
           meetingId: zoomMeetingId,
           accountId,
           participantName,
@@ -516,7 +516,7 @@ export async function POST(req: NextRequest) {
     case "meeting.ended":
       {
         const endTime = payload?.object?.end_time;
-        console.log("Meeting ended:", {
+        console.warn("Meeting ended:", {
           meetingId: zoomMeetingId,
           accountId,
           endTime,
@@ -532,7 +532,7 @@ export async function POST(req: NextRequest) {
       break;
 
     default: {
-      console.log("Unhandled Zoom event:", event, {
+      console.error("Unhandled Zoom event:", event, {
         meetingId: zoomMeetingId,
         accountId,
       });

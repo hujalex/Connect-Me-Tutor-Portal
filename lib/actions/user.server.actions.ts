@@ -11,7 +11,5 @@ export async function getUserFromAction() {
     error,
   } = await supabase.auth.getUser();
 
-  console.log("USER:", user, "ERROR:", error);
-
   return user;
 }

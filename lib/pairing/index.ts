@@ -74,8 +74,8 @@ export const runPairingWorkflow = async () => {
   ] as [QueueItem[], QueueItem[]];
 
 
-  // console.log("tutorQueue:", tutorQueue);
-  // console.log("studentQueue:", studentQueue);
+  console.log("tutorQueue:", tutorQueue);
+  console.log("studentQueue:", studentQueue);
 
   // Helper to shuffle a queue
 
@@ -139,7 +139,7 @@ export const runPairingWorkflow = async () => {
         .single();
 
       const result = data as QueueItemMatch;
-      // console.log("Tutor match:", data);
+      console.log("Tutor match:", data);
       if (error) console.error("Tutor best_match error:", error);
 
       if (result as QueueItemMatch) {
@@ -178,7 +178,7 @@ export const runPairingWorkflow = async () => {
   const matchedTutors: PairingMatch[] = await buildMatches(tutorMatches)
 
 
-  // console.log(matchedStudents);
+  console.log(matchedStudents);
 
   try {
     const emailPromises = matchedStudents.map(async (match) => {
@@ -201,7 +201,7 @@ export const runPairingWorkflow = async () => {
     console.error("Error processing matches", error);
   }
 
-  // console.log(matchedTutors, matchedStudents);
+  console.log(matchedTutors, matchedStudents);
 
   const {data: r1, error: r1Error} = await supabase
     .from("pairing_matches")
