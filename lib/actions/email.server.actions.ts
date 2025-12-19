@@ -196,7 +196,7 @@ export async function sendPairingRequestEmail(
   const emailResult = await resend.emails.send({
     from: "reminder@connectmego.app",
     to: "ahu@connectmego.org",
-    cc: ['ahu@connectmego.org'],
+    cc: ['ahu@connectmego.org', 'aaronmarsh755@gmail.com'],
     subject: "Connect Me Pairing Request",
     html: emailHtml,
   });
