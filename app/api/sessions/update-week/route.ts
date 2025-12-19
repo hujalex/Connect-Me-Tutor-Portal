@@ -46,9 +46,6 @@ const handleUpdateWeek = async (): Promise<Session[]> => {
       enrollments,
       sessions
     );
-
-    console.log("New Sessions", newSessions)
-
     if (!newSessions) {
       throw new Error("No sessions were created");
     }

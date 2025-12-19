@@ -203,7 +203,7 @@ const TutorDashboard = () => {
     );
     setFilteredPastSessions(filtered);
     setCurrentPage(1);
-  }, [filterValuePastSessions, sessions]);
+  }, [filterValuePastSessions, sessions, pastSessions]);
 
   const totalPages = Math.ceil(filteredSessions.length / rowsPerPage);
 

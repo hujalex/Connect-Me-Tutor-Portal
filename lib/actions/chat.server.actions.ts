@@ -34,7 +34,6 @@ export const createAdminConversation = async (user_id: string) => {
   // const user = await getUserFromId(profile_id);
   // if (!user) throw new Error("failed to locate profile");
 
-  console.log("created ID: ", createdConversationID);
   if (createdConversationID) return createdConversationID;
 
   const conversationID = crypto.randomUUID();
@@ -56,7 +55,6 @@ export const createAdminConversation = async (user_id: string) => {
       },
     ]);
 
-  console.log("created participant result: ", createdParticipantResult);
 
   return conversationID;
 };
