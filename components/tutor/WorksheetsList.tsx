@@ -1,68 +1,59 @@
 "use client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-  CardDescription,
-} from "@/components/ui/card";
 
 const mockWorksheets = [
   {
     id: 1,
-    title: "8th Grade Algebra",
-    description: "",
-    link: "#",
+    title: "Algebra Basics",
+    description: ".",
+    link: "",
   },
   {
     id: 2,
-    title: "4th Grade Calculus",
+    title: "Geometry Review",
     description: "",
-    link: "#",
+    link: "",
   },
   {
     id: 3,
-    title: "10th Grade Addition",
+    title: "Chemistry Fundamentals",
     description: "",
-    link: "#",
+    link: "",
   },
 ];
 
-export default function WorksheetsList() {
+const WorksheetsList = () => {
   return (
-<main className="p-8">
-  <h1 className="text-3xl font-semibold mb-6">Worksheets</h1>
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Worksheets</h1>
 
-  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {mockWorksheets.map((r) => (
-      <Card
-        key={r.id}
-        className="transition-shadow hover:shadow-md"
-      >
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-lg font-medium">
-            {r.title}
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground">
-            {r.description}
-          </CardDescription>
-        </CardHeader>
-
-        <CardFooter>
-          <Button
-            className="w-full"
-            onClick={() => window.open(r.link, "_blank")}
+      <div className="flex space-x-6">
+        {mockWorksheets.map((r) => (
+          <div
+            key={r.id}
+            className="border rounded-lg p-4 w-64 flex flex-col justify-between"
           >
-            Open
-          </Button>
-        </CardFooter>
-      </Card>
-    ))}
-  </div>
-</main>
+            <div>
+              <h2 className="text-lg font-semibold mb-1">
+                {r.title}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {r.description}
+              </p>
+            </div>
 
+            <Button
+              className="mt-4"
+              onClick={() => window.open(r.link, "_blank")}
+            >
+              Open
+            </Button>
+          </div>
+        ))}
+      </div>
+    </main>
   );
-}
+};
+
+export default WorksheetsList;
