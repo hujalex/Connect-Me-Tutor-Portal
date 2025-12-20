@@ -7,6 +7,7 @@ export const usePairing = (pairingId: string) => {
   const supabase = createClientComponentClient();
   useEffect(() => {
     (async () => {
+      console.log("Getting Pairing")
       const { data, error } = await supabase
         .rpc("get_pairing_with_profiles", {
           pairing_uuid: pairingId,
