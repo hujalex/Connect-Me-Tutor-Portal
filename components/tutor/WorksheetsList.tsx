@@ -1,26 +1,16 @@
 "use client";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 
 const mockWorksheets = [
-  {
-    id: 1,
-    title: "Algebra Basics",
-    description: ".",
-    link: "",
-  },
-  {
-    id: 2,
-    title: "Geometry Review",
-    description: "",
-    link: "",
-  },
-  {
-    id: 3,
-    title: "Chemistry Fundamentals",
-    description: "",
-    link: "",
-  },
+  { id: 1, title: "Algebra Basics" },
+  { id: 2, title: "Geometry Review" },
+  { id: 3, title: "Chemistry Fundamentals" },
 ];
 
 const WorksheetsList = () => {
@@ -30,26 +20,22 @@ const WorksheetsList = () => {
 
       <div className="flex space-x-6">
         {mockWorksheets.map((r) => (
-          <div
+          <Card
             key={r.id}
-            className="border rounded-lg p-4 w-64 flex flex-col justify-between"
+            className="w-80 transition-shadow hover:shadow-md"
           >
-            <div>
-              <h2 className="text-lg font-semibold mb-1">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-lg font-semibold text-center">
                 {r.title}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {r.description}
-              </p>
-            </div>
+              </CardTitle>
+            </CardHeader>
 
-            <Button
-              className="mt-4"
-              onClick={() => window.open(r.link, "_blank")}
-            >
-              Open
-            </Button>
-          </div>
+            <CardFooter>
+              <Button className="w-full">
+                Open
+              </Button>
+            </CardFooter>
+          </Card>
         ))}
       </div>
     </main>
