@@ -178,7 +178,7 @@ export default function SettingsPage() {
   const handleSwitchProfile = async () => {
     try {
       if (profile) await switchProfile(profile?.userId, profileId);
-      
+      toast.success("Switched Account")
     } catch (error) {
       console.error("Unable to switch account", error);
       toast.error("Unable to switch account");

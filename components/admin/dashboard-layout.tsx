@@ -241,7 +241,6 @@ export default function DashboardLayout({
     // },
   ];
 
-  useEffect(() => {
     const getUserProfileRole = async () => {
       try {
         const {
@@ -249,8 +248,11 @@ export default function DashboardLayout({
         } = await supabase.auth.getUser();
 
         if (user) {
-          const profile = await getSessionUserProfile();
-          const profileRole = await getProfileRole(user.id);
+          const [profile, profileRole] = await Promise.all([
+            getSessionUserProfile(),
+            getProfileRole(user.id)
+          ])
+
           if (profileRole) {
             setRole(profileRole);
           }
@@ -264,6 +266,8 @@ export default function DashboardLayout({
       }
     };
 
+
+  useEffect(() => {
     getUserProfileRole();
   }, [supabase.auth]);
 

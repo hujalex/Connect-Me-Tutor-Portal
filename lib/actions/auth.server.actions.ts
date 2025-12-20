@@ -6,6 +6,7 @@ import { Profile, CreatedProfileData, Availability } from "@/types";
 import { User } from "@supabase/supabase-js";
 import { Table } from "../supabase/tables";
 import { admin } from "googleapis/build/src/apis/admin";
+import { profile } from "console";
 
 interface UserMetadata {
   email: string;
@@ -166,9 +167,24 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
 
 const replaceLastActiveProfile = async (
   userId: string,
-  lastActiveProfileId: string
+  lastActiveProfileId: string,
+  userProfileIds: { id: string }[]
 ) => {
+  const supabase = await createClient();
   try {
+    const availableProfile = userProfileIds.find(
+      (profile) => profile.id != lastActiveProfileId
+    );
+    if (availableProfile === undefined)
+      throw new Error(
+        "Called replaceLastActiveProfile with only one or zero profileIds attached to userId"
+      );
+
+    await supabase
+      .from("user_settings")
+      .update({ lastActiveProfileId: availableProfile.id })
+      .eq("user_id", userId)
+      .throwOnError();
   } catch (error) {
     console.error("Unable to replace last active profile", error);
     throw error;
@@ -179,36 +195,49 @@ export const deleteUser = async (profileId: string) => {
   const adminSupabase = await createAdminClient();
 
   try {
-    const { data: userSettings } = await adminSupabase
-      .from("user_settings")
-      .select(
-        `
-        user_id,
-        last_active_profile_id
-        `
-      )
-      .single()
-      .throwOnError();
-
-    const { data: profileData } = await adminSupabase
+    const { data: profile, error: fetchError } = await adminSupabase
       .from(Table.Profiles)
       .select("user_id")
       .eq("id", profileId)
+      .single()
       .throwOnError();
 
-    if (profileData.length == 1) {
-      
+    const [res1, res2] = await Promise.all([
+      adminSupabase
+        .from(Table.Profiles)
+        .select("id")
+        .eq("user_id", profile.user_id)
+        .throwOnError(),
+      adminSupabase
+        .from("user_settings")
+        .select(
+          `
+        user_id,
+        last_active_profile_id
+        `
+        )
+        .eq("last_active_profile_id", profileId)
+        .maybeSingle()
+        .throwOnError(),
+    ]);
+
+    const relatedProfiles = res1.data;
+    const userSettings = res2.data;
+
+    if (relatedProfiles.length == 1) {
       const { error: authError } = await adminSupabase.auth.admin.deleteUser(
-        profileData[0].user_id
-      )
+        relatedProfiles[0].id
+      );
 
       if (authError) throw authError;
-      
-
-    } else if (userSettings.last_active_profile_id == profileId) {
+    } else if (
+      userSettings &&
+      userSettings.last_active_profile_id == profileId
+    ) {
       replaceLastActiveProfile(
         userSettings.user_id,
-        userSettings.last_active_profile_id
+        userSettings.last_active_profile_id,
+        relatedProfiles
       );
     }
 
