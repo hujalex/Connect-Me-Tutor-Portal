@@ -1,9 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { Profile, CreatedProfileData, Availability } from "@/types";
 import { User } from "@supabase/supabase-js";
+import { Table } from "../supabase/tables";
+import { admin } from "googleapis/build/src/apis/admin";
 
 interface UserMetadata {
   email: string;
@@ -86,16 +88,15 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
       .from("Profiles")
       .select("user_id")
       .eq("email", newProfileData.email)
-      .throwOnError()
+      .throwOnError();
 
-    const existingUser = data && data.length > 0 ? data[0].user_id : null
-    
+    const existingUser = data && data.length > 0 ? data[0].user_id : null;
+
     // console.log("Existing User", existingUser);
 
     const userId = existingUser ?? (await inviteUser(newProfileData));
 
-    console.log("Auth Data", userId)
-
+    console.log("Auth Data", userId);
 
     const userMetadata: UserMetadata = {
       email: newProfileData.email,
@@ -125,7 +126,8 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
       .select()
       .single();
 
-    if (!existingUser && profileError) { // Only delete if this is not another existing user
+    if (!existingUser && profileError) {
+      // Only delete if this is not another existing user
       await supabase.auth.admin.deleteUser(userId);
       throw profileError;
     }
@@ -158,6 +160,66 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
   } catch (error) {
     const err = error as Error;
     console.error("Error creating user:", error);
+    throw error;
+  }
+};
+
+const replaceLastActiveProfile = async (
+  userId: string,
+  lastActiveProfileId: string
+) => {
+  try {
+  } catch (error) {
+    console.error("Unable to replace last active profile", error);
+    throw error;
+  }
+};
+
+export const deleteUser = async (profileId: string) => {
+  const adminSupabase = await createAdminClient();
+
+  try {
+    const { data: userSettings } = await adminSupabase
+      .from("user_settings")
+      .select(
+        `
+        user_id,
+        last_active_profile_id
+        `
+      )
+      .single()
+      .throwOnError();
+
+    const { data: profileData } = await adminSupabase
+      .from(Table.Profiles)
+      .select("user_id")
+      .eq("id", profileId)
+      .throwOnError();
+
+    if (profileData.length == 1) {
+      
+      const { error: authError } = await adminSupabase.auth.admin.deleteUser(
+        profileData[0].user_id
+      )
+
+      if (authError) throw authError;
+      
+
+    } else if (userSettings.last_active_profile_id == profileId) {
+      replaceLastActiveProfile(
+        userSettings.user_id,
+        userSettings.last_active_profile_id
+      );
+    }
+
+    // Delete from profiles table
+    await adminSupabase
+      .from(Table.Profiles)
+      .delete()
+      .eq("id", profileId)
+      .throwOnError();
+  } catch (error: any) {
+    console.error("Failed to delete user", error);
     throw error;
   }
 };

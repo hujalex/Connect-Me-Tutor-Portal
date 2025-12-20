@@ -146,31 +146,33 @@ export async function getAllProfiles(
   }
 }
 
-export async function deleteUser(profileId: string) {
-  try {
-    if (!profileId) throw new Error("Profile ID is required");
+// export async function deleteUser(profileId: string) {
+//   try {
+//     if (!profileId) throw new Error("Profile ID is required");
 
-    const response = await fetch("/api/admin/delete-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ profileId }),
-    });
+//     const response = await fetch("/api/admin/delete-user", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ profileId }),
+//     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.error || `HTTP ${response.status}: Failed to delete user`
-      );
-    }
+//     if (!response.ok) {
+//       const error = await response.json();
+//       throw new Error(
+//         error.error || `HTTP ${response.status}: Failed to delete user`
+//       );
+//     }
 
-    return await response.json();
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    throw error;
-  }
-}
+//     const response = await 
+
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error deleting user:", error);
+//     throw error;
+//   }
+// }
 
 export async function getUserFromId(profileId: string) {
   try {
