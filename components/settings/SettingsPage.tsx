@@ -266,8 +266,7 @@ export default function SettingsPage() {
                   <Input
                     id="first-name"
                     placeholder="Enter your first name (e.g John)"
-                    disabled
-                    className="mt-1"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
 
@@ -278,8 +277,7 @@ export default function SettingsPage() {
                   <Input
                     id="last-name"
                     placeholder="Enter your last name (e.g Smith)"
-                    disabled
-                    className="mt-1"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -293,8 +291,7 @@ export default function SettingsPage() {
                     id="phone-number"
                     type="tel"
                     placeholder="Enter your phone number (e.g (555) 123-4567)"
-                    disabled
-                    className="mt-1"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
 
@@ -307,8 +304,7 @@ export default function SettingsPage() {
                     id="age"
                     type="number"
                     placeholder="Enter your age (e.g 25)"
-                    disabled
-                    className="mt-1"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -321,8 +317,7 @@ export default function SettingsPage() {
                   id="email"
                   type="email"
                   placeholder="Enter your email (e.g john@example.com)"
-                  disabled
-                  className="mt-1"
+                  className="mt-1 placeholder:text-gray-300"
                 />
               </div>
 
@@ -333,8 +328,7 @@ export default function SettingsPage() {
                 <Textarea
                   id="bio"
                   placeholder="Tell us about yourself (e.g What hobbies do you enjoy?)"
-                  disabled
-                  className="mt-1"
+                  className="mt-1 placeholder:text-gray-300"
                   rows={4}
                 />
               </div>
@@ -346,8 +340,7 @@ export default function SettingsPage() {
                 <Textarea
                   id="subjects"
                   placeholder="Enter your subjects of interest (e.g Mathematics, Physics, Chemistry)"
-                  disabled
-                  className="mt-1"
+                  className="mt-1 placeholder:text-gray-300"
                   rows={4}
                 />
               </div>
@@ -360,8 +353,7 @@ export default function SettingsPage() {
                 <Textarea
                   id="languages"
                   placeholder="Enter languages you speak (e.g English, Spanish, French)"
-                  disabled
-                  className="mt-1"
+                  className="mt-1 placeholder:text-gray-300"
                   rows={4}
                 />
               </div>
