@@ -9,7 +9,7 @@ import PairingRequestNotificationEmail from "@/components/emails/pairing-request
 import TutorPairingConfirmationEmail from "@/components/emails/tutor-confirmation-email";
 import { PairingConfirmationEmailProps, PairingRequestNotificationEmailProps  } from "@/types/email";
 
-export async function fetchScheduledMessages() {
+export const fetchScheduledMessages = async () => {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 
   const messages = await qstash.schedules.list();
@@ -217,6 +217,7 @@ export async function sendTutorPairingConfirmationEmail(data: PairingConfirmatio
 
   return emailResult;
 }
+
 
 // export async function sendPairingEmail(
 //   emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",

@@ -97,8 +97,10 @@ const EmailManager = () => {
 
   const listScheduledMessages = async () => {
     try {
-      const response = await fetch("/api/qstash/schedules");
-      const data = await response.json();
+
+      const data = await fetchScheduledMessages();
+      console.log(data)
+
     } catch (error) {
       console.error("Error listing messages:", error);
       toast.error("Failed to fetch schedules");
