@@ -7,14 +7,18 @@ import React from "react";
 import { Resend } from "resend";
 import PairingRequestNotificationEmail from "@/components/emails/pairing-request-notification";
 import TutorPairingConfirmationEmail from "@/components/emails/tutor-confirmation-email";
-import { PairingConfirmationEmailProps, PairingRequestNotificationEmailProps  } from "@/types/email";
+import {
+  PairingConfirmationEmailProps,
+  PairingRequestNotificationEmailProps,
+} from "@/types/email";
+import { createClient } from "../supabase/server";
 
-export async function fetchScheduledMessages() {
+export const fetchScheduledMessages = async () => {
   const qstash = new Client({ token: process.env.QSTASH_TOKEN });
 
   const messages = await qstash.schedules.list();
   return messages;
-}
+};
 
 /**
  * Sends requests to an API endpoint to schedule reminder emails for a list of sessions.
@@ -196,27 +200,50 @@ export async function sendPairingRequestEmail(
   const emailResult = await resend.emails.send({
     from: "reminder@connectmego.app",
     to: "ahu@connectmego.org",
-    cc: ['ahu@connectmego.org', 'aaronmarsh755@gmail.com'],
+    cc: ["ahu@connectmego.org", "aaronmarsh755@gmail.com"],
     subject: "Connect Me Pairing Request",
     html: emailHtml,
   });
   return emailResult;
 }
 
-export async function sendTutorPairingConfirmationEmail(data: PairingConfirmationEmailProps, emailTo: string) {
+export async function sendTutorPairingConfirmationEmail(
+  data: PairingConfirmationEmailProps,
+  emailTo: string
+) {
   const emailHtml = await render(
     React.createElement(TutorPairingConfirmationEmail, data)
   );
   const emailResult = await resend.emails.send({
     from: "Connect Me Free Tutoring & Mentoring <confirmation@connectmego.app>",
     to: "ahu@connectmego.org",
-    cc: ['', 'ahu@connectmego.org'],
+    cc: ["", "ahu@connectmego.org"],
     subject: "Confirmed for Tutoring",
     html: emailHtml,
   });
 
   return emailResult;
 }
+
+export const sendEmail = async (
+  from: string,
+  to: string,
+  subject: string,
+  body: string,
+) => {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  try {
+    await resend.emails.send({
+      from: from,
+      to: to,
+      subject: subject,
+      html: body,
+    });
+  } catch (error) {
+    console.error("Unable to send email", error);
+    throw error;
+  }
+};
 
 // export async function sendPairingEmail(
 //   emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",

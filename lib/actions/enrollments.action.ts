@@ -72,6 +72,8 @@ export const getEnrollmentsWithMissingSEF = async () => {
   }
 };
 
+
+
 /**
  *@returns Prints to console enrollments where the corresponding past two sessions for the given enrollment haven't been filled out
  */
