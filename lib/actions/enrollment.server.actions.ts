@@ -7,7 +7,6 @@ import { Table } from "../supabase/tables";
 export async function getAllActiveEnrollmentsServer(endOfWeek: string): Promise<Enrollment[]> {
   try {
     const supabase = await createClient();
-    console.log("Fetching Enrollments")
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,

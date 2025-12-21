@@ -71,8 +71,6 @@ export async function logError(
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorStack = error instanceof Error ? error.stack : undefined;
 
-  console.log("error stack: ", errorStack);
-
   await logEvent(
     "zoom_webhook_error",
     {

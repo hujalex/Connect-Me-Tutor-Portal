@@ -146,6 +146,7 @@ export default function MeetingParticipation() {
   const handleExport = async () => {
     if (!meetingData) return;
 
+    // console.log("participantSummaries", participantSummaries);
     // Calculate average duration
     const calculatedAvgDuration =
       participantSummaries.length > 0

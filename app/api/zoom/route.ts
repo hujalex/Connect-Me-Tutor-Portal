@@ -25,7 +25,6 @@ export async function POST(
 
   //  Handle Zoom's URL validation challenge
   if (body.event === "endpoint.url_validation") {
-    console.log("validating");
     const hashForValidate = crypto
       .createHmac("sha256", validationSecret)
       .update(body.payload.plainToken)
@@ -38,12 +37,11 @@ export async function POST(
   }
   // Verify authorization header from Zoom
   const authHeader = req.headers.get("authorization");
-  console.log(authHeader);
   if (authHeader !== `Bearer ${validationSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  console.log("Authorization header verified");
+  // console.log("Authorization header verified");
 
   // Handle actual Zoom events
   const event = body?.event;
@@ -53,13 +51,13 @@ export async function POST(
 
   switch (event) {
     case "meeting.started":
-      console.log("Meeting started:", payload?.object?.id);
+      // console.log("Meeting started:", payload?.object?.id);
       break;
 
     case "meeting.participant_joined":
       {
         const participant = payload?.object?.participant;
-        console.log("JOINED: ", participant);
+        // console.log("JOINED: ", participant);
 
         await logZoomMetadata({
           session_id: payload?.object?.id,
@@ -85,12 +83,12 @@ export async function POST(
           timestamp: participant?.leave_time ?? new Date().toISOString(),
         });
 
-        console.log("Participant left:", participant?.user_name);
+        // console.log("Participant left:", participant?.user_name);
       }
       break;
 
     default:
-      console.log("Unhandled Zoom event:", event);
+      console.warn("Unhandled Zoom event:", event);
   }
 
   return NextResponse.json({ status: "received" });

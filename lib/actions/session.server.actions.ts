@@ -346,25 +346,29 @@ export async function findMeetingByNormalizedId(
 
 /**
  * Get active session by meeting ID (UUID from Meetings table)
+ * Finds the closest active session to the current time that is in the past
  * @param meetingID - Meeting UUID (from Meetings.id)
- * @returns Active session or null if not found
+ * @returns Array of active sessions (closest to current time, in the past) or empty array if not found
  */
 export async function getActiveSessionFromMeetingID(meetingID: string) {
   const supabase = await createServerClient();
+  const now = new Date().toISOString();
 
   const { data, error } = await supabase
     .from(Table.Sessions)
     .select("*")
     .eq("meeting_id", meetingID)
     .eq("status", "Active")
-    .single();
+    .lte("date", now) // Only sessions in the past (date <= current time)
+    .order("date", { ascending: false }) // Most recent first
+    .limit(1); // Get the closest one to now
 
   if (error) {
     console.error("Error fetching session:", error);
-    return null;
+    return [];
   }
 
-  return data;
+  return data || [];
 }
 import { getParticipationBySessionId } from "./zoom.server.actions";
 import { scheduleMultipleSessionReminders } from "../twilio";
@@ -546,8 +550,6 @@ export async function getParticipationData(
     // Get participation records
     const participationRecords = await getParticipationBySessionId(sessionId);
 
-    console.log("participationRecords: ", participationRecords);
-
     // Transform participation records into events format
     // Each record in zoom_participant_events already represents a single action (joined or left)
     const events: ParticipationEvent[] = participationRecords.map((record) => ({
@@ -629,13 +631,33 @@ export async function getParticipationData(
 
       // If still in meeting, calculate duration until session end or now
       if (joinTime !== null && summary.currentlyInMeeting) {
-        const endTime = sessionEndTime || new Date();
+        const now = new Date();
         const joinTimeDate = joinTime as Date;
-        totalDuration +=
-          (endTime.getTime() - joinTimeDate.getTime()) / (1000 * 60);
+
+        // Determine the end time: use session end if it exists and is in the past,
+        // otherwise use current time, but never use a time before the join time
+        let endTime: Date;
+        if (sessionEndTime && sessionEndTime >= joinTimeDate) {
+          // Session has ended, use session end time (but not if it's in the future)
+          endTime = sessionEndTime < now ? sessionEndTime : now;
+        } else {
+          // No session end time or it's before join time, use current time
+          endTime = now;
+        }
+
+        // Only calculate if join time is before or equal to end time
+        if (joinTimeDate <= endTime) {
+          const duration =
+            (endTime.getTime() - joinTimeDate.getTime()) / (1000 * 60);
+          // Only add positive durations
+          if (duration > 0) {
+            totalDuration += duration;
+          }
+        }
       }
 
-      summary.totalDuration = Math.round(totalDuration);
+      // Ensure totalDuration is never negative
+      summary.totalDuration = Math.max(0, Math.round(totalDuration));
     });
 
     const participantSummaries = Array.from(participantMap.values()).sort(

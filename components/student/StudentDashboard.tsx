@@ -65,8 +65,10 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
   const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
 
   useEffect(() => {
-    getUserData();
-    fetchMeetings();
+    return () => {
+      getUserData();
+      fetchMeetings();
+    }
   }, []);
 
   const fetchMeetings = async () => {
