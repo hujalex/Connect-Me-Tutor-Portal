@@ -149,7 +149,6 @@ const StudentList = () => {
                   </TableCell>
                   <TableCell>
                     <UserAvailabilities user={student} />
-                    {/* <AvailabilityFormat availability={student.availability} /> */}
                   </TableCell>
                   <TableCell className="flex flex-col">
                     {student.subjects_of_interest?.map((item, index) => (

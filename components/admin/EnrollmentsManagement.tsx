@@ -978,6 +978,7 @@ const EnrollmentList = () => {
                   <TableCell className="colspan-[40px]">
                     <AvailabilityFormat
                       availability={enrollment.availability}
+                      card = {false}
                     />{" "}
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
