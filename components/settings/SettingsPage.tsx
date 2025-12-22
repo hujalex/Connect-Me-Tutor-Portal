@@ -362,9 +362,8 @@ export default function SettingsPage() {
                   </Label>
                   <Input
                     id="first-name"
-                    placeholder="Enter your first name"
-                    disabled
-                    className="mt-1"
+                    placeholder="Enter your first name (e.g John)"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
 
@@ -374,9 +373,35 @@ export default function SettingsPage() {
                   </Label>
                   <Input
                     id="last-name"
-                    placeholder="Enter your last name"
-                    disabled
-                    className="mt-1"
+                    placeholder="Enter your last name (e.g Smith)"
+                    className="mt-1 placeholder:text-gray-300"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone-number" className="text-sm font-medium">
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phone-number"
+                    type="tel"
+                    placeholder="Enter your phone number (e.g (555) 123-4567)"
+                    className="mt-1 placeholder:text-gray-300"
+                  />
+                </div>
+
+                <div>
+                  {/* hi */}
+                  <Label htmlFor="age" className="text-sm font-medium">
+                    Age
+                  </Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    placeholder="Enter your age (e.g 25)"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -388,9 +413,8 @@ export default function SettingsPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
-                  disabled
-                  className="mt-1"
+                  placeholder="Enter your email (e.g john@example.com)"
+                  className="mt-1 placeholder:text-gray-300"
                 />
               </div>
 
@@ -400,9 +424,33 @@ export default function SettingsPage() {
                 </Label>
                 <Textarea
                   id="bio"
-                  placeholder="Tell us about yourself"
-                  disabled
-                  className="mt-1"
+                  placeholder="Tell us about yourself (e.g What hobbies do you enjoy?)"
+                  className="mt-1 placeholder:text-gray-300"
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="subjects" className="text-sm font-medium">
+                  Subjects of Interest
+                </Label>
+                <Textarea
+                  id="subjects"
+                  placeholder="Enter your subjects of interest (e.g Mathematics, Physics, Chemistry)"
+                  className="mt-1 placeholder:text-gray-300"
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                {/* hi */}
+                <Label htmlFor="languages" className="text-sm font-medium">
+                  Languages Spoken
+                </Label>
+                <Textarea
+                  id="languages"
+                  placeholder="Enter languages you speak (e.g English, Spanish, French)"
+                  className="mt-1 placeholder:text-gray-300"
                   rows={4}
                 />
               </div>
