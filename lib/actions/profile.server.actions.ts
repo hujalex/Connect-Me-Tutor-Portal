@@ -22,3 +22,4 @@ export const switchProfile = async (userId: string, profileId: string) => {
     throw error;
   }
 };
+

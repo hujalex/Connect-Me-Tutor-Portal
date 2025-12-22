@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,18 +16,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getProfile, getUserInfo, updateProfile } from "@/lib/actions/user.actions";
+import {
+  getProfile,
+  getProfileWithProfileId,
+  getUserInfo,
+  updateProfile,
+} from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import toast, { Toaster } from "react-hot-toast";
 import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 import { switchProfile } from "@/lib/actions/profile.server.actions";
+import { useProfile } from "@/contexts/profileContext";
+import { NetworkAccessProfileListInstance } from "twilio/lib/rest/supersim/v1/networkAccessProfile";
 
 export default function SettingsPage() {
   const supabase = createClientComponentClient();
-  const router = useRouter()
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileId, setProfileId] = useState<string>("");
+  const router = useRouter();
+  const { profile, setProfile } = useProfile();
+  // const [profile, setProfile] = useState<Profile | null>(null);
+  const [lastActiveProfileId, setLastActiveProfileId] = useState<string>("");
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const [sessionReminders, setSessionReminders] = useState(false);
   const [sessionEmailNotifications, setSessionEmailNotifications] =
@@ -41,12 +49,10 @@ export default function SettingsPage() {
     useState(false);
   const [settingsId, setSettingsId] = useState("");
 
-
   const fetchUserInfo = async () => {
-      const userId = await fetchUser();
-      if (userId) await fetchUserProfiles(userId);
-    };
-
+    const userId = await fetchUser();
+    if (userId) await fetchUserProfiles(userId);
+  };
 
   useEffect(() => {
     fetchUserInfo();
@@ -72,7 +78,7 @@ export default function SettingsPage() {
       if (!profileData) throw new Error("No profile found");
 
       setProfile(profileData);
-      setProfileId(profileData.id)
+      setLastActiveProfileId(profileData.id);
       return user.id;
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -168,7 +174,6 @@ export default function SettingsPage() {
 
       await fetchNotificationSettings();
       toast.success("Saved Notification Settings");
-      
     } catch (error) {
       console.error("Error saving notification settings:", error);
       toast.error("Unable to save notification settings");
@@ -177,8 +182,15 @@ export default function SettingsPage() {
 
   const handleSwitchProfile = async () => {
     try {
-      if (profile) await switchProfile(profile?.userId, profileId);
-      toast.success("Switched Account")
+      if (profile) {
+        const [, newProfileData] = await Promise.all([
+          switchProfile(profile?.userId, lastActiveProfileId),
+          getProfileWithProfileId(lastActiveProfileId)
+        ])
+        setProfile(newProfileData)
+      }
+
+      toast.success("Switched Account");
     } catch (error) {
       console.error("Unable to switch account", error);
       toast.error("Unable to switch account");
@@ -199,9 +211,15 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between pb-3 border-b">
                   <h3 className="text-lg font-semibold">Your Profiles</h3>
                 </div>
-                <Select onValueChange={setProfileId}>
+                <Select onValueChange={setLastActiveProfileId}>
                   <SelectTrigger className="h-12">
-                    <SelectValue placeholder = {profile ? `${profile?.firstName} ${profile?.lastName}` : ""}/>
+                    <SelectValue
+                      placeholder={
+                        profile
+                          ? `${profile?.firstName} ${profile?.lastName}`
+                          : ""
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -216,7 +234,6 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-
             </div>
 
             <Button

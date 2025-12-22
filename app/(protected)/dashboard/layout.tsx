@@ -1,11 +1,12 @@
-'use client'; // This needs to be at the top to declare a client component
+"use client"; // This needs to be at the top to declare a client component
 
-import React, { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { getProfileRole } from '@/lib/actions/user.actions';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/admin/dashboard-layout'; // Assuming Sidebar component is available
+import React, { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getProfileRole } from "@/lib/actions/user.actions";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/admin/dashboard-layout"; // Assuming Sidebar component is available
+import { ProfileContextProvider } from "@/contexts/profileContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null);
@@ -16,8 +17,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const getUserProfileRole = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (user) {
           const profileRole = await getProfileRole(user.id);
           if (profileRole) {
@@ -25,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error("Error fetching user role:", error);
       } finally {
         setLoading(false);
       }
@@ -44,16 +47,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   if (!role) {
-    router.push('/');
+    router.push("/");
     return null;
   }
 
   // Layout with Sidebar and Navbar
   return (
-    <DashboardLayout>
-      <main>
-        {children}
-      </main>
-    </DashboardLayout>
+    <ProfileContextProvider>
+      <DashboardLayout>
+        <main>{children}</main>
+      </DashboardLayout>
+    </ProfileContextProvider>
   );
 }

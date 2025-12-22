@@ -11,6 +11,7 @@ import {
   logoutUser,
 } from "@/lib/actions/user.actions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProfile } from "@/contexts/profileContext";
 import {
   Search,
   Link as LinkIcon,
@@ -72,12 +73,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [role, setRole] = useState<string | null>(null);
+  // const [role, setRole] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{
-    firstName: string;
-    lastName: string;
-  } | null>(null); // For displaying profile data
+  // const [profile, setProfile] = useState<{
+  //   firstName: string;
+  //   lastName: string;
+  // } | null>(null); // For displaying profile data
+
+  const { role, profile, setRole, setProfile } = useProfile()
   const supabase = createClientComponentClient();
   const router = useRouter();
   const pathname = usePathname();
