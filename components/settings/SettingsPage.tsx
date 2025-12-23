@@ -28,6 +28,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 import { switchProfile } from "@/lib/actions/profile.server.actions";
 import { useProfile } from "@/contexts/profileContext";
+import { getUserProfiles} from "@/lib/actions/profile.server.actions"
 import { NetworkAccessProfileListInstance } from "twilio/lib/rest/supersim/v1/networkAccessProfile";
 
 export default function SettingsPage() {
@@ -87,25 +88,7 @@ export default function SettingsPage() {
 
   const fetchUserProfiles = async (userId: string) => {
     try {
-      const { data } = await supabase
-        .from("Profiles")
-        .select(
-          `
-          id,
-          first_name,
-          last_name,
-          email
-          `
-        )
-        .eq("user_id", userId)
-        .throwOnError();
-
-      const profiles: Partial<Profile>[] = data.map((profile) => ({
-        id: profile.id,
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-      }));
-
+      const profiles = await getUserProfiles(userId)
       setUserProfiles(profiles);
     } catch (error) {
       toast.error("Error fetching profiles");
@@ -159,7 +142,7 @@ export default function SettingsPage() {
       // Handle notification settings save logic here
       // You could show a success toast here
 
-      const { data, error } = await supabase
+      await supabase
         .from("user_notification_settings")
         .update({
           email_tutoring_session_notifications_enabled:
@@ -168,9 +151,8 @@ export default function SettingsPage() {
           email_webinar_notifications_enabled: webinarEmailNotifications,
           text_webinar_notifications_enabled: webinarTextNotifications,
         })
-        .eq("id", settingsId);
-
-      if (error) throw error;
+        .eq("id", settingsId)
+        .throwOnError();
 
       await fetchNotificationSettings();
       toast.success("Saved Notification Settings");
@@ -189,8 +171,7 @@ export default function SettingsPage() {
         ])
         setProfile(newProfileData)
       }
-
-      toast.success("Switched Account");
+      toast.success("Switched Profile");
     } catch (error) {
       console.error("Unable to switch account", error);
       toast.error("Unable to switch account");

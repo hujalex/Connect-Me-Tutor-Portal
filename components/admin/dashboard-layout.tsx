@@ -7,6 +7,7 @@ import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   getProfileRole,
+  getProfileWithProfileId,
   getSessionUserProfile,
   logoutUser,
 } from "@/lib/actions/user.actions";
@@ -67,6 +68,12 @@ import {
   TooltipProvider, // Import TooltipProvider
 } from "@/components/ui/tooltip";
 import { toast, Toaster } from "react-hot-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { Profile } from "@/types";
+import {
+  getUserProfiles,
+  switchProfile,
+} from "@/lib/actions/profile.server.actions";
 
 export default function DashboardLayout({
   children,
@@ -81,7 +88,8 @@ export default function DashboardLayout({
   //   lastName: string;
   // } | null>(null); // For displaying profile data
 
-  const { role, profile, setRole, setProfile } = useProfile()
+  const { role, profile, setRole, setProfile } = useProfile();
+  const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const supabase = createClientComponentClient();
   const router = useRouter();
   const pathname = usePathname();
@@ -162,7 +170,7 @@ export default function DashboardLayout({
     {
       title: "Worksheets",
       href: "/dashboard/worksheets",
-      icon: <FileText className = "h-5 w-5"/>
+      icon: <FileText className="h-5 w-5" />,
     },
     {
       title: "Pairings",
@@ -236,8 +244,8 @@ export default function DashboardLayout({
     {
       title: "Analytics",
       href: "/dashboard/data-analytics",
-      icon: <ChartColumn className = "h-5 w-5"/>
-    }
+      icon: <ChartColumn className="h-5 w-5" />,
+    },
     // {
     //   title: "Migrate Profiles",
     //   href: "/dashboard/migrate",
@@ -245,6 +253,7 @@ export default function DashboardLayout({
     // },
   ];
 
+  useEffect(() => {
     const getUserProfileRole = async () => {
       try {
         const {
@@ -252,16 +261,15 @@ export default function DashboardLayout({
         } = await supabase.auth.getUser();
 
         if (user) {
-          const [profile, profileRole] = await Promise.all([
+          const [profile, profileRole, userProfiles] = await Promise.all([
             getSessionUserProfile(),
-            getProfileRole(user.id)
-          ])
+            getProfileRole(user.id),
+            getUserProfiles(user.id),
+          ]);
 
-          if (profileRole) {
-            setRole(profileRole);
-          }
-          // Simulating getting profile information from somewhere
-          setProfile(profile);
+          if (profileRole) setRole(profileRole);
+          if (profile) setProfile(profile);
+          if (userProfiles) setUserProfiles(userProfiles);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -269,9 +277,6 @@ export default function DashboardLayout({
         setLoading(false);
       }
     };
-
-
-  useEffect(() => {
     getUserProfileRole();
   }, [supabase.auth]);
 
@@ -282,6 +287,22 @@ export default function DashboardLayout({
     toast.success("Successfully logging out");
     await logoutUser();
     router.push("/");
+  };
+
+  const handleSwitchProfile = async (newProfileId: string) => {
+    try {
+      if (profile) {
+        const [, newProfileData] = await Promise.all([
+          switchProfile(profile?.userId, newProfileId),
+          getProfileWithProfileId(newProfileId),
+        ]);
+        setProfile(newProfileData);
+      }
+      toast.success("Switched Profile")
+    } catch (error) {
+      toast.error("Unable to switch profiles");
+      console.error(error);
+    }
   };
 
   if (loading) {
@@ -601,10 +622,29 @@ export default function DashboardLayout({
                 </Button>
               )}
               <div className="flex items-center space-x-2 absolute tpo-4 right-8">
-                <User className="w-4 h-4" />
-                <span className="font-semibold">
-                  {profile?.firstName} {profile?.lastName}
-                </span>
+                <Select onValueChange={handleSwitchProfile}>
+                  <SelectTrigger className="space-x-2">
+                    {/* <span className=""> */}
+                    <User className="w-4 h-4" />
+                    <span className="font-semibold">
+                      {profile?.firstName} {profile?.lastName}
+                    </span>
+                    {/* </span> */}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userProfiles.map((profile) => (
+                      <SelectItem value={profile.id || ""}>
+                        {profile.firstName} {profile.lastName}
+                      </SelectItem>
+                    ))}
+                    {/* <SelectItem value="apple">Apple</SelectItem>
+                    <SelectItem value="banana">Banana</SelectItem>
+                    <SelectItem value="blueberry">Blueberry</SelectItem>
+                    <SelectItem value="grapes">Grapes</SelectItem>
+                    <SelectItem value="pineapple">Pineapple</SelectItem>
+                  </SelectContent> */}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

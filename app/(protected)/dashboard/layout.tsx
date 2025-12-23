@@ -6,10 +6,10 @@ import { getProfileRole } from "@/lib/actions/user.actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/admin/dashboard-layout"; // Assuming Sidebar component is available
-import { ProfileContextProvider } from "@/contexts/profileContext";
+import { ProfileContextProvider, useProfile } from "@/contexts/profileContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = useState<string | null>(null);
+  const {role, setRole} = useProfile()
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -53,10 +53,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   // Layout with Sidebar and Navbar
   return (
-    <ProfileContextProvider>
       <DashboardLayout>
         <main>{children}</main>
       </DashboardLayout>
-    </ProfileContextProvider>
   );
 }
