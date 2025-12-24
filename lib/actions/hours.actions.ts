@@ -466,10 +466,11 @@ export const handleCalculateDuration = async (
 
 export const getHoursTutored = async (profileId: string, start: ISOStringFormat, end: ISOStringFormat) => {
   try {
-
+    return await getAllHoursRange(profileId, start as string, end as string)
 
   } catch (error) {
-
+    console.error("Error getting hours tutored:", error);
+    throw error;
   }
 }
 
