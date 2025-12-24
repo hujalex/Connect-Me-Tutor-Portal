@@ -88,7 +88,7 @@ export default function DashboardLayout({
   //   lastName: string;
   // } | null>(null); // For displaying profile data
 
-  const { role, profile, setRole, setProfile } = useProfile();
+  const {profile, setProfile } = useProfile();
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -267,7 +267,6 @@ export default function DashboardLayout({
             getUserProfiles(user.id),
           ]);
 
-          if (profileRole) setRole(profileRole);
           if (profile) setProfile(profile);
           if (userProfiles) setUserProfiles(userProfiles);
         }
@@ -314,8 +313,9 @@ export default function DashboardLayout({
     );
   }
 
-  if (!role) {
-    router.push("/");
+
+  if (!profile) {
+    router.push("/")
     return null;
   }
 
@@ -454,7 +454,7 @@ export default function DashboardLayout({
             {/* Navigation */}
             {!isSettingsPage && (
               <nav className="flex-grow space-y-1 px-3">
-                {role === "Student" && (
+                {profile.role === "Student" && (
                   <>
                     {studentSidebarItems.map((item) => (
                       <Tooltip key={item.href}>
@@ -489,7 +489,7 @@ export default function DashboardLayout({
                 )}
 
                 {/* Tutor Role Navigation */}
-                {role === "Tutor" && (
+                {profile.role === "Tutor" && (
                   <>
                     {tutorSidebarItems.map((item) => (
                       <Tooltip key={item.href}>
@@ -524,7 +524,7 @@ export default function DashboardLayout({
                 )}
 
                 {/* Admin Role Navigation */}
-                {role === "Admin" && (
+                {profile.role === "Admin" && (
                   <>
                     {adminSidebarItems.map((item) => (
                       <Tooltip key={item.href}>

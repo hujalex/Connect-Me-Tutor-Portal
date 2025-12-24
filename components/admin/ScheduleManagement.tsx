@@ -50,8 +50,6 @@ import { Label } from "@/components/ui/label";
 import { Circle, Loader2, ChevronDown, Check } from "lucide-react";
 import {
   getAllSessions,
-  rescheduleSession,
-  getAllEnrollments,
   updateSession,
   getMeetings,
   getAllProfiles,

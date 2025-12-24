@@ -66,7 +66,6 @@ export const fetchDaySessionsFromSchedule = async (requestedDate: Date) => {
   }
 };
 
-
 export async function getSessionKeys(data?: Session[]) {
   const sessionKeys: Set<string> = new Set();
 
@@ -97,8 +96,6 @@ export async function getSessionKeys(data?: Session[]) {
   return sessionKeys;
 }
 
-
-
 /**
  * Add sessions for enrollments within the specified week range
  * @param weekStartString - ISO string of week start in Eastern Time
@@ -113,8 +110,6 @@ export async function addSessions(
   enrollments: Enrollment[],
   sessions: Session[]
 ) {
-
-
   try {
     const weekStart: Date = fromZonedTime(
       parseISO(weekStartString),
@@ -266,8 +261,7 @@ export async function addSessions(
     if (sessionsToCreate.length > 0) {
       const { data, error } = await supabase
         .from(Table.Sessions)
-        .insert(sessionsToCreate)
-        .select(`
+        .insert(sessionsToCreate).select(`
           *,
           student:Profiles!student_id(*),
           tutor:Profiles!tutor_id(*),
@@ -278,24 +272,22 @@ export async function addSessions(
 
       if (data) {
         // Transform returned data to Session objects
-        const sessions: Session[] = await Promise.all(
-          data.map(async (session: any) => ({
-            id: session.id,
-            enrollmentId: session.enrollment_id,
-            createdAt: session.created_at,
-            environment: session.environment,
-            date: session.date,
-            summary: session.summary,
-            meeting: session.meeting,
-            student: session.student,
-            tutor: session.tutor,
-            status: session.status,
-            session_exit_form: session.session_exit_form || null,
-            isQuestionOrConcern: session.isQuestionOrConcern,
-            isFirstSession: session.isFirstSession,
-            duration: session.duration,
-          }))
-        );
+        const sessions: Session[] = data.map((session: any) => ({
+          id: session.id,
+          enrollmentId: session.enrollment_id,
+          createdAt: session.created_at,
+          environment: session.environment,
+          date: session.date,
+          summary: session.summary,
+          meeting: session.meeting,
+          student: session.student,
+          tutor: session.tutor,
+          status: session.status,
+          session_exit_form: session.session_exit_form || null,
+          isQuestionOrConcern: session.isQuestionOrConcern,
+          isFirstSession: session.isFirstSession,
+          duration: session.duration,
+        }));
 
         // // if (!sessions) return;
 
@@ -312,4 +304,3 @@ export async function addSessions(
     throw error;
   }
 }
-

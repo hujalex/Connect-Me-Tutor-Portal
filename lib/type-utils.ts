@@ -1,6 +1,6 @@
-import { Profile } from "@/types";
+import { Meeting, Profile } from "@/types";
 
-export async function tableToInterfaceProfiles(data: any) {
+export const tableToInterfaceProfiles = (data: any) => {
   try {
     if (!data) {
       throw new Error("Data is null");
@@ -35,3 +35,24 @@ export async function tableToInterfaceProfiles(data: any) {
     throw error
   }
 }
+
+export const tableToInterfaceMeetings = (data: any) => {
+  try {
+    if (!data) {
+      throw new Error("Data is null");
+    }
+    const meetings: Meeting = {
+      id: data.id,
+      createdAt: data.created_at,
+      password: data.password,
+      meetingId: data.meeting_id,
+      link: data.link,
+      name: data.name,
+    };
+    return meetings;
+  } catch (error) {
+    console.error("Unable to convert to interface for Meetings", error);
+    throw error
+  }
+}
+
