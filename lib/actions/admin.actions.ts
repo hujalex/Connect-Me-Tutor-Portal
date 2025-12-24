@@ -34,7 +34,7 @@ import {
   subDays,
 } from "date-fns"; // Only use date-fns
 import * as DateFNS from "date-fns-tz";
-import ResetPassword from "@/app/(public)/set-password/page";
+import ResetPassword from "@/app/(auth)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
