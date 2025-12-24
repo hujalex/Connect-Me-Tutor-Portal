@@ -206,7 +206,7 @@ export default function SettingsPage() {
                     <SelectGroup>
                       <SelectLabel>Profiles</SelectLabel>
                       {userProfiles.map((profile) => (
-                        <SelectItem value={profile.id || ""}>
+                        <SelectItem key = {profile.id} value={profile.id || ""}>
                           {profile.firstName} {profile.lastName}
                         </SelectItem>
                       ))}

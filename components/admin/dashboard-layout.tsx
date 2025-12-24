@@ -256,18 +256,8 @@ export default function DashboardLayout({
   useEffect(() => {
     const getUserProfileRole = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const [profile, profileRole, userProfiles] = await Promise.all([
-            getSessionUserProfile(),
-            getProfileRole(user.id),
-            getUserProfiles(user.id),
-          ]);
-
-          if (profile) setProfile(profile);
+        if (profile) {
+          const userProfiles = await getUserProfiles(profile.userId)
           if (userProfiles) setUserProfiles(userProfiles);
         }
       } catch (error) {
@@ -277,7 +267,7 @@ export default function DashboardLayout({
       }
     };
     getUserProfileRole();
-  }, [supabase.auth]);
+  }, [profile]);
 
   const [isOpen, setIsOpen] = useState(true);
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -633,16 +623,10 @@ export default function DashboardLayout({
                   </SelectTrigger>
                   <SelectContent>
                     {userProfiles.map((profile) => (
-                      <SelectItem value={profile.id || ""}>
+                      <SelectItem key = {profile.id} value={profile.id || ""}>
                         {profile.firstName} {profile.lastName}
                       </SelectItem>
                     ))}
-                    {/* <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="banana">Banana</SelectItem>
-                    <SelectItem value="blueberry">Blueberry</SelectItem>
-                    <SelectItem value="grapes">Grapes</SelectItem>
-                    <SelectItem value="pineapple">Pineapple</SelectItem>
-                  </SelectContent> */}
                   </SelectContent>
                 </Select>
               </div>
