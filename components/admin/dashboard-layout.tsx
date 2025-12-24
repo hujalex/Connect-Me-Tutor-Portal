@@ -74,6 +74,8 @@ import {
   getUserProfiles,
   switchProfile,
 } from "@/lib/actions/profile.server.actions";
+import { profileEnd } from "console";
+import { useFetchProfile } from "@/hooks/auth";
 
 export default function DashboardLayout({
   children,
@@ -88,12 +90,23 @@ export default function DashboardLayout({
   //   lastName: string;
   // } | null>(null); // For displaying profile data
 
-  const {profile, setProfile } = useProfile();
+  // const {profile, setProfile } = useProfile();
+  const fetchedProfile = useFetchProfile()
+  const { profile, setProfile } = useProfile()
+
+  useEffect(() => {
+    if (fetchedProfile.profile) {
+      setProfile(fetchedProfile.profile)
+    }
+  }, [fetchedProfile.profile, setProfile])
+
+  
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const supabase = createClientComponentClient();
   const router = useRouter();
   const pathname = usePathname();
   const isSettingsPage = pathname === "/dashboard/settings";
+  
 
   const settingsSidebarItems = [
     {
@@ -256,18 +269,19 @@ export default function DashboardLayout({
   useEffect(() => {
     const getUserProfileRole = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        // const {
+        //   data: { user },
+        // } = await supabase.auth.getUser();
 
-        if (user) {
-          const [profile, profileRole, userProfiles] = await Promise.all([
-            getSessionUserProfile(),
-            getProfileRole(user.id),
-            getUserProfiles(user.id),
-          ]);
+        if (profile) {
+          // const [profile, userProfiles] = await Promise.all([
+          //   getSessionUserProfile(),
+          //   getUserProfiles(user.id),
+          // ]);
 
-          if (profile) setProfile(profile);
+          const userProfiles = await getUserProfiles(profile.userId)
+
+          // if (profile) setProfile(profile);
           if (userProfiles) setUserProfiles(userProfiles);
         }
       } catch (error) {
@@ -277,7 +291,8 @@ export default function DashboardLayout({
       }
     };
     getUserProfileRole();
-  }, [supabase.auth]);
+  }, [profile]);
+
 
   const [isOpen, setIsOpen] = useState(true);
   const toggleSidebar = () => setIsOpen(!isOpen);

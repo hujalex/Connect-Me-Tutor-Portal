@@ -14,29 +14,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const supabase = createClientComponentClient();
   const router = useRouter();
 
-  useEffect(() => {
-    const getUserProfileRole = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const profileRole = await getProfileRole(user.id);
-          if (profileRole) {
-            setRole(profileRole);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getUserProfileRole();
-  }, [supabase.auth]);
-
   if (loading) {
     return (
       <section className="grid grid-cols-[1fr_4fr] gap-10 m-10">

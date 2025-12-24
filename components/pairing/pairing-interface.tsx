@@ -25,7 +25,7 @@ import {
 import type { ProfilePairingMetadata } from "@/types/profile";
 import { PairingRequestCard } from "./que/request-card";
 import { PairingLogsTable } from "./pairing-logs";
-import { useProfile } from "@/hooks/auth";
+import { useFetchProfile } from "@/hooks/auth";
 import { TestingPairingControls } from "./test-controls";
 import {
   getIncomingPairingMatches,
@@ -45,7 +45,7 @@ export function PairingInterface() {
   const [requestedPairings, setRequestedPairings] = useState<string[]>([]);
   const [suggestedAvailability, setSuggestedAvailability] = useState<Availability>()
 
-  const { profile } = useProfile();
+  const { profile } = useFetchProfile();
 
   const [matchedPairings, setMatchedPairings] = useState<
     IncomingPairingMatch[]

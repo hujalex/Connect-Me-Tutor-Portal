@@ -427,7 +427,6 @@ const Schedule = () => {
     try {
       await getEnrollmentsWithMissingSEF()
       toast.success("Printed to console")
-
     } catch (error) {
       console.error(error);
       toast.error("Please view Dev Console for error")

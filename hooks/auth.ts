@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
  * @returns An object containing the profile data or null if not found.
  * @throws Will throw an error if the user is not authenticated or if there is an issue fetching the profile.
  */
-export const useProfile = () => {
+export const useFetchProfile = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const supabase = createClientComponentClient();
