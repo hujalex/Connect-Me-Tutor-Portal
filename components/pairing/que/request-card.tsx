@@ -17,7 +17,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { createPairingRequest } from "@/lib/actions/pairing.actions";
-import { useProfile } from "@/hooks/auth";
 import toast from "react-hot-toast";
 
 export type PairingRequest = {

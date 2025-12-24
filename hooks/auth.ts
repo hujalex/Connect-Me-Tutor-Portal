@@ -1,6 +1,6 @@
 import { getProfile } from "@/lib/actions/user.actions";
 import { Profile } from "@/types";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
 /**
@@ -9,26 +9,36 @@ import { useEffect, useState } from "react";
  * @throws Will throw an error if the user is not authenticated or if there is an issue fetching the profile.
  */
 export const useFetchProfile = () => {
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const supabase = createClientComponentClient();
+  const [error, setError] = useState<Error | null>(null)
   useEffect(() => {
-    setLoading(true);
+
+    let isMounted = true;
+
     (async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
+        if (userError) throw new Error(userError.message);
+        if (!user) throw new Error("No user found");
 
-      const profileData = await getProfile(user.id);
-      setProfile(profileData);
+        const profileData = await getProfile(user.id);
+        if (profileData && isMounted) setProfile(profileData);
+      } catch (error: any) {
+        if (isMounted) setError(error)
+        console.error("Error fetching profile:", error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     })();
 
-    setLoading(false);
-  }, [supabase.auth]);
+    return () => { isMounted = false };
 
-  return { profile: profile!, loading };
+  }, []);
+
+  return { profile: profile, loading, error };
 };

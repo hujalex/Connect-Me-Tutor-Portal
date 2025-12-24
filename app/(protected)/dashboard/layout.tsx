@@ -2,17 +2,27 @@
 
 import React, { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { getProfileRole } from "@/lib/actions/user.actions";
+import { getProfile, getProfileRole } from "@/lib/actions/user.actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/admin/dashboard-layout"; // Assuming Sidebar component is available
 import { ProfileContextProvider, useProfile } from "@/contexts/profileContext";
+import { useFetchProfile } from "@/hooks/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const {role, setRole} = useProfile()
+  const {profile: fetchedData, loading: isLoading} = useFetchProfile()
+  const { profile, setProfile } = useProfile();
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
   const router = useRouter();
+
+  useEffect(() => {
+    if (fetchedData) {
+      setProfile(fetchedData)
+      setLoading(isLoading)
+    }
+    // setProfile(fetchedProfile.profile)
+  }, [fetchedData, isLoading, setProfile, setLoading]);
 
   if (loading) {
     return (
@@ -23,15 +33,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!role) {
+  if (!profile || !profile.role) {
     router.push("/");
     return null;
   }
 
   // Layout with Sidebar and Navbar
   return (
-      <DashboardLayout>
-        <main>{children}</main>
-      </DashboardLayout>
+    <DashboardLayout>
+      <main>{children}</main>
+    </DashboardLayout>
   );
 }
