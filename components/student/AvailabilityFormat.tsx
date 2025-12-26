@@ -3,11 +3,12 @@ import { formatMilitaryToStandardTime } from "@/lib/utils";
 // Single Availability component that takes an array and formats it
 const Availability = ({
   availability,
+  card,
 }: {
-  availability: { day: string; startTime: string; endTime: string }[];
+  availability: { day: string; startTime: string; endTime: string }[], card: boolean;
 }) => (
   <div>
-    <ul className="text-sm text-muted-foreground">
+    <ul className={card ? "text-sm text-muted-foreground" : "text-xs"}>
       {availability?.map((entry, index) => (
         <li key={index}>
           <span className="font-semibold">{entry.day}s:</span>{" "}
