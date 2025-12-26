@@ -32,9 +32,9 @@ export const tableToInterfaceProfiles = (data: any) => {
     return userProfile;
   } catch (error) {
     console.error("Unable to convert to interface for Profiles", error);
-    throw error
+    throw error;
   }
-}
+};
 
 export const tableToInterfaceMeetings = (data: any) => {
   try {
@@ -52,7 +52,34 @@ export const tableToInterfaceMeetings = (data: any) => {
     return meetings;
   } catch (error) {
     console.error("Unable to convert to interface for Meetings", error);
-    throw error
+    throw error;
   }
-}
+};
 
+export const InterfaceToTableProfiles = (data: Profile) => {
+  if (!data) {
+    throw new Error("Data is null");
+  }
+  const profile = {
+    email: data.email,
+    role: data.role,
+    user_id: data.userId,
+    first_name: data.firstName,
+    last_name: data.lastName,
+    age: data.age,
+    grade: data.grade,
+    gender: data.gender,
+    start_date: data.startDate,
+    availability: data.availability,
+    parent_name: data.parentName,
+    parent_phone: data.parentPhone,
+    parent_email: data.parentEmail,
+    phone_number: data.phoneNumber,
+    timezone: data.timeZone,
+    subjects_of_interest: data.subjects_of_interest,
+    status: data.status,
+    student_number: data.studentNumber,
+    languages_spoken: data.languages_spoken,
+  };
+  return profile;
+};

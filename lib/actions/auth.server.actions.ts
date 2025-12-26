@@ -7,6 +7,7 @@ import { User } from "@supabase/supabase-js";
 import { Table } from "../supabase/tables";
 import { admin } from "googleapis/build/src/apis/admin";
 import { profile } from "console";
+import { tableToInterfaceProfiles } from "../type-utils";
 
 interface UserMetadata {
   email: string;
@@ -74,39 +75,21 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
 export const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   try {
-    // Call signUp to create a new user
-
-    // const existingUser: User | undefined = await supabase.auth.admin
-    //   .listUsers()
-    //   .then(({ data: { users } }) => {
-    //     console.log(users);
-    //     return users.find((user) => user.email === newProfileData.email);
-    //   });
-
-    // const existingUser = await supabase
-    //   .from("Profiles")
-    //   .select("user_id")
-    //   .eq("email", newProfileData.email)
-    //   .throwOnError()
-    //   .then(({ data: existingUser }) => {
-    //     if (existingUser && existingUser.length > 0)
-    //       return existingUser[0].user_id;
-    //   })
-
-    const { data } = await supabase
+    
+    const { data: profile } = await supabase
       .from("Profiles")
-      .select("user_id")
+      .select("user_id, role")
       .eq("email", newProfileData.email)
+      .limit(1)
+      .maybeSingle()
       .throwOnError();
+    
 
-    const existingUser = data && data.length > 0 ? data[0].user_id : null;
+    if (profile?.role === 'Admin') {
+       throw new Error ("Multiple profiles prohibited for provided email") 
+    }
 
-    // console.log("Existing User", existingUser);
-
-    const userId = existingUser ?? (await inviteUser(newProfileData));
-
-    console.log("Auth Data", userId);
-
+    const userId = profile?.user_id ?? (await inviteUser(newProfileData));
     const userMetadata: UserMetadata = {
       email: newProfileData.email,
       role: newProfileData.role,
@@ -135,35 +118,13 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
       .select()
       .single();
 
-    if (!existingUser && profileError) {
+    if (!profile && profileError) {
       // Only delete if this is not another existing user
       await supabase.auth.admin.deleteUser(userId);
       throw profileError;
     }
 
-    const createdProfileData: Profile = {
-      id: createdProfile.id, // Assuming 'id' is the generated key
-      createdAt: createdProfile.created_at, // Assuming 'created_at' is the generated timestamp
-      userId: createdProfile.user_id, // Adjust based on your schema
-      role: createdProfile.role,
-      firstName: createdProfile.first_name,
-      lastName: createdProfile.last_name,
-      // dateOfBirth: createdProfile.dateOfBirth,
-      startDate: createdProfile.start_date,
-      availability: createdProfile.availability,
-      email: createdProfile.email,
-      phoneNumber: createdProfile.phone_number,
-      parentName: createdProfile.parent_name,
-      parentPhone: createdProfile.parent_phone,
-      parentEmail: createdProfile.parent_email,
-      timeZone: createdProfile.time_zone,
-      subjects_of_interest: createdProfile.subjects_of_interest,
-      languages_spoken: createdProfile.languages_spoken,
-      tutorIds: createdProfile.tutor_ids,
-      status: createdProfile.status,
-      studentNumber: createdProfile.studentNumber,
-      settingsId: createdProfile.settings_id,
-    };
+    const createdProfileData: Profile = tableToInterfaceProfiles(createdProfile)
 
     return createdProfileData;
   } catch (error) {
@@ -203,7 +164,7 @@ export const deleteUser = async (profileId: string) => {
   const adminSupabase = await createAdminClient();
 
   try {
-    const { data: profile, error: fetchError } = await adminSupabase
+    const { data: profile } = await adminSupabase
       .from(Table.Profiles)
       .select("user_id")
       .eq("id", profileId)
