@@ -261,24 +261,22 @@ export async function addSessionsServer(
 
       if (data) {
         // Transform returned data to Session objects
-        const sessions: Session[] = await Promise.all(
-          data.map(async (session: any) => ({
-            id: session.id,
-            enrollmentId: session.enrollment_id,
-            createdAt: session.created_at,
-            environment: session.environment,
-            date: session.date,
-            summary: session.summary,
-            meeting: session.meeting,
-            student: session.student,
-            tutor: session.tutor,
-            status: session.status,
-            session_exit_form: session.session_exit_form || null,
-            isQuestionOrConcern: session.isQuestionOrConcern,
-            isFirstSession: session.isFirstSession,
-            duration: session.duration,
-          }))
-        );
+        const sessions: Session[] = data.map((session: any) => ({
+          id: session.id,
+          enrollmentId: session.enrollment_id,
+          createdAt: session.created_at,
+          environment: session.environment,
+          date: session.date,
+          summary: session.summary,
+          meeting: session.meeting,
+          student: session.student,
+          tutor: session.tutor,
+          status: session.status,
+          session_exit_form: session.session_exit_form || null,
+          isQuestionOrConcern: session.isQuestionOrConcern,
+          isFirstSession: session.isFirstSession,
+          duration: session.duration,
+        }));
 
         // // if (!sessions) return;
 

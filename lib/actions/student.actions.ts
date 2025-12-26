@@ -4,6 +4,10 @@ import { Profile, Session } from "@/types";
 import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./admin.actions";
 import { Table } from "../supabase/tables";
+import {
+  tableToInterfaceMeetings,
+  tableToInterfaceProfiles,
+} from "@/lib/type-utils";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -22,7 +26,10 @@ export async function getStudentSessions(
     .from(Table.Sessions)
     .select(
       `
-      *
+      *,
+      student:Profiles!student_id(*),
+      tutor:Profiles!tutor_id(*),
+      meeting:Meetings!meeting_id(*)
     `
     )
     .eq("student_id", profileId);
@@ -54,25 +61,23 @@ export async function getStudentSessions(
   }
 
   // Map the result to the Session interface
-  const sessions: Session[] = await Promise.all(
-    data.map(async (session: any) => ({
-      id: session.id,
-      enrollmentId: session.enrollment_id,
-      createdAt: session.created_at,
-      environment: session.environment,
-      date: session.date,
-      summary: session.summary,
-      // meetingId: session.meeting_id,
-      meeting: await getMeeting(session.meeting_id),
-      status: session.status,
-      student: await getProfileWithProfileId(session.student_id),
-      tutor: await getProfileWithProfileId(session.tutor_id),
-      session_exit_form: session.session_exit_form,
-      isQuestionOrConcern: session.isQuestionOrConcern,
-      isFirstSession: session.isFirstSession,
-      duration: session.duration,
-    }))
-  );
+  const sessions: Session[] = data.map((session: any) => ({
+    id: session.id,
+    enrollmentId: session.enrollment_id,
+    createdAt: session.created_at,
+    environment: session.environment,
+    date: session.date,
+    summary: session.summary,
+    // meetingId: session.meeting_id,
+    meeting: tableToInterfaceMeetings(session.meeting),
+    status: session.status,
+    student: tableToInterfaceProfiles(session.student),
+    tutor: tableToInterfaceProfiles(session.tutor),
+    session_exit_form: session.session_exit_form,
+    isQuestionOrConcern: session.isQuestionOrConcern,
+    isFirstSession: session.isFirstSession,
+    duration: session.duration,
+  }));
 
   return sessions;
 }

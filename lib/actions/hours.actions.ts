@@ -27,7 +27,7 @@ import {
   setMinutes,
   ISOStringFormat,
 } from "date-fns"; // Only use date-fns
-import ResetPassword from "@/app/(public)/set-password/page";
+import ResetPassword from "@/app/(auth)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";

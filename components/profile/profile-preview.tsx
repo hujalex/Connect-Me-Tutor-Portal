@@ -14,10 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ProfilePairingMetadata } from "@/types/profile";
 import { fetchProfileData } from "@/lib/profile-utils";
-import { useProfile } from "@/hooks/auth";
+import { useFetchProfile } from "@/hooks/auth";
 
 export function ProfilePreview() {
-  const { profile, loading } = useProfile();
+  const { profile, loading } = useFetchProfile();
 
   const [refreshing, setRefreshing] = useState(false);
 

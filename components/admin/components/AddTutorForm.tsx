@@ -186,7 +186,7 @@ const AddTutorForm = ({
           <div className="grid gap-4 py-4">
             {/* Basic Info Tab */}
             {activeTab === "basic" && (
-              <ScrollArea className="h-[calc(70vh-120px)] pr-4">
+              <ScrollArea className="max-h-[calc(70vh-120px)] pr-4">
                 <div className="space-y-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="firstName" className="text-right">
@@ -268,7 +268,7 @@ const AddTutorForm = ({
 
             {/* Extended Profile Tab */}
             {activeTab === "extended" && (
-              <ScrollArea className="h-[calc(70vh-120px)] pr-4">
+              <ScrollArea className="max-h-[calc(70vh-120px)] pr-4">
                 <div className="space-y-6">
                   {/* Availability Section */}
                   <div className="space-y-4">

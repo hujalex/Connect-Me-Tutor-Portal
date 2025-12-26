@@ -229,7 +229,7 @@ const EditStudentForm = ({
             <div className="grid gap-4 py-4">
               {/* Basic Info Tab */}
               {activeTab === "basic" && (
-                <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+                <ScrollArea className="max-h-[calc(80vh-120px)] pr-4">
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="studentNumber" className="text-right">
@@ -427,7 +427,7 @@ const EditStudentForm = ({
                 </ScrollArea>
               )}
               {activeTab === "extended" && (
-                <ScrollArea className="h-[calc(80vh-120px)]">
+                <ScrollArea className="max-h-[calc(80vh-120px)]">
                   {" "}
                   <div className="space-y-6">
                     {/* Availability Section */}

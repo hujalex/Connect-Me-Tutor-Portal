@@ -309,13 +309,6 @@ const EnrollmentList = () => {
       setLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
-
       const enrollmentsData = await getAllEnrollments();
       if (!enrollmentsData) throw new Error("No enrollments found");
 
@@ -632,7 +625,7 @@ const EnrollmentList = () => {
                   <DialogHeader>
                     <DialogTitle>Add New Enrollment</DialogTitle>
                   </DialogHeader>
-                  <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+                  <ScrollArea className="max-h-[calc(80vh-120px)] pr-4">
                     {" "}
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-4 items-center gap-4">
@@ -1160,7 +1153,7 @@ const EnrollmentList = () => {
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+          <ScrollArea className="max-h-[calc(80vh-120px)] pr-4">
             {" "}
             {selectedEnrollment && (
               <div className="grid gap-4 py-4">
