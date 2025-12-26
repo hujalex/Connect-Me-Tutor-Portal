@@ -5,8 +5,6 @@ import { createClient } from "@/lib/supabase/server"
 import { createUser as createUserServer} from "@/lib/actions/auth.server.actions"
 import {
   createPassword,
-  deleteUser,
-  sendConfirmationEmail,
 } from "./admin.actions";
 import { NextResponse } from "next/server";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";

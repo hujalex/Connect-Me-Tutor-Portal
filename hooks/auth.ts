@@ -42,3 +42,7 @@ export const useFetchProfile = () => {
 
   return { profile: profile, loading, error };
 };
+
+export const useFetchUser = () => {
+  
+}

@@ -43,6 +43,14 @@ interface UserMetadata {
 //   }
 // }
 
+export const getUser = async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+};
+
 const inviteUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   const { data: authData, error: authError } =

@@ -613,7 +613,7 @@ export default function DashboardLayout({
               )}
               <div className="flex items-center space-x-2 absolute tpo-4 right-8">
                 <Select onValueChange={handleSwitchProfile}>
-                  <SelectTrigger className="space-x-2">
+                  <SelectTrigger className="space-x-2 z-50">
                     {/* <span className=""> */}
                     <User className="w-4 h-4" />
                     <span className="font-semibold">
