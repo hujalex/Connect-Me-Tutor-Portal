@@ -151,7 +151,7 @@ const replaceLastActiveProfile = async (
 
     await supabase
       .from("user_settings")
-      .update({ lastActiveProfileId: availableProfile.id })
+      .update({ last_active_profile_id: availableProfile.id })
       .eq("user_id", userId)
       .throwOnError();
   } catch (error) {
@@ -162,6 +162,8 @@ const replaceLastActiveProfile = async (
 
 export const deleteUser = async (profileId: string) => {
   const adminSupabase = await createAdminClient();
+    console.log("Clear")
+
 
   try {
     const { data: profile } = await adminSupabase
@@ -170,6 +172,7 @@ export const deleteUser = async (profileId: string) => {
       .eq("id", profileId)
       .single()
       .throwOnError();
+
 
     const [res1, res2] = await Promise.all([
       adminSupabase
