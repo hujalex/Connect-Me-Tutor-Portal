@@ -107,7 +107,7 @@ const EnrollmentForm = ({
         <DialogHeader>
           <DialogTitle>Add New Enrollment</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[calc(80vh-120px)] pr-4">
+        <ScrollArea className="max-h-[calc(80vh-120px)] pr-4">
           {" "}
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">

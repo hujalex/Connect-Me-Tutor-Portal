@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
 import { getProfileRole } from '@/lib/actions/user.actions';
+import ProfileDashboard from "@/components/student/ProfileDashboard"
 import StudentDashboard from '@/components/student/StudentDashboard';
 import TutorDashboard from '@/components/tutor/DashboardContent';
 import AdminDashboard from '@/components/admin/DashboardContent';
@@ -59,6 +60,7 @@ const Dashboard = () => {
   return (
     <main>
       {role === 'Student' && <StudentDashboard user={userData}/>}
+      {/* {role == 'Student' && <ProfileDashboard />} */}
       {role === 'Tutor' && <TutorDashboard />}
       {role === 'Admin' && <AdminDashboard />}
     </main>

@@ -18,21 +18,12 @@ import { redirect } from "next/navigation";
 import { fetchUserAdminConversation } from "@/lib/actions/chat.server.actions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getUser } from "@/lib/actions/auth.server.actions";
 
 export default async function ChatPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getUser()
   const userId = user?.id;
-
   if (!userId) redirect("/");
-
-  // const [enrollments, role] = await Promise.all([
-  //   getAccountEnrollments(userId),
-  //   getProfileRole(userId),
-  // ]);
 
   const [adminConversationID, pairings, role] = await Promise.all([
     fetchUserAdminConversation(userId),

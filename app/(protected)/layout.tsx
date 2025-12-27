@@ -19,18 +19,5 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  // const supabase = createClientComponentClient();
-  // const {
-  //   data: { user },
-
-  //   error,
-  // } = await supabase.auth.getUser();
-
-  // console.log("USER", error);
-
-  // const userId = user ? user.id : "";
-  // console.log("USER ID", user, "Layout");
-  // const data = await getProfile(userId);
-
   return <div className="flex-col h-full w-full m-auto">{children}</div>;
 }

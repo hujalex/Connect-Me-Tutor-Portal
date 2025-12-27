@@ -2,10 +2,9 @@
 import { supabase } from "@/lib/supabase/client";
 import { CreatedProfileData, Profile } from "@/types";
 import { createClient } from "@/lib/supabase/server"
+import { createUser as createUserServer} from "@/lib/actions/auth.server.actions"
 import {
   createPassword,
-  deleteUser,
-  sendConfirmationEmail,
 } from "./admin.actions";
 import { NextResponse } from "next/server";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -13,7 +12,7 @@ import { createPairingRequest, handleResolveQueues } from "./pairing.actions";
 import { X } from "lucide-react";
 
 
-export const createUser = async (
+const createUser = async (
   userData: CreatedProfileData
 ): Promise<Profile> => {
   try {
@@ -53,20 +52,20 @@ export const addUser = async (
 
     const lowerCaseEmail = userData.email.toLowerCase().trim();
 
-    // Check if a user with this email already exists
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from("Profiles")
-      .select("user_id")
-      .eq("email", lowerCaseEmail);
+    // // Check if a user with this email already exists
+    // const { data: existingUser, error: userCheckError } = await supabase
+    //   .from("Profiles")
+    //   .select("user_id")
+    //   .eq("email", lowerCaseEmail);
 
-    if (userCheckError && userCheckError.code !== "PGRST116") {
-      // PGRST116 means no rows returned, which is what we want
-      throw userCheckError;
-    }
+    // if (userCheckError && userCheckError.code !== "PGRST116") {
+    //   // PGRST116 means no rows returned, which is what we want
+    //   throw userCheckError;
+    // }
 
-    if (existingUser && existingUser.length > 0) {
-      throw new Error("A user with this email already exists");
-    }
+    // if (existingUser && existingUser.length > 0) {
+    //   throw new Error("A user with this email already exists");
+    // }
 
     // -----Moved After Duplicate Check to prevent Sending confimration email-----
     const tempPassword = await createPassword();
@@ -109,7 +108,7 @@ export const addUser = async (
       languages_spoken: userData.languages_spoken || [],
     }
 
-    const profileData: Profile = await createUser(newProfileData);
+    const profileData: Profile = await createUserServer(newProfileData);
 
     return profileData;
   } catch (error) {

@@ -47,11 +47,13 @@ import {
   getAllProfiles,
   deactivateUser,
   reactivateUser,
-  deleteUser,
   editUser,
   getUserFromId,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
+import { 
+  deleteUser
+} from "@/lib/actions/auth.server.actions"
 import { addUser } from "@/lib/actions/auth.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
@@ -439,6 +441,7 @@ const StudentList = () =>
     const handleDeleteStudent = async () => {
       if (selectedStudentId) {
         try {
+          console.log("Deleting User")
           await deleteUser(selectedStudentId);
           toast.success("Student deleted successfully");
           setIsDeactivateModalOpen(false);

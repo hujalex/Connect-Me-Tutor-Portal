@@ -5,29 +5,24 @@ import { createClient } from "../supabase/server";
 import { AdminConversation } from "@/types/chat";
 import { getUserFromAction } from "./user.server.actions";
 import { getUserFromId } from "./admin.actions";
+import { getProfileFromUserSettings } from "./user.actions";
 
 export const createAdminConversation = async (user_id: string) => {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    throw new Error("Missing Supabase environment variables");
-  }
   const supabase = await createClient();
-
 
   const createdConversationID = await fetchUserAdminConversation(
     user_id,
     false
   );
 
-  const { data: profileData, error } = await supabase
-    .from("Profiles")
-    .select("id")
-    .eq("user_id", user_id)
-    .single();
-  if (error) throw error;
+  // const { data: profileData, error } = await supabase
+  //   .from("Profiles")
+  //   .select("id")
+  //   .eq("user_id", user_id)
+  //   .single();
+  // if (error) throw error;
+
+  const profileData = await getProfileFromUserSettings(user_id)
   const profile_id = profileData.id;
 
   // const user = await getUserFromId(profile_id);
@@ -54,7 +49,6 @@ export const createAdminConversation = async (user_id: string) => {
       },
     ]);
 
-
   return conversationID;
 };
 
@@ -62,33 +56,25 @@ export async function fetchUserAdminConversation(
   userId: string,
   createIfNull: boolean = true
 ) {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    throw new Error("Missing Supabase environment variables");
+  try {
+    const supabase = await createClient();
+    const profile = await getProfileFromUserSettings(userId);
+
+    const profileId = profile.id;
+
+    const { data, error } = await supabase
+      .rpc("get_client_admin_conversations", {
+        profile_id: profileId,
+      })
+      .single();
+
+    const result = data as AdminConversation;
+
+    if (result) return result.conversation_id;
+    if (createIfNull) await createAdminConversation(userId);
+    return null;
+  } catch (error) {
+    console.error("Unable to fetch user admin conversations", error);
+    throw error;
   }
-  const supabase = await createClient();
-
-  const { data: profile, error } = await supabase
-    .from("Profiles")
-    .select("id")
-    .eq("user_id", userId)
-    .single();
-
-  if (error) throw error;
-
-  const profileId = profile.id;
-
-  const { data } = await supabase
-    .rpc("get_client_admin_conversations", {
-      profile_id: profileId,
-    })
-    .single();
-  const result = data as AdminConversation;
-
-  if (result) return result.conversation_id;
-  if (createIfNull) await createAdminConversation(userId);
-  return null;
 }

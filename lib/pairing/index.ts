@@ -113,7 +113,14 @@ export const runPairingWorkflow = async () => {
             match_profile_id: result.match_profile.id,
           },
         });
-        await updatePairingStatus(supabase, studentReq.pairing_request_id, "paired");
+
+
+        // * UNCOMMENT IN PROD
+
+        // await updatePairingStatus(supabase, studentReq.pairing_request_id, "paired");
+
+        // * UNCOMMENT IN PROD
+
 
         studentMatches.push(result);
       } else {
@@ -143,11 +150,16 @@ export const runPairingWorkflow = async () => {
       if (error) console.error("Tutor best_match error:", error);
 
       if (result as QueueItemMatch) {
-        await updatePairingStatus(supabase, tutorReq.pairing_request_id, "paired");
-        await sendPairingRequestNotification(
-          result.requestor_profile.id,
-          result.match_profile.id
-        );
+        // * UNCOMMENT IN PROD
+        // * await updatePairingStatus(supabase, tutorReq.pairing_request_id, "paired");
+        
+        console.log("MATCH", result.requestor_profile.id, result.match_profile.id)
+        
+        // * UNCOMMENT IN PROD
+        // await sendPairingRequestNotification(
+        //   result.requestor_profile.id,
+        //   result.match_profile.id
+        // );
 
         tutorMatches.push(result as QueueItemMatch);
         tutorsToUpdate.push(tutorReq.pairing_request_id);
@@ -181,13 +193,19 @@ export const runPairingWorkflow = async () => {
   try {
     const emailPromises = matchedStudents.map(async (match) => {
       try {
-        return await sendPairingRequestNotification(
-          match.tutor_id,
-          match.student_id
-        );
+        return console.log("MATCH", match.tutor_id, match.student_id)
+
       } catch (error) {
-        throw error;
+        throw error
       }
+      // try {
+      //   return await sendPairingRequestNotification(
+      //     match.tutor_id,
+      //     match.student_id
+      //   );
+      // } catch (error) {
+      //   throw error;
+      // }
     });
     const results = await Promise.allSettled(emailPromises);
     results.forEach((result, index) => {
@@ -201,16 +219,18 @@ export const runPairingWorkflow = async () => {
 
   // console.log(matchedTutors, matchedStudents);
 
-  const {data: r1, error: r1Error} = await supabase
-    .from("pairing_matches")
-    .insert(
-      [...matchedStudents, ...matchedTutors].filter(
-        ({ similarity }) => similarity
-      )
-    );
+
+  // * UNCOMMENT IN PROD
+  // const {data: r1, error: r1Error} = await supabase
+  //   .from("pairing_matches")
+  //   .insert(
+  //     [...matchedStudents, ...matchedTutors].filter(
+  //       ({ similarity }) => similarity
+  //     )
+  //   );
 
   // dummy insert
-  if (r1Error) throw r1Error
+  // if (r1Error) throw r1Error
   // const {data: dummyData, error: dummyError} = await supabase.from("pairing_matches").insert(
   //   {student_id: student_id,
   //     tutor_id: tutor_id,
@@ -224,17 +244,20 @@ export const runPairingWorkflow = async () => {
   // }
 
 
-  // Insert logs
-  const r2 = await supabase
-    .from("pairing_logs")
-    .insert(logs.filter((log) => !log.error));
+  // // Insert logs
+  // const r2 = await supabase
+  //   .from("pairing_logs")
+  //   .insert(logs.filter((log) => !log.error));
 
-  // ✅ Now mark tutors as paired (after all matching is done)
-  if (tutorsToUpdate.length > 0) {
-    await supabase
-      .from("pairing_requests")
-      .update({ status: "paired" })
-      .in("id", tutorsToUpdate);
-  }
+  // // ✅ Now mark tutors as paired (after all matching is done)
+  // if (tutorsToUpdate.length > 0) {
+  //   await supabase
+  //     .from("pairing_requests")
+  //     .update({ status: "paired" })
+  //     .in("id", tutorsToUpdate);
+  // }
+
+  // * UNCOMMENT IN PROD
+
 
 };

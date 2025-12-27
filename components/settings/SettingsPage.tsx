@@ -1,20 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { getProfile, updateProfile } from "@/lib/actions/user.actions";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  getProfile,
+  getProfileWithProfileId,
+  getUserInfo,
+  updateProfile,
+} from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import toast, { Toaster } from "react-hot-toast";
 import { datacatalog } from "googleapis/build/src/apis/datacatalog";
+import { switchProfile } from "@/lib/actions/profile.server.actions";
+import { useProfile } from "@/contexts/profileContext";
+import { getUserProfiles} from "@/lib/actions/profile.server.actions"
+import { NetworkAccessProfileListInstance } from "twilio/lib/rest/supersim/v1/networkAccessProfile";
 
 export default function SettingsPage() {
   const supabase = createClientComponentClient();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const router = useRouter();
+  const { profile, setProfile } = useProfile();
+  // const [profile, setProfile] = useState<Profile | null>(null);
+  const [lastActiveProfileId, setLastActiveProfileId] = useState<string>("");
+  const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const [sessionReminders, setSessionReminders] = useState(false);
   const [sessionEmailNotifications, setSessionEmailNotifications] =
     useState(false);
@@ -27,9 +50,16 @@ export default function SettingsPage() {
     useState(false);
   const [settingsId, setSettingsId] = useState("");
 
+  const fetchUserInfo = async () => {
+    const userId = await fetchUser();
+    if (userId) await fetchUserProfiles(userId);
+  };
+
   useEffect(() => {
-    fetchUser();
+    fetchUserInfo();
   }, []);
+
+  useEffect(() => {});
 
   useEffect(() => {
     fetchNotificationSettings();
@@ -49,8 +79,20 @@ export default function SettingsPage() {
       if (!profileData) throw new Error("No profile found");
 
       setProfile(profileData);
+      setLastActiveProfileId(profileData.id);
+      return user.id;
     } catch (error) {
       console.error("Error fetching user:", error);
+    }
+  };
+
+  const fetchUserProfiles = async (userId: string) => {
+    try {
+      const profiles = await getUserProfiles(userId)
+      setUserProfiles(profiles);
+    } catch (error) {
+      toast.error("Error fetching profiles");
+      console.error("Error fetching other profiles", error);
     }
   };
 
@@ -100,7 +142,7 @@ export default function SettingsPage() {
       // Handle notification settings save logic here
       // You could show a success toast here
 
-      const { data, error } = await supabase
+      await supabase
         .from("user_notification_settings")
         .update({
           email_tutoring_session_notifications_enabled:
@@ -109,9 +151,8 @@ export default function SettingsPage() {
           email_webinar_notifications_enabled: webinarEmailNotifications,
           text_webinar_notifications_enabled: webinarTextNotifications,
         })
-        .eq("id", settingsId);
-
-      if (error) throw error;
+        .eq("id", settingsId)
+        .throwOnError();
 
       await fetchNotificationSettings();
       toast.success("Saved Notification Settings");
@@ -121,11 +162,68 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSwitchProfile = async () => {
+    try {
+      if (profile) {
+        const [, newProfileData] = await Promise.all([
+          switchProfile(profile?.userId, lastActiveProfileId),
+          getProfileWithProfileId(lastActiveProfileId)
+        ])
+        setProfile(newProfileData)
+      }
+      toast.success("Switched Profile");
+    } catch (error) {
+      console.error("Unable to switch account", error);
+      toast.error("Unable to switch account");
+    }
+  };
+
   return (
     <>
       <Toaster />{" "}
       <main className="p-8 max-w-4xl mx-auto">
         <div className="space-y-12">
+          {/* Switch Profiles Section */}
+          <section className="bg-white rounded-lg border p-6">
+            <h1 className="text-2xl font-bold mb-6">Profiles</h1>
+            <div className="space-y-8">
+              {/* Profiles */}
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <h3 className="text-lg font-semibold">Your Profiles</h3>
+                </div>
+                <Select onValueChange={setLastActiveProfileId}>
+                  <SelectTrigger className="h-12">
+                    <SelectValue
+                      placeholder={
+                        profile
+                          ? `${profile?.firstName} ${profile?.lastName}`
+                          : ""
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Profiles</SelectLabel>
+                      {userProfiles.map((profile) => (
+                        <SelectItem key = {profile.id} value={profile.id || ""}>
+                          {profile.firstName} {profile.lastName}
+                        </SelectItem>
+                      ))}
+                      {/* <SelectItem value="all">All</SelectItem> */}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSwitchProfile}
+              className="mt-6 w-full sm:w-auto"
+            >
+              Switch Profile
+            </Button>
+          </section>
           {/* Notifications Section */}
           <section className="bg-white rounded-lg border p-6">
             <h1 className="text-2xl font-bold mb-6">Notification Settings</h1>
@@ -154,9 +252,6 @@ export default function SettingsPage() {
                         <Label htmlFor="session-email" className="text-base">
                           Email notifications
                         </Label>
-                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full border border-green-200">
-                          Beginning June 29th
-                        </span>
                       </div>
 
                       <Switch
@@ -247,14 +342,14 @@ export default function SettingsPage() {
           {/* Profile Section */}
           <section className="bg-white rounded-lg border p-6">
             <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-2xl font-bold">Profile Settings</h2>
+              <h2 className="text-2xl font-bold">Account Settings</h2>
               <span className="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
                 In Development
               </span>
             </div>
 
             <p className="text-gray-600 mb-6">
-              Manage your profile information and account preferences.
+              Manage your information and account preferences.
             </p>
 
             <form onSubmit={handleProfileSubmit} className="space-y-6">
@@ -265,9 +360,8 @@ export default function SettingsPage() {
                   </Label>
                   <Input
                     id="first-name"
-                    placeholder="Enter your first name"
-                    disabled
-                    className="mt-1"
+                    placeholder="Enter your first name (e.g John)"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
 
@@ -277,9 +371,35 @@ export default function SettingsPage() {
                   </Label>
                   <Input
                     id="last-name"
-                    placeholder="Enter your last name"
-                    disabled
-                    className="mt-1"
+                    placeholder="Enter your last name (e.g Smith)"
+                    className="mt-1 placeholder:text-gray-300"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone-number" className="text-sm font-medium">
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phone-number"
+                    type="tel"
+                    placeholder="Enter your phone number (e.g (555) 123-4567)"
+                    className="mt-1 placeholder:text-gray-300"
+                  />
+                </div>
+
+                <div>
+                  {/* hi */}
+                  <Label htmlFor="age" className="text-sm font-medium">
+                    Age
+                  </Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    placeholder="Enter your age (e.g 25)"
+                    className="mt-1 placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -291,9 +411,8 @@ export default function SettingsPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
-                  disabled
-                  className="mt-1"
+                  placeholder="Enter your email (e.g john@example.com)"
+                  className="mt-1 placeholder:text-gray-300"
                 />
               </div>
 
@@ -303,9 +422,33 @@ export default function SettingsPage() {
                 </Label>
                 <Textarea
                   id="bio"
-                  placeholder="Tell us about yourself"
-                  disabled
-                  className="mt-1"
+                  placeholder="Tell us about yourself (e.g What hobbies do you enjoy?)"
+                  className="mt-1 placeholder:text-gray-300"
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="subjects" className="text-sm font-medium">
+                  Subjects of Interest
+                </Label>
+                <Textarea
+                  id="subjects"
+                  placeholder="Enter your subjects of interest (e.g Mathematics, Physics, Chemistry)"
+                  className="mt-1 placeholder:text-gray-300"
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                {/* hi */}
+                <Label htmlFor="languages" className="text-sm font-medium">
+                  Languages Spoken
+                </Label>
+                <Textarea
+                  id="languages"
+                  placeholder="Enter languages you speak (e.g English, Spanish, French)"
+                  className="mt-1 placeholder:text-gray-300"
                   rows={4}
                 />
               </div>

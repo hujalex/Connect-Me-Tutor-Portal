@@ -129,3 +129,7 @@ export async function updateProfileDetails({
 
   return { success: true };
 }
+
+export const switchAndGetProfileInfo = async () => {
+
+}

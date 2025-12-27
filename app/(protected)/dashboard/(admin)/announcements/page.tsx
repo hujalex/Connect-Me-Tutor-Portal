@@ -15,14 +15,14 @@ import {
   StudentAnnouncementsRoomId,
   TutorAnnouncementRoomId,
 } from "@/constants/chat";
-import { useProfile } from "@/hooks/auth";
+import { useFetchProfile } from "@/hooks/auth";
 import { useEffect, useState } from "react";
 
 type AnnouncementsRooms = "tutors" | "students" | "all";
 
 export default function AnnouncementsPage() {
   const [currentRoom, setCurrentRoom] = useState<AnnouncementsRooms>("tutors");
-  const { profile } = useProfile();
+  const { profile } = useFetchProfile();
   const [roomID, setRoomID] = useState<string>(TutorAnnouncementRoomId);
   useEffect(() => {
     if (profile && profile.role !== "Admin") {

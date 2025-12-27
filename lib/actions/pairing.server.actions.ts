@@ -2,7 +2,7 @@
 
 import { Enrollment, Meeting, Profile } from "@/types";
 import { SharedPairing } from "@/types/pairing";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import axios from "axios";
 import { getProfile } from "./user.actions";
 import { createServerClient } from "../supabase/server";
@@ -18,17 +18,7 @@ import { formatDateAdmin, to12Hour } from "../utils";
 
 export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
   try {
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ) {
-      throw new Error("Missing Supabase environment variables");
-    }
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from("Enrollments")
       .select("pairing_id")
@@ -44,17 +34,8 @@ export const getPairingFromEnrollmentId = async (enrollmentId: string) => {
 
 export async function getAccountPairings(userId: string) {
   try {
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ) {
-      throw new Error("Missing Supabase environment variables");
-    }
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+  
+    const supabase = await createClient()
     const { data, error } = await supabase.rpc(
       "get_user_pairings_with_profiles",
       {
@@ -83,10 +64,8 @@ export const deleteAllPairingRequests = async () => {
     ) {
       throw new Error("Missing Supabase environment variables");
     }
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
+
+    const supabase = await createClient()
 
     // // Delete all rows from pairing_requests
     // const { error: pairingRequestsError } = await supabase
@@ -136,10 +115,8 @@ export const resetPairingQueues = async () => {
     throw new Error("Missing Supabase environment variables");
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  const supabase = await createClient()
+
   const { error } = await supabase
     .from("pairing_requests")
     .update({ status: "pending" })

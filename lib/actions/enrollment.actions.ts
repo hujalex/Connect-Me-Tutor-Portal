@@ -1,7 +1,7 @@
-"use client"
+"use client";
 // lib/student.actions.ts
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { supabase } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client";
 import {
   Profile,
   Session,
@@ -30,7 +30,7 @@ import {
   setHours,
   setMinutes,
 } from "date-fns"; // Only use date-fns
-import ResetPassword from "@/app/(public)/set-password/page";
+import ResetPassword from "@/app/(auth)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
@@ -39,9 +39,8 @@ import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
 import { StdioNull } from "node:child_process";
+import { tableToInterfaceProfiles } from "../type-utils";
 // import { getMeeting } from "./meeting.actions";
-
-
 
 export async function getEnrollments(
   tutorId: string
@@ -62,7 +61,9 @@ export async function getEnrollments(
         availability,
         meetingId,
         paused,
-        duration
+        duration,
+        student:Profiles!student_id(*),
+        tutor:Profiles!tutor_id(*)
       `
       )
       .eq("tutor_id", tutorId);
@@ -74,24 +75,22 @@ export async function getEnrollments(
     }
 
     // Check if data exists
-  
+
     // Mapping the fetched data to the Notification object
-    const enrollments: Enrollment[] = await Promise.all(
-      data.map(async (enrollment: any) => ({
-        createdAt: enrollment.created_at,
-        id: enrollment.id,
-        summary: enrollment.summary,
-        student: await getProfileWithProfileId(enrollment.student_id),
-        tutor: await getProfileWithProfileId(enrollment.tutor_id),
-        startDate: enrollment.start_date,
-        endDate: enrollment.end_date,
-        availability: enrollment.availability,
-        meetingId: enrollment.meetingId,
-        paused: enrollment.paused,
-        duration: enrollment.duration,
-        frequency: enrollment.frequency
-      }))
-    );
+    const enrollments: Enrollment[] = data.map((enrollment: any) => ({
+      createdAt: enrollment.created_at,
+      id: enrollment.id,
+      summary: enrollment.summary,
+      student: tableToInterfaceProfiles(enrollment.student),
+      tutor: tableToInterfaceProfiles(enrollment.tutor),
+      startDate: enrollment.start_date,
+      endDate: enrollment.end_date,
+      availability: enrollment.availability,
+      meetingId: enrollment.meetingId,
+      paused: enrollment.paused,
+      duration: enrollment.duration,
+      frequency: enrollment.frequency,
+    }));
 
     return enrollments; // Return the array of enrollments
   } catch (error) {
@@ -99,8 +98,6 @@ export async function getEnrollments(
     return null;
   }
 }
-
-
 
 export const getHourInterval = async (availabilityList: Availability[]) => {
   try {
@@ -130,7 +127,6 @@ export const getOverlappingAvailabilites = async (
   }[]
 ): Promise<Availability[]> => {
   try {
-
     const { data, error } = await supabase.rpc(
       "get_overlapping_availabilities_array",
       {
@@ -139,19 +135,23 @@ export const getOverlappingAvailabilites = async (
       }
     );
     if (error) throw error;
-    return data; 
+    return data;
   } catch (error) {
     console.error("Failed to get overlapping availabilities");
-    throw error
-    return []
+    throw error;
+    return [];
   }
 };
 
-
-export async function getAllActiveEnrollments(endOfWeek: string): Promise<Enrollment[]> {
+export async function getAllActiveEnrollments(
+  endOfWeek: string
+): Promise<Enrollment[]> {
   try {
     // Fetch meeting details from Supabase
-    const { data, error } = await supabase.from(Table.Enrollments).select(`
+    const { data, error } = await supabase
+      .from(Table.Enrollments)
+      .select(
+        `
         id,
         created_at,
         summary,
@@ -166,9 +166,10 @@ export async function getAllActiveEnrollments(endOfWeek: string): Promise<Enroll
         frequency,
         student:Profiles!student_id(*),
         tutor:Profiles!tutor_id(*)
-      `)
-      .eq('paused', false)
-      .lte('start_date', endOfWeek);
+      `
+      )
+      .eq("paused", false)
+      .lte("start_date", endOfWeek);
 
     // Check for errors and log them
     if (error) {
@@ -178,26 +179,24 @@ export async function getAllActiveEnrollments(endOfWeek: string): Promise<Enroll
 
     // Check if data exists
     if (!data) {
-      throw new Error("No data fetched")
+      throw new Error("No data fetched");
     }
 
     // Mapping the fetched data to the Notification object
-    const enrollments: Enrollment[] = await Promise.all(
-      data.map(async (enrollment: any) => ({
-        createdAt: enrollment.created_at,
-        id: enrollment.id,
-        summary: enrollment.summary,
-        student: enrollment.student,
-        tutor: enrollment.tutor,
-        startDate: enrollment.start_date,
-        endDate: enrollment.end_date,
-        availability: enrollment.availability,
-        meetingId: enrollment.meetingId,
-        paused: enrollment.paused,
-        duration: enrollment.duration,
-        frequency: enrollment.frequency,
-      }))
-    );
+    const enrollments: Enrollment[] = data.map((enrollment: any) => ({
+      createdAt: enrollment.created_at,
+      id: enrollment.id,
+      summary: enrollment.summary,
+      student: enrollment.student,
+      tutor: enrollment.tutor,
+      startDate: enrollment.start_date,
+      endDate: enrollment.end_date,
+      availability: enrollment.availability,
+      meetingId: enrollment.meetingId,
+      paused: enrollment.paused,
+      duration: enrollment.duration,
+      frequency: enrollment.frequency,
+    }));
 
     return enrollments; // Return the array of enrollments
   } catch (error) {
@@ -205,4 +204,3 @@ export async function getAllActiveEnrollments(endOfWeek: string): Promise<Enroll
     throw error;
   }
 }
-

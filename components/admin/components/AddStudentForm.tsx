@@ -174,7 +174,7 @@ const AddStudentForm = ({
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
           {activeTab === "basic" && (
-            <ScrollArea className="h-[calc(90vh-200px)] px-6 py-10">
+            <ScrollArea className="max-h-[calc(90vh-200px)] px-6 py-10">
               <div className="space-y-6">
                 {/* Student ID Section */}
                 <div className="space-y-4">
@@ -419,7 +419,7 @@ const AddStudentForm = ({
           )}
 
           {activeTab === "extended" && (
-            <ScrollArea className="h-[calc(90vh-200px)] px-6 py-10">
+            <ScrollArea className="max-h-[calc(90vh-200px)] px-6 py-10">
               <div className="space-y-8">
                 {/* Availability Section */}
                 <div className="space-y-4">

@@ -36,7 +36,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { updateProfile } from "@/lib/actions/user.actions";
 import { updateProfileDetails } from "@/lib/actions/profile.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useProfile } from "@/hooks/auth";
+import { useFetchProfile } from "@/hooks/auth";
 
 interface UpdateProfileInput {
   userId: string;
@@ -65,7 +65,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function ProfileUpdateForm() {
-  const { profile: initialData } = useProfile();
+  const { profile: initialData } = useFetchProfile();
   const [availability, setAvailability] = useState<
     { day: string; startTime: string; endTime: string }[]
   >(initialData?.availability || []);

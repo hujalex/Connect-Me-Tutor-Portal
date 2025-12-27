@@ -6,6 +6,10 @@ import { getProfileWithProfileId } from "./user.actions";
 import { getMeeting } from "./admin.actions";
 import { Stats } from "fs";
 import { Table } from "../supabase/tables";
+import {
+  tableToInterfaceMeetings,
+  tableToInterfaceProfiles,
+} from "../type-utils";
 
 const supabase = createClientComponentClient({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -32,7 +36,10 @@ export async function getTutorSessions(
     .from(Table.Sessions)
     .select(
       `
-     *
+     *,
+     meeting:Meetings!meeting_id(*),
+     student:Profiles!student_id(*),
+     tutor:Profiles!tutor_id(*)
     `
     )
     .eq("tutor_id", profileId);
@@ -64,32 +71,24 @@ export async function getTutorSessions(
   }
 
   // Map the result to the Session interface
-  const sessions: Session[] = await Promise.all(
-    data.map(async (session: any) => {
-      const [meeting, student, tutor] = await Promise.all([
-        getMeeting(session.meeting_id),
-        getProfileWithProfileId(session.student_id),
-        getProfileWithProfileId(session.tutor_id),
-      ]);
-
-      return {
-        id: session.id,
-        enrollmentId: session.enrollment_id,
-        createdAt: session.created_at,
-        environment: session.environment,
-        date: session.date,
-        summary: session.summary,
-        meeting: meeting,
-        student: student,
-        tutor: tutor,
-        status: session.status,
-        session_exit_form: session.session_exit_form,
-        isQuestionOrConcern: Boolean(session.isQuestionOrConcernO),
-        isFirstSession: Boolean(session.isFirstSession),
-        duration: session.duration,
-      };
-    })
-  );
+  const sessions: Session[] = data.map((session: any) => {
+    return {
+      id: session.id,
+      enrollmentId: session.enrollment_id,
+      createdAt: session.created_at,
+      environment: session.environment,
+      date: session.date,
+      summary: session.summary,
+      meeting: tableToInterfaceMeetings(session.meeting),
+      student: tableToInterfaceProfiles(session.student),
+      tutor: tableToInterfaceProfiles(session.tutor),
+      status: session.status,
+      session_exit_form: session.session_exit_form,
+      isQuestionOrConcern: Boolean(session.isQuestionOrConcernO),
+      isFirstSession: Boolean(session.isFirstSession),
+      duration: session.duration,
+    };
+  });
 
   return sessions;
 }

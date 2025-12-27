@@ -25,8 +25,9 @@ import {
   isValid,
   setHours,
   setMinutes,
+  ISOStringFormat,
 } from "date-fns"; // Only use date-fns
-import ResetPassword from "@/app/(public)/set-password/page";
+import ResetPassword from "@/app/(auth)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
@@ -391,11 +392,11 @@ export const getTotalHours = async () => {
   } catch (error) {
     console.error("Error fetching tutor hours", error);
     throw error;
-}
+  }
 };
 
 /**
- * Fetches hours for each student 
+ * Fetches hours for each student
  *@param {string} tutorId
  *@returns An array containing hours for each student
  */
@@ -451,6 +452,27 @@ export const handleCalculateDuration = async (
     console.error("Unable to calculate duration", error);
   }
 };
+
+/**
+ * TODO:
+ * 
+ * Create a function below to calculate the number of hours 
+ * for a tutor from a certain timeframe
+ * 
+ * @param profileId profile id of the tutor
+ * @param start start of timeframe - assume in ISOstring format
+ * @param end end of timeframe - assume in ISOstring format
+ */
+
+export const getHoursTutored = async (profileId: string, start: ISOStringFormat, end: ISOStringFormat) => {
+  try {
+
+
+  } catch (error) {
+
+  }
+}
+
 /**
  * 
  * BEGIN
