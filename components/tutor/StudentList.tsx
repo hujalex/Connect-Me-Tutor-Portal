@@ -134,9 +134,9 @@ const StudentList = () => {
                 <TableHead>Student Name</TableHead>
                 <TableHead>Availability</TableHead>
                 <TableHead>Subjects</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>Student Email</TableHead>
+                <TableHead>Parent Email</TableHead>
                 <TableHead>Parent Phone</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -150,14 +150,18 @@ const StudentList = () => {
                   <TableCell>
                     <UserAvailabilities user={student} />
                   </TableCell>
-                  <TableCell className="flex flex-col">
-                    {student.subjects_of_interest?.map((item, index) => (
-                      <span key={index}>{item}</span>
-                    ))}
+                  <TableCell className="h-full">
+                    <div className="flex flex-col items-center justify-center min-h-[inherit]">
+                      {student.subjects_of_interest?.map((item, index) => (
+                        <span key={index} className="text-center">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
                   </TableCell>
                   <TableCell>{student.email}</TableCell>
+                  <TableCell>{student.parentEmail}</TableCell>
                   <TableCell>{student.parentPhone}</TableCell>
-                  <TableCell></TableCell>
                   <TableCell>
                     <DeletePairingForm student={student} tutor={profile} />
                   </TableCell>

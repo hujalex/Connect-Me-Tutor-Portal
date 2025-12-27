@@ -441,6 +441,7 @@ const StudentList = () =>
     const handleDeleteStudent = async () => {
       if (selectedStudentId) {
         try {
+          console.log("Deleting User")
           await deleteUser(selectedStudentId);
           toast.success("Student deleted successfully");
           setIsDeactivateModalOpen(false);
