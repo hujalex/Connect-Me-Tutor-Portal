@@ -34,7 +34,7 @@ import {
   subDays,
 } from "date-fns"; // Only use date-fns
 import * as DateFNS from "date-fns-tz";
-import ResetPassword from "@/app/(public)/set-password/page";
+import ResetPassword from "@/app/(auth)/set-password/page";
 import { getStudentSessions } from "./student.actions";
 import { date } from "zod";
 import { withCoalescedInvoke } from "next/dist/lib/coalesced-function";
@@ -42,10 +42,7 @@ import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
-import DeleteTutorForm from "@/components/admin/components/DeleteTutorForm";
-import { createUser } from "./auth.actions";
 import { handleCalculateDuration } from "./hours.actions";
-import { language } from "googleapis/build/src/apis/language";
 import { tableToInterfaceProfiles } from "../type-utils";
 import { createPairingRequest } from "./pairing.actions";
 import { scheduleMultipleSessionReminders } from "../twilio";
@@ -146,31 +143,33 @@ export async function getAllProfiles(
   }
 }
 
-export async function deleteUser(profileId: string) {
-  try {
-    if (!profileId) throw new Error("Profile ID is required");
+// export async function deleteUser(profileId: string) {
+//   try {
+//     if (!profileId) throw new Error("Profile ID is required");
 
-    const response = await fetch("/api/admin/delete-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ profileId }),
-    });
+//     const response = await fetch("/api/admin/delete-user", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ profileId }),
+//     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.error || `HTTP ${response.status}: Failed to delete user`
-      );
-    }
+//     if (!response.ok) {
+//       const error = await response.json();
+//       throw new Error(
+//         error.error || `HTTP ${response.status}: Failed to delete user`
+//       );
+//     }
 
-    return await response.json();
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    throw error;
-  }
-}
+//     const response = await
+
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error deleting user:", error);
+//     throw error;
+//   }
+// }
 
 export async function getUserFromId(profileId: string) {
   try {
@@ -920,7 +919,9 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         meetingId,
         paused,
         duration,
-        frequency
+        frequency,
+        student:Profiles!student_id(*),
+        tutor:Profiles!tutor_id(*)
       `);
 
     // Check for errors and log them
@@ -935,13 +936,14 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
     }
 
     // Mapping the fetched data to the Notification object
-    const enrollments: Enrollment[] = await Promise.all(
-      data.map(async (enrollment: any) => ({
+    const enrollments: Enrollment[] = data
+      .filter((enrollment) => enrollment.student && enrollment.tutor)
+      .map((enrollment: any) => ({
         createdAt: enrollment.created_at,
         id: enrollment.id,
         summary: enrollment.summary,
-        student: await getProfileWithProfileId(enrollment.student_id),
-        tutor: await getProfileWithProfileId(enrollment.tutor_id),
+        student: tableToInterfaceProfiles(enrollment.student),
+        tutor: tableToInterfaceProfiles(enrollment.tutor),
         startDate: enrollment.start_date,
         endDate: enrollment.end_date,
         availability: enrollment.availability,
@@ -949,8 +951,7 @@ export async function getAllEnrollments(): Promise<Enrollment[] | null> {
         paused: enrollment.paused,
         duration: enrollment.duration,
         frequency: enrollment.frequency,
-      }))
-    );
+      }));
 
     return enrollments; // Return the array of enrollments
   } catch (error) {
@@ -1029,7 +1030,6 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
       enrollment.availability[0].endTime
     );
 
-
     const { data: updateEnrollmentData, error: updateEnrollmentError } =
       await supabase
         .from(Table.Enrollments)
@@ -1093,7 +1093,6 @@ export const addEnrollment = async (
   sendEmail?: boolean
 ) => {
   try {
-
     const duration = await handleCalculateDuration(
       enrollment.availability[0].startTime,
       enrollment.availability[0].endTime
@@ -1135,7 +1134,6 @@ export const addEnrollment = async (
       throw error;
     }
 
-
     return {
       createdAt: data.created_at,
       id: data.id,
@@ -1164,7 +1162,6 @@ export const removeFutureSessions = async (enrollmentId: string) => {
         .eq("enrollment_id", enrollmentId)
         .eq("status", "Active")
         .gte("date", now);
-
 
     if (deleteSessionsError) {
       throw deleteSessionsError;
@@ -1217,17 +1214,15 @@ export async function getEvents(tutorId: string): Promise<Event[]> {
     }
 
     // Mapping the fetched data to the Notification object
-    const events: Event[] = await Promise.all(
-      data.map(async (event: any) => ({
-        createdAt: event.created_at,
-        id: event.id,
-        summary: event.summary,
-        tutorId: event.tutor_id,
-        date: event.date,
-        hours: event.hours,
-        type: event.type,
-      }))
-    );
+    const events: Event[] = data.map((event: any) => ({
+      createdAt: event.created_at,
+      id: event.id,
+      summary: event.summary,
+      tutorId: event.tutor_id,
+      date: event.date,
+      hours: event.hours,
+      type: event.type,
+    }));
 
     return events; // Return the array of notifications
   } catch (error) {
@@ -1355,7 +1350,9 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
         tutor_id,
         student_id,
         status,
-        summary
+        summary,
+        student:Profiles!student_id(*),
+        tutor:Profiles!tutor_id(*)
       `);
 
     // Check for errors and log them
@@ -1370,19 +1367,18 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
     }
 
     // Mapping the fetched data to the Notification object
-    const notifications: Notification[] = await Promise.all(
-      data.map(async (notification: any) => ({
+    const notifications: Notification[] = 
+      data.map((notification: any) => ({
         createdAt: notification.created_at,
         id: notification.id,
         summary: notification.summary,
         sessionId: notification.session_id,
         previousDate: notification.previous_date,
         suggestedDate: notification.suggested_date,
-        student: await getProfileWithProfileId(notification.student_id),
-        tutor: await getProfileWithProfileId(notification.tutor_id),
+        student: tableToInterfaceProfiles(notification.student_id),
+        tutor: tableToInterfaceProfiles(notification.tutor_id),
         status: notification.status,
       }))
-    );
 
     return notifications; // Return the array of notifications
   } catch (error) {

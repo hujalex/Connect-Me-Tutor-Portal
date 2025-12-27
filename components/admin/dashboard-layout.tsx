@@ -7,10 +7,12 @@ import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   getProfileRole,
+  getProfileWithProfileId,
   getSessionUserProfile,
   logoutUser,
 } from "@/lib/actions/user.actions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProfile } from "@/contexts/profileContext";
 import {
   Search,
   Link as LinkIcon,
@@ -66,18 +68,28 @@ import {
   TooltipProvider, // Import TooltipProvider
 } from "@/components/ui/tooltip";
 import { toast, Toaster } from "react-hot-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { Profile } from "@/types";
+import {
+  getUserProfiles,
+  switchProfile,
+} from "@/lib/actions/profile.server.actions";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [role, setRole] = useState<string | null>(null);
+  // const [role, setRole] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{
-    firstName: string;
-    lastName: string;
-  } | null>(null); // For displaying profile data
+  // const [profile, setProfile] = useState<{
+  //   firstName: string;
+  //   lastName: string;
+  // } | null>(null); // For displaying profile data
+
+  const {profile, setProfile } = useProfile();
+  const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const supabase = createClientComponentClient();
   const router = useRouter();
   const pathname = usePathname();
@@ -106,11 +118,6 @@ export default function DashboardLayout({
       title: "Chats",
       href: "/dashboard/chats",
       icon: <MessageCircleIcon className="h-5 w-5" />,
-    },
-    {
-      title: "Pairings",
-      href: "/dashboard/pairings",
-      icon: <LinkIcon className="h-5 w-5" />,
     },
     {
       title: "Pairings",
@@ -163,7 +170,7 @@ export default function DashboardLayout({
     {
       title: "Worksheets",
       href: "/dashboard/worksheets",
-      icon: <FileText className = "h-5 w-5"/>
+      icon: <FileText className="h-5 w-5" />,
     },
     {
       title: "Pairings",
@@ -237,8 +244,8 @@ export default function DashboardLayout({
     {
       title: "Analytics",
       href: "/dashboard/data-analytics",
-      icon: <ChartColumn className = "h-5 w-5"/>
-    }
+      icon: <ChartColumn className="h-5 w-5" />,
+    },
     // {
     //   title: "Migrate Profiles",
     //   href: "/dashboard/migrate",
@@ -249,18 +256,9 @@ export default function DashboardLayout({
   useEffect(() => {
     const getUserProfileRole = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const profile = await getSessionUserProfile();
-          const profileRole = await getProfileRole(user.id);
-          if (profileRole) {
-            setRole(profileRole);
-          }
-          // Simulating getting profile information from somewhere
-          setProfile(profile);
+        if (profile) {
+          const userProfiles = await getUserProfiles(profile.userId)
+          if (userProfiles) setUserProfiles(userProfiles);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -268,9 +266,8 @@ export default function DashboardLayout({
         setLoading(false);
       }
     };
-
     getUserProfileRole();
-  }, [supabase.auth]);
+  }, [profile]);
 
   const [isOpen, setIsOpen] = useState(true);
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -279,6 +276,22 @@ export default function DashboardLayout({
     toast.success("Successfully logging out");
     await logoutUser();
     router.push("/");
+  };
+
+  const handleSwitchProfile = async (newProfileId: string) => {
+    try {
+      if (profile) {
+        const [, newProfileData] = await Promise.all([
+          switchProfile(profile?.userId, newProfileId),
+          getProfileWithProfileId(newProfileId),
+        ]);
+        setProfile(newProfileData);
+      }
+      toast.success("Switched Profile")
+    } catch (error) {
+      toast.error("Unable to switch profiles");
+      console.error(error);
+    }
   };
 
   if (loading) {
@@ -290,8 +303,9 @@ export default function DashboardLayout({
     );
   }
 
-  if (!role) {
-    router.push("/");
+
+  if (!profile) {
+    router.push("/")
     return null;
   }
 
@@ -312,7 +326,7 @@ export default function DashboardLayout({
             {/* Logo */}
             <div className="h-16 p-4 flex items-center">
               <Link
-                href="/"
+                href="/dashboard"
                 className="flex items-center px-1 text-sm font-medium rounded-md transition-colors"
               >
                 <div className="text-white p-1 rounded">
@@ -430,7 +444,7 @@ export default function DashboardLayout({
             {/* Navigation */}
             {!isSettingsPage && (
               <nav className="flex-grow space-y-1 px-3">
-                {role === "Student" && (
+                {profile.role === "Student" && (
                   <>
                     {studentSidebarItems.map((item) => (
                       <Tooltip key={item.href}>
@@ -465,7 +479,7 @@ export default function DashboardLayout({
                 )}
 
                 {/* Tutor Role Navigation */}
-                {role === "Tutor" && (
+                {profile.role === "Tutor" && (
                   <>
                     {tutorSidebarItems.map((item) => (
                       <Tooltip key={item.href}>
@@ -500,7 +514,7 @@ export default function DashboardLayout({
                 )}
 
                 {/* Admin Role Navigation */}
-                {role === "Admin" && (
+                {profile.role === "Admin" && (
                   <>
                     {adminSidebarItems.map((item) => (
                       <Tooltip key={item.href}>
@@ -598,10 +612,23 @@ export default function DashboardLayout({
                 </Button>
               )}
               <div className="flex items-center space-x-2 absolute tpo-4 right-8">
-                <User className="w-4 h-4" />
-                <span className="font-semibold">
-                  {profile?.firstName} {profile?.lastName}
-                </span>
+                <Select onValueChange={handleSwitchProfile}>
+                  <SelectTrigger className="space-x-2 z-50">
+                    {/* <span className=""> */}
+                    <User className="w-4 h-4" />
+                    <span className="font-semibold">
+                      {profile?.firstName} {profile?.lastName}
+                    </span>
+                    {/* </span> */}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userProfiles.map((profile) => (
+                      <SelectItem key = {profile.id} value={profile.id || ""}>
+                        {profile.firstName} {profile.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

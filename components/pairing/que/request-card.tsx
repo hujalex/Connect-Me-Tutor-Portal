@@ -17,7 +17,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { createPairingRequest } from "@/lib/actions/pairing.actions";
-import { useProfile } from "@/hooks/auth";
 import toast from "react-hot-toast";
 
 export type PairingRequest = {
@@ -94,7 +93,11 @@ export function PairingRequestCard({ userId }: PairingRequestCardProps) {
         <div className="flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" />
           <CardTitle className="text-2xl">Submit Pairing Request</CardTitle>
+          <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
+            In Development
+          </span>
         </div>
+
         <CardDescription className="text-base leading-relaxed">
           Submit a request to be paired with a tutor or student. Your request
           will be reviewed and matched based on availability, subject expertise,
@@ -170,7 +173,8 @@ export function PairingRequestCard({ userId }: PairingRequestCardProps) {
           <Button
             type="submit"
             className="w-full"
-            disabled={isSubmitting}
+            // disabled={isSubmitting}
+            disabled={true}
             size="lg"
           >
             {isSubmitting ? (

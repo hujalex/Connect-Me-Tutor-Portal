@@ -135,7 +135,7 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
             <TableHead>Mark Status</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Title</TableHead>
-            <TableHead>Student</TableHead>
+            <TableHead>Tutor</TableHead>
             <TableHead>Meeting</TableHead>
           </TableRow>
         </TableHeader>
@@ -176,11 +176,11 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
               </TableCell>
               <TableCell>{formatSessionDate(session.date)}</TableCell>
               <TableCell className="font-medium">
-                Tutoring Session with {session.student?.firstName}{" "}
-                {session.student?.lastName}
+                Tutoring Session with {session.tutor?.firstName}{" "}
+                {session.tutor?.lastName}
               </TableCell>
               <TableCell>
-                {session.student?.firstName} {session.student?.lastName}
+                {session.tutor?.firstName} {session.tutor?.lastName}
               </TableCell>
               <TableCell>
                 {session.environment !== "In-Person" && (

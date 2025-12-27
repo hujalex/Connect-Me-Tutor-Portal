@@ -55,11 +55,13 @@ import {
   reactivateUser,
   getEvents,
   getEventsWithTutorMonth,
-  deleteUser,
   getUserFromId,
   editUser,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
+import {
+  deleteUser
+} from "@/lib/actions/auth.server.actions"
 import { addUser } from "@/lib/actions/auth.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -310,7 +312,7 @@ const TutorList = () => {
     } catch (error) {
       const err = error as Error;
       console.error("Error adding tutor:", error);
-      toast.error(`Failed to add tutor ${err.message}`);
+      toast.error(`Failed to add tutor: ${err.message}`);
     } finally {
       setAddingTutor(false);
     }

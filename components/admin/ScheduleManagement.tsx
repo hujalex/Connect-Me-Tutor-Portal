@@ -50,8 +50,6 @@ import { Label } from "@/components/ui/label";
 import { Circle, Loader2, ChevronDown, Check } from "lucide-react";
 import {
   getAllSessions,
-  rescheduleSession,
-  getAllEnrollments,
   updateSession,
   getMeetings,
   getAllProfiles,
@@ -429,7 +427,6 @@ const Schedule = () => {
     try {
       await getEnrollmentsWithMissingSEF()
       toast.success("Printed to console")
-
     } catch (error) {
       console.error(error);
       toast.error("Please view Dev Console for error")

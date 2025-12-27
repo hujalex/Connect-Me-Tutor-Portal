@@ -1,11 +1,14 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 // import StudentCalendar from "../StudentCalendar";
 import { Input } from "@/components/ui/input";
 import ActiveSessionsTable from "./components/ActiveSessionsTable";
 import CurrentSessionsTable from "./components/CurrentSessionsTable";
 import CompletedSessionsTable from "./components/CompletedSessionsTable";
-import { createClientComponentClient, User } from "@supabase/auth-helpers-nextjs";
+import {
+  createClientComponentClient,
+  User,
+} from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
 import {
   updateSession,
@@ -32,10 +35,9 @@ import {
 import { SelectSeparator } from "@radix-ui/react-select";
 import { Description } from "@radix-ui/react-dialog";
 import { getStudentSessions } from "@/lib/actions/student.actions";
+import { useProfile } from "@/contexts/profileContext";
 
-
-
-const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
+const StudentDashboard: React.FC<{ user: User | null }> = ({ user }) => {
   const supabase = createClientComponentClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -46,7 +48,7 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
   const [filteredPastSessions, setFilteredPastSessions] = useState<Session[]>(
     []
   );
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { profile, setProfile } = useProfile();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,77 +66,18 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
   const [notes, setNotes] = useState<string>("");
   const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
 
-  useEffect(() => {
-    return () => {
-      getUserData();
-      fetchMeetings();
-    }
-  }, []);
-
-  const fetchMeetings = async () => {
-    try {
-      const fetchedMeetings = await getMeetings();
-      if (fetchedMeetings) {
-        setMeetings(fetchedMeetings);
-      }
-    } catch (error) {
-      console.error("Failed to fetch meetings:", error);
-      toast.error("Failed to load meetings");
-    }
-  };
-
-  const getUserData = async () => {
+  const getUserData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // const {
-      //   data: { user },
-      //   error: userError,
-      // } = await supabase.auth.getUser();
+      // if (!user) throw new Error("No user found");
 
-      // if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
+      // const profileData = await getProfile(user.id);
+      // if (!profileData) throw new Error("No profile found");
 
-      const profileData = await getProfile(user.id);
-      if (!profileData) throw new Error("No profile found");
-
-      setProfile(profileData);
-
-      const currentSessionData = await getStudentSessions(
-        profileData.id,
-        startOfWeek(new Date()).toISOString(),
-        endOfWeek(new Date()).toISOString(),
-        undefined,
-        "date",
-        false
-      );
-
-
-      setCurrentSessions(currentSessionData);
-
-      const activeSessionData = await getStudentSessions(
-        profileData.id,
-        undefined,
-        undefined,
-        "Active",
-        "date",
-        false
-      );
-
-      setSessions(activeSessionData);
-      setFilteredSessions(activeSessionData);
-
-      const pastSessionData = await getStudentSessions(
-        profileData.id,
-        undefined,
-        undefined,
-        ["Complete", "Cancelled"],
-        "date",
-        false
-      );
-      setPastSessions(pastSessionData);
-      setFilteredPastSessions(pastSessionData);
+      // setProfile(profileData);
+      if (!profile) return;
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError(
@@ -143,7 +86,75 @@ const StudentDashboard: React.FC<{user: User | null}> = ({user}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      if (profile) {
+        const [
+          currentSessionData,
+          activeSessionData,
+          pastSessionData,
+          fetchedMeetings,
+        ] = await Promise.all([
+          getStudentSessions(
+            profile.id,
+            startOfWeek(new Date()).toISOString(),
+            endOfWeek(new Date()).toISOString(),
+            undefined,
+            "date",
+            false
+          ),
+          getStudentSessions(
+            profile.id,
+            undefined,
+            undefined,
+            "Active",
+            "date",
+            false
+          ),
+          getStudentSessions(
+            profile.id,
+            undefined,
+            undefined,
+            ["Complete", "Cancelled"],
+            "date",
+            false
+          ),
+          getMeetings(),
+        ]);
+        if (isMounted) {
+          setCurrentSessions(currentSessionData);
+          setSessions(activeSessionData);
+          setFilteredSessions(activeSessionData);
+          setPastSessions(pastSessionData);
+          setFilteredPastSessions(pastSessionData);
+
+          if (fetchedMeetings) setMeetings(fetchedMeetings);
+        }
+      }
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [profile]);
+
+  // const fetchMeetings = async () => {
+  //   try {
+
+  //     const fetchedMeetings = await getMeetings();
+  //     if (fetchedMeetings) {
+  //       setMeetings(fetchedMeetings);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch meetings:", error);
+  //     toast.error("Failed to load meetings");
+  //   }
+  // };
 
   const fetchAllSessionsFromSchedule = async () => {
     try {

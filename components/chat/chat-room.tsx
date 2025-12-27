@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
-import { useProfile } from "@/hooks/auth";
+import { useFetchProfile } from "@/hooks/auth";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEnrollment } from "@/hooks/enrollments";
 import { fetchAdmins } from "@/lib/actions/chat.actions";
@@ -79,7 +79,7 @@ export function ChatRoom({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
-  const { profile } = useProfile();
+  const { profile } = useFetchProfile();
 
   // Computed loading states
   const isLoading = isLoadingMessages || isLoadingUsers;

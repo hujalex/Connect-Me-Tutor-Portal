@@ -61,10 +61,6 @@ const AdminDashboard = () => {
 
 
   useEffect(() => {
-  
-  }, [supabase.auth]);
-
-  useEffect(() => {
     const filtered = sessions.filter((session) => {
       const searchTerm = filterValue.toLowerCase().trim();
 
