@@ -32,7 +32,6 @@ import {
 } from "date-fns";
 import { SelectSeparator } from "@radix-ui/react-select";
 import { Description } from "@radix-ui/react-dialog";
-import Link from "next/link";
 
 const TutorDashboard = () => {
   const supabase = createClientComponentClient();
@@ -62,20 +61,6 @@ const TutorDashboard = () => {
 
   const [notes, setNotes] = useState<string>("");
   const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
-
-  const grade8Topics = [
-    { title: "Linear Equations", slug: "linear-equations" },
-    { title: "Systems of Equations", slug: "systems" },
-    { title: "Functions", slug: "functions" },
-    { title: "Geometry", slug: "geometry" },
-    { title: "Pythagorean Theorem", slug: "pythagorean" },
-    { title: "Volume & Surface Area", slug: "volume-surface-area" },
-    { title: "Rational Numbers", slug: "rational-numbers" },
-    { title: "Exponents & Radicals", slug: "exponents-radicals" },
-    { title: "Probability & Statistics", slug: "probability-statistics" },
-    { title: "Slope & Graphing", slug: "slope-graphing" },
-    { title: "Transformations", slug: "transformations" },
-  ];
 
   useEffect(() => {
     getUserData();
@@ -425,24 +410,6 @@ const TutorDashboard = () => {
           </div>
         </div>
       </div>{" "}
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Worksheets</h1>
-
-        <div className="flex space-x-6 mb-6">
-          {grade8Topics.map((t) => (
-            <Link key={t.slug} href={`/dashboard/worksheets?topic=${t.slug}`}>
-              <div className="w-48 cursor-pointer">
-                <Card className="w-48">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-md text-center">{t.title}</CardTitle>
-                  </CardHeader>
-                </Card>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">Active Sessions</h1>
 
