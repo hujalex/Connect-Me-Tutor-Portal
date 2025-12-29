@@ -53,12 +53,14 @@ import {
   getAllProfiles,
   deactivateUser,
   reactivateUser,
-  getEvents,
   getEventsWithTutorMonth,
   getUserFromId,
   editUser,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
+import {
+  getEvents
+} from "@/lib/actions/event.server.actions"
 import {
   deleteUser
 } from "@/lib/actions/auth.server.actions"

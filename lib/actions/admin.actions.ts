@@ -1184,52 +1184,7 @@ export const removeEnrollment = async (enrollmentId: string) => {
   }
 };
 
-/* EVENTS */
-export async function getEvents(tutorId: string): Promise<Event[]> {
-  try {
-    // Fetch meeting details from Supabase
-    const { data, error } = await supabase
-      .from("Events")
-      .select(
-        `
-        id,
-        created_at,
-        date,
-        summary,
-        tutor_id,
-        hours
-      `
-      )
-      .eq("tutor_id", tutorId);
 
-    // Check for errors and log them
-    if (error) {
-      console.error("Error fetching event details:", error.message);
-      return []; // Returning null here is valid since the function returns Promise<Notification[] | null>
-    }
-
-    // Check if data exists
-    if (!data) {
-      return []; // Valid return
-    }
-
-    // Mapping the fetched data to the Notification object
-    const events: Event[] = data.map((event: any) => ({
-      createdAt: event.created_at,
-      id: event.id,
-      summary: event.summary,
-      tutorId: event.tutor_id,
-      date: event.date,
-      hours: event.hours,
-      type: event.type,
-    }));
-
-    return events; // Return the array of notifications
-  } catch (error) {
-    console.error("Unexpected error in getMeeting:", error);
-    return [];
-  }
-}
 
 export async function getEventsWithTutorMonth(
   tutorId: string,
