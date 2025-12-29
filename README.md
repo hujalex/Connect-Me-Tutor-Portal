@@ -19,7 +19,6 @@ Our portal allows users to have multiple profiles under one email in order to ac
 - **Sessions Schedule** - Full schedule of all Connect Me's tutoring sessions
 - **Tutors Dashboard** - Comprehensive user interface to navigate through Connect Me's tutors
 - **Students Dashboard** - Comprehensive user interface to navigate through Connect Me's students
-- **Students Dashboard**
 - **Volunteer Hours** Dashboard to view volunteering hours for each user, by each week, month, and all time
 
 ## In Development
