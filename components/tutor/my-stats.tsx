@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
-import { getEvents } from "@/lib/actions/admin.actions";
+import { getEvents } from "@/lib/actions/event.server.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getProfile } from "@/lib/actions/user.actions";
 import {
@@ -18,21 +18,11 @@ import { Session, Event, Enrollment } from "@/types";
 import { addDays, subDays } from "date-fns";
 import {
   getAllEventDetailsForTutor,
-  getAllEventHours,
-  getAllEventHoursBatchWithType,
-  getAllSessionHoursWithStudent,
-  getEventHoursRange,
   getSessionHoursByStudent,
-  getSessionHoursRange,
-  getSessionHoursRangeWithStudent,
 } from "@/lib/actions/hours.actions";
-import { get } from "http";
-import { StaticGenerationAsyncStorage } from "next/dist/client/components/static-generation-async-storage.external";
 import toast from "react-hot-toast";
-import { TabletSmartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { table } from "console";
 
 interface EnrollmentDetails {
   studentId: string;
@@ -50,13 +40,7 @@ interface EventDetails {
 
 const Stats = () => {
   const supabase = createClientComponentClient();
-  const [totalHours, setTotalHours] = useState<number>(0);
-  const [allSessions, setAllSessions] = useState<Session[]>([]);
-  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [sessionHours, setSessionHours] = useState<Map<string, number>>(
-    new Map()
-  );
   const [enrollmentDetails, setEnrollmentDetails] = useState<
     EnrollmentDetails[]
   >([]);

@@ -40,11 +40,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   getAllProfiles,
-  getEvents,
   getEventsWithTutorMonth,
   createEvent,
   removeEvent,
 } from "@/lib/actions/admin.actions";
+import { getEvents } from "@/lib/actions/event.client.actions"
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { Profile, Session, Event } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
@@ -739,7 +739,7 @@ const HoursManager = () => {
                         try {
                           // Show loading state
                           toast.loading("Loading events...");
-                          const events = await getEvents(value);
+                          const events = await getEvents(value, {field: "date", ascending: false});
                           setEventsToRemove(events || []);
                           toast.dismiss();
                         } catch (error) {
