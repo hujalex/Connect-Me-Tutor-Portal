@@ -2,7 +2,8 @@
 
 import { PairingLog, PairingRequest, SharedPairing } from "@/types/pairing";
 import { createClient } from "@supabase/supabase-js";
-import { getProfile, getProfileRole, supabase } from "./user.actions";
+import { getProfile, getProfileRole } from "./user.actions";
+import { supabase } from "../supabase/client";
 import { getAccountEnrollments } from "./enrollments.action";
 import { Table } from "../supabase/tables";
 import { PairingLogSchemaType } from "../pairing/types";
@@ -363,7 +364,7 @@ export const getAutomaticEnrollment = async (
         tutor: tutor,
         availability: [autoAvailability.availability],
         meetingId: autoAvailability.meeting.meetingId,
-        summerPaused: false,
+        paused: false,
         duration: 1,
         startDate: new Date().toISOString(),
         endDate: null,

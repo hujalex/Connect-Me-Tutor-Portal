@@ -47,6 +47,8 @@ export function PairingInterface() {
 
   const { profile } = useFetchProfile();
 
+  if (!profile) return; // ! Double Check this
+
   const [matchedPairings, setMatchedPairings] = useState<
     IncomingPairingMatch[]
   >([]);
@@ -68,7 +70,6 @@ export function PairingInterface() {
     matchId: string,
     status: "accepted" | "rejected"
   ) => {
-
 
     const promise = updatePairingMatchStatus(profile.id, matchId, status);
 
