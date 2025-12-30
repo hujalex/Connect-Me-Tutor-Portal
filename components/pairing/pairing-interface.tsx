@@ -47,8 +47,6 @@ export function PairingInterface() {
 
   const { profile } = useFetchProfile();
 
-  if (!profile) return; // ! Double Check this
-
   const [matchedPairings, setMatchedPairings] = useState<
     IncomingPairingMatch[]
   >([]);

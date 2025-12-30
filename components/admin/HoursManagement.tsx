@@ -540,11 +540,11 @@ const HoursManager = () => {
     try {
       // Show loading state
       toast.loading("Loading events...");
-      const events = useEvents(value, {
+      const events = await getEvents(value, {
         field: "date",
         ascending: false,
       });
-      setEventsToRemove(events.data || []);
+      setEventsToRemove(events || []);
       toast.dismiss();
     } catch (error) {
       console.error("Failed to fetch events:", error);
