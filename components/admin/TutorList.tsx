@@ -152,7 +152,7 @@ const TutorList = ({ initialTutors }: any) => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = () => {
       setTutors(initialTutors)
       setFilteredTutors(initialTutors)
     }

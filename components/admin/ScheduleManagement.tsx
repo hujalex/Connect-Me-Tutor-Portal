@@ -82,7 +82,7 @@ import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollments.action";
 
-const Schedule = () => {
+const Schedule = ({ initialSessions }: any) => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [weekEnd, setWeekEnd] = useState("");
   const [weekStart, setWeekStart] = useState("");
@@ -182,6 +182,13 @@ const Schedule = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchData = () => {
+
+    }
+    fetchData()
+  }, [])
 
   useEffect(() => {
     const currWeekStart = startOfWeek(currentWeek).toISOString();

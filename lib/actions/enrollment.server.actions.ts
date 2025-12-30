@@ -1,6 +1,7 @@
 import { Enrollment } from "@/types";
 import { createClient } from "../supabase/server";
 import { Table } from "../supabase/tables";
+import { tableToInterfaceProfiles } from "../type-utils";
 
 /* ENROLLMENTS */
 export async function getAllActiveEnrollmentsServer(
@@ -63,5 +64,62 @@ export async function getAllActiveEnrollmentsServer(
   } catch (error) {
     console.error("Error getting needed enrollment information:", error);
     throw error;
+  }
+}
+
+export async function getAllEnrollments(): Promise<Enrollment[] | null> {
+  try {
+    const supabase = await createClient()
+    // Fetch meeting details from Supabase
+    const { data, error } = await supabase.from(Table.Enrollments).select(`
+        id,
+        created_at,
+        summary,
+        student_id,
+        tutor_id,
+        start_date,
+        end_date,
+        availability,
+        meetingId,
+        paused,
+        duration,
+        frequency,
+        student:Profiles!student_id(*),
+        tutor:Profiles!tutor_id(*)
+      `);
+
+    // Check for errors and log them
+    if (error) {
+      console.error("Error fetching event details:", error.message);
+      return null; // Returning null here is valid since the function returns Promise<Notification[] | null>
+    }
+
+    // Check if data exists
+    if (!data) {
+      return null; // Valid return
+    }
+
+    // Mapping the fetched data to the Notification object
+    const enrollments: Enrollment[] = data
+      .filter((enrollment) => enrollment.student && enrollment.tutor)
+      .map((enrollment: any) => ({
+        createdAt: enrollment.created_at,
+        id: enrollment.id,
+        summary: enrollment.summary,
+        student: tableToInterfaceProfiles(enrollment.student),
+        tutor: tableToInterfaceProfiles(enrollment.tutor),
+        startDate: enrollment.start_date,
+        endDate: enrollment.end_date,
+        availability: enrollment.availability,
+        meetingId: enrollment.meetingId,
+        paused: enrollment.paused,
+        duration: enrollment.duration,
+        frequency: enrollment.frequency,
+      }));
+
+    return enrollments; // Return the array of enrollments
+  } catch (error) {
+    console.error("Unexpected error in getMeeting:", error);
+    return null;
   }
 }

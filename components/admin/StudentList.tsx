@@ -179,7 +179,7 @@ const StudentList = ({ initialStudents }: any) =>
     };
 
     useEffect(() => {
-      const fetchData = async () => {
+      const fetchData = () => {
         setStudents(initialStudents)
         setFilteredStudents(initialStudents)
       }
