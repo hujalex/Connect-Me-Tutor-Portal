@@ -487,6 +487,87 @@ export async function getAllSessionsServer(
     );
 
     return sessions;
+  } catch (error) {
+    console.error("Error fetching sessions", error);
+    return [];
+  }
+}
+
+export async function getAllSessions(
+  startDate?: string,
+  endDate?: string,
+  options?: {
+    orderBy?: {
+      field: string;
+      ascending: boolean;
+    };
+  }
+): Promise<Session[]> {
+  try {
+    const supabase = await createClient();
+
+    let query = supabase.from(Table.Sessions).select(`
+      id,
+      enrollment_id,
+      created_at,
+      environment,
+      student_id,
+      tutor_id,
+      date,
+      summary,
+      meeting_id,
+      status,
+      is_question_or_concern,
+      is_first_session,
+      session_exit_form,
+      duration,
+      meetings:Meetings!meeting_id(*),
+      student:Profiles!student_id(*),
+      tutor:Profiles!tutor_id(*)
+    `);
+
+    if (startDate) {
+      query = query.gte("date", startDate);
+    }
+    if (endDate) {
+      query = query.lte("date", endDate);
+    }
+
+    if (options && options.orderBy) {
+      query = query.order(options.orderBy.field, {
+        ascending: options.orderBy.ascending,
+      });
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching student sessions:", error.message);
+      throw error;
+    }
+
+    const sessions: Session[] = data
+      .filter((session: any) => session.student && session.tutor)
+      .map((session: any) => ({
+        id: session.id,
+        enrollmentId: session.enrollment_id,
+        createdAt: session.created_at,
+        environment: session.environment,
+        date: session.date,
+        summary: session.summary,
+        // meetingId: session.meeting_id,
+        // meeting: await getMeeting(session.meeting_id),
+        meeting: session.meetings,
+        student: tableToInterfaceProfiles(session.student),
+        tutor: tableToInterfaceProfiles(session.tutor),
+        // student: await getProfileWithProfileId(session.student_id),
+        // tutor: await getProfileWithProfileId(session.tutor_id),
+        status: session.status,
+        session_exit_form: session.session_exit_form,
+        isQuestionOrConcern: Boolean(session.is_question_or_concern),
+        isFirstSession: Boolean(session.is_first_session),
+        duration: session.duration,
+      }));
 
     return sessions;
   } catch (error) {

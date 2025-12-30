@@ -185,7 +185,7 @@ const Schedule = ({ initialSessions }: any) => {
 
   useEffect(() => {
     const fetchData = () => {
-
+      
     }
     fetchData()
   }, [])
