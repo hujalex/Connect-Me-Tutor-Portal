@@ -44,7 +44,7 @@ import {
   createEvent,
   removeEvent,
 } from "@/lib/actions/admin.actions";
-import { getEvents } from "@/lib/actions/event.client.actions"
+import { getEvents } from "@/lib/actions/event.client.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { Profile, Session, Event } from "@/types";
 import { toast, Toaster } from "react-hot-toast";
@@ -68,6 +68,7 @@ import {
 import { resourceLimits } from "worker_threads";
 import { number } from "zod";
 import { Loader2 } from "lucide-react";
+import { useEvents } from "@/hooks/events";
 
 const HoursManager = () => {
   const [tutors, setTutors] = useState<Profile[]>([]);
@@ -535,6 +536,22 @@ const HoursManager = () => {
     } catch (error) {}
   };
 
+  const handleFetchEvents = async (value: string) => {
+    try {
+      // Show loading state
+      toast.loading("Loading events...");
+      const events = useEvents(value, {
+        field: "date",
+        ascending: false,
+      });
+      setEventsToRemove(events.data || []);
+      toast.dismiss();
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+      toast.error("Failed to load events");
+    }
+  };
+
   // Sample data to test the basic PDF
   const reportData = {
     selectedDate: selectedDate,
@@ -735,18 +752,7 @@ const HoursManager = () => {
                           label: `${tutor.firstName} ${tutor.lastName} - ${tutor.email}`,
                         }))}
                       category="tutor"
-                      onValueChange={async (value) => {
-                        try {
-                          // Show loading state
-                          toast.loading("Loading events...");
-                          const events = await getEvents(value, {field: "date", ascending: false});
-                          setEventsToRemove(events || []);
-                          toast.dismiss();
-                        } catch (error) {
-                          console.error("Failed to fetch events:", error);
-                          toast.error("Failed to load events");
-                        }
-                      }}
+                      onValueChange={(value) => handleFetchEvents(value)}
                     />
                     {eventsToRemove && (
                       <Select

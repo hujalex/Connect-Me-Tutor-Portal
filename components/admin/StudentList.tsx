@@ -81,7 +81,7 @@ const getOrdinalSuffix = (num: number): string => {
   return "th";
 };
 
-const StudentList = () =>
+const StudentList = ({ initialStudents }: any) =>
   //   {
   //   isOpen,
   //   onOpenChange,
@@ -179,8 +179,12 @@ const StudentList = () =>
     };
 
     useEffect(() => {
-      getStudentData();
-    }, [supabase.auth]);
+      const fetchData = async () => {
+        setStudents(initialStudents)
+        setFilteredStudents(initialStudents)
+      }
+      fetchData()
+    }, []);
 
     useEffect(() => {
       const filtered = students.filter((student) => {

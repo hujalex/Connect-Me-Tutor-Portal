@@ -87,11 +87,10 @@ import { Turret_Road } from "next/font/google";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { UserAvailabilities } from "../ui/UserAvailabilities";
 
-const TutorList = () => {
+const TutorList = ({ initialTutors }: any) => {
   const supabase = createClientComponentClient();
   const [tutors, setTutors] = useState<Profile[]>([]);
   const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,18 +136,6 @@ const TutorList = () => {
       setLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
-
-      const profileData = await getProfile(user.id);
-      if (!profileData) throw new Error("No profile found");
-
-      setProfile(profileData);
-
       const tutorsData = await getAllProfiles("Tutor", "created_at", false);
       if (!tutorsData) throw new Error("No tutors found");
 
@@ -165,8 +152,12 @@ const TutorList = () => {
   };
 
   useEffect(() => {
-    getTutorData();
-  }, [supabase.auth]);
+    const fetchData = async () => {
+      setTutors(initialTutors)
+      setFilteredTutors(initialTutors)
+    }
+    fetchData()
+  }, []);
 
   useEffect(() => {
     const filtered = tutors.filter((tutor) => {

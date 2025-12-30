@@ -8,7 +8,6 @@ export async function getEvents(
   tutorId: string,
   orderBy?: { field: string; ascending: boolean }
 ): Promise<Event[]> {
-  try {
 
     let query = supabase
       .from("Events")
@@ -52,8 +51,4 @@ export async function getEvents(
     }));
 
     return events; // Return the array of notifications
-  } catch (error) {
-    console.error("Unexpected error in getMeeting:", error);
-    throw error
-  }
 }
