@@ -96,12 +96,14 @@ import { profile } from "console";
 import AvailabilityForm2 from "../ui/availability-form-2";
 import { checkAvailableMeetingForEnrollments } from "@/lib/actions/meeting.server.actions";
 import { isDeepStrictEqual } from "util";
+import { useProfile } from "@/contexts/profileContext";
 // import EnrollmentForm from "./components/EnrollmentForm";
 // import Availability from "@/components/student/AvailabilityFormat";
 
-const EnrollmentList = () => {
+const EnrollmentList = ({ initialEnrollments, initialProfile, initialMeetings, initialStudents }: any) => {
   const supabase = createClientComponentClient();
-  const [userData, setUserData] = useState<Profile | null>(null);
+  const { profile: userData, setProfile: setUserData } = useProfile();
+  // const [userData, setUserData] = useState<Profile | null>(null);
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -157,10 +159,14 @@ const EnrollmentList = () => {
   const router = useRouter();
 
   useEffect(() => {
-    fetchEnrollments();
-    fetchProfiles();
-    fetchMeetings();
-  }, [supabase.auth]);
+    setEnrollments(initialEnrollments)
+    setFilteredEnrollments(initialEnrollments)
+    setUserData(initialProfile)
+    setMeetings(initialMeetings)
+    setStudents(initialStudents)
+    setLoading(false)
+    if (userData) setTutors([userData])
+  }, []);
 
   useEffect(() => {
     const filtered = enrollments.filter((enrollment) => {
@@ -298,7 +304,6 @@ const EnrollmentList = () => {
     Object.entries(updatedMeetingAvailability).forEach(
       ([meetingId, isAvailable]) => {
         const meetingName = meetings.find((m) => m.id === meetingId)?.name;
-    
       }
     );
   };
@@ -307,9 +312,8 @@ const EnrollmentList = () => {
     enrollment: Omit<Enrollment, "id" | "createdAt">
   ) => {
     setIsCheckingMeetingAvailability(true);
-    const otherEnrollments: Enrollment[] | null = allEnrollments.length > 0 
-      ? allEnrollments
-      : await getAllEnrollments();
+    const otherEnrollments: Enrollment[] | null =
+      allEnrollments.length > 0 ? allEnrollments : await getAllEnrollments();
     if (otherEnrollments) {
       const updatedMeetingAvailability =
         await checkAvailableMeetingForEnrollments(
@@ -318,7 +322,7 @@ const EnrollmentList = () => {
           meetings
         );
       setMeetingAvailability(updatedMeetingAvailability);
-      setAllEnrollments(otherEnrollments)
+      setAllEnrollments(otherEnrollments);
       setIsCheckingMeetingAvailability(false);
     }
   };
@@ -373,17 +377,9 @@ const EnrollmentList = () => {
       setLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
+      if (!userData) return;
 
-      const profileData = await getProfile(user.id);
-      if (!profileData) throw new Error("No profile found");
-
-      const enrollmentsData = await getEnrollments(profileData.id);
+      const enrollmentsData = await getEnrollments(userData.id);
       if (!enrollmentsData) throw new Error("No enrollments found");
 
       const sortedEnrollments = enrollmentsData.sort(
@@ -391,7 +387,6 @@ const EnrollmentList = () => {
           new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
       );
 
-      setUserData(profileData);
       setEnrollments(sortedEnrollments);
       setFilteredEnrollments(sortedEnrollments);
     } catch (error) {
@@ -405,29 +400,6 @@ const EnrollmentList = () => {
     }
   };
 
-  const fetchProfiles = async () => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
-
-      const profileData = await getProfile(user.id);
-      if (!profileData) throw new Error("No profile found");
-
-      const studentsData = await getTutorStudents(profileData.id);
-      if (studentsData)
-        setStudents(studentsData.filter((s) => s.status === "Active"));
-      if (profileData) setTutors([profileData]);
-    } catch (error) {
-      console.error(
-        "Error fetching profiles in EnrollmentsMangement.tsx:",
-        error
-      );
-    }
-  };
 
   const totalPages = Math.ceil(filteredEnrollments.length / rowsPerPage);
 
@@ -966,7 +938,7 @@ const EnrollmentList = () => {
                   <TableCell className="colspan-[40px]">
                     <AvailabilityFormat
                       availability={enrollment.availability}
-                      card = {true}
+                      card={false}
                     />{" "}
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
@@ -1151,7 +1123,7 @@ const EnrollmentList = () => {
           <DialogHeader>
             <DialogTitle>Edit Enrollment</DialogTitle>
           </DialogHeader>
-          <ScrollArea className = "max-h-[calc(80vh-120px)] pr-4">
+          <ScrollArea className="max-h-[calc(80vh-120px)] pr-4">
             {" "}
             {selectedEnrollment && (
               <div className="grid gap-4 py-4">

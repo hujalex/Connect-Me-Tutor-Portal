@@ -5,7 +5,7 @@ import { getAllProfiles } from "@/lib/actions/profile.server.actions";
 import { getAllSessions } from "@/lib/actions/session.server.actions";
 import { endOfWeek, startOfWeek } from "date-fns";
 
-export default async function MyStudentsPage() {
+export default async function MySchedulePage() {
   const currentWeek = new Date();
   const currWeekStart = startOfWeek(currentWeek).toISOString();
   const currWeekEnd = endOfWeek(currentWeek).toISOString();
@@ -21,6 +21,9 @@ export default async function MyStudentsPage() {
   return (
     <main>
       <ScheduleManagement
+        initialCurrentWeek = {currentWeek}
+        initialCurrWeekStart = {currWeekStart}
+        initialCurrWeekEnd = {currWeekEnd}
         initialMeetings={meetings}
         initialStudents={students}
         initialTutors={tutors}

@@ -3,7 +3,7 @@ import { getAllEnrollments } from "@/lib/actions/enrollment.server.actions";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
 import { getAllProfiles } from "@/lib/actions/profile.server.actions";
 
-export default async function MyStudentsPage() {
+export default async function MyEnrollmentsPage() {
   const [enrollments, meetings, students, tutors] = await Promise.all([
     getAllEnrollments(),
     getMeetings(),
