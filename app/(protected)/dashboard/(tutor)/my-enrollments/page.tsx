@@ -4,20 +4,20 @@ import {
   getEnrollments,
 } from "@/lib/actions/enrollment.server.actions";
 import { cachedGetUser } from "@/lib/actions/user.server.actions";
-import { cachedGetProfile, getTutorStudents } from "@/lib/actions/profile.server.actions";
+import {
+  cachedGetProfile,
+  getTutorStudents,
+} from "@/lib/actions/profile.server.actions";
 import { createClient } from "@/lib/supabase/server";
 import { Profile } from "@/types";
 import { profile } from "console";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
 
 const fetchUserProfile = async () => {
-  const res = await cachedGetUser();
-  if (res.error) throw new Error(res.error.message);
-  if (!res.data) throw new Error("No user found");
-
-  const profileData = await cachedGetProfile(res.data.user.id);
+  const user = await cachedGetUser();
+  const profileData = await cachedGetProfile(user.id);
   if (!profileData) throw new Error("No profile found");
-  return profileData
+  return profileData;
 };
 
 const fetchEnrollments = async (profileData: Profile) => {
@@ -31,13 +31,15 @@ const fetchEnrollments = async (profileData: Profile) => {
 };
 
 export default async function MyEnrollmentsPage() {
-  const profileData = await fetchUserProfile()
+  const profileData = await fetchUserProfile();
 
   const [sortedEnrollments, meetings, students] = await Promise.all([
     fetchEnrollments(profileData),
     getMeetings(),
-    getTutorStudents(profileData.id).then((s) => s?.filter((s) => s.status === 'Active'))
-  ])
+    getTutorStudents(profileData.id).then((s) =>
+      s?.filter((s) => s.status === "Active")
+    ),
+  ]);
 
   return (
     <main>

@@ -160,6 +160,7 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
       setMeetings(initialMeetings)
     }
     fetchData()
+    setLoading(false)
   }, []);
 
   useEffect(() => {

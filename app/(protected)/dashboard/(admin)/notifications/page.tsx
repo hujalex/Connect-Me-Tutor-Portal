@@ -1,6 +1,6 @@
 import NotificationCenter from '@/components/admin/NotificationCenter'
 
-export default function MyStudentsPage() {
+export default async function MyStudentsPage() {
 
     return (
         <main>

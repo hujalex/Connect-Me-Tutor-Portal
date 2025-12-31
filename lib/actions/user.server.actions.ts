@@ -19,8 +19,10 @@ export async function getUserFromAction() {
 
 
 export const getUser = async () => {
-   const supabase = await createClient();
-  return await supabase.auth.getUser();
+  const supabase = await createClient();
+  const {data, error} = await supabase.auth.getUser()
+  if (error) throw error;
+  return data.user;
 } 
 
 export const cachedGetUser = cache(getUser)

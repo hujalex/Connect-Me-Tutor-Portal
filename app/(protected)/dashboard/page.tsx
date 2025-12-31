@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/contexts/profileContext';
 
-const Dashboard = () => {
+const Dashboard = async () => {
   const { profile, setProfile } = useProfile()
   const router = useRouter();
 

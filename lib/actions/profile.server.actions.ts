@@ -214,7 +214,7 @@ export async function getProfile(userId: string) {
 
 export const cachedGetProfile = cache(getProfile)
 
-export async function getTutorStudents(tutorId: string) {
+export const getTutorStudents = cache(async (tutorId: string) => {
   try {
     const supabase = await createClient()
     const { data: pairings, error: pairingsError } = await supabase
@@ -269,4 +269,4 @@ export async function getTutorStudents(tutorId: string) {
     console.error("Unexpected error in getProfile:", error);
     return null;
   }
-}
+})

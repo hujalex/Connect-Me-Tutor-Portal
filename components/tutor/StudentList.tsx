@@ -36,12 +36,13 @@ import { Profile } from "@/types";
 import { StudentAnnouncementsRoomId } from "@/constants/chat";
 import { UserAvailabilities } from "../ui/UserAvailabilities";
 import DeletePairingForm from "./components/DeletePairingForm";
+import { useProfile } from "@/contexts/profileContext";
 
-const StudentList = () => {
+const StudentList = ({ initialStudents }: any) => {
   const supabase = createClientComponentClient();
+  const { profile, setProfile } = useProfile();
   const [students, setStudents] = useState<Profile[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Profile[]>([]); // New state for filtered students
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,39 +50,8 @@ const StudentList = () => {
   const [filterValue, setFilterValue] = useState("");
 
   useEffect(() => {
-    const getTutorData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError) throw new Error(userError.message);
-        if (!user) throw new Error("No user found");
-
-        const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error("No profile found");
-
-        setProfile(profileData);
-
-        const studentsData = await getTutorStudents(profileData.id);
-        if (!studentsData) throw new Error("No students found");
-
-        setStudents(studentsData);
-        setFilteredStudents(studentsData); // Initialize filteredStudents
-      } catch (error) {
-        console.error("Error fetching tutor data:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getTutorData();
+    setStudents(initialStudents);
+    setFilteredStudents(initialStudents);
   }, [supabase.auth]);
 
   useEffect(() => {
