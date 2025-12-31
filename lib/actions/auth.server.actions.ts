@@ -63,7 +63,7 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
       },
     });
 
-  if (authError) throw new Error(authError.message);
+  if (authError) throw new Error("Unable to invite user " + authError.message);
   return authData.user.id;
 };
 
