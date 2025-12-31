@@ -1,5 +1,5 @@
 import EnrollmentsManager from "@/components/admin/EnrollmentsManagement";
-import { SkeletonCard } from "@/components/ui/skeleton";
+import SkeletonTable, { SkeletonCard } from "@/components/ui/skeleton";
 import { getAllEnrollments } from "@/lib/actions/enrollment.server.actions";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
 import { getAllProfiles } from "@/lib/actions/profile.server.actions";
@@ -31,7 +31,7 @@ export default function MyEnrollmentsPage() {
   return (
     <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
-      <Suspense fallback = {<SkeletonCard />}>
+      <Suspense fallback = {<SkeletonTable />}>
         <MyEnrollmentsData/>
       </Suspense>
     </main>

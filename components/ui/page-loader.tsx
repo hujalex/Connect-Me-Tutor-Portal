@@ -5,9 +5,12 @@ interface PageLoaderProps {
 }
 
 const PageLoader = ({ pageName }: PageLoaderProps) => {
-  <div className="text-center py-10">
-    <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
-    <p className="mt-4 text-gray-600">Loading {pageName}...</p>
-  </div>;
+  return (
+    <div className="text-center py-10">
+      <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
+      <p className="mt-4 text-gray-600">Loading {pageName}...</p>
+    </div>
+  );
 };
+
 export { PageLoader };

@@ -1,5 +1,5 @@
 import StudentList from "@/components/admin/StudentList";
-import { SkeletonCard } from "@/components/ui/skeleton";
+import SkeletonTable, { SkeletonCard } from "@/components/ui/skeleton";
 import { getAllProfiles } from "@/lib/actions/profile.server.actions";
 import { Suspense } from "react";
 
@@ -16,7 +16,7 @@ export default async function MyStudentsPage() {
 
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
-          <Suspense fallback = {<SkeletonCard />}>
+          <Suspense fallback = {<SkeletonTable />}>
             <MyStudentsData />
           </Suspense>
         </div>
