@@ -142,8 +142,8 @@ export const checkAvailableMeetingForEnrollments = async (
 };
 
 export async function getMeetings(): Promise<Meeting[] | null> {
+  const supabase = await createClient()
   try {
-    const supabase = await createClient()
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Meetings).select(`
         id,

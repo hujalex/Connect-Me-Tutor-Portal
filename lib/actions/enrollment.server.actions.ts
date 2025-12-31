@@ -69,8 +69,8 @@ export async function getAllActiveEnrollmentsServer(
 }
 
 export async function getAllEnrollments(): Promise<Enrollment[] | null> {
+  const supabase = await createClient()
   try {
-    const supabase = await createClient()
     // Fetch meeting details from Supabase
     const { data, error } = await supabase.from(Table.Enrollments).select(`
         id,
