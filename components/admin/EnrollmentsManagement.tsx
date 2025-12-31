@@ -94,7 +94,12 @@ const durationSchema = z.object({
     .min(0, "Duration must be at least 0"),
 });
 
-const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, initialTutors }: any) => {
+const EnrollmentList = ({
+  initialEnrollments,
+  initialMeetings,
+  initialStudents,
+  initialTutors,
+}: any) => {
   const supabase = createClientComponentClient();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
@@ -153,14 +158,14 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
 
   useEffect(() => {
     const fetchData = () => {
-      setEnrollments(initialEnrollments)
-      setFilteredEnrollments(initialEnrollments)
-      setStudents(initialStudents)
-      setTutors(initialTutors)
-      setMeetings(initialMeetings)
-    }
-    fetchData()
-    setLoading(false)
+      setEnrollments(initialEnrollments);
+      setFilteredEnrollments(initialEnrollments);
+      setStudents(initialStudents);
+      setTutors(initialTutors);
+      setMeetings(initialMeetings);
+    };
+    fetchData();
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -602,8 +607,8 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
   };
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
+    <>
+      {" "}
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
@@ -787,7 +792,10 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
                         availabilityList={availabilityList} // new enrollment by default will not have an availability
                         setAvailabilityList={(availability) => {
                           setAvailabilityList(availability);
-                          setNewEnrollment({ ...newEnrollment, availability });
+                          setNewEnrollment({
+                            ...newEnrollment,
+                            availability,
+                          });
                         }}
                       />
                       <div className="grid grid-cols-[80px_1fr] items-center gap-4">
@@ -1146,7 +1154,6 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
           </div>
         </div>
       </div>
-
       {/* Edit Enrollment Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -1479,7 +1486,6 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
           <Button onClick={handleUpdateEnrollment}>Update Enrollment</Button>
         </DialogContent>
       </Dialog>
-
       {/* Delete Enrollment Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -1505,10 +1511,9 @@ const EnrollmentList = ({ initialEnrollments, initialMeetings, initialStudents, 
           </div>
         </DialogContent>
       </Dialog>
-
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
-    </main>
+    </>
   );
 };
 

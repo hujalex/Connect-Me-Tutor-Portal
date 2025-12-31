@@ -192,20 +192,20 @@ const Schedule = ({
     }
   };
 
-  useEffect(() => {
-    const fetchData = () => {
-      // setCurrentWeek(initialCurrentWeek)
-      setWeekStart(initialCurrWeekStart)
-      setWeekEnd(initialCurrWeekEnd)
-      setSessions(initialSessions)
-      setEnrollments(initialEnrollments)
-      setMeetings(initialMeetings)
-      setStudents(initialStudents)
-      setTutors(initialTutors)
-    };
-    fetchData();
-    setLoading(false)
-  }, []);
+  // useEffect(() => {
+  //   const fetchData = () => {
+  //     // setCurrentWeek(initialCurrentWeek)
+  //     setWeekStart(initialCurrWeekStart)
+  //     setWeekEnd(initialCurrWeekEnd)
+  //     setSessions(initialSessions)
+  //     setEnrollments(initialEnrollments)
+  //     setMeetings(initialMeetings)
+  //     setStudents(initialStudents)
+  //     setTutors(initialTutors)
+  //   };
+  //   fetchData();
+  //   setLoading(false)
+  // }, []);
 
   useEffect(() => {
     console.log(initialMount)

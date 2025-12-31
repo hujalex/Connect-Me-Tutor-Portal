@@ -1,11 +1,24 @@
-import TutorList from '@/components/admin/TutorList'
-import { getAllProfiles } from '@/lib/actions/profile.server.actions'
+import TutorList from "@/components/admin/TutorList";
+import { getAllProfiles } from "@/lib/actions/profile.server.actions";
+import { Suspense } from "react";
+import { SkeletonCard } from "@/components/ui/skeleton";
+
+async function MyTutorsData() {
+  const tutors = await getAllProfiles("Tutor", "created_at", false);
+  return <TutorList initialTutors={tutors} />
+}
 
 export default async function MyTutorsPage() {
-    const tutors = await getAllProfiles("Tutor", "created_at", false)
-    return (
-        <main>
-            <TutorList initialTutors={tutors}/>
-        </main>
-    )
+  return (
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">All Tutors</h1>
+      <div className="flex space-x-6">
+        <div className="flex-grow bg-white rounded-lg shadow p-6">
+          <Suspense fallback = {<SkeletonCard className="h-4 w-[250px]" />}>
+            <MyTutorsData />
+          </Suspense>
+        </div>
+      </div>
+    </main>
+  );
 }

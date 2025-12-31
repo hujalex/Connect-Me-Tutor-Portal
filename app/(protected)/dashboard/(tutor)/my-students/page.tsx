@@ -4,16 +4,29 @@ import {
   getTutorStudents,
 } from "@/lib/actions/profile.server.actions";
 import { cachedGetUser } from "@/lib/actions/user.server.actions";
+import { Suspense } from "react";
 
-export default async function MyStudentsPage() {
+async function MyStudentsData() {
   const user = await cachedGetUser();
   const profile = await cachedGetProfile(user.id);
   if (!profile) throw new Error("Profile not found");
   const students = await getTutorStudents(profile.id);
 
+  return <StudentList initialStudents={students} />;
+}
+
+export default async function MyStudentsPage() {
   return (
-    <main>
-      <StudentList initialStudents={students} />
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">My Students</h1>
+      <div className="flex space-x-6">
+        <div className="flex-grow bg-white rounded-lg shadow p-6">
+          {" "}
+          <Suspense>
+            <MyStudentsData />{" "}
+          </Suspense>
+        </div>
+      </div>
     </main>
   );
 }

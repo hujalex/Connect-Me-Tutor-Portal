@@ -100,7 +100,12 @@ import { useProfile } from "@/contexts/profileContext";
 // import EnrollmentForm from "./components/EnrollmentForm";
 // import Availability from "@/components/student/AvailabilityFormat";
 
-const EnrollmentList = ({ initialEnrollments, initialProfile, initialMeetings, initialStudents }: any) => {
+const EnrollmentList = ({
+  initialEnrollments,
+  initialProfile,
+  initialMeetings,
+  initialStudents,
+}: any) => {
   const supabase = createClientComponentClient();
   const { profile: userData, setProfile: setUserData } = useProfile();
   // const [userData, setUserData] = useState<Profile | null>(null);
@@ -159,13 +164,13 @@ const EnrollmentList = ({ initialEnrollments, initialProfile, initialMeetings, i
   const router = useRouter();
 
   useEffect(() => {
-    setEnrollments(initialEnrollments)
-    setFilteredEnrollments(initialEnrollments)
-    setUserData(initialProfile)
-    setMeetings(initialMeetings)
-    setStudents(initialStudents)
-    setLoading(false)
-    if (userData) setTutors([userData])
+    setEnrollments(initialEnrollments);
+    setFilteredEnrollments(initialEnrollments);
+    setUserData(initialProfile);
+    setMeetings(initialMeetings);
+    setStudents(initialStudents);
+    setLoading(false);
+    if (userData) setTutors([userData]);
   }, []);
 
   useEffect(() => {
@@ -400,7 +405,6 @@ const EnrollmentList = ({ initialEnrollments, initialProfile, initialMeetings, i
     }
   };
 
-
   const totalPages = Math.ceil(filteredEnrollments.length / rowsPerPage);
 
   const handlePageChange = (newPage: number) => {
@@ -609,15 +613,7 @@ const EnrollmentList = ({ initialEnrollments, initialProfile, initialMeetings, i
   // };
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Enrollments</h1>
-      {/* <div className="flex space-x-6">
-        <div className="flex-grow bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            Availabilites
-          </div>
-        </div>
-      </div> */}
+    <>
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
@@ -1415,7 +1411,7 @@ const EnrollmentList = ({ initialEnrollments, initialProfile, initialMeetings, i
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
-    </main>
+    </>
   );
 };
 

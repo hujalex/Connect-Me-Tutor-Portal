@@ -1,9 +1,11 @@
 import EnrollmentsManager from "@/components/admin/EnrollmentsManagement";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { getAllEnrollments } from "@/lib/actions/enrollment.server.actions";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
 import { getAllProfiles } from "@/lib/actions/profile.server.actions";
+import { Suspense } from "react";
 
-export default async function MyEnrollmentsPage() {
+async function MyEnrollmentsData() {
   const [enrollments, meetings, students, tutors] = await Promise.all([
     getAllEnrollments(),
     getMeetings(),
@@ -16,13 +18,22 @@ export default async function MyEnrollmentsPage() {
   ]);
 
   return (
-    <main>
-      <EnrollmentsManager
-        initialEnrollments={enrollments}
-        initialMeetings={meetings}
-        initialStudents={students}
-        initialTutors={tutors}
-      />
+    <EnrollmentsManager
+      initialEnrollments={enrollments}
+      initialMeetings={meetings}
+      initialStudents={students}
+      initialTutors={tutors}
+    />
+  );
+}
+
+export default function MyEnrollmentsPage() {
+  return (
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
+      <Suspense fallback = {<SkeletonCard />}>
+        <MyEnrollmentsData/>
+      </Suspense>
     </main>
   );
 }

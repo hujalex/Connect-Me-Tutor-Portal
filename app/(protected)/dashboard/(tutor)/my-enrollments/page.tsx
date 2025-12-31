@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Profile } from "@/types";
 import { profile } from "console";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
+import { Suspense } from "react";
+import { Calendar } from "lucide-react";
 
 const fetchUserProfile = async () => {
   const user = await cachedGetUser();
@@ -30,7 +32,7 @@ const fetchEnrollments = async (profileData: Profile) => {
   return sortedEnrollments;
 };
 
-export default async function MyEnrollmentsPage() {
+async function MyEnrollmentsData() {
   const profileData = await fetchUserProfile();
 
   const [sortedEnrollments, meetings, students] = await Promise.all([
@@ -40,15 +42,30 @@ export default async function MyEnrollmentsPage() {
       s?.filter((s) => s.status === "Active")
     ),
   ]);
-
   return (
-    <main>
-      <EnrollmentsList
-        initialEnrollments={sortedEnrollments}
-        initialProfile={profileData}
-        initialMeetings={meetings}
-        initialStudents={students}
-      />
+    <EnrollmentsList
+      initialEnrollments={sortedEnrollments}
+      initialProfile={profileData}
+      initialMeetings={meetings}
+      initialStudents={students}
+    />
+  );
+}
+
+export default async function MyEnrollmentsPage() {
+  return (
+    <main className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Enrollments</h1>
+      <Suspense
+        fallback={
+          <div className="text-center py-10">
+            <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
+            <p className="mt-4 text-gray-600">Loading enrollments...</p>
+          </div>
+        }
+      >
+        <MyEnrollmentsData />
+      </Suspense>
     </main>
   );
 }
