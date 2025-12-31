@@ -95,15 +95,19 @@ const durationSchema = z.object({
 });
 
 const EnrollmentList = ({
-  enrollmentsPromise,
-  meetingsPromise,
-  studentsPromise,
-  tutorsPromise,
+  // enrollmentsPromise,
+  // meetingsPromise,
+  // studentsPromise,
+  // tutorsPromise,
+  initialEnrollments,
+  initialMeetings,
+  initialStudents,
+  initialTutors,
 }: any) => {
-  const initialEnrollments: Enrollment[] = use(enrollmentsPromise);
-  const initialMeetings: Meeting[] = use(meetingsPromise);
-  const initialStudents: Profile[] = use(studentsPromise);
-  const initialTutors: Profile[] = use(tutorsPromise);
+  // const initialEnrollments: Enrollment[] = use(enrollmentsPromise);
+  // const initialMeetings: Meeting[] = use(meetingsPromise);
+  // const initialStudents: Profile[] = use(studentsPromise);
+  // const initialTutors: Profile[] = use(tutorsPromise);
 
   const [enrollments, setEnrollments] =
     useState<Enrollment[]>(initialEnrollments);
