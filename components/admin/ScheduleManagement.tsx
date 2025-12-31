@@ -208,11 +208,6 @@ const Schedule = ({
   // }, []);
 
   useEffect(() => {
-    console.log(initialMount)
-    if (initialMount.current) {
-      initialMount.current = false;
-      return;
-    }
 
     const currWeekStart = startOfWeek(currentWeek).toISOString();
     const currWeekEnd = endOfWeek(currentWeek).toISOString();

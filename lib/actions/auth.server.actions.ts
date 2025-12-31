@@ -75,6 +75,8 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
 export const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   try {
+
+    console.log("CREATING USER")
     
     const { data: profile } = await supabase
       .from("Profiles")
