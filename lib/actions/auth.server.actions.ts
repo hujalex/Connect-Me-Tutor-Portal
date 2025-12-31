@@ -53,6 +53,7 @@ export const getUser = async () => {
 };
 
 const inviteUser = async (newProfileData: CreatedProfileData) => {
+  console.log("INVITING USER")
   const supabase = await createClient();
   const { data: authData, error: authError } =
     await supabase.auth.admin.inviteUserByEmail(newProfileData.email, {
