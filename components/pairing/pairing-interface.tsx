@@ -69,7 +69,6 @@ export function PairingInterface() {
     status: "accepted" | "rejected"
   ) => {
 
-
     const promise = updatePairingMatchStatus(profile.id, matchId, status);
 
     toast.promise(promise, {

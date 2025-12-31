@@ -53,7 +53,8 @@ export const getUser = async () => {
 };
 
 const inviteUser = async (newProfileData: CreatedProfileData) => {
-  const supabase = await createClient();
+  console.log("INVITING USER")
+  const supabase = await createAdminClient();
   const { data: authData, error: authError } =
     await supabase.auth.admin.inviteUserByEmail(newProfileData.email, {
       data: {
@@ -62,7 +63,7 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
       },
     });
 
-  if (authError) throw new Error(authError.message);
+  if (authError) throw new Error("Unable to invite user " + authError.message);
   return authData.user.id;
 };
 
@@ -75,6 +76,8 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
 export const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   try {
+
+    console.log("CREATING USER")
     
     const { data: profile } = await supabase
       .from("Profiles")
@@ -162,8 +165,6 @@ const replaceLastActiveProfile = async (
 
 export const deleteUser = async (profileId: string) => {
   const adminSupabase = await createAdminClient();
-    console.log("Clear")
-
 
   try {
     const { data: profile } = await adminSupabase
@@ -172,12 +173,12 @@ export const deleteUser = async (profileId: string) => {
       .eq("id", profileId)
       .single()
       .throwOnError();
-
+    
 
     const [res1, res2] = await Promise.all([
       adminSupabase
         .from(Table.Profiles)
-        .select("id")
+        .select("id, user_id")
         .eq("user_id", profile.user_id)
         .throwOnError(),
       adminSupabase
@@ -196,9 +197,14 @@ export const deleteUser = async (profileId: string) => {
     const relatedProfiles = res1.data;
     const userSettings = res2.data;
 
+
+    console.log(relatedProfiles)
+
+
     if (relatedProfiles.length == 1) {
+      console.log("breakpoint")
       const { error: authError } = await adminSupabase.auth.admin.deleteUser(
-        relatedProfiles[0].id
+        relatedProfiles[0].user_id
       );
 
       if (authError) throw authError;

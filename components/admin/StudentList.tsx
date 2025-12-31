@@ -51,9 +51,7 @@ import {
   getUserFromId,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
-import { 
-  deleteUser
-} from "@/lib/actions/auth.server.actions"
+import { deleteUser } from "@/lib/actions/auth.server.actions";
 import { addUser } from "@/lib/actions/auth.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
@@ -81,7 +79,7 @@ const getOrdinalSuffix = (num: number): string => {
   return "th";
 };
 
-const StudentList = () =>
+const StudentList = ({ initialStudents }: any) =>
   //   {
   //   isOpen,
   //   onOpenChange,
@@ -179,8 +177,12 @@ const StudentList = () =>
     };
 
     useEffect(() => {
-      getStudentData();
-    }, [supabase.auth]);
+      const fetchData = () => {
+        setStudents(initialStudents);
+        setFilteredStudents(initialStudents);
+      };
+      fetchData();
+    }, []);
 
     useEffect(() => {
       const filtered = students.filter((student) => {
@@ -320,28 +322,11 @@ const StudentList = () =>
         // Ensure addStudent returns a Profile
         const addedStudent: Profile = await addUser(student, "Student", true);
 
-        // Update local state
-        setStudents((prevStudents) => {
-          // Check if addedStudent is valid
-          if (addedStudent) {
-            return [...prevStudents, addedStudent]; // Ensure returning an array of Profile
-          }
-          return prevStudents; // Return previous state if addedStudent is not valid
-        });
-
-        setFilteredStudents((prevFiltered) => {
-          // Check if addedStudent is valid
-          if (addedStudent) {
-            return [...prevFiltered, addedStudent]; // Ensure returning an array of Profile
-          }
-          return prevFiltered; // Return previous state if addedStudent is not valid
-        });
-
         if (addedStudent) {
           // Close modal and show success toast
           setIsModalOpen(false);
           setStudents((prevStudents) => [...prevStudents, addedStudent]);
-
+          setFilteredStudents((prev) => [...prev, addedStudent]);
           toast.success("Successfully added student.");
 
           // Reset form
@@ -441,7 +426,7 @@ const StudentList = () =>
     const handleDeleteStudent = async () => {
       if (selectedStudentId) {
         try {
-          console.log("Deleting User")
+          console.log("Deleting User");
           await deleteUser(selectedStudentId);
           toast.success("Student deleted successfully");
           setIsDeactivateModalOpen(false);
@@ -514,194 +499,189 @@ const StudentList = () =>
     };
 
     return (
-      <main className="p-8">
-        <h1 className="text-3xl font-bold mb-6">All Students</h1>
+      <>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex space-x-2">
+            <Input
+              type="text"
+              placeholder="Filter students..."
+              className="w-64"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+            />
+            {/*Add Student*/}
+            <AddStudentForm
+              newStudent={newStudent}
+              handleInputChange={handleInputChange}
+              handleGradeChange={handleGradeChange}
+              handleTimeZone={handleTimeZone}
+              handleGender={handleGender}
+              handleAddStudent={handleAddStudentWithParam}
+              addingStudent={addingStudent}
+            />
 
-        <div className="flex space-x-6">
-          <div className="flex-grow bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex space-x-2">
-                <Input
-                  type="text"
-                  placeholder="Filter students..."
-                  className="w-64"
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
-                />
-                {/*Add Student*/}
-                <AddStudentForm
-                  newStudent={newStudent}
-                  handleInputChange={handleInputChange}
-                  handleGradeChange={handleGradeChange}
-                  handleTimeZone={handleTimeZone}
-                  handleGender={handleGender}
-                  handleAddStudent={handleAddStudentWithParam}
-                  addingStudent={addingStudent}
-                />
+            <DeleteStudentForm
+              students={students}
+              selectedStudentId={selectedStudentId}
+              setSelectedStudentId={setSelectedStudentId}
+              handleDeleteStudent={handleDeleteStudent}
+            />
+            {/*Reactivate Student*/}
 
-                <DeleteStudentForm
-                  students={students}
-                  selectedStudentId={selectedStudentId}
-                  setSelectedStudentId={setSelectedStudentId}
-                  handleDeleteStudent={handleDeleteStudent}
-                />
-                {/*Reactivate Student*/}
+            <EditStudentForm
+              students={students}
+              selectedStudentId={selectedStudentId}
+              setSelectedStudentId={setSelectedStudentId}
+              handleGetSelectedStudent={handleGetSelectedStudent}
+              selectedStudent={selectedStudent}
+              handleInputChangeForEdit={handleInputChangeForEdit}
+              handleGradeChangeForEdit={handleGradeChangeForEdit}
+              handleGenderForEdit={handleGenderForEdit}
+              handleTimeZoneForEdit={handleTimeZoneForEdit}
+              handleSubjectsChangeForEdit={handleSubjectsChangeForEdit}
+              handleEditProfile={handleEditProfile}
+              getOrdinalSuffix={getOrdinalSuffix}
+              handleEditStudent={handleEditStudent}
+            />
+          </div>
+        </div>
 
-                <EditStudentForm
-                  students={students}
-                  selectedStudentId={selectedStudentId}
-                  setSelectedStudentId={setSelectedStudentId}
-                  handleGetSelectedStudent={handleGetSelectedStudent}
-                  selectedStudent={selectedStudent}
-                  handleInputChangeForEdit={handleInputChangeForEdit}
-                  handleGradeChangeForEdit={handleGradeChangeForEdit}
-                  handleGenderForEdit={handleGenderForEdit}
-                  handleTimeZoneForEdit={handleTimeZoneForEdit}
-                  handleSubjectsChangeForEdit={handleSubjectsChangeForEdit}
-                  handleEditProfile={handleEditProfile}
-                  getOrdinalSuffix={getOrdinalSuffix}
-                  handleEditStudent={handleEditStudent}
-                />
-              </div>
-            </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Student #</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Start Date</TableHead>
+              <TableHead>Student Name</TableHead>
+              <TableHead>Grade Level</TableHead>
+              <TableHead>Availability</TableHead>
+              <TableHead>Subjects Learning</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Parent Phone</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedStudents.map((student, index) => (
+              <TableRow key={index}>
+                <TableCell>{student.studentNumber}</TableCell>
+                <TableCell>{student.status}</TableCell>
+                <TableCell>{student.startDate}</TableCell>
+                <TableCell>
+                  {student.firstName} {student.lastName}
+                </TableCell>
+                <TableCell>{student.grade}</TableCell>
+                <TableCell>
+                  <UserAvailabilities user={student} />
+                </TableCell>
+                <TableCell className="flex flex-col">
+                  {student.subjects_of_interest?.map((item, index) => (
+                    <span key={index}>{item}</span>
+                  ))}
+                </TableCell>
+                <TableCell>{student.email}</TableCell>
+                <TableCell>{student.parentPhone}</TableCell>
+                <TableCell>
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <Button variant="ghost" size="icon">
+                        <RefreshCcw className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Resend Email Confirmation for {student.firstName}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {" "}
+                          Note: Will not resend confirmation email if the user
+                          has already signed in before
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() =>
+                            resendEmailConfirmation(student.email)
+                              .then(() =>
+                                toast.success("Resent Email Confirmation")
+                              )
+                              .catch(() =>
+                                toast.error("Failed to resend email")
+                              )
+                          }
+                        >
+                          Resend
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student #</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Grade Level</TableHead>
-                  <TableHead>Availability</TableHead>
-                  <TableHead>Subjects Learning</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Parent Phone</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedStudents.map((student, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{student.studentNumber}</TableCell>
-                    <TableCell>{student.status}</TableCell>
-                    <TableCell>{student.startDate}</TableCell>
-                    <TableCell>
-                      {student.firstName} {student.lastName}
-                    </TableCell>
-                    <TableCell>{student.grade}</TableCell>
-                    <TableCell>
-                      <UserAvailabilities user={student} />
-                    </TableCell>
-                    <TableCell className="flex flex-col">
-                      {student.subjects_of_interest?.map((item, index) => (
-                        <span key={index}>{item}</span>
-                      ))}
-                    </TableCell>
-                    <TableCell>{student.email}</TableCell>
-                    <TableCell>{student.parentPhone}</TableCell>
-                    <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger>
-                          <Button variant="ghost" size="icon">
-                            <RefreshCcw className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Resend Email Confirmation for {student.firstName}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {" "}
-                              Note: Will not resend confirmation email if the
-                              user has already signed in before
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() =>
-                                resendEmailConfirmation(student.email)
-                                  .then(() =>
-                                    toast.success("Resent Email Confirmation")
-                                  )
-                                  .catch(() =>
-                                    toast.error("Failed to resend email")
-                                  )
-                              }
-                            >
-                              Resend
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            <div className="mt-4 flex justify-between items-center">
-              <span>{filteredStudents.length} row(s) total.</span>
-              <div className="flex items-center space-x-2">
-                <span>Rows per page</span>
-                <Select
-                  value={rowsPerPage.toString()}
-                  onValueChange={handleRowsPerPageChange}
-                >
-                  <SelectTrigger className="w-[70px]">
-                    <SelectValue placeholder={rowsPerPage.toString()} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <div className="flex space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+        <div className="mt-4 flex justify-between items-center">
+          <span>{filteredStudents.length} row(s) total.</span>
+          <div className="flex items-center space-x-2">
+            <span>Rows per page</span>
+            <Select
+              value={rowsPerPage.toString()}
+              onValueChange={handleRowsPerPageChange}
+            >
+              <SelectTrigger className="w-[70px]">
+                <SelectValue placeholder={rowsPerPage.toString()} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex space-x-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
+
         <Toaster />
-      </main>
+      </>
     );
   };
 

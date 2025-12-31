@@ -36,12 +36,13 @@ import { Profile } from "@/types";
 import { StudentAnnouncementsRoomId } from "@/constants/chat";
 import { UserAvailabilities } from "../ui/UserAvailabilities";
 import DeletePairingForm from "./components/DeletePairingForm";
+import { useProfile } from "@/contexts/profileContext";
 
-const StudentList = () => {
+const StudentList = ({ initialStudents }: any) => {
   const supabase = createClientComponentClient();
+  const { profile, setProfile } = useProfile();
   const [students, setStudents] = useState<Profile[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Profile[]>([]); // New state for filtered students
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,39 +50,8 @@ const StudentList = () => {
   const [filterValue, setFilterValue] = useState("");
 
   useEffect(() => {
-    const getTutorData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError) throw new Error(userError.message);
-        if (!user) throw new Error("No user found");
-
-        const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error("No profile found");
-
-        setProfile(profileData);
-
-        const studentsData = await getTutorStudents(profileData.id);
-        if (!studentsData) throw new Error("No students found");
-
-        setStudents(studentsData);
-        setFilteredStudents(studentsData); // Initialize filteredStudents
-      } catch (error) {
-        console.error("Error fetching tutor data:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getTutorData();
+    setStudents(initialStudents);
+    setFilteredStudents(initialStudents);
   }, [supabase.auth]);
 
   useEffect(() => {
@@ -111,124 +81,119 @@ const StudentList = () => {
   );
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">My Students</h1>
-      <div className="flex space-x-6">
-        <div className="flex-grow bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-              <Input
-                type="text"
-                placeholder="Filter students..."
-                className="w-64"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-            </div>
-          </div>
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex space-x-2">
+          <Input
+            type="text"
+            placeholder="Filter students..."
+            className="w-64"
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+          />
+        </div>
+      </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Start Date</TableHead>
-                <TableHead>Student Name</TableHead>
-                <TableHead>Availability</TableHead>
-                <TableHead>Subjects</TableHead>
-                <TableHead>Student Email</TableHead>
-                <TableHead>Parent Email</TableHead>
-                <TableHead>Parent Phone</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedStudents.map((student, index) => (
-                <TableRow key={index}>
-                  <TableCell>{student.startDate}</TableCell>
-                  <TableCell>
-                    {student.firstName} {student.lastName}
-                  </TableCell>
-                  <TableCell>
-                    <UserAvailabilities user={student} />
-                  </TableCell>
-                  <TableCell className="h-full">
-                    <div className="flex flex-col items-center justify-center min-h-[inherit]">
-                      {student.subjects_of_interest?.map((item, index) => (
-                        <span key={index} className="text-center">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>{student.email}</TableCell>
-                  <TableCell>{student.parentEmail}</TableCell>
-                  <TableCell>{student.parentPhone}</TableCell>
-                  <TableCell>
-                    <DeletePairingForm student={student} tutor={profile} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Start Date</TableHead>
+            <TableHead>Student Name</TableHead>
+            <TableHead>Availability</TableHead>
+            <TableHead>Subjects</TableHead>
+            <TableHead>Student Email</TableHead>
+            <TableHead>Parent Email</TableHead>
+            <TableHead>Parent Phone</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {paginatedStudents.map((student, index) => (
+            <TableRow key={index}>
+              <TableCell>{student.startDate}</TableCell>
+              <TableCell>
+                {student.firstName} {student.lastName}
+              </TableCell>
+              <TableCell>
+                <UserAvailabilities user={student} />
+              </TableCell>
+              <TableCell className="h-full">
+                <div className="flex flex-col items-center justify-center min-h-[inherit]">
+                  {student.subjects_of_interest?.map((item, index) => (
+                    <span key={index} className="text-center">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </TableCell>
+              <TableCell>{student.email}</TableCell>
+              <TableCell>{student.parentEmail}</TableCell>
+              <TableCell>{student.parentPhone}</TableCell>
+              <TableCell>
+                <DeletePairingForm student={student} tutor={profile} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-          <div className="mt-4 flex justify-between items-center">
-            <span>{filteredStudents.length} row(s) total.</span>
-            <div className="flex items-center space-x-2">
-              <span>Rows per page</span>
-              <Select
-                value={rowsPerPage.toString()}
-                onValueChange={handleRowsPerPageChange}
-              >
-                <SelectTrigger className="w-[70px]">
-                  <SelectValue placeholder={rowsPerPage.toString()} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex space-x-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+      <div className="mt-4 flex justify-between items-center">
+        <span>{filteredStudents.length} row(s) total.</span>
+        <div className="flex items-center space-x-2">
+          <span>Rows per page</span>
+          <Select
+            value={rowsPerPage.toString()}
+            onValueChange={handleRowsPerPageChange}
+          >
+            <SelectTrigger className="w-[70px]">
+              <SelectValue placeholder={rowsPerPage.toString()} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
-    </main>
+    </>
   );
 };
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   format,
@@ -82,7 +82,16 @@ import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollments.action";
 
-const Schedule = () => {
+const Schedule = ({
+  initialCurrentWeek,
+  initialCurrWeekStart,
+  initialCurrWeekEnd,
+  initialSessions,
+  initialEnrollments,
+  initialStudents,
+  initialTutors,
+  initialMeetings,
+}: any) => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [weekEnd, setWeekEnd] = useState("");
   const [weekStart, setWeekStart] = useState("");
@@ -105,7 +114,7 @@ const Schedule = () => {
   const [allSessions, setAllSessions] = useState<Session[]>([]);
 
   //---------------------------------
-
+  const initialMount = useRef(true)
   const [openStudentOptions, setOpenStudentOptions] = useState(false);
   const [openTutorOptions, setOpentTutorOptions] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -183,7 +192,23 @@ const Schedule = () => {
     }
   };
 
+  // useEffect(() => {
+  //   const fetchData = () => {
+  //     // setCurrentWeek(initialCurrentWeek)
+  //     setWeekStart(initialCurrWeekStart)
+  //     setWeekEnd(initialCurrWeekEnd)
+  //     setSessions(initialSessions)
+  //     setEnrollments(initialEnrollments)
+  //     setMeetings(initialMeetings)
+  //     setStudents(initialStudents)
+  //     setTutors(initialTutors)
+  //   };
+  //   fetchData();
+  //   setLoading(false)
+  // }, []);
+
   useEffect(() => {
+
     const currWeekStart = startOfWeek(currentWeek).toISOString();
     const currWeekEnd = endOfWeek(currentWeek).toISOString();
 
@@ -425,14 +450,13 @@ const Schedule = () => {
 
   const handleGetMissingSEF = async () => {
     try {
-      await getEnrollmentsWithMissingSEF()
-      toast.success("Printed to console")
+      await getEnrollmentsWithMissingSEF();
+      toast.success("Printed to console");
     } catch (error) {
       console.error(error);
-      toast.error("Please view Dev Console for error")
+      toast.error("Please view Dev Console for error");
     }
-
-  }
+  };
 
   return (
     <>
@@ -528,8 +552,13 @@ const Schedule = () => {
                       defaultValue={formatDateForInput(newSession.date)}
                       onBlur={async (e) => {
                         const scheduledDate = new Date(e.target.value);
-                        const updatedSession: Partial<Session> = {...newSession, date: scheduledDate.toISOString()}
-                        await checkMeetingAvailabilites(updatedSession as Session);
+                        const updatedSession: Partial<Session> = {
+                          ...newSession,
+                          date: scheduledDate.toISOString(),
+                        };
+                        await checkMeetingAvailabilites(
+                          updatedSession as Session
+                        );
                         setNewSession(updatedSession);
                       }}
                       disabled={isCheckingMeetingAvailability}
@@ -545,10 +574,12 @@ const Schedule = () => {
                       <Select
                         onValueChange={(value) => {
                           const duration = parseFloat(value);
-                          const updatedSession: Partial<Session> = {...newSession, duration: duration}
+                          const updatedSession: Partial<Session> = {
+                            ...newSession,
+                            duration: duration,
+                          };
                           checkMeetingAvailabilites(updatedSession as Session);
                           setNewSession(updatedSession);
- 
                         }}
                       >
                         <SelectTrigger className="w-full">
@@ -643,7 +674,7 @@ const Schedule = () => {
               </ScrollArea>
             </DialogContent>
           </Dialog>
-          <Button onClick = {() => handleGetMissingSEF()}>Function Tester</Button>
+          <Button onClick={() => handleGetMissingSEF()}>Function Tester</Button>
 
           {loading ? (
             <div className="text-center py-10">

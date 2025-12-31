@@ -4,7 +4,7 @@ import { ProfilePreview } from "@/components/profile/profile-preview";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PairingInterface } from "@/components/pairing/pairing-interface";
 
-export default function PairingPage() {
+export default async function PairingPage() {
   return (
     <div className="container py-6 space-y-6">
       <div>

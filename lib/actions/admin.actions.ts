@@ -432,30 +432,28 @@ export async function getAllSessions(
       throw error;
     }
 
-    const sessions: Session[] = await Promise.all(
-      data
-        .filter((session: any) => session.student && session.tutor)
-        .map(async (session: any) => ({
-          id: session.id,
-          enrollmentId: session.enrollment_id,
-          createdAt: session.created_at,
-          environment: session.environment,
-          date: session.date,
-          summary: session.summary,
-          // meetingId: session.meeting_id,
-          // meeting: await getMeeting(session.meeting_id),
-          meeting: session.meetings,
-          student: await tableToInterfaceProfiles(session.student),
-          tutor: await tableToInterfaceProfiles(session.tutor),
-          // student: await getProfileWithProfileId(session.student_id),
-          // tutor: await getProfileWithProfileId(session.tutor_id),
-          status: session.status,
-          session_exit_form: session.session_exit_form,
-          isQuestionOrConcern: Boolean(session.is_question_or_concern),
-          isFirstSession: Boolean(session.is_first_session),
-          duration: session.duration,
-        }))
-    );
+    const sessions: Session[] = data
+      .filter((session: any) => session.student && session.tutor)
+      .map((session: any) => ({
+        id: session.id,
+        enrollmentId: session.enrollment_id,
+        createdAt: session.created_at,
+        environment: session.environment,
+        date: session.date,
+        summary: session.summary,
+        // meetingId: session.meeting_id,
+        // meeting: await getMeeting(session.meeting_id),
+        meeting: session.meetings,
+        student: tableToInterfaceProfiles(session.student),
+        tutor: tableToInterfaceProfiles(session.tutor),
+        // student: await getProfileWithProfileId(session.student_id),
+        // tutor: await getProfileWithProfileId(session.tutor_id),
+        status: session.status,
+        session_exit_form: session.session_exit_form,
+        isQuestionOrConcern: Boolean(session.is_question_or_concern),
+        isFirstSession: Boolean(session.is_first_session),
+        duration: session.duration,
+      }));
 
     return sessions;
   } catch (error) {
@@ -1184,53 +1182,6 @@ export const removeEnrollment = async (enrollmentId: string) => {
   }
 };
 
-/* EVENTS */
-export async function getEvents(tutorId: string): Promise<Event[]> {
-  try {
-    // Fetch meeting details from Supabase
-    const { data, error } = await supabase
-      .from("Events")
-      .select(
-        `
-        id,
-        created_at,
-        date,
-        summary,
-        tutor_id,
-        hours
-      `
-      )
-      .eq("tutor_id", tutorId);
-
-    // Check for errors and log them
-    if (error) {
-      console.error("Error fetching event details:", error.message);
-      return []; // Returning null here is valid since the function returns Promise<Notification[] | null>
-    }
-
-    // Check if data exists
-    if (!data) {
-      return []; // Valid return
-    }
-
-    // Mapping the fetched data to the Notification object
-    const events: Event[] = data.map((event: any) => ({
-      createdAt: event.created_at,
-      id: event.id,
-      summary: event.summary,
-      tutorId: event.tutor_id,
-      date: event.date,
-      hours: event.hours,
-      type: event.type,
-    }));
-
-    return events; // Return the array of notifications
-  } catch (error) {
-    console.error("Unexpected error in getMeeting:", error);
-    return [];
-  }
-}
-
 export async function getEventsWithTutorMonth(
   tutorId: string,
   selectedMonth: string
@@ -1367,18 +1318,17 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
     }
 
     // Mapping the fetched data to the Notification object
-    const notifications: Notification[] = 
-      data.map((notification: any) => ({
-        createdAt: notification.created_at,
-        id: notification.id,
-        summary: notification.summary,
-        sessionId: notification.session_id,
-        previousDate: notification.previous_date,
-        suggestedDate: notification.suggested_date,
-        student: tableToInterfaceProfiles(notification.student_id),
-        tutor: tableToInterfaceProfiles(notification.tutor_id),
-        status: notification.status,
-      }))
+    const notifications: Notification[] = data.map((notification: any) => ({
+      createdAt: notification.created_at,
+      id: notification.id,
+      summary: notification.summary,
+      sessionId: notification.session_id,
+      previousDate: notification.previous_date,
+      suggestedDate: notification.suggested_date,
+      student: tableToInterfaceProfiles(notification.student_id),
+      tutor: tableToInterfaceProfiles(notification.tutor_id),
+      status: notification.status,
+    }));
 
     return notifications; // Return the array of notifications
   } catch (error) {
