@@ -38,7 +38,7 @@ interface EventDetails {
   summary: string;
 }
 
-const Stats = () => {
+const Stats = ({ initialEnrollmentDetails, initialEventDetails }: any) => {
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState<boolean>(false);
   const [enrollmentDetails, setEnrollmentDetails] = useState<
@@ -69,13 +69,13 @@ const Stats = () => {
     { id: "unified", label: "Unified Table" },
   ];
 
-  const totalSessionHours = Object.values(enrollmentDetails).flat().reduce(
-    (sum, e) => sum + e.hours,
-    0
-  );
+  const totalSessionHours = Object.values(enrollmentDetails)
+    .flat()
+    .reduce((sum, e) => sum + e.hours, 0);
   const totalEventHours = Object.values(eventDetails)
     .flat()
     .reduce((sum, e) => sum + e.hours, 0);
+
   const totalAllHours = totalSessionHours + totalEventHours;
 
   // const [eventHours, setEventHours] = useState<Map<string, number>>(new Map());
@@ -86,65 +86,33 @@ const Stats = () => {
 
   useEffect(() => {
     //Fetches total tutoring hours where each session and event counts as one hour each
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-        if (error) throw error;
-        if (!user) throw new Error("No user found");
+    setEnrollmentDetails(initialEnrollmentDetails);
+    setEventDetails(initialEventDetails);
+    setLoading(false);
+  }, []);
 
-        const profileData = await getProfile(user.id);
-        if (!profileData) throw new Error("No profile found");
+  // const fetchEnrollmentDetails = async (tutorId: string) => {
+  //   try {
+  //     const data: EnrollmentDetails[] = await getSessionHoursByStudent(tutorId);
 
-        const current = new Date();
-        const weekBefore = subDays(current, 7);
-        // const specificStudentId = "2f1ebfd0-a604-4748-82bb-d7977d1f275a";
+  //     setEnrollmentDetails(data);
+  //   } catch (error) {
+  //     toast.error("Unable to fetch enrollment details");
+  //   }
+  // };
 
-        // Parallelize all independent API calls
-        const [allCompletedSessions, allEvents] = await Promise.all([
-          // getTutorSessions(profileData.id, undefined, undefined, "Complete"),
-          // getEvents(profileData.id),
-          fetchEventDetails(profileData.id),
-          fetchEnrollmentDetails(profileData.id),
-        ]);
-
-        // // Process session hours map more efficiently
-       
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [supabase.auth]);
-
-  const fetchEnrollmentDetails = async (tutorId: string) => {
-    try {
-      const data: EnrollmentDetails[] = await getSessionHoursByStudent(tutorId);
-
-      setEnrollmentDetails(data);
-    } catch (error) {
-      toast.error("Unable to fetch enrollment details");
-    }
-  };
-
-  const fetchEventDetails = async (tutorId: string) => {
-    try {
-      const data: { [key: string]: EventDetails[] } =
-        await getAllEventDetailsForTutor(tutorId);
-      setEventDetails(data);
-    } catch (error) {
-      toast.error("Unable to fetch event details");
-    }
-  };
+  // const fetchEventDetails = async (tutorId: string) => {
+  //   try {
+  //     const data: { [key: string]: EventDetails[] } =
+  //       await getAllEventDetailsForTutor(tutorId);
+  //     setEventDetails(data);
+  //   } catch (error) {
+  //     toast.error("Unable to fetch event details");
+  //   }
+  // };
 
   return (
-    <main className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">My Hours</h1>
+    <>
       <div className="flex space-x-1 mb-6 bg-white rounded-lg p-1 shadow-sm">
         {tabs.map((tab) => (
           <Button
@@ -279,8 +247,7 @@ const Stats = () => {
                     <TableHeader>
                       <TableRow className="bg-gray-50">
                         <TableHead>Summary</TableHead>
-                        <TableHead>Hours</TableHead>`
-                        `
+                        <TableHead>Hours</TableHead>` `
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -404,7 +371,7 @@ const Stats = () => {
           </div>
         </div>
       )} */}
-    </main>
+    </>
   );
 };
 

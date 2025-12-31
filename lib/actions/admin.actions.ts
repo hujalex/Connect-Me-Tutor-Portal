@@ -432,30 +432,28 @@ export async function getAllSessions(
       throw error;
     }
 
-    const sessions: Session[] = await Promise.all(
-      data
-        .filter((session: any) => session.student && session.tutor)
-        .map(async (session: any) => ({
-          id: session.id,
-          enrollmentId: session.enrollment_id,
-          createdAt: session.created_at,
-          environment: session.environment,
-          date: session.date,
-          summary: session.summary,
-          // meetingId: session.meeting_id,
-          // meeting: await getMeeting(session.meeting_id),
-          meeting: session.meetings,
-          student: await tableToInterfaceProfiles(session.student),
-          tutor: await tableToInterfaceProfiles(session.tutor),
-          // student: await getProfileWithProfileId(session.student_id),
-          // tutor: await getProfileWithProfileId(session.tutor_id),
-          status: session.status,
-          session_exit_form: session.session_exit_form,
-          isQuestionOrConcern: Boolean(session.is_question_or_concern),
-          isFirstSession: Boolean(session.is_first_session),
-          duration: session.duration,
-        }))
-    );
+    const sessions: Session[] = data
+      .filter((session: any) => session.student && session.tutor)
+      .map((session: any) => ({
+        id: session.id,
+        enrollmentId: session.enrollment_id,
+        createdAt: session.created_at,
+        environment: session.environment,
+        date: session.date,
+        summary: session.summary,
+        // meetingId: session.meeting_id,
+        // meeting: await getMeeting(session.meeting_id),
+        meeting: session.meetings,
+        student: tableToInterfaceProfiles(session.student),
+        tutor: tableToInterfaceProfiles(session.tutor),
+        // student: await getProfileWithProfileId(session.student_id),
+        // tutor: await getProfileWithProfileId(session.tutor_id),
+        status: session.status,
+        session_exit_form: session.session_exit_form,
+        isQuestionOrConcern: Boolean(session.is_question_or_concern),
+        isFirstSession: Boolean(session.is_first_session),
+        duration: session.duration,
+      }));
 
     return sessions;
   } catch (error) {
@@ -1184,8 +1182,6 @@ export const removeEnrollment = async (enrollmentId: string) => {
   }
 };
 
-
-
 export async function getEventsWithTutorMonth(
   tutorId: string,
   selectedMonth: string
@@ -1322,18 +1318,17 @@ export async function getAllNotifications(): Promise<Notification[] | null> {
     }
 
     // Mapping the fetched data to the Notification object
-    const notifications: Notification[] = 
-      data.map((notification: any) => ({
-        createdAt: notification.created_at,
-        id: notification.id,
-        summary: notification.summary,
-        sessionId: notification.session_id,
-        previousDate: notification.previous_date,
-        suggestedDate: notification.suggested_date,
-        student: tableToInterfaceProfiles(notification.student_id),
-        tutor: tableToInterfaceProfiles(notification.tutor_id),
-        status: notification.status,
-      }))
+    const notifications: Notification[] = data.map((notification: any) => ({
+      createdAt: notification.created_at,
+      id: notification.id,
+      summary: notification.summary,
+      sessionId: notification.session_id,
+      previousDate: notification.previous_date,
+      suggestedDate: notification.suggested_date,
+      student: tableToInterfaceProfiles(notification.student_id),
+      tutor: tableToInterfaceProfiles(notification.tutor_id),
+      status: notification.status,
+    }));
 
     return notifications; // Return the array of notifications
   } catch (error) {

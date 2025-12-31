@@ -58,12 +58,8 @@ import {
   editUser,
   resendEmailConfirmation,
 } from "@/lib/actions/admin.actions";
-import {
-  getEvents
-} from "@/lib/actions/event.server.actions"
-import {
-  deleteUser
-} from "@/lib/actions/auth.server.actions"
+import { getEvents } from "@/lib/actions/event.server.actions";
+import { deleteUser } from "@/lib/actions/auth.server.actions";
 import { addUser } from "@/lib/actions/auth.actions";
 import { getTutorSessions } from "@/lib/actions/tutor.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -87,11 +83,10 @@ import { Turret_Road } from "next/font/google";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { UserAvailabilities } from "../ui/UserAvailabilities";
 
-const TutorList = () => {
+const TutorList = ({ initialTutors }: any) => {
   const supabase = createClientComponentClient();
   const [tutors, setTutors] = useState<Profile[]>([]);
   const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,7 +110,7 @@ const TutorList = () => {
     status: "Active",
     tutorIds: [],
   });
-  
+
   const [selectedTutor, setSelectedTutor] = useState<Profile | null>(null);
 
   //---Modals
@@ -137,18 +132,6 @@ const TutorList = () => {
       setLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw new Error(userError.message);
-      if (!user) throw new Error("No user found");
-
-      const profileData = await getProfile(user.id);
-      if (!profileData) throw new Error("No profile found");
-
-      setProfile(profileData);
-
       const tutorsData = await getAllProfiles("Tutor", "created_at", false);
       if (!tutorsData) throw new Error("No tutors found");
 
@@ -165,8 +148,12 @@ const TutorList = () => {
   };
 
   useEffect(() => {
-    getTutorData();
-  }, [supabase.auth]);
+    const fetchData = () => {
+      setTutors(initialTutors);
+      setFilteredTutors(initialTutors);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const filtered = tutors.filter((tutor) => {
@@ -266,33 +253,12 @@ const TutorList = () => {
       // Ensure addStudent returns a Profile
       const addedTutor: Profile = await addUser(tutor, "Tutor", true);
 
-      // const addedTutor: Profile = () => {return new Tutor()}
-
-      // Update local state
-      setTutors((prevTutors) => {
-        // Check if addedStudent is valid
-        if (addedTutor) {
-          return [...prevTutors, addedTutor]; // Ensure returning an array of Profile
-        }
-        return prevTutors; // Return previous state if addedStudent is not valid
-      });
-
-      setFilteredTutors((prevFiltered) => {
-        // Check if addedStudent is valid
-        if (addedTutor) {
-          return [...prevFiltered, addedTutor]; // Ensure returning an array of Profile
-        }
-        return prevFiltered; // Return previous state if addedStudent is not valid
-      });
-
       if (addedTutor) {
-        // Close modal and show success toast
         setIsModalOpen(false);
         setTutors((prevTutors) => [...prevTutors, addedTutor]);
-
+        setFilteredTutors((prev) => [...prev, addedTutor]);
         toast.success("Successfully added tutor.");
 
-        // Reset form
         setNewTutor({
           role: "Tutor",
           firstName: "",
@@ -319,7 +285,6 @@ const TutorList = () => {
       setAddingTutor(false);
     }
   };
-
 
   const handleResendEmailConfirmation = async () => {
     if (selectedTutor) {
@@ -405,11 +370,9 @@ const TutorList = () => {
   };
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">All Tutors</h1>
-
-      <div className="flex space-x-6">
-        <div className="flex-grow bg-white rounded-lg shadow p-6">
+    <>
+      {" "}
+   
           <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2">
               <Input
@@ -593,10 +556,9 @@ const TutorList = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+   
       <Toaster />
-    </main>
+    </>
   );
 };
 

@@ -162,8 +162,6 @@ const replaceLastActiveProfile = async (
 
 export const deleteUser = async (profileId: string) => {
   const adminSupabase = await createAdminClient();
-    console.log("Clear")
-
 
   try {
     const { data: profile } = await adminSupabase
@@ -172,12 +170,12 @@ export const deleteUser = async (profileId: string) => {
       .eq("id", profileId)
       .single()
       .throwOnError();
-
+    
 
     const [res1, res2] = await Promise.all([
       adminSupabase
         .from(Table.Profiles)
-        .select("id")
+        .select("id, user_id")
         .eq("user_id", profile.user_id)
         .throwOnError(),
       adminSupabase
@@ -196,9 +194,14 @@ export const deleteUser = async (profileId: string) => {
     const relatedProfiles = res1.data;
     const userSettings = res2.data;
 
+
+    console.log(relatedProfiles)
+
+
     if (relatedProfiles.length == 1) {
+      console.log("breakpoint")
       const { error: authError } = await adminSupabase.auth.admin.deleteUser(
-        relatedProfiles[0].id
+        relatedProfiles[0].user_id
       );
 
       if (authError) throw authError;

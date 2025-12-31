@@ -22,7 +22,7 @@ import {
   Check,
   Circle,
   Loader2,
-  Copy
+  Copy,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -94,7 +94,12 @@ const durationSchema = z.object({
     .min(0, "Duration must be at least 0"),
 });
 
-const EnrollmentList = () => {
+const EnrollmentList = ({
+  initialEnrollments,
+  initialMeetings,
+  initialStudents,
+  initialTutors,
+}: any) => {
   const supabase = createClientComponentClient();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
@@ -152,10 +157,16 @@ const EnrollmentList = () => {
   const router = useRouter();
 
   useEffect(() => {
-    fetchEnrollments();
-    fetchProfiles();
-    fetchMeetings();
-  }, [supabase.auth]);
+    const fetchData = () => {
+      setEnrollments(initialEnrollments);
+      setFilteredEnrollments(initialEnrollments);
+      setStudents(initialStudents);
+      setTutors(initialTutors);
+      setMeetings(initialMeetings);
+    };
+    fetchData();
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     const filtered = enrollments.filter((enrollment) => {
@@ -253,10 +264,10 @@ const EnrollmentList = () => {
   ) => {
     setIsCheckingMeetingAvailability(true);
 
-    const updatedMeetingAvailability = await checkAvailableMeetingForEnrollments(enroll, enrollments, meetings)
+    const updatedMeetingAvailability =
+      await checkAvailableMeetingForEnrollments(enroll, enrollments, meetings);
     setIsCheckingMeetingAvailability(false);
     setMeetingAvailability(updatedMeetingAvailability);
-    
   };
 
   const isMeetingAvailable = (
@@ -488,10 +499,7 @@ const EnrollmentList = () => {
     try {
       const addedEnrollment = await addEnrollment(newEnrollment);
       if (addedEnrollment) {
-        setEnrollments([
-          { ...addedEnrollment, paused: false },
-          ...enrollments,
-        ]);
+        setEnrollments([{ ...addedEnrollment, paused: false }, ...enrollments]);
         setIsAddModalOpen(false);
         resetNewEnrollment();
         setSelectedTutorId("");
@@ -578,16 +586,14 @@ const EnrollmentList = () => {
     }
   };
   const handleCopyMeetingLink = (meetingId: string) => {
-    const meeting = meetings.find(
-      (m) => String(m.id) === String(meetingId)
-    );
+    const meeting = meetings.find((m) => String(m.id) === String(meetingId));
 
     if (!meeting) {
       toast.error("Meeting not found");
       return;
     }
 
-    const url = meeting.link; 
+    const url = meeting.link;
 
     if (!url) {
       toast.error("No Zoom link available");
@@ -597,13 +603,12 @@ const EnrollmentList = () => {
     navigator.clipboard
       .writeText(url)
       .then(() => toast.success("Meeting link copied!"))
-    .catch(() => toast.error("Failed to copy link"));
-};
-
+      .catch(() => toast.error("Failed to copy link"));
+  };
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">All Enrollments</h1>
+    <>
+      {" "}
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
@@ -787,7 +792,10 @@ const EnrollmentList = () => {
                         availabilityList={availabilityList} // new enrollment by default will not have an availability
                         setAvailabilityList={(availability) => {
                           setAvailabilityList(availability);
-                          setNewEnrollment({ ...newEnrollment, availability });
+                          setNewEnrollment({
+                            ...newEnrollment,
+                            availability,
+                          });
                         }}
                       />
                       <div className="grid grid-cols-[80px_1fr] items-center gap-4">
@@ -971,7 +979,7 @@ const EnrollmentList = () => {
                   <TableCell className="colspan-[40px]">
                     <AvailabilityFormat
                       availability={enrollment.availability}
-                      card = {false}
+                      card={false}
                     />{" "}
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
@@ -982,7 +990,7 @@ const EnrollmentList = () => {
                     {formatDateAdmin(enrollment.endDate, false, true)}
                   </TableCell> */}
                   <TableCell>
-                     {(() => {
+                    {(() => {
                       const meeting = meetings.find(
                         (m) => String(m.id) === String(enrollment.meetingId)
                       );
@@ -1146,7 +1154,6 @@ const EnrollmentList = () => {
           </div>
         </div>
       </div>
-
       {/* Edit Enrollment Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -1479,7 +1486,6 @@ const EnrollmentList = () => {
           <Button onClick={handleUpdateEnrollment}>Update Enrollment</Button>
         </DialogContent>
       </Dialog>
-
       {/* Delete Enrollment Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -1505,10 +1511,9 @@ const EnrollmentList = () => {
           </div>
         </DialogContent>
       </Dialog>
-
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
-    </main>
+    </>
   );
 };
 

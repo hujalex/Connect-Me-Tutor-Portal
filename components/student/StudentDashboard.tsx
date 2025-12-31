@@ -37,7 +37,7 @@ import { Description } from "@radix-ui/react-dialog";
 import { getStudentSessions } from "@/lib/actions/student.actions";
 import { useProfile } from "@/contexts/profileContext";
 
-const StudentDashboard: React.FC<{ user: User | null }> = ({ user }) => {
+const StudentDashboard = () => {
   const supabase = createClientComponentClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);

@@ -256,7 +256,7 @@ function OTPLogin() {
   );
 }
 
-const OTPForm = () => {
+const OTPForm = async () => {
   return (
     <>
       <Suspense>
