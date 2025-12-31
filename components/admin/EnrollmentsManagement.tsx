@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, use } from "react";
 import {
   AlarmClockMinus,
   MessageCircleIcon,
@@ -95,26 +95,35 @@ const durationSchema = z.object({
 });
 
 const EnrollmentList = ({
-  initialEnrollments,
-  initialMeetings,
-  initialStudents,
-  initialTutors,
+  enrollmentsPromise,
+  meetingsPromise,
+  studentsPromise,
+  tutorsPromise,
 }: any) => {
+  const initialEnrollments: Enrollment[] = use(enrollmentsPromise);
+  const initialMeetings: Meeting[] = use(meetingsPromise);
+  const initialStudents: Profile[] = use(studentsPromise);
+  const initialTutors: Profile[] = use(tutorsPromise);
+
+  const [enrollments, setEnrollments] =
+    useState<Enrollment[]>(initialEnrollments);
+  const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>(
+    initialEnrollments
+  );
+  const [students, setStudents] = useState<Profile[]>(initialStudents);
+  const [tutors, setTutors] = useState<Profile[]>(initialTutors);
+  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings);
+
   const supabase = createClientComponentClient();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>(
-    []
-  );
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
+
   const [openStudentOptions, setOpenStudentOptions] = useState(false);
   const [openTutorOptions, setOpentTutorOptions] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [students, setStudents] = useState<Profile[]>([]);
-  const [tutors, setTutors] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);

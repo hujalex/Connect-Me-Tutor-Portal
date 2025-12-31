@@ -27,7 +27,6 @@ function SkeletonCard({ className, ...props }: React.ComponentProps<"div">) {
 
 export { SkeletonCard }
 
-
 export default function SkeletonTable({ rows = 5 }: { rows?: number }) {
   return (
     <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">

@@ -53,7 +53,8 @@ export const getUser = async () => {
 };
 
 const inviteUser = async (newProfileData: CreatedProfileData) => {
-  const supabase = await createClient();
+  console.log("INVITING USER")
+  const supabase = await createAdminClient();
   const { data: authData, error: authError } =
     await supabase.auth.admin.inviteUserByEmail(newProfileData.email, {
       data: {
@@ -62,7 +63,7 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
       },
     });
 
-  if (authError) throw new Error(authError.message);
+  if (authError) throw new Error("Unable to invite user " + authError.message);
   return authData.user.id;
 };
 
@@ -75,6 +76,8 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
 export const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   try {
+
+    console.log("CREATING USER")
     
     const { data: profile } = await supabase
       .from("Profiles")
