@@ -66,12 +66,14 @@ import { Label } from "@/components/ui/label";
 import {
   getAllEnrollments,
   addEnrollment,
-  removeEnrollment,
-  updateEnrollment,
   getAllProfiles,
   getMeetings,
   pauseEnrollmentOverSummer,
 } from "@/lib/actions/admin.actions";
+import {
+  removeEnrollment,
+  updateEnrollment
+} from "@/lib/actions/enrollment.server.actions"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Enrollment, Profile, Event, Meeting, Availability } from "@/types";
 import toast from "react-hot-toast";
@@ -95,15 +97,19 @@ const durationSchema = z.object({
 });
 
 const EnrollmentList = ({
-  enrollmentsPromise,
-  meetingsPromise,
-  studentsPromise,
-  tutorsPromise,
+  // enrollmentsPromise,
+  // meetingsPromise,
+  // studentsPromise,
+  // tutorsPromise,
+  initialEnrollments,
+  initialMeetings,
+  initialStudents,
+  initialTutors,
 }: any) => {
-  const initialEnrollments: Enrollment[] = use(enrollmentsPromise);
-  const initialMeetings: Meeting[] = use(meetingsPromise);
-  const initialStudents: Profile[] = use(studentsPromise);
-  const initialTutors: Profile[] = use(tutorsPromise);
+  // const initialEnrollments: Enrollment[] = use(enrollmentsPromise);
+  // const initialMeetings: Meeting[] = use(meetingsPromise);
+  // const initialStudents: Profile[] = use(studentsPromise);
+  // const initialTutors: Profile[] = use(tutorsPromise);
 
   const [enrollments, setEnrollments] =
     useState<Enrollment[]>(initialEnrollments);
