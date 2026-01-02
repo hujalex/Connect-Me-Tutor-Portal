@@ -81,6 +81,7 @@ import { boolean } from "zod";
 import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollments.action";
+import { useQuery } from "@tanstack/react-query";
 
 const Schedule = ({
   initialCurrentWeek,
@@ -114,7 +115,7 @@ const Schedule = ({
   const [allSessions, setAllSessions] = useState<Session[]>([]);
 
   //---------------------------------
-  const initialMount = useRef(true)
+  const initialMount = useRef(true);
   const [openStudentOptions, setOpenStudentOptions] = useState(false);
   const [openTutorOptions, setOpentTutorOptions] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -174,24 +175,6 @@ const Schedule = ({
     }
   };
 
-  const fetchSessions = async (weekStart: string, weekEnd: string) => {
-    setLoading(true);
-    try {
-      const fetchedSessions = await getAllSessions(
-        weekStart,
-        weekEnd,
-        "date",
-        true
-      );
-      setSessions(fetchedSessions);
-    } catch (error) {
-      console.error("Failed to fetch sessions:", error);
-      toast.error("Failed to load sessions");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // useEffect(() => {
   //   const fetchData = () => {
   //     // setCurrentWeek(initialCurrentWeek)
@@ -207,32 +190,80 @@ const Schedule = ({
   //   setLoading(false)
   // }, []);
 
+  const currWeekStart = startOfWeek(currentWeek).toISOString();
+  const currWeekEnd = endOfWeek(currentWeek).toISOString();
+
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [
+          fetchedSessions,
+          fetchedEnrollments,
+          fetchedMeetings,
+          fetchedStudents,
+          fetchedTutors,
+        ] = await Promise.all([
+          fetchSessions(currWeekStart, currWeekEnd),
+          fetchEnrollments(currWeekEnd),
+          fetchMeetings(),
+          fetchStudents(),
+          fetchTutors(),
+        ]);
 
-    const currWeekStart = startOfWeek(currentWeek).toISOString();
-    const currWeekEnd = endOfWeek(currentWeek).toISOString();
+        if (fetchedSessions) setSessions(fetchedSessions);
+        if (fetchedEnrollments) setEnrollments(fetchedEnrollments);
+        if (fetchedMeetings) setMeetings(fetchedMeetings);
+        if (fetchedStudents) setStudents(fetchedStudents);
+        if (fetchedTutors) setTutors(fetchedTutors);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
 
-    Promise.all([
-      fetchSessions(currWeekStart, currWeekEnd),
-      fetchEnrollments(currWeekEnd),
-      fetchMeetings(),
-      fetchStudents(),
-      fetchTutors(),
-    ]).catch((error) => {
-      console.error("Failed to fetch data:", error);
-      // Optional: Add error handling (toast notification, error state, etc.)
-    });
-
-    setWeekStart(currWeekStart);
-    setWeekEnd(currWeekEnd);
+      setWeekStart(currWeekStart);
+      setWeekEnd(currWeekEnd);
+    };
+    fetchData();
   }, [currentWeek]);
+
+  const fetchSessions = async (weekStart: string, weekEnd: string) => {
+    setLoading(true);
+    try {
+      const fetchedSessions = await getAllSessions(
+        weekStart,
+        weekEnd,
+        "date",
+        true
+      );
+      return fetchedSessions;
+      // setSessions(fetchedSessions);
+    } catch (error) {
+      console.error("Failed to fetch sessions:", error);
+      toast.error("Failed to load sessions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      return await getAllProfiles("Student");
+      // if (fetchedStudents) {
+      //   setStudents(fetchedStudents);
+      // }
+      // return fetchedStudents;
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+      toast.error("Failed to load students");
+    }
+  };
 
   const fetchEnrollments = async (endOfWeek: string) => {
     try {
       // const fetchedEnrollments = await getAllEnrollments();
-      const fetchedEnrollments = await getAllActiveEnrollments(endOfWeek);
+      return await getAllActiveEnrollments(endOfWeek);
 
-      setEnrollments(fetchedEnrollments);
+      // setEnrollments(fetchedEnrollments);
+      // return fetchedEnrollments;
     } catch (error) {
       console.error("Failed to fetch enrollments:", error);
       toast.error("Failed to load enrollments");
@@ -241,39 +272,75 @@ const Schedule = ({
 
   const fetchMeetings = async () => {
     try {
-      const fetchedMeetings = await getMeetings();
-      if (fetchedMeetings) {
-        setMeetings(fetchedMeetings);
-      }
+      return await getMeetings();
+      // if (fetchedMeetings) {
+      //   setMeetings(fetchedMeetings);
+      // }
+      // return fetchedMeetings
     } catch (error) {
       console.error("Failed to fetch meetings:", error);
       toast.error("Failed to load meetings");
     }
   };
 
-  const fetchStudents = async () => {
+  const fetchTutors = async () => {
     try {
-      const fetchedStudents = await getAllProfiles("Student");
-      if (fetchedStudents) {
-        setStudents(fetchedStudents);
-      }
+      return await getAllProfiles("Tutor");
+      // if (fetchedTutors) {
+      //   setTutors(fetchedTutors);
+      // }
     } catch (error) {
       console.error("Failed to fetch students:", error);
       toast.error("Failed to load students");
     }
   };
 
-  const fetchTutors = async () => {
-    try {
-      const fetchedTutors = await getAllProfiles("Tutor");
-      if (fetchedTutors) {
-        setTutors(fetchedTutors);
-      }
-    } catch (error) {
-      console.error("Failed to fetch students:", error);
-      toast.error("Failed to load students");
-    }
-  };
+  // const { data: studentsData } = useQuery({
+  //   queryKey: ["students"],
+  //   queryFn: fetchStudents,
+  //   staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  // });
+
+  // const { data: tutorsData } = useQuery({
+  //   queryKey: ["tutors"],
+  //   queryFn: fetchTutors,
+  //   staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  // });
+
+  // const { data: sessionsData, isLoading: isLoadingSessions } = useQuery({
+  //   queryKey: ["sessions", currWeekStart, currWeekEnd],
+  //   queryFn: () => fetchSessions(currWeekStart, currWeekEnd),
+  // });
+
+  // const { data: enrollmentsData } = useQuery({
+  //   queryKey: ["enrollments", currWeekEnd],
+  //   queryFn: () => fetchEnrollments(currWeekEnd),
+  // });
+
+  // const { data: meetingsData } = useQuery({
+  //   queryKey: ["meetings"],
+  //   queryFn: () => fetchMeetings(),
+  // });
+
+  // useEffect(() => {
+  //   if (studentsData) setStudents(studentsData);
+  // }, [studentsData]);
+
+  // useEffect(() => {
+  //   if (tutorsData) setTutors(tutorsData);
+  // }, [tutorsData]);
+
+  // useEffect(() => {
+  //   if (sessionsData) setSessions(sessionsData)
+  // }, [sessionsData])
+
+  // useEffect(() => {
+  //   if (enrollmentsData) setEnrollments(enrollmentsData)
+  // }, [enrollmentsData])
+
+  // useEffect(() => {
+  //   if (meetingsData) setMeetings(meetingsData)
+  // }, [meetingsData])
 
   const fetchAllSessionsFromSchedule = async () => {
     try {

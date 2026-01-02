@@ -1,8 +1,10 @@
+"use server"
 import { Enrollment } from "@/types";
-import { createClient } from "../supabase/server";
+import { createAdminClient, createClient } from "../supabase/server";
 import { Table } from "../supabase/tables";
 import { tableToInterfaceProfiles } from "../type-utils";
 import { cache } from "react";
+import { handleCalculateDuration } from "../utils";
 
 /* ENROLLMENTS */
 export async function getAllActiveEnrollmentsServer(
@@ -250,3 +252,97 @@ export async function getEnrollments(
 }
 
 export const cachedGetEnrollments = cache(getEnrollments)
+
+export const removeFutureSessions = async (enrollmentId: string, supabase: any) => {
+  try {
+    const now: string = new Date().toISOString();
+    console.log(enrollmentId);
+    const { data: deleteSessionsData, error: deleteSessionsError } =
+      await supabase
+        .from("Sessions")
+        .select("*")
+        .eq("enrollment_id", enrollmentId)
+        .eq("status", "Active")
+        .gte("date", now)
+        .throwOnError();
+    console.log("Successfully returned future sessions", deleteSessionsData)
+  } catch (error) {
+    console.error("Unable to remove future sessions", error);
+    throw error;
+  }
+};
+
+export const removeEnrollment = async (enrollmentId: string) => {
+  const supabase = await createClient()
+  await removeFutureSessions(enrollmentId, supabase);
+
+  const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
+    await supabase.from("Enrollments").delete().eq("id", enrollmentId);
+
+  if (deleteEnrollmentError) {
+    console.error("Error removing enrollment:", deleteEnrollmentError);
+    throw deleteEnrollmentError;
+  }
+};
+
+export const updateEnrollment = async (enrollment: Enrollment) => {
+  const supabase = await createClient()
+  try {
+    const now = new Date().toISOString();
+
+    const duration = await handleCalculateDuration(
+      enrollment.availability[0].startTime,
+      enrollment.availability[0].endTime
+    );
+
+    const { data: updateEnrollmentData, error: updateEnrollmentError } =
+      await supabase
+        .from(Table.Enrollments)
+        .update({
+          student_id: enrollment.student?.id,
+          tutor_id: enrollment.tutor?.id,
+          summary: enrollment.summary,
+          start_date: enrollment.startDate,
+          end_date: enrollment.endDate,
+          availability: enrollment.availability,
+          meetingId: enrollment.meetingId,
+          duration: duration,
+          frequency: enrollment.frequency,
+        })
+        .eq("id", enrollment.id)
+        .select("*") // Ensure it selects all columns
+        .single(); // Ensure only one object is returned
+
+    if (updateEnrollmentError) {
+      console.error("Error updating enrollment: ", updateEnrollmentError);
+      throw updateEnrollmentError;
+    }
+
+    // update related sessions
+    if (enrollment.student && enrollment.tutor) {
+      const { data: updateSessionData, error: updateSessionError } =
+        await supabase
+          .from(Table.Sessions)
+          .update({
+            student_id: enrollment.student?.id,
+            tutor_id: enrollment.tutor?.id,
+            meeting_id: enrollment.meetingId,
+          })
+          .eq("enrollment_id", enrollment.id)
+          .gt("date", now);
+
+      if (updateSessionError) {
+        console.error("Error updating sessions: ", updateSessionError);
+        throw updateSessionError;
+      }
+    }
+
+    //remove future sessions
+    await removeFutureSessions(enrollment.id, supabase);
+
+    return updateEnrollmentData;
+  } catch (error) {
+    console.error("Unable to update Enrollment", error);
+    throw error;
+  }
+};

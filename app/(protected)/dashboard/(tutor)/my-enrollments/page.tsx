@@ -14,6 +14,7 @@ import { profile } from "console";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
 import { Suspense } from "react";
 import { Calendar } from "lucide-react";
+import SkeletonTable from "@/components/ui/skeleton";
 
 const fetchUserProfile = async () => {
   const user = await cachedGetUser();
@@ -58,10 +59,7 @@ export default async function MyEnrollmentsPage() {
       <h1 className="text-3xl font-bold mb-6">Enrollments</h1>
       <Suspense
         fallback={
-          <div className="text-center py-10">
-            <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
-            <p className="mt-4 text-gray-600">Loading enrollments...</p>
-          </div>
+          <SkeletonTable />
         }
       >
         <MyEnrollmentsData />

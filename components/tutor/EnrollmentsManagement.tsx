@@ -70,12 +70,14 @@ import { Label } from "@/components/ui/label";
 import {
   getAllEnrollments,
   addEnrollment,
-  removeEnrollment,
-  updateEnrollment,
   getAllProfiles,
   getMeetings,
   pauseEnrollmentOverSummer,
 } from "@/lib/actions/admin.actions";
+import {
+  removeEnrollment,
+  updateEnrollment
+} from "@/lib/actions/enrollment.server.actions"
 import {
   getEnrollments,
   getOverlappingAvailabilites,

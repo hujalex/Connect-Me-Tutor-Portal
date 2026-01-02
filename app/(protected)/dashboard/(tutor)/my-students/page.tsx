@@ -1,5 +1,6 @@
 import StudentList from "@/components/tutor/StudentList";
 import { PageLoader } from "@/components/ui/page-loader";
+import SkeletonTable from "@/components/ui/skeleton";
 import {
   cachedGetProfile,
   getTutorStudents,
@@ -23,7 +24,7 @@ export default async function MyStudentsPage() {
       <div className="flex space-x-6">
         <div className="flex-grow bg-white rounded-lg shadow p-6">
           {" "}
-          <Suspense fallback = {<PageLoader pageName = {"students"} />}>
+          <Suspense fallback = {<SkeletonTable />}>
             <MyStudentsData />{" "}
           </Suspense>
         </div>

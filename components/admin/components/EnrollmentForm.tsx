@@ -1,4 +1,4 @@
-import AvailabilityForm from "@/components/ui/availability-form";
+ import AvailabilityForm from "@/components/ui/availability-form";
 import { Button } from "@/components/ui/button";
 import {
   Command,

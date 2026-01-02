@@ -66,12 +66,14 @@ import { Label } from "@/components/ui/label";
 import {
   getAllEnrollments,
   addEnrollment,
-  removeEnrollment,
-  updateEnrollment,
   getAllProfiles,
   getMeetings,
   pauseEnrollmentOverSummer,
 } from "@/lib/actions/admin.actions";
+import {
+  removeEnrollment,
+  updateEnrollment
+} from "@/lib/actions/enrollment.server.actions"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Enrollment, Profile, Event, Meeting, Availability } from "@/types";
 import toast from "react-hot-toast";

@@ -8,18 +8,22 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/admin/dashboard-layout"; // Assuming Sidebar component is available
 import { ProfileContextProvider, useProfile } from "@/contexts/profileContext";
 import { useFetchProfile } from "@/hooks/auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const {profile: fetchedData, loading: isLoading} = useFetchProfile()
+  const { profile: fetchedData, loading: isLoading } = useFetchProfile();
   const { profile, setProfile } = useProfile();
   const [loading, setLoading] = useState(true);
-  const supabase = createClientComponentClient();
   const router = useRouter();
 
+  const [queryClient] = useState(() => new QueryClient());
+
+
   useEffect(() => {
+    console.log("Initial Profile Fetch");
     if (fetchedData) {
-      setProfile(fetchedData)
-      setLoading(isLoading)
+      setProfile(fetchedData);
+      setLoading(isLoading);
     }
     // setProfile(fetchedProfile.profile)
   }, [fetchedData, isLoading, setProfile, setLoading]);
@@ -40,8 +44,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   // Layout with Sidebar and Navbar
   return (
-    <DashboardLayout>
-      <main>{children}</main>
-    </DashboardLayout>
+    <QueryClientProvider client={queryClient}>
+      <DashboardLayout>
+        <main>{children}</main>
+      </DashboardLayout>
+    </QueryClientProvider>
   );
 }

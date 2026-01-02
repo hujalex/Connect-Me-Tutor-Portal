@@ -322,3 +322,22 @@ export function capitalizeFirstLetter(word: string | undefined) {
   }
   return word.charAt(0).toUpperCase() + word.slice(1)
 }
+
+export const handleCalculateDuration = async (
+  startTime: string,
+  endTime: string
+) => {
+  try {
+    const startTimeNumber: number = timeStrToHours(startTime);
+    const endTimeNumber: number = timeStrToHours(endTime);
+    let difference = endTimeNumber - startTimeNumber;
+    if (difference < 0) {
+      difference += 24;
+    }
+
+    return difference;
+  } catch (error) {
+    toast.error("Unable to calculate duration");
+    console.error("Unable to calculate duration", error);
+  }
+};
