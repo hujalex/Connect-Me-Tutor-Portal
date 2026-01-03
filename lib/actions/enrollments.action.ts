@@ -49,6 +49,18 @@ export const getEnrollmentsWithMissingSEF = async () => {
         student_id,
         tutor_id,
         availability,
+        student:Profiles!student_id(
+          id,
+          first_name,
+          last_name,
+          email
+        ),
+        tutor:Profiles!tutor_id(
+          id,
+          first_name,
+          last_name,
+          email
+        ),
         sessions:Sessions!enrollment_id!inner(
           id,
           date,
@@ -71,7 +83,6 @@ export const getEnrollmentsWithMissingSEF = async () => {
     throw error;
   }
 };
-
 
 
 /**
