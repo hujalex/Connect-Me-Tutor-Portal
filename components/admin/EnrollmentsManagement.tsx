@@ -358,12 +358,10 @@ const EnrollmentList = ({
 
   const fetchProfiles = async () => {
     try {
-      const studentsData = await getAllProfiles("Student");
-      const tutorsData = await getAllProfiles("Tutor");
-      if (studentsData)
-        setStudents(studentsData.filter((s) => s.status === "Active"));
-      if (tutorsData)
-        setTutors(tutorsData.filter((t) => t.status === "Active"));
+      const studentsData = await getAllProfiles("Student", null, null, "Active");
+      const tutorsData = await getAllProfiles("Tutor", null, null, "Active");
+      if (studentsData) setStudents(studentsData);
+      if (tutorsData) setTutors(tutorsData);
     } catch (error) {
       console.error(
         "Error fetching profiles in EnrollmentsMangement.tsx:",
@@ -505,8 +503,8 @@ const EnrollmentList = ({
       type === "add"
         ? setNewEnrollment((prev) => ({ ...prev, frequency: value }))
         : setSelectedEnrollment((prev) =>
-            prev ? { ...prev, frequency: value } : null
-          );
+          prev ? { ...prev, frequency: value } : null
+        );
     }
   };
 
@@ -665,7 +663,7 @@ const EnrollmentList = ({
                               className="col-span-3"
                             >
                               {selectedStudentId &&
-                              studentsMap[selectedStudentId]
+                                studentsMap[selectedStudentId]
                                 ? `${studentsMap[selectedStudentId].firstName} ${studentsMap[selectedStudentId].lastName}`
                                 : "Select a student"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -884,7 +882,7 @@ const EnrollmentList = ({
                           type="date"
                           value={newEnrollment.startDate}
                           onChange={handleInputChange}
-                          // className="col-span-3"
+                        // className="col-span-3"
                         />
                         {/* <Label htmlFor="endDate" className="text-right">
                           End Date
@@ -942,11 +940,10 @@ const EnrollmentList = ({
                                   {meeting.name} - {meeting.id}
                                 </span>
                                 <Circle
-                                  className={`w-2 h-2 ml-2 ${
-                                    meetingAvailability[meeting.id]
+                                  className={`w-2 h-2 ml-2 ${meetingAvailability[meeting.id]
                                       ? "text-green-500"
                                       : "text-red-500"
-                                  } fill-current`}
+                                    } fill-current`}
                                 />
                               </SelectItem>
                             ))}
@@ -1416,7 +1413,7 @@ const EnrollmentList = ({
                     name="summary"
                     value={selectedEnrollment.summary}
                     onChange={handleInputChange}
-                    // className="col-span-3"
+                  // className="col-span-3"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -1466,9 +1463,9 @@ const EnrollmentList = ({
                       <SelectValue placeholder="Select a meeting link">
                         {selectedEnrollment.meetingId
                           ? meetings.find(
-                              (meeting) =>
-                                meeting.id === selectedEnrollment.meetingId
-                            )?.name
+                            (meeting) =>
+                              meeting.id === selectedEnrollment.meetingId
+                          )?.name
                           : "Select a meeting"}
                       </SelectValue>
                     </SelectTrigger>
@@ -1483,11 +1480,10 @@ const EnrollmentList = ({
                             {meeting.name} - {meeting.id}
                           </span>
                           <Circle
-                            className={`w-2 h-2 ml-2 ${
-                              meetingAvailability[meeting.id]
+                            className={`w-2 h-2 ml-2 ${meetingAvailability[meeting.id]
                                 ? "text-green-500"
                                 : "text-red-500"
-                            } fill-current`}
+                              } fill-current`}
                           />
                         </SelectItem>
                       ))}

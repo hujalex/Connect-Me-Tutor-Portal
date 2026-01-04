@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <PostHogProvider>
           {/* <QueryClientProvider client={queryClient}> */}
-            <ProfileContextProvider>{children}</ProfileContextProvider>
+          {children}
           {/* </QueryClientProvider> */}
           <SpeedInsights />
         </PostHogProvider>

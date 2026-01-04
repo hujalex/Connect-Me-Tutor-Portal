@@ -35,15 +35,6 @@ import { AdminConversation } from "@/types/chat";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-// Sample profiles data - replace with your actual data source
-// const profiles = [
-//   { id: "1", name: "Sarah Johnson", role: "Marketing Manager", avatar: "SJ" },
-//   { id: "2", name: "Mike Chen", role: "Software Engineer", avatar: "MC" },
-//   { id: "3", name: "Emily Rodriguez", role: "Product Designer", avatar: "ER" },
-//   { id: "4", name: "David Kim", role: "Data Analyst", avatar: "DK" },
-//   { id: "5", name: "Lisa Thompson", role: "Customer Success", avatar: "LT" },
-//   { id: "6", name: "Alex Morgan", role: "Sales Director", avatar: "AM" },
-// ];
 
 const existingConversations = [
   {

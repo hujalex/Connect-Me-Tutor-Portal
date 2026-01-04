@@ -1,7 +1,10 @@
- import LoginForm from "@/components/auth/LoginForm";
+import LoginForm from "@/components/auth/LoginForm";
 import Logo from "@/components/ui/logo";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
+import { cachedGetUser } from "@/lib/actions/user.server.actions";
+import { redirect } from "next/navigation";
+import { cachedGetProfile } from "@/lib/actions/profile.server.actions";
 
 export const metadata: Metadata = {
   title: "Log in | ConnectMe",
@@ -9,6 +12,15 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
+  const user = await cachedGetUser();
+
+  if (user) {
+    const profile = await cachedGetProfile(user.id);
+    if (profile && profile.role !== "Admin") {
+      redirect("/dashboard");
+    }
+  }
+
   return (
     <section className="flex flex-col md:flex-row ">
       <section className="lg:hidden flex flex-col p-1 items-center justify-center bg-white shadow-md">

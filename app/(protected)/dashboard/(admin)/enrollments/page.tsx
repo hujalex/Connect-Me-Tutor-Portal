@@ -9,12 +9,8 @@ async function MyEnrollmentsData() {
   const [enrollments, meetings, students, tutors] = await Promise.all([
     getAllEnrollments(),
     getMeetings(),
-    getAllProfiles("Student").then((s) =>
-      s ? s.filter((s) => s.status === "Active") : null
-    ),
-    getAllProfiles("Tutor").then((s) =>
-      s ? s.filter((s) => s.status === "Active") : null
-    ),
+    getAllProfiles("Student", null, null, "Active"),
+    getAllProfiles("Tutor", null, null, "Active"),
   ]);
 
   // const enrollments = getAllEnrollments();
@@ -26,7 +22,7 @@ async function MyEnrollmentsData() {
   //   s ? s.filter((s) => s.status === "Active") : null
   // );
 
-  return ( 
+  return (
     <EnrollmentsManager
       // enrollmentsPromise={enrollments}
       // meetingsPromise={meetings}

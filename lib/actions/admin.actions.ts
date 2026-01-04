@@ -55,7 +55,8 @@ const { fromZonedTime } = DateFNS;
 export async function getAllProfiles(
   role: "Student" | "Tutor" | "Admin",
   orderBy?: string | null,
-  ascending?: boolean | null
+  ascending?: boolean | null,
+  status?: string | null
 ): Promise<Profile[] | null> {
   try {
     const profileFields = `
@@ -90,6 +91,10 @@ export async function getAllProfiles(
       .from(Table.Profiles)
       .select(profileFields)
       .eq("role", role);
+
+    if (status) {
+      query = query.eq("status", status);
+    }
 
     // Add ordering if provided
     if (orderBy && ascending !== null) {
@@ -634,7 +639,7 @@ export async function getSessionKeys(data?: Session[]) {
 export async function isSingleMeetingAvailable(
   meetingId: string,
   session: Session
-): Promise<void> {}
+): Promise<void> { }
 
 /**
  * Checks availability of multiple meetings at once

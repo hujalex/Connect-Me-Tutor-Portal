@@ -90,7 +90,6 @@ export default function DashboardLayout({
 
   const {profile, setProfile } = useProfile();
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
-  const supabase = createClientComponentClient();
   const router = useRouter();
   const pathname = usePathname();
   const isSettingsPage = pathname === "/dashboard/settings";
