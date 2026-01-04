@@ -15,6 +15,8 @@ const Dashboard = () => {
   const { profile, setProfile } = useProfile()
   const router = useRouter();
 
+  console.log("Dashboard")
+
   if (!profile || !profile.role) {
     router.push('/login');
     return null;

@@ -15,9 +15,11 @@ import { getMeetings } from "@/lib/actions/meeting.server.actions";
 import { Suspense } from "react";
 import { Calendar } from "lucide-react";
 import SkeletonTable from "@/components/ui/skeleton";
+import { redirect } from "next/navigation";
 
 const fetchUserProfile = async () => {
-  const user = await cachedGetUser();
+  const user = await cachedGetUser()
+  if (!user) redirect("/")
   const profileData = await cachedGetProfile(user.id);
   if (!profileData) throw new Error("No profile found");
   return profileData;
@@ -57,11 +59,7 @@ export default async function MyEnrollmentsPage() {
   return (
     <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">Enrollments</h1>
-      <Suspense
-        fallback={
-          <SkeletonTable />
-        }
-      >
+      <Suspense fallback={<SkeletonTable />}>
         <MyEnrollmentsData />
       </Suspense>
     </main>

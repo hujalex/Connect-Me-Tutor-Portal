@@ -26,7 +26,7 @@ async function MyEnrollmentsData() {
     s ? s.filter((s) => s.status === "Active") : null
   );
 
-  return ( 
+  return (
     <EnrollmentsManager
       enrollmentsPromise={enrollments}
       meetingsPromise={meetings}

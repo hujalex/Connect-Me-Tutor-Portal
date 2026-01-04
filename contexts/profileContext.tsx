@@ -15,9 +15,9 @@ type ProfileContextValue = {
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
 
-export function ProfileContextProvider({ children }: { children: ReactNode }) {
+export function ProfileContextProvider({ children, initialProfile }: { children: ReactNode, initialProfile: Profile | null }) {
   const [role, setRole] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(initialProfile);
 
   const contextValue: ProfileContextValue = {
     role,
