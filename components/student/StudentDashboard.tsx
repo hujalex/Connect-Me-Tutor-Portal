@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, use } from "react";
 // import StudentCalendar from "../StudentCalendar";
 import { Input } from "@/components/ui/input";
 import ActiveSessionsTable from "./components/ActiveSessionsTable";
@@ -37,19 +37,39 @@ import { Description } from "@radix-ui/react-dialog";
 import { getStudentSessions } from "@/lib/actions/student.actions";
 import { useProfile } from "@/contexts/profileContext";
 
-const StudentDashboard = ({ initialProfile }: { initialProfile: Profile}) => {
-  const supabase = createClientComponentClient();
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [currentSessions, setCurrentSessions] = useState<Session[]>([]);
-  const [pastSessions, setPastSessions] = useState<Session[]>([]);
-  const [allSessions, setAllSessions] = useState<Session[]>([]);
-  const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
+const StudentDashboard = ({
+  initialProfile,
+  currentSessionsPromise,
+  activeSessionsPromise,
+  pastSessionsPromise,
+  meetingsPromise
+}: {
+  initialProfile: Profile;
+  currentSessionsPromise: Promise<Session[]>;
+  activeSessionsPromise: Promise<Session[]>;
+  pastSessionsPromise: Promise<Session[]>;
+  meetingsPromise: Promise<Meeting[] | null>
+}) => {
+
+  const initialCurrentSessions = use(currentSessionsPromise)
+  const initialActiveSessions = use(activeSessionsPromise)
+  const initialPastSessions = use(pastSessionsPromise)
+  const initialMeetings = use(meetingsPromise)
+
+  const [currentSessions, setCurrentSessions] = useState<Session[]>(initialCurrentSessions);
+  const [pastSessions, setPastSessions] = useState<Session[]>(initialPastSessions);
+  const [sessions, setSessions] = useState<Session[]>(initialActiveSessions);
+  const [filteredSessions, setFilteredSessions] = useState<Session[]>(initialActiveSessions);
   const [filteredPastSessions, setFilteredPastSessions] = useState<Session[]>(
-    []
+    initialPastSessions
   );
+  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings || []);
+
+
+  const [allSessions, setAllSessions] = useState<Session[]>([]);
+
   // const { profile, setProfile } = useProfile();
-  const [profile, setProfile] = useState<Profile | null>(initialProfile)
+  const [profile, setProfile] = useState<Profile | null>(initialProfile);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,60 +109,60 @@ const StudentDashboard = ({ initialProfile }: { initialProfile: Profile}) => {
     }
   }, []);
 
-  useEffect(() => {
-    let isMounted = true;
+  // useEffect(() => {
+  //   let isMounted = true;
 
-    const loadData = async () => {
-      if (profile) {
-        const [
-          currentSessionData,
-          activeSessionData,
-          pastSessionData,
-          fetchedMeetings,
-        ] = await Promise.all([
-          getStudentSessions(
-            profile.id,
-            startOfWeek(new Date()).toISOString(),
-            endOfWeek(new Date()).toISOString(),
-            undefined,
-            "date",
-            false
-          ),
-          getStudentSessions(
-            profile.id,
-            undefined,
-            undefined,
-            "Active",
-            "date",
-            false
-          ),
-          getStudentSessions(
-            profile.id,
-            undefined,
-            undefined,
-            ["Complete", "Cancelled"],
-            "date",
-            false
-          ),
-          getMeetings(),
-        ]);
-        if (isMounted) {
-          setCurrentSessions(currentSessionData);
-          setSessions(activeSessionData);
-          setFilteredSessions(activeSessionData);
-          setPastSessions(pastSessionData);
-          setFilteredPastSessions(pastSessionData);
+  //   const loadData = async () => {
+  //     if (profile) {
+  //       const [
+  //         currentSessionData,
+  //         activeSessionData,
+  //         pastSessionData,
+  //         fetchedMeetings,
+  //       ] = await Promise.all([
+  //         getStudentSessions(
+  //           profile.id,
+  //           startOfWeek(new Date()).toISOString(),
+  //           endOfWeek(new Date()).toISOString(),
+  //           undefined,
+  //           "date",
+  //           false
+  //         ),
+  //         getStudentSessions(
+  //           profile.id,
+  //           undefined,
+  //           undefined,
+  //           "Active",
+  //           "date",
+  //           false
+  //         ),
+  //         getStudentSessions(
+  //           profile.id,
+  //           undefined,
+  //           undefined,
+  //           ["Complete", "Cancelled"],
+  //           "date",
+  //           false
+  //         ),
+  //         getMeetings(),
+  //       ]);
+  //       if (isMounted) {
+  //         setCurrentSessions(currentSessionData);
+  //         setSessions(activeSessionData);
+  //         setFilteredSessions(activeSessionData);
+  //         setPastSessions(pastSessionData);
+  //         setFilteredPastSessions(pastSessionData);
 
-          if (fetchedMeetings) setMeetings(fetchedMeetings);
-        }
-      }
-    };
+  //         if (fetchedMeetings) setMeetings(fetchedMeetings);
+  //       }
+  //     }
+  //   };
 
-    loadData();
-    return () => {
-      isMounted = false;
-    };
-  }, [profile]);
+  //   loadData();
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [profile]);
 
   // const fetchMeetings = async () => {
   //   try {

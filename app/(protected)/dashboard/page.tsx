@@ -2,22 +2,28 @@ import AdminDashboard from "@/components/admin/DashboardContent";
 // import Dashboard from "@/components/dashboard/dashboard";
 import StudentDashboard from "@/components/student/StudentDashboard";
 import TutorDashboard from "@/components/tutor/dashboard";
+import SkeletonTable from "@/components/ui/skeleton";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
 import { cachedGetProfile } from "@/lib/actions/profile.server.actions";
-import { getTutorSessions } from "@/lib/actions/session.server.actions";
+import {
+  getStudentSessions,
+  getTutorSessions,
+} from "@/lib/actions/session.server.actions";
 import { cachedGetUser } from "@/lib/actions/user.server.actions";
+import { Meeting, Profile } from "@/types";
 import { endOfWeek, startOfWeek } from "date-fns";
 import { redirect } from "next/navigation";
+import { SurveySchedule } from "posthog-js";
+import { Suspense } from "react";
 
-async function getTutorSessionData() {}
 
-export default async function DashboardPage() {
-  const user = await cachedGetUser();
-  if (!user) redirect("/");
-
-  const profile = await cachedGetProfile(user.id);
-  if (!profile) throw new Error("No Profile found");
-
+async function TutorDashboardPage({
+  profile,
+  meetings,
+}: {
+  profile: Profile;
+  meetings: Promise<Meeting[] | null>;
+}) {
   const currentSessionData = getTutorSessions(
     profile.id,
     startOfWeek(new Date()).toISOString(),
@@ -45,22 +51,87 @@ export default async function DashboardPage() {
     false
   );
 
+  return (
+    <TutorDashboard
+      initialProfile={profile}
+      currentSessionsPromise={currentSessionData}
+      activeSessionsPromise={activeSessionData}
+      pastSessionsPromise={pastSessionData}
+      meetingsPromise={meetings}
+    />
+  );
+}
+
+async function StudentDashboardPage({
+  profile,
+  meetings,
+}: {
+  profile: Profile;
+  meetings: Promise<Meeting[] | null>;
+}) {
+  const currentStudentSessions = getStudentSessions(
+    profile.id,
+    startOfWeek(new Date()).toISOString(),
+    endOfWeek(new Date()).toISOString(),
+    undefined,
+    "date",
+    false
+  );
+
+  const activeStudentSessions = getStudentSessions(
+    profile.id,
+    undefined,
+    undefined,
+    "Active",
+    "date",
+    false
+  );
+
+  const pastStudentSessions = getStudentSessions(
+    profile.id,
+    undefined,
+    undefined,
+    ["Complete", "Cancelled"],
+    "date",
+    false
+  );
+
+  return (
+    <StudentDashboard
+      initialProfile={profile}
+      currentSessionsPromise={currentStudentSessions}
+      activeSessionsPromise={activeStudentSessions}
+      pastSessionsPromise={pastStudentSessions}
+      meetingsPromise={meetings}
+    />
+  );
+}
+
+export default async function DashboardPage() {
+  const user = await cachedGetUser();
+  if (!user) redirect("/");
+
+  const profile = await cachedGetProfile(user.id);
+  if (!profile) throw new Error("No Profile found");
+
   const meetings = getMeetings();
 
   return (
     <>
       {/* <Dashboard /> */}
       {profile.role === "Student" && (
-        <StudentDashboard initialProfile={profile} />
+        <Suspense fallback={<SkeletonTable />}>
+          {" "}
+          <StudentDashboardPage
+            profile={profile}
+            meetings={meetings}
+          />
+        </Suspense>
       )}
       {profile.role === "Tutor" && (
-        <TutorDashboard
-          initialProfile={profile}
-          currentSessionsPromise={currentSessionData}
-          activeSessionsPromise={activeSessionData}
-          pastSessionsPromise={pastSessionData}
-          meetingsPromise={meetings}
-        />
+        <Suspense fallback={<SkeletonTable />}>
+          <TutorDashboardPage profile={profile} meetings={meetings} />{" "}
+        </Suspense>
       )}
       {profile.role === "Admin" && <AdminDashboard />}
     </>

@@ -1,7 +1,7 @@
 import { cachedGetUser } from "@/lib/actions/user.server.actions";
 import DashboardLayout from "@/components/admin/dashboard-layout";
 import DashboardProviders from "./dashboardprovider";
-import { cachedGetProfile } from "@/lib/actions/profile.server.actions";
+import { cachedGetProfile, getUserProfiles } from "@/lib/actions/profile.server.actions";
 import { redirect } from "next/navigation";
 
 export default async function Layout({
@@ -14,7 +14,7 @@ export default async function Layout({
     redirect("/");
   });
 
-  if (!user) redirect("/")
+  if (!user) redirect("/");
 
   const profile = await cachedGetProfile(user.id);
 
@@ -22,11 +22,13 @@ export default async function Layout({
     redirect("/");
   }
 
+  const userProfiles = getUserProfiles(profile.userId)
+
   return (
     <>
       <DashboardProviders initialProfile={profile}>
         {" "}
-        <DashboardLayout>{children}</DashboardLayout>
+        <DashboardLayout profile={profile} userProfilesPromise = {userProfiles}>{children}</DashboardLayout>
       </DashboardProviders>
     </>
   );

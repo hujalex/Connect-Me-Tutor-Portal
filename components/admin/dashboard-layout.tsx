@@ -1,6 +1,6 @@
 "use client"; // This needs to be at the top to declare a client component
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -77,19 +77,23 @@ import {
 
 export default function DashboardLayout({
   children,
+  profile,
+  userProfilesPromise,
 }: {
   children: React.ReactNode;
+  profile: Profile;
+  userProfilesPromise: Promise<Partial<Profile>[]>;
 }) {
   // const [role, setRole] = useState<string | null>(null);
+  const userProfiles: Partial<Profile>[] = use(userProfilesPromise) || []
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   // const [profile, setProfile] = useState<{
   //   firstName: string;
   //   lastName: string;
   // } | null>(null); // For displaying profile data
 
-  const {profile, setProfile } = useProfile();
-  const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
+  // const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const router = useRouter();
   const pathname = usePathname();
   const isSettingsPage = pathname === "/dashboard/settings";
@@ -252,21 +256,21 @@ export default function DashboardLayout({
     // },
   ];
 
-  useEffect(() => {
-    const getUserProfileRole = async () => {
-      try {
-        if (profile) {
-          const userProfiles = await getUserProfiles(profile.userId)
-          if (userProfiles) setUserProfiles(userProfiles);
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getUserProfileRole();
-  }, [profile]);
+  // useEffect(() => {
+  //   const getUserProfileRole = async () => {
+  //     try {
+  //       if (profile) {
+  //         const userProfiles = await getUserProfiles(profile.userId)
+  //         if (userProfiles) setUserProfiles(userProfiles);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching user role:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   getUserProfileRole();
+  // }, [profile]);
 
   const [isOpen, setIsOpen] = useState(true);
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -284,7 +288,8 @@ export default function DashboardLayout({
           switchProfile(profile?.userId, newProfileId),
           getProfileWithProfileId(newProfileId),
         ]);
-        setProfile(newProfileData);
+        router.refresh()
+        // setProfile(newProfileData);
       }
       toast.success("Switched Profile")
     } catch (error) {

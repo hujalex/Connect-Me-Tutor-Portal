@@ -9,6 +9,8 @@ import { useFetchProfile } from "@/hooks/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fetchExternalImage } from "next/dist/server/image-optimizer";
 import { Profile } from "@/types";
+import ErrorBoundary from "next/dist/client/components/error-boundary";
+import GlobalError from "./error";
 
 export default function DashboardProviders({
   children,
@@ -21,8 +23,7 @@ export default function DashboardProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <ProfileContextProvider initialProfile={initialProfile}>
-        {" "}
-        {children}
+       {children}
       </ProfileContextProvider>
     </QueryClientProvider>
   );
