@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,14 +28,19 @@ import toast, { Toaster } from "react-hot-toast";
 import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 import { switchProfile } from "@/lib/actions/profile.server.actions";
 import { useProfile } from "@/contexts/profileContext";
-import { getUserProfiles} from "@/lib/actions/profile.server.actions"
+import { getUserProfiles } from "@/lib/actions/profile.server.actions";
 import { NetworkAccessProfileListInstance } from "twilio/lib/rest/supersim/v1/networkAccessProfile";
 
-export default function SettingsPage() {
+export default function SettingsPage({
+  profilePromise,
+}: {
+  profilePromise: Promise<Profile | null>;
+}) {
+  //   const profile = use(profilePromise);
+
   const supabase = createClientComponentClient();
   const router = useRouter();
   const { profile, setProfile } = useProfile();
-  // const [profile, setProfile] = useState<Profile | null>(null);
   const [lastActiveProfileId, setLastActiveProfileId] = useState<string>("");
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const [sessionReminders, setSessionReminders] = useState(false);
@@ -52,14 +57,16 @@ export default function SettingsPage() {
 
   const fetchUserInfo = async () => {
     const userId = await fetchUser();
-    if (userId) await fetchUserProfiles(userId);
+    if (userId) return await fetchUserProfiles(userId);
   };
 
   useEffect(() => {
-    fetchUserInfo();
+    const fetchData = async () => {
+      const userProfiles = await fetchUserInfo();
+      if (userProfiles) setUserProfiles(userProfiles);
+    };
+    fetchData()
   }, []);
-
-  useEffect(() => {});
 
   useEffect(() => {
     fetchNotificationSettings();
@@ -78,7 +85,7 @@ export default function SettingsPage() {
       const profileData = await getProfile(user.id);
       if (!profileData) throw new Error("No profile found");
 
-      setProfile(profileData);
+      // setProfile(profileData);
       setLastActiveProfileId(profileData.id);
       return user.id;
     } catch (error) {
@@ -88,8 +95,7 @@ export default function SettingsPage() {
 
   const fetchUserProfiles = async (userId: string) => {
     try {
-      const profiles = await getUserProfiles(userId)
-      setUserProfiles(profiles);
+      return await getUserProfiles(userId);
     } catch (error) {
       toast.error("Error fetching profiles");
       console.error("Error fetching other profiles", error);
@@ -167,9 +173,10 @@ export default function SettingsPage() {
       if (profile) {
         const [, newProfileData] = await Promise.all([
           switchProfile(profile?.userId, lastActiveProfileId),
-          getProfileWithProfileId(lastActiveProfileId)
-        ])
-        setProfile(newProfileData)
+          getProfileWithProfileId(lastActiveProfileId),
+        ]);
+        setProfile(newProfileData);
+        // router.refresh()
       }
       toast.success("Switched Profile");
     } catch (error) {
@@ -206,7 +213,7 @@ export default function SettingsPage() {
                     <SelectGroup>
                       <SelectLabel>Profiles</SelectLabel>
                       {userProfiles.map((profile) => (
-                        <SelectItem key = {profile.id} value={profile.id || ""}>
+                        <SelectItem key={profile.id} value={profile.id || ""}>
                           {profile.firstName} {profile.lastName}
                         </SelectItem>
                       ))}

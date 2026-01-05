@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, use } from "react";
+import React, { useState, useEffect, useCallback, use, Suspense } from "react";
 // import StudentCalendar from "../StudentCalendar";
 import { Input } from "@/components/ui/input";
 import ActiveSessionsTable from "./components/ActiveSessionsTable";
@@ -36,35 +36,38 @@ import { SelectSeparator } from "@radix-ui/react-select";
 import { Description } from "@radix-ui/react-dialog";
 import { getStudentSessions } from "@/lib/actions/student.actions";
 import { useProfile } from "@/contexts/profileContext";
+import SkeletonTable, { Skeleton } from "../ui/skeleton";
 
 const StudentDashboard = ({
   initialProfile,
   currentSessionsPromise,
   activeSessionsPromise,
   pastSessionsPromise,
-  meetingsPromise
+  meetingsPromise,
 }: {
   initialProfile: Profile;
   currentSessionsPromise: Promise<Session[]>;
   activeSessionsPromise: Promise<Session[]>;
   pastSessionsPromise: Promise<Session[]>;
-  meetingsPromise: Promise<Meeting[] | null>
+  meetingsPromise: Promise<Meeting[] | null>;
 }) => {
+  const initialCurrentSessions = use(currentSessionsPromise);
+  const initialActiveSessions = use(activeSessionsPromise);
+  const initialPastSessions = use(pastSessionsPromise);
+  const initialMeetings = use(meetingsPromise);
 
-  const initialCurrentSessions = use(currentSessionsPromise)
-  const initialActiveSessions = use(activeSessionsPromise)
-  const initialPastSessions = use(pastSessionsPromise)
-  const initialMeetings = use(meetingsPromise)
-
-  const [currentSessions, setCurrentSessions] = useState<Session[]>(initialCurrentSessions);
-  const [pastSessions, setPastSessions] = useState<Session[]>(initialPastSessions);
-  const [sessions, setSessions] = useState<Session[]>(initialActiveSessions);
-  const [filteredSessions, setFilteredSessions] = useState<Session[]>(initialActiveSessions);
-  const [filteredPastSessions, setFilteredPastSessions] = useState<Session[]>(
-    initialPastSessions
+  const [currentSessions, setCurrentSessions] = useState<Session[]>(
+    initialCurrentSessions
   );
+  const [pastSessions, setPastSessions] =
+    useState<Session[]>(initialPastSessions);
+  const [sessions, setSessions] = useState<Session[]>(initialActiveSessions);
+  const [filteredSessions, setFilteredSessions] = useState<Session[]>(
+    initialActiveSessions
+  );
+  const [filteredPastSessions, setFilteredPastSessions] =
+    useState<Session[]>(initialPastSessions);
   const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings || []);
-
 
   const [allSessions, setAllSessions] = useState<Session[]>([]);
 
@@ -418,32 +421,34 @@ const StudentDashboard = ({
         <h1 className="text-3xl font-bold mb-6">This Week</h1>
         <div className="flex space-x-6">
           <div className="flex-grow bg-white rounded-lg shadow p-6">
-            <CurrentSessionsTable
-              currentSessions={currentSessions}
-              filteredSessions={filteredSessions}
-              meetings={meetings}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage.toString()}
-              selectedSession={selectedSession}
-              selectedSessionDate={selectedSessionDate}
-              isDialogOpen={isDialogOpen}
-              isSessionExitFormOpen={isSessionExitFormOpen}
-              notes={notes}
-              nextClassConfirmed={nextClassConfirmed}
-              setSelectedSession={setSelectedSession}
-              setSelectedSessionDate={setSelectedSessionDate}
-              setIsDialogOpen={setIsDialogOpen}
-              setIsSessionExitFormOpen={setIsSessionExitFormOpen}
-              setNotes={setNotes}
-              setNextClassConfirmed={setNextClassConfirmed}
-              handleStatusChange={handleStatusChange}
-              handleReschedule={handleReschedule}
-              handleSessionComplete={handleSessionComplete}
-              handlePageChange={handlePageChange}
-              handleRowsPerPageChange={handleRowsPerPageChange}
-              handleInputChange={handleInputChange}
-            />
+            <Suspense fallback={<SkeletonTable />}>
+              <CurrentSessionsTable
+                currentSessions={currentSessions}
+                filteredSessions={filteredSessions}
+                meetings={meetings}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage.toString()}
+                selectedSession={selectedSession}
+                selectedSessionDate={selectedSessionDate}
+                isDialogOpen={isDialogOpen}
+                isSessionExitFormOpen={isSessionExitFormOpen}
+                notes={notes}
+                nextClassConfirmed={nextClassConfirmed}
+                setSelectedSession={setSelectedSession}
+                setSelectedSessionDate={setSelectedSessionDate}
+                setIsDialogOpen={setIsDialogOpen}
+                setIsSessionExitFormOpen={setIsSessionExitFormOpen}
+                setNotes={setNotes}
+                setNextClassConfirmed={setNextClassConfirmed}
+                handleStatusChange={handleStatusChange}
+                handleReschedule={handleReschedule}
+                handleSessionComplete={handleSessionComplete}
+                handlePageChange={handlePageChange}
+                handleRowsPerPageChange={handleRowsPerPageChange}
+                handleInputChange={handleInputChange}
+              />
+            </Suspense>
           </div>
         </div>
       </div>{" "}
@@ -463,33 +468,34 @@ const StudentDashboard = ({
                 />
               </div>
             </div>
-
-            <ActiveSessionsTable
-              paginatedSessions={paginatedSessions}
-              filteredSessions={filteredSessions}
-              meetings={meetings}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage.toString()}
-              selectedSession={selectedSession}
-              selectedSessionDate={selectedSessionDate}
-              isDialogOpen={isDialogOpen}
-              isSessionExitFormOpen={isSessionExitFormOpen}
-              notes={notes}
-              nextClassConfirmed={nextClassConfirmed}
-              setSelectedSession={setSelectedSession}
-              setSelectedSessionDate={setSelectedSessionDate}
-              setIsDialogOpen={setIsDialogOpen}
-              setIsSessionExitFormOpen={setIsSessionExitFormOpen}
-              setNotes={setNotes}
-              setNextClassConfirmed={setNextClassConfirmed}
-              handleStatusChange={handleStatusChange}
-              handleReschedule={handleReschedule}
-              handleSessionComplete={handleSessionComplete}
-              handlePageChange={handlePageChange}
-              handleRowsPerPageChange={handleRowsPerPageChange}
-              handleInputChange={handleInputChange}
-            />
+            <Suspense fallback={<SkeletonTable />}>
+              <ActiveSessionsTable
+                paginatedSessions={paginatedSessions}
+                filteredSessions={filteredSessions}
+                meetings={meetings}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage.toString()}
+                selectedSession={selectedSession}
+                selectedSessionDate={selectedSessionDate}
+                isDialogOpen={isDialogOpen}
+                isSessionExitFormOpen={isSessionExitFormOpen}
+                notes={notes}
+                nextClassConfirmed={nextClassConfirmed}
+                setSelectedSession={setSelectedSession}
+                setSelectedSessionDate={setSelectedSessionDate}
+                setIsDialogOpen={setIsDialogOpen}
+                setIsSessionExitFormOpen={setIsSessionExitFormOpen}
+                setNotes={setNotes}
+                setNextClassConfirmed={setNextClassConfirmed}
+                handleStatusChange={handleStatusChange}
+                handleReschedule={handleReschedule}
+                handleSessionComplete={handleSessionComplete}
+                handlePageChange={handlePageChange}
+                handleRowsPerPageChange={handleRowsPerPageChange}
+                handleInputChange={handleInputChange}
+              />
+            </Suspense>
           </div>
 
           {/* <div className="w-80">
@@ -514,17 +520,20 @@ const StudentDashboard = ({
               </div>
             </div>
 
-            <CompletedSessionsTable
-              paginatedSessions={paginatedPastSessions}
-              filteredSessions={filteredPastSessions}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage.toString()}
-              selectedSession={selectedSession}
-              setSelectedSession={setSelectedSession}
-              handlePageChange={handlePageChange}
-              handleRowsPerPageChange={handleRowsPerPageChange}
-            />
+            <Suspense fallback={<SkeletonTable />}>
+              {" "}
+              <CompletedSessionsTable
+                paginatedSessions={paginatedPastSessions}
+                filteredSessions={filteredPastSessions}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage.toString()}
+                selectedSession={selectedSession}
+                setSelectedSession={setSelectedSession}
+                handlePageChange={handlePageChange}
+                handleRowsPerPageChange={handleRowsPerPageChange}
+              />
+            </Suspense>
           </div>
 
           {/* <div className="w-80">
