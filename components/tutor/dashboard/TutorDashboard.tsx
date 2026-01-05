@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import TutorCalendar from "../TutorCalendar";
 import { Input } from "@/components/ui/input";
 import SessionsTable from "../components/ActiveSessionsTable";
@@ -33,18 +33,31 @@ import {
 import { SelectSeparator } from "@radix-ui/react-select";
 import { Description } from "@radix-ui/react-dialog";
 
-const TutorDashboard = () => {
+const TutorDashboard = ({
+  initialProfile,
+  currentSessionsPromise,
+  activeSessionsPromise,
+  pastSessionsPromise,
+  meetingsPromise,
+}: any) => {
+  const currentSessionsData: Session[] = use(currentSessionsPromise)
+  const activeSessionsData: Session[] = use(activeSessionsPromise)
+  const pastSessionsData: Session[] = use(pastSessionsPromise)
+  const meetings: Meeting[] = use(meetingsPromise)
+
+
   const supabase = createClientComponentClient();
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [currentSessions, setCurrentSessions] = useState<Session[]>([]);
-  const [pastSessions, setPastSessions] = useState<Session[]>([]);
-  const [allSessions, setAllSessions] = useState<Session[]>([]);
-  const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<Session[]>(activeSessionsData);
+  const [currentSessions, setCurrentSessions] = useState<Session[]>(currentSessionsData);
+  const [pastSessions, setPastSessions] = useState<Session[]>(pastSessionsData);
+  const [filteredSessions, setFilteredSessions] = useState<Session[]>(activeSessionsData);
   const [filteredPastSessions, setFilteredPastSessions] = useState<Session[]>(
-    []
+    pastSessionsData
   );
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(initialProfile);
+
+  const [allSessions, setAllSessions] = useState<Session[]>([]);
+ 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,21 +76,21 @@ const TutorDashboard = () => {
   const [nextClassConfirmed, setNextClassConfirmed] = useState<boolean>(false);
 
   useEffect(() => {
-    getUserData();
-    fetchMeetings();
+    // getUserData();
+    // fetchMeetings();
   }, []);
 
-  const fetchMeetings = async () => {
-    try {
-      const fetchedMeetings = await getMeetings();
-      if (fetchedMeetings) {
-        setMeetings(fetchedMeetings);
-      }
-    } catch (error) {
-      console.error("Failed to fetch meetings:", error);
-      toast.error("Failed to load meetings");
-    }
-  };
+  // const fetchMeetings = async () => {
+  //   try {
+  //     const fetchedMeetings = await getMeetings();
+  //     if (fetchedMeetings) {
+  //       setMeetings(fetchedMeetings);
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch meetings:", error);
+  //     toast.error("Failed to load meetings");
+  //   }
+  // };
 
   const getUserData = async () => {
     try {
@@ -245,7 +258,7 @@ const TutorDashboard = () => {
           )
         );
       }
-      getUserData();
+      // getUserData();
       setSelectedSession(null);
       setIsDialogOpen(false);
       toast.success("Session updated successfully");
