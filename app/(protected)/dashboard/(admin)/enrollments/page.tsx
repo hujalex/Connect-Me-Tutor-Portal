@@ -26,12 +26,16 @@ async function MyEnrollmentsData() {
     s ? s.filter((s) => s.status === "Active") : null
   );
 
-  return ( 
+  return (
     <EnrollmentsManager
       enrollmentsPromise={enrollments}
       meetingsPromise={meetings}
       studentsPromise={students}
       tutorsPromise={tutors}
+      // initialEnrollments={enrollments}
+      // initialMeetings={meetings}
+      // initialStudents={students}
+      // initialTutors={tutors}
     />
   );
 }

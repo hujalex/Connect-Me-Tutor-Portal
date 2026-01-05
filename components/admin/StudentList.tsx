@@ -97,8 +97,8 @@ const StudentList = ({ initialStudents }: any) =>
   // }
   {
     const supabase = createClientComponentClient();
-    const [students, setStudents] = useState<Profile[]>([]);
-    const [filteredStudents, setFilteredStudents] = useState<Profile[]>([]);
+    const [students, setStudents] = useState<Profile[]>(initialStudents);
+    const [filteredStudents, setFilteredStudents] = useState<Profile[]>(initialStudents);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -176,13 +176,6 @@ const StudentList = ({ initialStudents }: any) =>
       }
     };
 
-    useEffect(() => {
-      const fetchData = () => {
-        setStudents(initialStudents);
-        setFilteredStudents(initialStudents);
-      };
-      fetchData();
-    }, []);
 
     useEffect(() => {
       const filtered = students.filter((student) => {

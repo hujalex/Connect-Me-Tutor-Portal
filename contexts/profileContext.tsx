@@ -7,22 +7,17 @@ import type { Profile } from "@/types";
 import { getProfile } from "@/lib/actions/user.actions";
 
 type ProfileContextValue = {
-  role: string | null;
   profile: Profile | null;
-  setRole: (role: string | null) => void;
   setProfile: (profile: Profile | null) => void;
 };
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
 
-export function ProfileContextProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+export function ProfileContextProvider({ children, initialProfile }: { children: ReactNode, initialProfile: Profile | null }) {
+  const [profile, setProfile] = useState<Profile | null>(initialProfile);
 
   const contextValue: ProfileContextValue = {
-    role,
     profile,
-    setRole,
     setProfile,
   };
 

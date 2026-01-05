@@ -42,10 +42,11 @@ import toast from "react-hot-toast";
 import { DatabaseIcon } from "lucide-react";
 import { SYSTEM_ENTRYPOINTS } from "next/dist/shared/lib/constants";
 import { Table } from "../supabase/tables";
-import { handleCalculateDuration } from "./hours.actions";
+import { handleCalculateDuration } from "@/lib/utils";
 import { tableToInterfaceProfiles } from "../type-utils";
 import { createPairingRequest } from "./pairing.actions";
 import { scheduleMultipleSessionReminders } from "../twilio";
+import { removeFutureSessions } from "./enrollment.server.actions";
 // import { getMeeting } from "./meeting.actions";
 
 const { fromZonedTime } = DateFNS;
@@ -54,7 +55,8 @@ const { fromZonedTime } = DateFNS;
 export async function getAllProfiles(
   role: "Student" | "Tutor" | "Admin",
   orderBy?: string | null,
-  ascending?: boolean | null
+  ascending?: boolean | null,
+  status?: string | null
 ): Promise<Profile[] | null> {
   try {
     const profileFields = `
@@ -89,6 +91,10 @@ export async function getAllProfiles(
       .from(Table.Profiles)
       .select(profileFields)
       .eq("role", role);
+
+    if (status) {
+      query = query.eq("status", status);
+    }
 
     // Add ordering if provided
     if (orderBy && ascending !== null) {
@@ -633,7 +639,7 @@ export async function getSessionKeys(data?: Session[]) {
 export async function isSingleMeetingAvailable(
   meetingId: string,
   session: Session
-): Promise<void> {}
+): Promise<void> { }
 
 /**
  * Checks availability of multiple meetings at once
@@ -1019,66 +1025,7 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
   }
 }
 
-export const updateEnrollment = async (enrollment: Enrollment) => {
-  try {
-    const now = new Date().toISOString();
 
-    const duration = await handleCalculateDuration(
-      enrollment.availability[0].startTime,
-      enrollment.availability[0].endTime
-    );
-
-    const { data: updateEnrollmentData, error: updateEnrollmentError } =
-      await supabase
-        .from(Table.Enrollments)
-        .update({
-          student_id: enrollment.student?.id,
-          tutor_id: enrollment.tutor?.id,
-          summary: enrollment.summary,
-          start_date: enrollment.startDate,
-          end_date: enrollment.endDate,
-          availability: enrollment.availability,
-          meetingId: enrollment.meetingId,
-          duration: duration,
-          frequency: enrollment.frequency,
-        })
-        .eq("id", enrollment.id)
-        .select("*") // Ensure it selects all columns
-        .single(); // Ensure only one object is returned
-
-    if (updateEnrollmentError) {
-      console.error("Error updating enrollment: ", updateEnrollmentError);
-      throw updateEnrollmentError;
-    }
-
-    // update related sessions
-    if (enrollment.student && enrollment.tutor) {
-      const { data: updateSessionData, error: updateSessionError } =
-        await supabase
-          .from(Table.Sessions)
-          .update({
-            student_id: enrollment.student?.id,
-            tutor_id: enrollment.tutor?.id,
-            meeting_id: enrollment.meetingId,
-          })
-          .eq("enrollment_id", enrollment.id)
-          .gt("date", now);
-
-      if (updateSessionError) {
-        console.error("Error updating sessions: ", updateSessionError);
-        throw updateSessionError;
-      }
-    }
-
-    //remove future sessions
-    await removeFutureSessions(enrollment.id);
-
-    return updateEnrollmentData;
-  } catch (error) {
-    console.error("Unable to update Enrollment", error);
-    throw error;
-  }
-};
 
 export const isValidUUID = (uuid: string): boolean => {
   const uuidRegex =
@@ -1150,37 +1097,6 @@ export const addEnrollment = async (
   }
 };
 
-export const removeFutureSessions = async (enrollmentId: string) => {
-  try {
-    const now: string = new Date().toISOString();
-    const { data: deleteSessionsData, error: deleteSessionsError } =
-      await supabase
-        .from("Sessions")
-        .delete()
-        .eq("enrollment_id", enrollmentId)
-        .eq("status", "Active")
-        .gte("date", now);
-
-    if (deleteSessionsError) {
-      throw deleteSessionsError;
-    }
-  } catch (error) {
-    console.error("Unable to remove future sessions", error);
-    throw error;
-  }
-};
-
-export const removeEnrollment = async (enrollmentId: string) => {
-  await removeFutureSessions(enrollmentId);
-
-  const { data: deleteEnrollmentData, error: deleteEnrollmentError } =
-    await supabase.from("Enrollments").delete().eq("id", enrollmentId);
-
-  if (deleteEnrollmentError) {
-    console.error("Error removing enrollment:", deleteEnrollmentError);
-    throw deleteEnrollmentError;
-  }
-};
 
 export async function getEventsWithTutorMonth(
   tutorId: string,

@@ -18,6 +18,8 @@ export const switchProfile = async (userId: string, profileId: string) => {
       .update({ last_active_profile_id: profileId })
       .eq("user_id", userId)
       .throwOnError();
+
+    console.log("Switched")
   } catch (error) {
     throw error;
   }
@@ -55,9 +57,10 @@ export const getUserProfiles = async (userId: string) => {
 export async function getAllProfiles(
   role: "Student" | "Tutor" | "Admin",
   orderBy?: string | null,
-  ascending?: boolean | null
+  ascending?: boolean | null,
+  status?: string | null
 ): Promise<Profile[] | null> {
-  
+
   const supabase = await createClient()
 
   try {
@@ -93,6 +96,10 @@ export async function getAllProfiles(
       .from(Table.Profiles)
       .select(profileFields)
       .eq("role", role);
+
+    if (status) {
+      query = query.eq("status", status);
+    }
 
     // Add ordering if provided
     if (orderBy && ascending !== null) {

@@ -85,8 +85,8 @@ import { UserAvailabilities } from "../ui/UserAvailabilities";
 
 const TutorList = ({ initialTutors }: any) => {
   const supabase = createClientComponentClient();
-  const [tutors, setTutors] = useState<Profile[]>([]);
-  const [filteredTutors, setFilteredTutors] = useState<Profile[]>([]);
+  const [tutors, setTutors] = useState<Profile[]>(initialTutors);
+  const [filteredTutors, setFilteredTutors] = useState<Profile[]>(initialTutors);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -146,14 +146,6 @@ const TutorList = ({ initialTutors }: any) => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const fetchData = () => {
-      setTutors(initialTutors);
-      setFilteredTutors(initialTutors);
-    };
-    fetchData();
-  }, []);
 
   useEffect(() => {
     const filtered = tutors.filter((tutor) => {
