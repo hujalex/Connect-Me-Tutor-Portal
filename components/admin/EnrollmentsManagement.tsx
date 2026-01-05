@@ -171,17 +171,6 @@ const EnrollmentList = ({
   const [minutes, setMinutes] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchData = () => {
-      setEnrollments(initialEnrollments);
-      setFilteredEnrollments(initialEnrollments);
-      setStudents(initialStudents);
-      setTutors(initialTutors);
-      setMeetings(initialMeetings);
-    };
-    fetchData();
-    setLoading(false);
-  }, []);
 
   useEffect(() => {
     const filtered = enrollments.filter((enrollment) => {

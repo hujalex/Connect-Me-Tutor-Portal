@@ -122,13 +122,12 @@ export default async function DashboardPage() {
     <>
       {/* <Dashboard /> */}
       {profile.role === "Student" && (
-        <Suspense fallback={<SkeletonTable />}>
-          {" "}
+        // <Suspense fallback={<SkeletonTable />}>
           <StudentDashboardPage
             profile={profile}
             meetings={meetings}
           />
-        </Suspense>
+        // </Suspense>
       )}
       {profile.role === "Tutor" && (
         <Suspense fallback={<SkeletonTable />}>
