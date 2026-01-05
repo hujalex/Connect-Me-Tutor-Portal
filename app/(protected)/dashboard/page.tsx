@@ -53,6 +53,7 @@ async function TutorDashboardPage({
 
   return (
     <TutorDashboard
+      key = {profile.id}
       initialProfile={profile}
       currentSessionsPromise={currentSessionData}
       activeSessionsPromise={activeSessionData}
@@ -98,6 +99,7 @@ async function StudentDashboardPage({
 
   return (
     <StudentDashboard
+      key = {profile.id}
       initialProfile={profile}
       currentSessionsPromise={currentStudentSessions}
       activeSessionsPromise={activeStudentSessions}
