@@ -284,14 +284,14 @@ export default function DashboardLayout({
   const handleSwitchProfile = async (newProfileId: string) => {
     try {
       if (profile) {
-        const [, newProfileData] = await Promise.all([
+        await Promise.all([
           switchProfile(profile?.userId, newProfileId),
-          getProfileWithProfileId(newProfileId),
+          // getProfileWithProfileId(newProfileId),
         ]);
         router.refresh()
         // setProfile(newProfileData);
+        toast.success("Switched Profile")
       }
-      toast.success("Switched Profile")
     } catch (error) {
       toast.error("Unable to switch profiles");
       console.error(error);

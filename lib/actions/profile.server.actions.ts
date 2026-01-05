@@ -18,6 +18,8 @@ export const switchProfile = async (userId: string, profileId: string) => {
       .update({ last_active_profile_id: profileId })
       .eq("user_id", userId)
       .throwOnError();
+
+    console.log("Switched")
   } catch (error) {
     throw error;
   }
