@@ -4,7 +4,10 @@ import StudentDashboard from "@/components/student/StudentDashboard";
 import TutorDashboard from "@/components/tutor/dashboard";
 import SkeletonTable from "@/components/ui/skeleton";
 import { getMeetings } from "@/lib/actions/meeting.server.actions";
-import { cachedGetProfile, getProfile } from "@/lib/actions/profile.server.actions";
+import {
+  cachedGetProfile,
+  getProfile,
+} from "@/lib/actions/profile.server.actions";
 import {
   getStudentSessions,
   getTutorSessions,
@@ -15,7 +18,6 @@ import { endOfWeek, startOfWeek } from "date-fns";
 import { redirect } from "next/navigation";
 import { SurveySchedule } from "posthog-js";
 import { Suspense } from "react";
-
 
 async function TutorDashboardPage({
   profile,
@@ -53,6 +55,7 @@ async function TutorDashboardPage({
 
   return (
     <TutorDashboard
+      key={profile.id}
       initialProfile={profile}
       currentSessionsPromise={currentSessionData}
       activeSessionsPromise={activeSessionData}
@@ -97,13 +100,16 @@ async function StudentDashboardPage({
   );
 
   return (
-    <StudentDashboard
-      initialProfile={profile}
-      currentSessionsPromise={currentStudentSessions}
-      activeSessionsPromise={activeStudentSessions}
-      pastSessionsPromise={pastStudentSessions}
-      meetingsPromise={meetings}
-    />
+    <Suspense fallback={<SkeletonTable />}>
+      <StudentDashboard
+        key={profile.id}
+        initialProfile={profile}
+        currentSessionsPromise={currentStudentSessions}
+        activeSessionsPromise={activeStudentSessions}
+        pastSessionsPromise={pastStudentSessions}
+        meetingsPromise={meetings}
+      />
+    </Suspense>
   );
 }
 
@@ -120,13 +126,7 @@ export default async function DashboardPage() {
     <>
       {/* <Dashboard /> */}
       {profile.role === "Student" && (
-        <Suspense fallback={<SkeletonTable />}>
-          {" "}
-          <StudentDashboardPage
-            profile={profile}
-            meetings={meetings}
-          />
-        </Suspense>
+        <StudentDashboardPage profile={profile} meetings={meetings} />
       )}
       {profile.role === "Tutor" && (
         <Suspense fallback={<SkeletonTable />}>
