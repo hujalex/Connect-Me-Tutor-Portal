@@ -337,7 +337,57 @@ export const handleCalculateDuration = async (
 
     return difference;
   } catch (error) {
-    toast.error("Unable to calculate duration");
     console.error("Unable to calculate duration", error);
   }
 };
+
+
+export async function createPassword(length: number = 16): Promise<string> {
+  // Character sets for password generation
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+  const allChars = lowercase + uppercase + numbers + symbols;
+
+  // Use crypto.getRandomValues for cryptographically secure randomness
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+
+  let password = "";
+
+  // Ensure at least one character from each character set
+  const guaranteedChars = [
+    lowercase[array[0] % lowercase.length],
+    uppercase[array[1] % uppercase.length],
+    numbers[array[2] % numbers.length],
+    symbols[array[3] % symbols.length],
+  ];
+
+  // Fill remaining positions with random characters from all sets
+  for (let i = 4; i < length; i++) {
+    password += allChars[array[i] % allChars.length];
+  }
+
+  // Add guaranteed characters
+  password += guaranteedChars.join("");
+
+  // Shuffle the password to randomize guaranteed character positions
+  return shuffleString(password);
+}
+
+
+function shuffleString(str: string): string {
+  const array = str.split("");
+  const randomArray = new Uint8Array(array.length);
+  crypto.getRandomValues(randomArray);
+
+  // Fisher-Yates shuffle with crypto random
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = randomArray[i] % (i + 1);
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array.join("");
+}

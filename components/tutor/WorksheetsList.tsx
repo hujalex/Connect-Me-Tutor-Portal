@@ -9,11 +9,9 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase/client";
+import toast, { Toaster } from "react-hot-toast";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 const WorksheetsList = () => {
   const [worksheets, setWorksheets] = useState<any[]>([]);
@@ -33,6 +31,10 @@ const WorksheetsList = () => {
 
   const downloadFile = async (path: string) => {
     const { data } = await supabase.storage.from("worksheets").download(path);
+    if (!data) {
+      toast.error("Worksheet nor found")
+      return;
+    }
     const url = URL.createObjectURL(data);
     const download = document.createElement("a");
     download.href = url;
@@ -79,6 +81,7 @@ const WorksheetsList = () => {
           </Card>
         ))}
       </div>
+      <Toaster />
     </main>
   );
 };
