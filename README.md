@@ -6,6 +6,10 @@ Connect Me's tutor portal began as an internal tool to meet our organization's n
 
 ## Mult-Profile System
 Our portal allows users to have multiple profiles under one email to accommodate parents who would like to register multiple students under one email, or tutors who would also like to register as students to take classes with other tutors 
+
+## Auth
+- **OTP Login** - Alternative to password logins
+- **2-step Verification** - Options to enforce two-step verification for various users
  
 ## Tutors & Students
 - **Volunteer Dashboard** - Provides necessary information regarding pairings and sessions
