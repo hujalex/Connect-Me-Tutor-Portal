@@ -268,7 +268,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   <UserRoundPlus className="h-4 w-4" />
                 </Button>
                 <AlertDialog>
-                  <AlertDialogTrigger>
+                  <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon">
                       <Trash color="#ef4444" className="h-4 w-4" />
                     </Button>

@@ -3,36 +3,35 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import toast, { Toaster } from "react-hot-toast";
 
-
-const WorksheetsList = () => {
-  const [worksheets, setWorksheets] = useState<any[]>([]);
-
-    useEffect(() => {
-    const fetchFiles = async () => {
-      const { data, error } = await supabase.storage
-        .from("worksheets")
-        .list(""); 
-      if (!error && data){
-        setWorksheets(data);
+const WorksheetsList = ({
+  files,
+}: {
+  files:
+    | {
+        data: any[];
+        error: null;
       }
-    };
+    | {
+        data: null;
+        error: Error;
+      };
+}) => {
+  const [worksheets, setWorksheets] = useState<any[]>(files.data || []);
 
-    fetchFiles();
+  useEffect(() => {
+    if (files.error) {
+      toast.error("Unable to load worksheets")
+    }
   }, []);
 
   const downloadFile = async (path: string) => {
     const { data } = await supabase.storage.from("worksheets").download(path);
     if (!data) {
-      toast.error("Worksheet nor found")
+      toast.error("Worksheet nor found");
       return;
     }
     const url = URL.createObjectURL(data);
@@ -64,7 +63,9 @@ const WorksheetsList = () => {
                 <Button
                   className="w-1/2"
                   onClick={() => {
-                    const { data } = supabase.storage.from("worksheets").getPublicUrl(file.name);
+                    const { data } = supabase.storage
+                      .from("worksheets")
+                      .getPublicUrl(file.name);
                     window.open(data.publicUrl, "_blank");
                   }}
                 >
