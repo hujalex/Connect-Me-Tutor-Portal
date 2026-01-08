@@ -143,8 +143,6 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Student</TableHead>
             <TableHead>Duration</TableHead>
             <TableHead>Meeting</TableHead>
-            {/* <TableHead>Reschedule</TableHead> */}
-            {/* <TableHead>Request Substitute</TableHead> */}
             <TableHead>Session Exit Form</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>

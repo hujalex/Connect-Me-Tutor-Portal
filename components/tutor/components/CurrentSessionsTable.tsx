@@ -278,7 +278,6 @@ const CurrentSessionsTable: React.FC<CurrentSessionTableProps> = ({
                     <center>Request a Substitute</center>
                   </HoverCardContent>
                 </HoverCard>
-
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <HoverCard>

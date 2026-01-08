@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import toast, { Toaster } from "react-hot-toast";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
+// const supabase = createClientComponentClient()
 
 const WorksheetsList = ({
   files,
@@ -23,9 +26,16 @@ const WorksheetsList = ({
   const [worksheets, setWorksheets] = useState<any[]>(files.data || []);
 
   useEffect(() => {
-    if (files.error) {
-      toast.error("Unable to load worksheets")
-    }
+    const fetchWorksheets = async () => {
+      const sheets = await supabase.storage.from("worksheets").list();
+      console.log(sheets);
+      if (files.error) {
+        toast.error("Unable to load worksheets");
+      }
+      if (sheets.data) setWorksheets(sheets.data);
+    };
+
+    fetchWorksheets();
   }, []);
 
   const downloadFile = async (path: string) => {
