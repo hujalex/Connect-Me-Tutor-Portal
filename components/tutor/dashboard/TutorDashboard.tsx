@@ -295,7 +295,7 @@ const TutorDashboard = ({
     isFirstSession: boolean
   ) => {
     try {
-      await recordSessionExitForm(updatedSession.id, notes);
+      updatedSession.session_exit_form = notes;
       updatedSession.status = "Complete";
       updatedSession.isQuestionOrConcern = isQuestionOrConcern;
       updatedSession.isFirstSession = isFirstSession;
