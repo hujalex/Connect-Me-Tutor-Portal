@@ -80,7 +80,7 @@ import { Textarea } from "../ui/textarea";
 import { boolean } from "zod";
 import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
-import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollments.action";
+import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollment.server.actions";
 import { useQuery } from "@tanstack/react-query";
 
 const Schedule = ({

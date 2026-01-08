@@ -5,6 +5,8 @@ import { Table } from "../supabase/tables";
 import { tableToInterfaceProfiles } from "../type-utils";
 import { cache } from "react";
 import { handleCalculateDuration } from "../utils";
+import { subWeeks } from "date-fns";
+
 
 /* ENROLLMENTS */
 export async function getAllActiveEnrollmentsServer(
@@ -346,3 +348,55 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
     throw error;
   }
 };
+
+
+export const getEnrollmentsWithMissingSEF = async () => {
+  const supabase = await createClient()
+  try {
+    const twoWeeksAgo = subWeeks(new Date(), 2).toISOString();
+    const now = new Date().toISOString();
+
+    const { data: enrollments } = await supabase
+      .from("Enrollments")
+      .select(
+        `
+        id,
+        student_id,
+        tutor_id,
+        availability,
+        student:Profiles!student_id(
+          id,
+          first_name,
+          last_name,
+          email
+        ),
+        tutor:Profiles!tutor_id(
+          id,
+          first_name,
+          last_name,
+          email
+        ),
+        sessions:Sessions!enrollment_id!inner(
+          id,
+          date,
+          status
+        )
+        `
+      )
+      .eq("sessions.status", "Active")
+      .gte("sessions.date", twoWeeksAgo)
+      .lte("sessions.date", now)
+      .throwOnError();
+
+    const enrollmentsWithTwoMissingSessions = enrollments.filter(
+      (enrollment) => enrollment.sessions.length >= 2
+    );
+
+    console.log(enrollmentsWithTwoMissingSessions);
+  } catch (error) {
+    console.error("Unable to filter ", error);
+    throw error;
+  }
+};
+
+

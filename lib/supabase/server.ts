@@ -8,7 +8,7 @@ import { createClient as createAdmin } from "@supabase/supabase-js";
 import { cookies, headers } from "next/headers";
 
 export async function createServerClient() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   return makeServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,7 +33,7 @@ export async function createServerClient() {
 
 // Supabase Instances are singleton
 export async function createClient() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   return createServerComponentClient(
     {

@@ -8,6 +8,7 @@ import { Table } from "../supabase/tables";
 import { admin } from "googleapis/build/src/apis/admin";
 import { profile } from "console";
 import { tableToInterfaceProfiles } from "../type-utils";
+import { createPassword } from "../utils";
 
 interface UserMetadata {
   email: string;
@@ -53,8 +54,8 @@ export const getUser = async () => {
 };
 
 const inviteUser = async (newProfileData: CreatedProfileData) => {
-  console.log("INVITING USER")
   const supabase = await createAdminClient();
+
   const { data: authData, error: authError } =
     await supabase.auth.admin.inviteUserByEmail(newProfileData.email, {
       data: {
@@ -62,6 +63,11 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
         last_name: newProfileData.lastName,
       },
     });
+
+  // await supabase.auth.admin.createUser({
+  //   email: newProfileData.email,
+  //   password: newProfileData.password,
+  // });
 
   if (authError) throw new Error("Unable to invite user " + authError.message);
   return authData.user.id;
@@ -76,9 +82,6 @@ const inviteUser = async (newProfileData: CreatedProfileData) => {
 export const createUser = async (newProfileData: CreatedProfileData) => {
   const supabase = await createClient();
   try {
-
-    console.log("CREATING USER")
-    
     const { data: profile } = await supabase
       .from("Profiles")
       .select("user_id, role")
@@ -86,10 +89,9 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
       .limit(1)
       .maybeSingle()
       .throwOnError();
-    
 
-    if (profile?.role === 'Admin') {
-       throw new Error ("Multiple profiles prohibited for provided email") 
+    if (profile?.role === "Admin") {
+      throw new Error("Multiple profiles prohibited for provided email");
     }
 
     const userId = profile?.user_id ?? (await inviteUser(newProfileData));
@@ -122,12 +124,12 @@ export const createUser = async (newProfileData: CreatedProfileData) => {
       .single();
 
     if (!profile && profileError) {
-      // Only delete if this is not another existing user
       await supabase.auth.admin.deleteUser(userId);
       throw profileError;
     }
 
-    const createdProfileData: Profile = tableToInterfaceProfiles(createdProfile)
+    const createdProfileData: Profile =
+      tableToInterfaceProfiles(createdProfile);
 
     return createdProfileData;
   } catch (error) {
@@ -173,7 +175,6 @@ export const deleteUser = async (profileId: string) => {
       .eq("id", profileId)
       .single()
       .throwOnError();
-    
 
     const [res1, res2] = await Promise.all([
       adminSupabase
@@ -197,12 +198,7 @@ export const deleteUser = async (profileId: string) => {
     const relatedProfiles = res1.data;
     const userSettings = res2.data;
 
-
-    console.log(relatedProfiles)
-
-
     if (relatedProfiles.length == 1) {
-      console.log("breakpoint")
       const { error: authError } = await adminSupabase.auth.admin.deleteUser(
         relatedProfiles[0].user_id
       );
@@ -228,5 +224,20 @@ export const deleteUser = async (profileId: string) => {
   } catch (error: any) {
     console.error("Failed to delete user", error);
     throw error;
+  }
+};
+
+export const createUserWithTempPassword = async (tutor: Partial<Profile>) => {
+  try {
+    const tempPassword = await createPassword();
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: tutor.email || "",
+      password: tempPassword,
+      email_confirm: true,
+    });
+    return tutor as Profile;
+  } catch (error) {
+    console.error("Unable to create user", error);
   }
 };

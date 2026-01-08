@@ -35,7 +35,7 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-src 'self' blob: https://*.zoom.us;",
+            value: "frame-src 'self' blob: https://*.zoom.us https://vercel.live;",
           },
         ],
       },

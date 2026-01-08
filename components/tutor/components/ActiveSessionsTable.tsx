@@ -143,8 +143,6 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
             <TableHead>Student</TableHead>
             <TableHead>Duration</TableHead>
             <TableHead>Meeting</TableHead>
-            {/* <TableHead>Reschedule</TableHead> */}
-            {/* <TableHead>Request Substitute</TableHead> */}
             <TableHead>Session Exit Form</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -268,7 +266,7 @@ const ActiveSessionsTable: React.FC<SessionsTableProps> = ({
                   <UserRoundPlus className="h-4 w-4" />
                 </Button>
                 <AlertDialog>
-                  <AlertDialogTrigger>
+                  <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon">
                       <Trash color="#ef4444" className="h-4 w-4" />
                     </Button>
