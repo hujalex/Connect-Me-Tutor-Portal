@@ -98,7 +98,7 @@ async function StudentDashboardPage({
     "date",
     false
   );
-
+  
   return (
     <Suspense fallback={<SkeletonTable />}>
       <StudentDashboard
