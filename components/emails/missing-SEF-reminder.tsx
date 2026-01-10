@@ -22,7 +22,7 @@ export const missingSEFReminderEmail = (
       are still marked as incomplete.<br><br>
 
       Please visit
-      <a href="https://www.connectmego.app/">ConnectMeGo</a>
+      <a href="https://www.connectmego.app/">ConnectMe Tutor Portal</a>
       and submit the required SEFs as soon as possible.<br><br>
 
       If you have any questions, feel free to reach out to us on Discord.<br><br>
