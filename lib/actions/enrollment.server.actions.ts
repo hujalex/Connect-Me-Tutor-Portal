@@ -349,7 +349,6 @@ export const updateEnrollment = async (enrollment: Enrollment) => {
   }
 };
 
-
 export const getEnrollmentsWithMissingSEF = async () => {
   const supabase = await createClient()
   try {
