@@ -517,7 +517,7 @@ const Schedule = ({
 
   const handleGetMissingSEF = async () => {
     try {
-      await getEnrollmentsWithMissingSEF();
+      await  getEnrollmentsWithMissingSEF();
       toast.success("Printed to console");
     } catch (error) {
       console.error(error);

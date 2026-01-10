@@ -153,6 +153,32 @@ export function formatDateAdmin(
   return date.toLocaleDateString("en-US", options);
 }
 
+export function formatDateUTC(
+  dateString: string,
+  params: {
+    includeTime? : boolean,
+    includeDate? : boolean,
+  }
+) {
+  const date: Date = new Date(dateString)
+
+  const { includeTime = true, includeDate = true } = params;
+
+    const options: Intl.DateTimeFormatOptions = {
+    year: includeDate ? "numeric" : undefined,
+    month: includeDate ? "long" : undefined, // Can be 'short' or 'numeric' for different formats
+    day: includeDate ? "numeric" : undefined,
+    hour: includeTime ? "numeric" : undefined,
+    minute: includeTime ? "numeric" : undefined,
+    second: includeTime ? "numeric" : undefined,
+    timeZone: "UTC",
+    // timeZoneName: "short", // To include time zone information
+  };
+
+  return date.toLocaleDateString("en-US", options)
+
+}
+
 export function getSessionTimespan(timeStr: string, duration: number): string {
   const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",

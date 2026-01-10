@@ -7,7 +7,7 @@ import {
   Timer,
   TimerOff,
 } from "lucide-react";
-import { cn, formatDateAdmin, formatSessionDuration } from "@/lib/utils";
+import { cn, formatDateAdmin, formatDateUTC, formatSessionDuration } from "@/lib/utils";
 import {
   ChevronDown,
   ChevronsLeft,
@@ -86,6 +86,7 @@ import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { checkAvailableMeetingForEnrollments } from "@/lib/actions/meeting.server.actions";
+import { formatDateServer } from "@/lib/actions/utils.server.actions";
 // import Availability from "@/components/student/AvailabilityFormat";
 
 const durationSchema = z.object({
@@ -996,7 +997,8 @@ const EnrollmentList = ({
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
                   <TableCell>
-                    {formatDateAdmin(enrollment.startDate, false, true)}
+                    {formatDateUTC(enrollment.startDate, { includeTime: false, includeDate: true})}
+                    {/* {formatDateServer(enrollment.startDate, { includeTime: false, includeDate: true})} */}
                   </TableCell>
                   {/* <TableCell>
                     {formatDateAdmin(enrollment.endDate, false, true)}
