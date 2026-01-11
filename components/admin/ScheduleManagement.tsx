@@ -227,14 +227,13 @@ const Schedule = ({
     meetingsResult,
   ] = query;
 
-
   const sessions = sessionsResult.data || [];
   const students = studentsResult.data || [];
   const tutors = tutorsResult.data || [];
   const enrollments = enrollmentsResult.data || [];
   const meetings = meetingsResult.data || [];
 
-  let isLoading = sessionsResult.isLoading
+  let isLoading = sessionsResult.isLoading;
 
   // const [sessions, setSessions] = useState<Session[]>([]);
 
@@ -447,8 +446,23 @@ const Schedule = ({
 
   const updateWeekMutation = useMutation({
     mutationFn: () => addSessions(weekStart, weekEnd, enrollments, sessions),
-    onMutate: () => {
-      isLoading = true;
+    onMutate: async () => {
+
+      // await queryClient.cancelQueries({ queryKey: ["sessions"] });
+
+      // const prevSessions: Session[] | undefined = queryClient.getQueryData([
+      //   "sessions",
+      //   weekStart,
+      //   weekEnd,
+      // ]);
+
+      // await queryClient.setQueryData(
+      //   ["sessions", weekStart, weekEnd],
+      //   (sessions: Session[] | undefined) =>
+      //     sessions && prevSessions ? [...sessions, ...prevSessions] : []
+      // );
+
+      // return { prevSessions };
     },
     onSuccess: (newSessions: Session[]) => {
       queryClient.invalidateQueries({
@@ -456,52 +470,24 @@ const Schedule = ({
       });
       toast.success(`${newSessions.length} new sessions added successfully`);
     },
-    onError: (error: any) => {
-      console.error("Failed to add sessions:", error);
+    onError: (error: any, _, context) => {
+      // if (context) {
+      //   queryClient.setQueryData(
+      //     ["sessions", weekStart, weekEnd],
+      //     context.prevSessions
+      //   );
+      // }
+      // console.error("Failed to add sessions:", error);
       error.digest === "4161161223"
         ? toast.error("Please wait until adding new sessions")
         : toast.error(`Failed to add sessions. ${error.message}`);
     },
     onSettled: () => {
-      isLoading = false
     },
   });
 
   const handleUpdateWeek = async () => {
     updateWeekMutation.mutate();
-    // try {
-    //   //------Set Loading-------
-    //   setLoading(true);
-
-    //   // Create sessions for all enrollments without checking meeting availability
-    //   const newSessions = await addSessions(
-    //     weekStart,
-    //     weekEnd,
-    //     enrollments,
-    //     sessions
-    //   );
-
-    //   // const response = await fetch('/api/sessions/update-week');
-    //   // if (!response.ok) throw new Error(response.statusText)
-    //   // const data = await response.json();
-
-    //   // const newSessions = data.newSessions;
-
-    //   if (!newSessions) {
-    //     throw new Error("No sessions were created");
-    //   }
-
-    //   setSessions((prevSessions) => [...prevSessions, ...newSessions]);
-    //   fetchSessions(weekStart, weekEnd); // Reloads only sessions
-    //   toast.success(`${newSessions.length} new sessions added successfully`);
-    // } catch (error: any) {
-    //   console.error("Failed to add sessions:", error);
-    //   error.digest === "4161161223"
-    //     ? toast.error("Please wait until adding new sessions")
-    //     : toast.error(`Failed to add sessions. ${error.message}`);
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   // Filter sessions with valid dates for display
@@ -524,37 +510,47 @@ const Schedule = ({
 
   const removeSessionMutation = useMutation({
     mutationFn: (sessionId: string) => removeSession(sessionId),
-    onMutate: () => {
-      isLoading = true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onMutate: async (sessionId: string) => {
+      await queryClient.cancelQueries({
         queryKey: ["sessions", weekStart, weekEnd],
       });
+      const prevSessions = queryClient.getQueryData<Session[]>([
+        "sessions",
+        weekStart,
+        weekEnd,
+      ]);
+
+      queryClient.setQueryData(
+        ["sessions", weekStart, weekEnd],
+        (sessions: Session[] | undefined) =>
+          sessions ? sessions.filter((session) => session.id !== sessionId) : []
+      );
+
+      return { prevSessions };
+    },
+    onSuccess: () => {
+      setIsModalOpen(false);
       toast.success("Session removed successfully");
     },
-    onError: (error: any) => {
+    onError: (error: any, sessionId, context) => {
+      if (context) {
+        queryClient.setQueryData(
+          ["sessions", weekStart, weekEnd],
+          context.prevSessions
+        );
+      }
       console.error("Failed to remove session", error);
       toast.error("Failed to remove session");
     },
     onSettled: () => {
-      isLoading = false
-    }
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", weekStart, weekEnd],
+      });
+    },
   });
 
   const handleRemoveSession = async (sessionId: string) => {
     removeSessionMutation.mutate(sessionId);
-    // try {
-    //   await removeSession(sessionId);
-    //   setSessions((prevSessions) =>
-    //     prevSessions.filter((session) => session.id !== sessionId)
-    //   );
-    //   fetchSessions(weekStart, weekEnd);
-    //   toast.success("Session removed successfully");
-    // } catch (error) {
-    //   console.error("Failed to remove session", error);
-    //   toast.error("Failed to remove session");
-    // }
   };
 
   const handleUpdateSession = async (updatedSession: Session) => {
