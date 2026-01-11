@@ -234,7 +234,7 @@ const Schedule = ({
   const enrollments = enrollmentsResult.data || [];
   const meetings = meetingsResult.data || [];
 
-  const isLoading = sessionsResult.isLoading
+  let isLoading = sessionsResult.isLoading
 
   // const [sessions, setSessions] = useState<Session[]>([]);
 
@@ -448,7 +448,7 @@ const Schedule = ({
   const updateWeekMutation = useMutation({
     mutationFn: () => addSessions(weekStart, weekEnd, enrollments, sessions),
     onMutate: () => {
-      setLoading(true);
+      isLoading = true;
     },
     onSuccess: (newSessions: Session[]) => {
       queryClient.invalidateQueries({
@@ -463,7 +463,7 @@ const Schedule = ({
         : toast.error(`Failed to add sessions. ${error.message}`);
     },
     onSettled: () => {
-      setLoading(false);
+      isLoading = false
     },
   });
 
@@ -525,7 +525,7 @@ const Schedule = ({
   const removeSessionMutation = useMutation({
     mutationFn: (sessionId: string) => removeSession(sessionId),
     onMutate: () => {
-      setLoading(true);
+      isLoading = true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -538,7 +538,7 @@ const Schedule = ({
       toast.error("Failed to remove session");
     },
     onSettled: () => {
-      setLoading(false)
+      isLoading = false
     }
   });
 
