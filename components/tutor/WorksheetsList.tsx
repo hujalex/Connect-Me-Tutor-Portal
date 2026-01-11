@@ -3,36 +3,47 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase/client";
+import toast, { Toaster } from "react-hot-toast";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// const supabase = createClientComponentClient()
 
-const WorksheetsList = () => {
-  const [worksheets, setWorksheets] = useState<any[]>([]);
-
-    useEffect(() => {
-    const fetchFiles = async () => {
-      const { data, error } = await supabase.storage
-        .from("worksheets")
-        .list(""); 
-      if (!error && data){
-        setWorksheets(data);
+const WorksheetsList = ({
+  files,
+}: {
+  files:
+    | {
+        data: any[];
+        error: null;
       }
+    | {
+        data: null;
+        error: Error;
+      };
+}) => {
+  const [worksheets, setWorksheets] = useState<any[]>(files.data || []);
+
+  useEffect(() => {
+    const fetchWorksheets = async () => {
+      const sheets = await supabase.storage.from("worksheets").list();
+      console.log(sheets);
+      if (files.error) {
+        toast.error("Unable to load worksheets");
+      }
+      if (sheets.data) setWorksheets(sheets.data);
     };
 
-    fetchFiles();
+    fetchWorksheets();
   }, []);
 
   const downloadFile = async (path: string) => {
     const { data } = await supabase.storage.from("worksheets").download(path);
+    if (!data) {
+      toast.error("Worksheet nor found");
+      return;
+    }
     const url = URL.createObjectURL(data);
     const download = document.createElement("a");
     download.href = url;
@@ -62,7 +73,9 @@ const WorksheetsList = () => {
                 <Button
                   className="w-1/2"
                   onClick={() => {
-                    const { data } = supabase.storage.from("worksheets").getPublicUrl(file.name);
+                    const { data } = supabase.storage
+                      .from("worksheets")
+                      .getPublicUrl(file.name);
                     window.open(data.publicUrl, "_blank");
                   }}
                 >
@@ -79,6 +92,7 @@ const WorksheetsList = () => {
           </Card>
         ))}
       </div>
+      <Toaster />
     </main>
   );
 };

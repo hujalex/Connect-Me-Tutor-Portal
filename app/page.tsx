@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-  const user = await cachedGetUser();
+  // const user = await cachedGetUser();
 
-  if (user) {
-    const profile = await cachedGetProfile(user.id);
-    if (profile && profile.role !== "Admin") {
-      redirect("/dashboard");
-    }
-  }
+  // if (user) {
+  //   const profile = await cachedGetProfile(user.id);
+  //   if (profile && profile.role !== "Admin") {
+  //     redirect("/dashboard");
+  //   }
+  // }
 
   return (
     <section className="flex flex-col md:flex-row ">

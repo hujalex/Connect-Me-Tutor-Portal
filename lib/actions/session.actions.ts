@@ -96,6 +96,8 @@ export async function getSessionKeys(data?: Session[]) {
   return sessionKeys;
 }
 
+
+
 /**
  * Add sessions for enrollments within the specified week range
  * @param weekStartString - ISO string of week start in Eastern Time
@@ -141,12 +143,6 @@ export async function addSessions(
         frequency,
       } = enrollment;
 
-      // if (frequency === "biweekly") {
-      //   if (await isSessioninPastWeek(id, addDays(weekStart, 3))) continue;
-      // }
-
-      const startDate_asDate = new Date(startDate); //UTC
-
       //Check if paused over the summer
       if (enrollment.paused) {
         continue;
@@ -156,7 +152,7 @@ export async function addSessions(
       if (!student?.id || !tutor?.id || !availability?.length) {
         continue;
       }
-
+           
       // Process each availability slot
       let { day, startTime, endTime } = availability[0];
 
@@ -171,6 +167,8 @@ export async function addSessions(
         continue;
       }
 
+      const startDate_asDate = new Date(startDate); 
+ 
       // Find matching day in the week range
       let currentDate = new Date(weekStart);
       const dayLower = day.toLowerCase();
@@ -191,7 +189,7 @@ export async function addSessions(
 
         //Remove Seven Days if CurrentDate is next week (Acts as a Modulus to ensure updating current week only)
         if (currentDate > parseISO(weekEndString)) {
-          currentDate = addDays(currentDate, -7);
+          currentDate = addDays(currentDate, -7); 
         }
 
         try {

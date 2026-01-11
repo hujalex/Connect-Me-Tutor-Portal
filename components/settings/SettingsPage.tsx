@@ -19,13 +19,10 @@ import {
 import {
   getProfile,
   getProfileWithProfileId,
-  getUserInfo,
-  updateProfile,
 } from "@/lib/actions/user.actions";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Profile } from "@/types";
 import toast, { Toaster } from "react-hot-toast";
-import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 import { switchProfile } from "@/lib/actions/profile.server.actions";
 import { useProfile } from "@/contexts/profileContext";
 import { getUserProfiles } from "@/lib/actions/profile.server.actions";
@@ -41,8 +38,30 @@ export default function SettingsPage({
   const supabase = createClientComponentClient();
   const router = useRouter();
   const { profile, setProfile } = useProfile();
-  const [lastActiveProfileId, setLastActiveProfileId] = useState<string>("");
+  // changed to initialize from context so current profile is available at render time
+  const [lastActiveProfileId, setLastActiveProfileId] = useState<string>(
+    profile?.id || ""
+  );
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // changed to hydrate the form from the current profile on first render (instead of waiting for useEffect)
+  const [accountForm, setAccountForm] = useState(() => ({
+    firstName: profile?.firstName || "",
+    lastName: profile?.lastName || "",
+    phoneNumber: profile?.phoneNumber || "",
+    age:
+      profile?.age !== undefined && profile?.age !== null
+        ? String(profile.age)
+        : "",
+    email: profile?.email || "",
+    subjectsOfInterest: Array.isArray((profile as any)?.subjects_of_interest)
+      ? (profile as any).subjects_of_interest.join(", ")
+      : "",
+    languagesSpoken: Array.isArray((profile as any)?.languages_spoken)
+      ? (profile as any).languages_spoken.join(", ")
+      : "",
+  }));
   const [sessionReminders, setSessionReminders] = useState(false);
   const [sessionEmailNotifications, setSessionEmailNotifications] =
     useState(false);
@@ -72,6 +91,31 @@ export default function SettingsPage({
     fetchNotificationSettings();
   }, [profile]);
 
+  useEffect(() => {
+    if (!profile) return;
+
+    setAccountForm({
+      firstName: profile.firstName || "",
+      lastName: profile.lastName || "",
+      phoneNumber: profile.phoneNumber || "",
+      age: profile.age !== undefined && profile.age !== null ? String(profile.age) : "",
+      email: profile.email || "",
+      subjectsOfInterest: Array.isArray((profile as any).subjects_of_interest)
+        ? (profile as any).subjects_of_interest.join(", ")
+        : "",
+      languagesSpoken: Array.isArray((profile as any).languages_spoken)
+        ? (profile as any).languages_spoken.join(", ")
+        : "",
+    });
+  }, [profile]);
+
+  const toList = (value: string) => {
+    return value
+      .split(/[\n,]/g)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+
   const fetchUser = async () => {
     try {
       const {
@@ -85,7 +129,8 @@ export default function SettingsPage({
       const profileData = await getProfile(user.id);
       if (!profileData) throw new Error("No profile found");
 
-      // setProfile(profileData);
+      // changed to refresh profile after page load so the context stays current
+      setProfile(profileData);
       setLastActiveProfileId(profileData.id);
       return user.id;
     } catch (error) {
@@ -137,9 +182,39 @@ export default function SettingsPage({
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Handle profile update logic here
+      if (!profile?.id) {
+        toast.error("No active profile to update");
+        return;
+      }
+
+      setIsSavingProfile(true);
+
+      const updatePayload: Record<string, any> = {
+        first_name: accountForm.firstName.trim(),
+        last_name: accountForm.lastName.trim(),
+        phone_number: accountForm.phoneNumber.trim() || null,
+        age: accountForm.age ? Number(accountForm.age) : null,
+        email: accountForm.email.trim() || null,
+        subjects_of_interest: toList(accountForm.subjectsOfInterest),
+        languages_spoken: toList(accountForm.languagesSpoken),
+      };
+
+      const { error } = await supabase
+        .from("Profiles")
+        .update(updatePayload)
+        .eq("id", profile.id);
+
+      if (error) throw error;
+
+      const refreshed = await getProfileWithProfileId(profile.id);
+      if (refreshed) setProfile(refreshed);
+
+      toast.success("Profile updated");
     } catch (error) {
       console.error("Error updating profile:", error);
+      toast.error("Unable to update profile");
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -369,6 +444,13 @@ export default function SettingsPage({
                     id="first-name"
                     placeholder="Enter your first name (e.g John)"
                     className="mt-1 placeholder:text-gray-300"
+                    value={accountForm.firstName}
+                    onChange={(e) =>
+                      setAccountForm((prev) => ({
+                        ...prev,
+                        firstName: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -380,6 +462,13 @@ export default function SettingsPage({
                     id="last-name"
                     placeholder="Enter your last name (e.g Smith)"
                     className="mt-1 placeholder:text-gray-300"
+                    value={accountForm.lastName}
+                    onChange={(e) =>
+                      setAccountForm((prev) => ({
+                        ...prev,
+                        lastName: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -394,6 +483,13 @@ export default function SettingsPage({
                     type="tel"
                     placeholder="Enter your phone number (e.g (555) 123-4567)"
                     className="mt-1 placeholder:text-gray-300"
+                    value={accountForm.phoneNumber}
+                    onChange={(e) =>
+                      setAccountForm((prev) => ({
+                        ...prev,
+                        phoneNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -407,6 +503,13 @@ export default function SettingsPage({
                     type="number"
                     placeholder="Enter your age (e.g 25)"
                     className="mt-1 placeholder:text-gray-300"
+                    value={accountForm.age}
+                    onChange={(e) =>
+                      setAccountForm((prev) => ({
+                        ...prev,
+                        age: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -420,6 +523,13 @@ export default function SettingsPage({
                   type="email"
                   placeholder="Enter your email (e.g john@example.com)"
                   className="mt-1 placeholder:text-gray-300"
+                  value={accountForm.email}
+                  onChange={(e) =>
+                    setAccountForm((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
                 />
               </div>
 
@@ -432,6 +542,7 @@ export default function SettingsPage({
                   placeholder="Tell us about yourself (e.g What hobbies do you enjoy?)"
                   className="mt-1 placeholder:text-gray-300"
                   rows={4}
+                  disabled
                 />
               </div>
 
@@ -444,6 +555,13 @@ export default function SettingsPage({
                   placeholder="Enter your subjects of interest (e.g Mathematics, Physics, Chemistry)"
                   className="mt-1 placeholder:text-gray-300"
                   rows={4}
+                  value={accountForm.subjectsOfInterest}
+                  onChange={(e) =>
+                    setAccountForm((prev) => ({
+                      ...prev,
+                      subjectsOfInterest: e.target.value,
+                    }))
+                  }
                 />
               </div>
 
@@ -457,11 +575,22 @@ export default function SettingsPage({
                   placeholder="Enter languages you speak (e.g English, Spanish, French)"
                   className="mt-1 placeholder:text-gray-300"
                   rows={4}
+                  value={accountForm.languagesSpoken}
+                  onChange={(e) =>
+                    setAccountForm((prev) => ({
+                      ...prev,
+                      languagesSpoken: e.target.value,
+                    }))
+                  }
                 />
               </div>
 
-              <Button type="submit" disabled className="w-full sm:w-auto">
-                Update Profile
+              <Button
+                type="submit"
+                disabled={!profile || isSavingProfile}
+                className="w-full sm:w-auto"
+              >
+                {isSavingProfile ? "Updating..." : "Update Profile"}
               </Button>
             </form>
           </section>

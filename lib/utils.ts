@@ -65,10 +65,9 @@ export function formatDate(dateString: string): string {
   return date.toLocaleDateString("en-US", options);
 }
 
-
 /**
  * Formats a date string with customizable options for display.
- * 
+ *
  * @param dateString - The date string to format (should be parseable by the Date constructor)
  * @param options - Configuration options for formatting the date
  * @param options.includeYear - Whether to include the year in the output
@@ -79,9 +78,9 @@ export function formatDate(dateString: string): string {
  * @param options.includeSecond - Whether to include the second in the output
  * @param options.timeZone - The IANA timezone identifier (defaults to "America/New_York")
  * @param options.timeZoneName - The format for displaying the timezone name (defaults to "short")
- * 
+ *
  * @returns The formatted date string
- * 
+ *
  * @example
  * ```typescript
  * formatDateWithOptions("2024-01-15T10:30:00Z", {
@@ -130,9 +129,15 @@ export function formatDateWithOptions(
 
 export function formatDateAdmin(
   dateString: string,
-  includeTime = true,
-  includeDate = true
+  params?: {
+    includeTime?: boolean;
+    includeDate?: boolean;
+  }
 ): string {
+  const { includeTime = true, includeDate = true } = params
+    ? params
+    : { includeTime: true, includeDate: true };
+
   // Create a new Date object
   const date: Date = new Date(dateString);
 
@@ -150,6 +155,31 @@ export function formatDateAdmin(
   };
 
   // Format the date using toLocaleDateString
+  return date.toLocaleDateString("en-US", options);
+}
+
+export function formatDateUTC(
+  dateString: string,
+  params: {
+    includeTime?: boolean;
+    includeDate?: boolean;
+  }
+) {
+  const date: Date = new Date(dateString);
+
+  const { includeTime = true, includeDate = true } = params;
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: includeDate ? "numeric" : undefined,
+    month: includeDate ? "long" : undefined, // Can be 'short' or 'numeric' for different formats
+    day: includeDate ? "numeric" : undefined,
+    hour: includeTime ? "numeric" : undefined,
+    minute: includeTime ? "numeric" : undefined,
+    second: includeTime ? "numeric" : undefined,
+    timeZone: "UTC",
+    // timeZoneName: "short", // To include time zone information
+  };
+
   return date.toLocaleDateString("en-US", options);
 }
 
@@ -317,10 +347,10 @@ export function timeStrToHours(timeStr: string) {
 }
 
 export function capitalizeFirstLetter(word: string | undefined) {
-  if (typeof word !== 'string' || word.length == 0) {
+  if (typeof word !== "string" || word.length == 0) {
     return word;
   }
-  return word.charAt(0).toUpperCase() + word.slice(1)
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 export const handleCalculateDuration = async (
@@ -337,7 +367,55 @@ export const handleCalculateDuration = async (
 
     return difference;
   } catch (error) {
-    toast.error("Unable to calculate duration");
     console.error("Unable to calculate duration", error);
   }
 };
+
+export async function createPassword(length: number = 16): Promise<string> {
+  // Character sets for password generation
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+  const allChars = lowercase + uppercase + numbers + symbols;
+
+  // Use crypto.getRandomValues for cryptographically secure randomness
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+
+  let password = "";
+
+  // Ensure at least one character from each character set
+  const guaranteedChars = [
+    lowercase[array[0] % lowercase.length],
+    uppercase[array[1] % uppercase.length],
+    numbers[array[2] % numbers.length],
+    symbols[array[3] % symbols.length],
+  ];
+
+  // Fill remaining positions with random characters from all sets
+  for (let i = 4; i < length; i++) {
+    password += allChars[array[i] % allChars.length];
+  }
+
+  // Add guaranteed characters
+  password += guaranteedChars.join("");
+
+  // Shuffle the password to randomize guaranteed character positions
+  return shuffleString(password);
+}
+
+function shuffleString(str: string): string {
+  const array = str.split("");
+  const randomArray = new Uint8Array(array.length);
+  crypto.getRandomValues(randomArray);
+
+  // Fisher-Yates shuffle with crypto random
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = randomArray[i] % (i + 1);
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array.join("");
+}

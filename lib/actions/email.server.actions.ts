@@ -245,6 +245,28 @@ export const sendEmail = async (
   }
 };
 
+export const sendEmailTest = async (
+  from: string,
+  to: string,
+  subject: string,
+  body: string,
+) => {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  try {
+    await resend.emails.send({
+      from: from,
+      to: ['amansreejesh9@gmail.com', 'ahu@connectmego.org'],
+      subject: subject,
+      html: body,
+    });
+  } catch (error) {
+    console.error("Unable to send email", error);
+    throw error;
+  }
+};
+
+
+
 // export async function sendPairingEmail(
 //   emailType: "match-accepted" | "pairing-request" | "tutor-match-confirmation",
 //   data: any,

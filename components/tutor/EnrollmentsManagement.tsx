@@ -10,6 +10,7 @@ import {
 import {
   cn,
   formatDateAdmin,
+  formatDateUTC,
   formatSessionDuration,
   timeStrToHours,
 } from "@/lib/utils";
@@ -941,7 +942,7 @@ const EnrollmentList = ({
                   </TableCell>
                   <TableCell>{enrollment.summary}</TableCell>
                   <TableCell>
-                    {formatDateAdmin(enrollment.startDate, false, true)}
+                    {formatDateUTC(enrollment.startDate, { includeTime: false, includeDate: true})}
                   </TableCell>
                   <TableCell>
                     <TableCell>

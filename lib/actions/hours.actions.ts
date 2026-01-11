@@ -449,10 +449,17 @@ export const getAllEventDetailsForTutor = async (tutorId: string) => {
 
 export const getHoursTutored = async (profileId: string, start: ISOStringFormat, end: ISOStringFormat) => {
   try {
-
+    const sessionHours = await getSessionHoursRange(profileId, start, end);
+    const eventHours = await getEventHoursRange(profileId, start, end);
+    return sessionHours + eventHours;
 
   } catch (error) {
-
+    console.error("Error getting hours tutored:", error);
+    throw new Error(
+      `Failed to get hours tutored for user ${profileId} between ${start} and ${end}: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 }
 
