@@ -81,7 +81,8 @@ import { boolean } from "zod";
 import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollment.server.actions";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
 const Schedule = ({
   initialCurrentWeek,
@@ -93,15 +94,15 @@ const Schedule = ({
   initialTutors,
   initialMeetings,
 }: any) => {
+  const queryClient = new QueryClient();
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [weekEnd, setWeekEnd] = useState("");
-  const [weekStart, setWeekStart] = useState("");
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [students, setStudents] = useState<Profile[]>([]);
-  const [tutors, setTutors] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const weekEnd = endOfWeek(currentWeek).toISOString();
+  const weekStart = startOfWeek(currentWeek).toISOString();
+  // const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  // const [meetings, setMeetings] = useState<Meeting[]>([]);
+  // const [students, setStudents] = useState<Profile[]>([]);
+  // const [tutors, setTutors] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -190,63 +191,129 @@ const Schedule = ({
   //   setLoading(false)
   // }, []);
 
-  const currWeekStart = startOfWeek(currentWeek).toISOString();
-  const currWeekEnd = endOfWeek(currentWeek).toISOString();
+  // const currWeekStart = startOfWeek(currentWeek).toISOString();
+  // const currWeekEnd = endOfWeek(currentWeek).toISOString();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [
-          fetchedSessions,
-          fetchedEnrollments,
-          fetchedMeetings,
-          fetchedStudents,
-          fetchedTutors,
-        ] = await Promise.all([
-          fetchSessions(currWeekStart, currWeekEnd),
-          fetchEnrollments(currWeekEnd),
-          fetchMeetings(),
-          fetchStudents(),
-          fetchTutors(),
-        ]);
+  const query = useQueries({
+    queries: [
+      {
+        queryKey: ["sessions", weekStart, weekEnd],
+        queryFn: () => getAllSessions(weekStart, weekEnd, "date", true),
+      },
+      {
+        queryKey: ["students"],
+        queryFn: () => getAllProfiles("Student"),
+      },
+      {
+        queryKey: ["tutors"],
+        queryFn: () => getAllProfiles("Tutor"),
+      },
+      {
+        queryKey: ["enrollments", weekEnd],
+        queryFn: () => getAllActiveEnrollments(weekEnd),
+      },
+      {
+        queryKey: ["meetings"],
+        queryFn: () => getMeetings(),
+      },
+    ],
+  });
 
-        if (fetchedSessions) setSessions(fetchedSessions);
-        if (fetchedEnrollments) setEnrollments(fetchedEnrollments);
-        if (fetchedMeetings) setMeetings(fetchedMeetings);
-        if (fetchedStudents) setStudents(fetchedStudents);
-        if (fetchedTutors) setTutors(fetchedTutors);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
+  const [
+    sessionsResult,
+    studentsResult,
+    tutorsResult,
+    enrollmentsResult,
+    meetingsResult,
+  ] = query;
 
-      setWeekStart(currWeekStart);
-      setWeekEnd(currWeekEnd);
-    };
-    fetchData();
-  }, [currentWeek]);
+  const sessions = sessionsResult.data || [];
+  const students = studentsResult.data || [];
+  const tutors = tutorsResult.data || [];
+  const enrollments = enrollmentsResult.data || [];
+  const meetings = meetingsResult.data || [];
+
+  let isLoading = sessionsResult.isLoading;
+
+  // const [sessions, setSessions] = useState<Session[]>([]);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true)
+  //     try {
+  //       // const [
+  //       //   fetchedSessions,
+  //       //   fetchedEnrollments,
+  //       //   fetchedMeetings,
+  //       //   fetchedStudents,
+  //       //   fetchedTutors,
+  //       // ] = await Promise.all([
+  //       //   fetchSessions(currWeekStart, currWeekEnd),
+  //       //   fetchEnrollments(currWeekEnd),
+  //       //   fetchMeetings(),
+  //       //   fetchStudents(),
+  //       //   fetchTutors(),
+  //       // ]);
+
+  //       fetchSessions(weekStart, weekEnd).then(
+  //         (fetchedSessions) => fetchedSessions && setSessions(fetchedSessions)
+  //       );
+  //       // fetchEnrollments(currWeekEnd).then(
+  //       //   (fetchedEnrollments) =>
+  //       //     fetchedEnrollments && setEnrollments(fetchedEnrollments)
+  //       // );
+  //       // fetchMeetings().then(
+  //       //   (fetchedMeetings) => fetchedMeetings && setMeetings(fetchedMeetings)
+  //       // );
+  //       // fetchStudents().then(
+  //       //   (fetchedStudents) => fetchedStudents && setStudents(fetchedStudents)
+  //       // );
+  //       // fetchTutors().then(
+  //       //   (fetchedTutors) => fetchedTutors && setTutors(fetchedTutors)
+  //       // );
+
+  //       // if (fetchedSessions) setSessions(fetchedSessions);
+  //       // if (fetchedEnrollments) setEnrollments(fetchedEnrollments);
+  //       // if (fetchedMeetings) setMeetings(fetchedMeetings);
+  //       // if (fetchedStudents) setStudents(fetchedStudents);
+  //       // if (fetchedTutors) setTutors(fetchedTutors);
+  //     } catch (error) {
+  //       console.error("Failed to fetch data:", error);
+  //     } finally {
+  //       setLoading(false)
+  //     }
+
+  //     // setWeekStart(currWeekStart);
+  //     // setWeekEnd(currWeekEnd);
+  //   };
+  //   // fetchData();
+
+  //   // setSessions()
+  //   toast.success("Switched Week")
+  // }, [currentWeek]);
 
   const fetchSessions = async (weekStart: string, weekEnd: string) => {
-    setLoading(true);
     try {
-      const fetchedSessions = await getAllSessions(
-        weekStart,
-        weekEnd,
-        "date",
-        true
-      );
-      return fetchedSessions;
+      // const fetchedSessions = await queryClient.fetchQuery({
+      //   queryKey: [weekStart, weekEnd],
+      //   queryFn: async () => {
+      return getAllSessions(weekStart, weekEnd, "date", true);
+      //   },
+      // });
+      // return fetchedSessions;
       // setSessions(fetchedSessions);
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
       toast.error("Failed to load sessions");
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchStudents = async () => {
     try {
-      return await getAllProfiles("Student");
+      return await queryClient.fetchQuery({
+        queryKey: ["Student"],
+        queryFn: async () => getAllProfiles("Student"),
+      });
       // if (fetchedStudents) {
       //   setStudents(fetchedStudents);
       // }
@@ -260,8 +327,10 @@ const Schedule = ({
   const fetchEnrollments = async (endOfWeek: string) => {
     try {
       // const fetchedEnrollments = await getAllEnrollments();
-      return await getAllActiveEnrollments(endOfWeek);
-
+      return await queryClient.fetchQuery({
+        queryKey: [endOfWeek],
+        queryFn: async () => getAllActiveEnrollments(endOfWeek),
+      });
       // setEnrollments(fetchedEnrollments);
       // return fetchedEnrollments;
     } catch (error) {
@@ -272,7 +341,10 @@ const Schedule = ({
 
   const fetchMeetings = async () => {
     try {
-      return await getMeetings();
+      return await queryClient.fetchQuery({
+        queryKey: [],
+        queryFn: async () => getMeetings(),
+      });
       // if (fetchedMeetings) {
       //   setMeetings(fetchedMeetings);
       // }
@@ -285,7 +357,10 @@ const Schedule = ({
 
   const fetchTutors = async () => {
     try {
-      return await getAllProfiles("Tutor");
+      return await queryClient.fetchQuery({
+        queryKey: ["Tutor"],
+        queryFn: async () => getAllProfiles("Tutor"),
+      });
       // if (fetchedTutors) {
       //   setTutors(fetchedTutors);
       // }
@@ -369,40 +444,50 @@ const Schedule = ({
     }
   };
 
-  const handleUpdateWeek = async () => {
-    try {
-      //------Set Loading-------
-      setLoading(true);
+  const updateWeekMutation = useMutation({
+    mutationFn: () => addSessions(weekStart, weekEnd, enrollments, sessions),
+    onMutate: async () => {
 
-      // Create sessions for all enrollments without checking meeting availability
-      const newSessions = await addSessions(
-        weekStart,
-        weekEnd,
-        enrollments,
-        sessions
-      );
+      // await queryClient.cancelQueries({ queryKey: ["sessions"] });
 
-      // const response = await fetch('/api/sessions/update-week');
-      // if (!response.ok) throw new Error(response.statusText)
-      // const data = await response.json();
+      // const prevSessions: Session[] | undefined = queryClient.getQueryData([
+      //   "sessions",
+      //   weekStart,
+      //   weekEnd,
+      // ]);
 
-      // const newSessions = data.newSessions;
+      // await queryClient.setQueryData(
+      //   ["sessions", weekStart, weekEnd],
+      //   (sessions: Session[] | undefined) =>
+      //     sessions && prevSessions ? [...sessions, ...prevSessions] : []
+      // );
 
-      if (!newSessions) {
-        throw new Error("No sessions were created");
-      }
-
-      setSessions((prevSessions) => [...prevSessions, ...newSessions]);
-      fetchSessions(weekStart, weekEnd); // Reloads only sessions
+      // return { prevSessions };
+    },
+    onSuccess: (newSessions: Session[]) => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", weekStart, weekEnd],
+      });
       toast.success(`${newSessions.length} new sessions added successfully`);
-    } catch (error: any) {
-      console.error("Failed to add sessions:", error);
+    },
+    onError: (error: any, _, context) => {
+      // if (context) {
+      //   queryClient.setQueryData(
+      //     ["sessions", weekStart, weekEnd],
+      //     context.prevSessions
+      //   );
+      // }
+      // console.error("Failed to add sessions:", error);
       error.digest === "4161161223"
         ? toast.error("Please wait until adding new sessions")
         : toast.error(`Failed to add sessions. ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    },
+    onSettled: () => {
+    },
+  });
+
+  const handleUpdateWeek = async () => {
+    updateWeekMutation.mutate();
   };
 
   // Filter sessions with valid dates for display
@@ -423,18 +508,49 @@ const Schedule = ({
     });
   };
 
-  const handleRemoveSession = async (sessionId: string) => {
-    try {
-      await removeSession(sessionId);
-      setSessions((prevSessions) =>
-        prevSessions.filter((session) => session.id !== sessionId)
+  const removeSessionMutation = useMutation({
+    mutationFn: (sessionId: string) => removeSession(sessionId),
+    onMutate: async (sessionId: string) => {
+      await queryClient.cancelQueries({
+        queryKey: ["sessions", weekStart, weekEnd],
+      });
+      const prevSessions = queryClient.getQueryData<Session[]>([
+        "sessions",
+        weekStart,
+        weekEnd,
+      ]);
+
+      queryClient.setQueryData(
+        ["sessions", weekStart, weekEnd],
+        (sessions: Session[] | undefined) =>
+          sessions ? sessions.filter((session) => session.id !== sessionId) : []
       );
-      fetchSessions(weekStart, weekEnd);
+
+      return { prevSessions };
+    },
+    onSuccess: () => {
+      setIsModalOpen(false);
       toast.success("Session removed successfully");
-    } catch (error) {
+    },
+    onError: (error: any, sessionId, context) => {
+      if (context) {
+        queryClient.setQueryData(
+          ["sessions", weekStart, weekEnd],
+          context.prevSessions
+        );
+      }
       console.error("Failed to remove session", error);
       toast.error("Failed to remove session");
-    }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", weekStart, weekEnd],
+      });
+    },
+  });
+
+  const handleRemoveSession = async (sessionId: string) => {
+    removeSessionMutation.mutate(sessionId);
   };
 
   const handleUpdateSession = async (updatedSession: Session) => {
@@ -557,10 +673,10 @@ const Schedule = ({
 
           <Button
             onClick={handleUpdateWeek}
-            disabled={loading}
+            disabled={isLoading}
             className="mb-4"
           >
-            {loading ? (
+            {isLoading ? (
               <>
                 Loading Sessions{"  "}
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -743,7 +859,7 @@ const Schedule = ({
           </Dialog>
           <Button onClick={() => handleGetMissingSEF()}>Function Tester</Button>
 
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-10">
               <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
               <p className="mt-4 text-gray-600">Loading sessions...</p>

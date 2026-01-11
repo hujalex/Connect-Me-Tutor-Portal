@@ -38,19 +38,30 @@ export default function SettingsPage({
   const supabase = createClientComponentClient();
   const router = useRouter();
   const { profile, setProfile } = useProfile();
-  const [lastActiveProfileId, setLastActiveProfileId] = useState<string>("");
+  // changed to initialize from context so current profile is available at render time
+  const [lastActiveProfileId, setLastActiveProfileId] = useState<string>(
+    profile?.id || ""
+  );
   const [userProfiles, setUserProfiles] = useState<Partial<Profile>[]>([]);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  const [accountForm, setAccountForm] = useState({
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
-    age: "",
-    email: "",
-    subjectsOfInterest: "",
-    languagesSpoken: "",
-  });
+  // changed to hydrate the form from the current profile on first render (instead of waiting for useEffect)
+  const [accountForm, setAccountForm] = useState(() => ({
+    firstName: profile?.firstName || "",
+    lastName: profile?.lastName || "",
+    phoneNumber: profile?.phoneNumber || "",
+    age:
+      profile?.age !== undefined && profile?.age !== null
+        ? String(profile.age)
+        : "",
+    email: profile?.email || "",
+    subjectsOfInterest: Array.isArray((profile as any)?.subjects_of_interest)
+      ? (profile as any).subjects_of_interest.join(", ")
+      : "",
+    languagesSpoken: Array.isArray((profile as any)?.languages_spoken)
+      ? (profile as any).languages_spoken.join(", ")
+      : "",
+  }));
   const [sessionReminders, setSessionReminders] = useState(false);
   const [sessionEmailNotifications, setSessionEmailNotifications] =
     useState(false);
@@ -118,7 +129,8 @@ export default function SettingsPage({
       const profileData = await getProfile(user.id);
       if (!profileData) throw new Error("No profile found");
 
-      // setProfile(profileData);
+      // changed to refresh profile after page load so the context stays current
+      setProfile(profileData);
       setLastActiveProfileId(profileData.id);
       return user.id;
     } catch (error) {
