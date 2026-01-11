@@ -276,8 +276,8 @@ export default function DashboardLayout({
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const handleLogout = async () => {
-    toast.success("Successfully logging out");
     await logoutUser();
+    toast.success("Successfully logging out");
     router.push("/");
   };
 

@@ -178,7 +178,7 @@ const AdminDashboard = () => {
                   }
                 >
                   <TableCell>
-                    {formatDateAdmin(session.date, true, true)}
+                    {formatDateAdmin(session.date, { includeTime: true, includeDate: true})}
                   </TableCell>
                   <TableCell className="font-medium">
                     Tutoring Session with Tutor {session.tutor?.firstName}{" "}

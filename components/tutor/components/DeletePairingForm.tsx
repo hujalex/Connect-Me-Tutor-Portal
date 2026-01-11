@@ -2,7 +2,6 @@ import React from "react";
 import { useState } from "react";
 import {
   formatSessionDate,
-  formatDateAdmin,
   formatSessionDuration,
 } from "@/lib/utils";
 import { Session, Meeting, Profile } from "@/types";
