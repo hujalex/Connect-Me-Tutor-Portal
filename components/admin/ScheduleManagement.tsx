@@ -81,7 +81,7 @@ import { boolean } from "zod";
 import { checkAvailableMeeting } from "@/lib/actions/meeting.actions";
 import { getAllActiveEnrollments } from "@/lib/actions/enrollment.actions";
 import { getEnrollmentsWithMissingSEF } from "@/lib/actions/enrollment.server.actions";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/react-query";
 
 const Schedule = ({
@@ -96,8 +96,8 @@ const Schedule = ({
 }: any) => {
   const queryClient = new QueryClient();
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const weekEnd = endOfWeek(currentWeek).toISOString()
-  const weekStart = startOfWeek(currentWeek).toISOString()
+  const weekEnd = endOfWeek(currentWeek).toISOString();
+  const weekStart = startOfWeek(currentWeek).toISOString();
   // const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   // const [meetings, setMeetings] = useState<Meeting[]>([]);
   // const [students, setStudents] = useState<Profile[]>([]);
@@ -197,23 +197,23 @@ const Schedule = ({
   const query = useQueries({
     queries: [
       {
-        queryKey: [weekStart, weekEnd, "date", true],
-        queryFn: () => getAllSessions(weekStart, weekEnd, "date", true)
+        queryKey: ["sessions", weekStart, weekEnd],
+        queryFn: () => getAllSessions(weekStart, weekEnd, "date", true),
       },
       {
-        queryKey: ["Student"],
+        queryKey: ["students"],
         queryFn: () => getAllProfiles("Student"),
       },
       {
-        queryKey: ["Tutor"],
+        queryKey: ["tutors"],
         queryFn: () => getAllProfiles("Tutor"),
       },
       {
-        queryKey: [weekEnd],
+        queryKey: ["enrollments", weekEnd],
         queryFn: () => getAllActiveEnrollments(weekEnd),
       },
       {
-        queryKey: ["Meetings"],
+        queryKey: ["meetings"],
         queryFn: () => getMeetings(),
       },
     ],
@@ -228,14 +228,15 @@ const Schedule = ({
   ] = query;
 
 
-  const sessionsRes = sessionsResult.data || []
-  const students = studentsResult.data || []
-  const tutors = tutorsResult.data || []
-  const enrollments = enrollmentsResult.data || []
-  const meetings = meetingsResult.data || []
+  const sessions = sessionsResult.data || [];
+  const students = studentsResult.data || [];
+  const tutors = tutorsResult.data || [];
+  const enrollments = enrollmentsResult.data || [];
+  const meetings = meetingsResult.data || [];
 
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const isLoading = sessionsResult.isLoading
 
+  // const [sessions, setSessions] = useState<Session[]>([]);
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -297,7 +298,7 @@ const Schedule = ({
       // const fetchedSessions = await queryClient.fetchQuery({
       //   queryKey: [weekStart, weekEnd],
       //   queryFn: async () => {
-          return getAllSessions(weekStart, weekEnd, "date", true);
+      return getAllSessions(weekStart, weekEnd, "date", true);
       //   },
       // });
       // return fetchedSessions;
@@ -305,7 +306,7 @@ const Schedule = ({
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
       toast.error("Failed to load sessions");
-    } 
+    }
   };
 
   const fetchStudents = async () => {
@@ -444,40 +445,63 @@ const Schedule = ({
     }
   };
 
-  const handleUpdateWeek = async () => {
-    try {
-      //------Set Loading-------
+  const updateWeekMutation = useMutation({
+    mutationFn: () => addSessions(weekStart, weekEnd, enrollments, sessions),
+    onMutate: () => {
       setLoading(true);
-
-      // Create sessions for all enrollments without checking meeting availability
-      const newSessions = await addSessions(
-        weekStart,
-        weekEnd,
-        enrollments,
-        sessions
-      );
-
-      // const response = await fetch('/api/sessions/update-week');
-      // if (!response.ok) throw new Error(response.statusText)
-      // const data = await response.json();
-
-      // const newSessions = data.newSessions;
-
-      if (!newSessions) {
-        throw new Error("No sessions were created");
-      }
-
-      setSessions((prevSessions) => [...prevSessions, ...newSessions]);
-      fetchSessions(weekStart, weekEnd); // Reloads only sessions
+    },
+    onSuccess: (newSessions: Session[]) => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", weekStart, weekEnd],
+      });
       toast.success(`${newSessions.length} new sessions added successfully`);
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error("Failed to add sessions:", error);
       error.digest === "4161161223"
         ? toast.error("Please wait until adding new sessions")
         : toast.error(`Failed to add sessions. ${error.message}`);
-    } finally {
+    },
+    onSettled: () => {
       setLoading(false);
-    }
+    },
+  });
+
+  const handleUpdateWeek = async () => {
+    updateWeekMutation.mutate();
+    // try {
+    //   //------Set Loading-------
+    //   setLoading(true);
+
+    //   // Create sessions for all enrollments without checking meeting availability
+    //   const newSessions = await addSessions(
+    //     weekStart,
+    //     weekEnd,
+    //     enrollments,
+    //     sessions
+    //   );
+
+    //   // const response = await fetch('/api/sessions/update-week');
+    //   // if (!response.ok) throw new Error(response.statusText)
+    //   // const data = await response.json();
+
+    //   // const newSessions = data.newSessions;
+
+    //   if (!newSessions) {
+    //     throw new Error("No sessions were created");
+    //   }
+
+    //   setSessions((prevSessions) => [...prevSessions, ...newSessions]);
+    //   fetchSessions(weekStart, weekEnd); // Reloads only sessions
+    //   toast.success(`${newSessions.length} new sessions added successfully`);
+    // } catch (error: any) {
+    //   console.error("Failed to add sessions:", error);
+    //   error.digest === "4161161223"
+    //     ? toast.error("Please wait until adding new sessions")
+    //     : toast.error(`Failed to add sessions. ${error.message}`);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   // Filter sessions with valid dates for display
@@ -498,18 +522,39 @@ const Schedule = ({
     });
   };
 
-  const handleRemoveSession = async (sessionId: string) => {
-    try {
-      await removeSession(sessionId);
-      setSessions((prevSessions) =>
-        prevSessions.filter((session) => session.id !== sessionId)
-      );
-      fetchSessions(weekStart, weekEnd);
+  const removeSessionMutation = useMutation({
+    mutationFn: (sessionId: string) => removeSession(sessionId),
+    onMutate: () => {
+      setLoading(true);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", weekStart, weekEnd],
+      });
       toast.success("Session removed successfully");
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Failed to remove session", error);
       toast.error("Failed to remove session");
+    },
+    onSettled: () => {
+      setLoading(false)
     }
+  });
+
+  const handleRemoveSession = async (sessionId: string) => {
+    removeSessionMutation.mutate(sessionId);
+    // try {
+    //   await removeSession(sessionId);
+    //   setSessions((prevSessions) =>
+    //     prevSessions.filter((session) => session.id !== sessionId)
+    //   );
+    //   fetchSessions(weekStart, weekEnd);
+    //   toast.success("Session removed successfully");
+    // } catch (error) {
+    //   console.error("Failed to remove session", error);
+    //   toast.error("Failed to remove session");
+    // }
   };
 
   const handleUpdateSession = async (updatedSession: Session) => {
@@ -632,10 +677,10 @@ const Schedule = ({
 
           <Button
             onClick={handleUpdateWeek}
-            disabled={loading}
+            disabled={isLoading}
             className="mb-4"
           >
-            {loading ? (
+            {isLoading ? (
               <>
                 Loading Sessions{"  "}
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -818,7 +863,7 @@ const Schedule = ({
           </Dialog>
           <Button onClick={() => handleGetMissingSEF()}>Function Tester</Button>
 
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-10">
               <Calendar className="w-10 h-10 animate-spin mx-auto text-blue-500" />
               <p className="mt-4 text-gray-600">Loading sessions...</p>
