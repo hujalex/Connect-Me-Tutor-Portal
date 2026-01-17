@@ -68,6 +68,9 @@ import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import SessionExitForm from "./SessionExitForm";
 import RescheduleForm from "./RescheduleDialog";
 import CancellationForm from "./CancellationForm";
+import { useRouter } from "next/navigation";
+
+const router = useRouter();
 
 interface CurrentSessionTableProps {
   currentSessions: Session[];
