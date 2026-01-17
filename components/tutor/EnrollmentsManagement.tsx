@@ -97,7 +97,7 @@ import { getProfile } from "@/lib/actions/user.actions";
 import { getTutorStudents } from "@/lib/actions/tutor.actions";
 import { profile } from "console";
 import AvailabilityForm2 from "../ui/availability-form-2";
-import { checkAvailableMeetingForEnrollments } from "@/lib/actions/meeting.server.actions";
+import { checkAvailableMeetingForEnrollments } from "@/lib/actions/meeting.actions";
 import { isDeepStrictEqual } from "util";
 import { useProfile } from "@/contexts/profileContext";
 // import EnrollmentForm from "./components/EnrollmentForm";

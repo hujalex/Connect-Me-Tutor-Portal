@@ -1405,7 +1405,7 @@ const EnrollmentList = ({
                       <SelectContent>
                         {/* Add time zone options here */}
                         <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="biweekly" disabled={true} >Biweekly</SelectItem>
+                        <SelectItem value="biweekly" disabled={true}>Biweekly</SelectItem>
                         {/* <SelectItem value="MT">Monthy</SelectItem> */}
                       </SelectContent>
                     </Select>
