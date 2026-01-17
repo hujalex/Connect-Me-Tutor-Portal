@@ -43,4 +43,6 @@ keys.json
 
 .env.locala
 
+# unlighthouse
 .unlighthouse
+unlighthouse.config.mjs
