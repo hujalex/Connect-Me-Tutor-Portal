@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import TutorCalendar from "../TutorCalendar";
 import { Input } from "@/components/ui/input";
 import SessionsTable from "../components/ActiveSessionsTable";
@@ -40,6 +41,7 @@ const TutorDashboard = ({
   pastSessionsPromise,
   meetingsPromise,
 }: any) => {
+  const router = useRouter();
   const currentSessionsData: Session[] = use(currentSessionsPromise)
   const activeSessionsData: Session[] = use(activeSessionsPromise)
   const pastSessionsData: Session[] = use(pastSessionsPromise)
@@ -261,6 +263,9 @@ const TutorDashboard = ({
       // getUserData();
       setSelectedSession(null);
       setIsDialogOpen(false);
+      
+      // Refresh
+      router.refresh();
       toast.success("Session updated successfully");
     } catch (error) {
       console.error("Error requesting session reschedule:", error);
